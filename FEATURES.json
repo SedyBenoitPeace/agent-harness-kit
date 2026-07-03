@@ -71,6 +71,14 @@
       "status": "passing",
       "verify": "Gate: '## 3. Maintenance protocol' present and covers entropy GC",
       "notes": ""
+    },
+    {
+      "id": "M3-001",
+      "milestone": 3,
+      "title": "SKILL.md thin orchestration layer",
+      "status": "passing",
+      "verify": "Gate: frontmatter valid (name harness-planning, description present); every templates/ path referenced in SKILL.md exists",
+      "notes": ""
     }
   ]
 }

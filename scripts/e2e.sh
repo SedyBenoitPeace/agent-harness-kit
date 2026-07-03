@@ -91,4 +91,14 @@ grep -q 'ONE feature' "$PROTO" || fail "protocol: one-feature-per-session rule m
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
 grep -qi 'entropy' "$PROTO" || fail "protocol: maintenance section must cover entropy GC"
 
+# SKILL.md: valid frontmatter, references only templates that exist
+SKILL="skill/harness-planning/SKILL.md"
+[ -f "$SKILL" ] || fail "SKILL.md missing"
+[ "$(head -1 "$SKILL")" = "---" ] || fail "SKILL.md: missing frontmatter"
+grep -q '^name: harness-planning$' "$SKILL" || fail "SKILL.md: frontmatter name wrong"
+grep -q '^description: ' "$SKILL" || fail "SKILL.md: frontmatter description missing"
+while read -r ref; do
+  [ -f "skill/harness-planning/$ref" ] || fail "SKILL.md references missing file: $ref"
+done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
+
 echo "GATE GREEN"

@@ -26,5 +26,9 @@ Newest-first session log. One entry per working session. Read this (plus
 - Done: M2-003 — §3 Maintenance protocol: entropy GC, doc gardening,
   FEATURES.json gardening, "what's missing?" rule. Milestone 2 complete —
   the protocol doc is whole.
+- Done: M3-001 — SKILL.md: mode detection, "run the shipped manual §1",
+  template→destination copy table, retrofit rules, verify+commit, red-flags
+  table. Gate bug found by its own run: template-reference regex allowed
+  zero-length matches (bare `templates/` in prose); tightened to `+`.
 - Gate: green (`bash scripts/e2e.sh`).
-- Next: M3-001 — SKILL.md.
+- Next: M4-001 — full README.
