@@ -41,4 +41,17 @@ grep -q "MIT License" LICENSE 2>/dev/null || fail "LICENSE missing or not MIT"
 [ -f .gitignore ] || fail ".gitignore missing"
 [ -f README.md ] || fail "README.md missing"
 
+# --- templates ------------------------------------------------------------
+
+TMPL_DIR="skill/harness-planning/templates"
+
+# FEATURES.json.tmpl: contains placeholders, valid JSON once they are substituted
+grep -q '{{' "$TMPL_DIR/FEATURES.json.tmpl" \
+  || fail "FEATURES.json.tmpl has no {{placeholders}}"
+sed 's/{{[A-Za-z0-9_]*}}/X/g' "$TMPL_DIR/FEATURES.json.tmpl" | jq -e . >/dev/null \
+  || fail "FEATURES.json.tmpl: not valid JSON after placeholder substitution"
+
+[ -f "$TMPL_DIR/PROGRESS.md.tmpl" ] || fail "PROGRESS.md.tmpl missing"
+grep -q '{{' "$TMPL_DIR/PROGRESS.md.tmpl" || fail "PROGRESS.md.tmpl has no {{placeholders}}"
+
 echo "GATE GREEN"

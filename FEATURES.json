@@ -23,6 +23,14 @@
       "status": "passing",
       "verify": "Gate checks LICENSE (MIT), .gitignore, README.md exist; AGENTS.md <= 100 lines; no personal paths tracked",
       "notes": ""
+    },
+    {
+      "id": "M1-001",
+      "milestone": 1,
+      "title": "FEATURES.json.tmpl + PROGRESS.md.tmpl",
+      "status": "passing",
+      "verify": "Gate: FEATURES.json.tmpl parses as JSON after {{placeholder}} substitution; both templates contain placeholders",
+      "notes": ""
     }
   ]
 }
