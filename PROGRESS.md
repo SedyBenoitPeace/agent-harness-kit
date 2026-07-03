@@ -3,6 +3,20 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-03 — session 3
+
+- Branch: `master` (single direct commit — owner waived plan/branch/PR
+  phases for this one).
+- Done: M6-001 — option C: created SedyBenoitPeace/agent-harness-template
+  (private, isTemplate=true): templates laid out at final paths with
+  {{placeholders}}, bootstrap banner in AGENTS.md, CLAUDE.md/GEMINI.md
+  pointers, PRODUCT.md skeleton, protocol doc copied whole. Scaffold passed
+  the parent gate's checks before commit. README here links it; canonical
+  source stays skill/harness-planning/templates/ (drift risk noted there).
+- Gate: green (locally; CI runs on this push).
+- Next: none failing. Owner installs the skill and field-tests it; repos
+  still private — going public is the owner's call.
+
 ## 2026-07-03 — session 2
 
 - Branch: `m5-ci-gate` (PR #2); PR #1 (v1, M0–M4) merged to master by owner.

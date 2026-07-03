@@ -32,6 +32,14 @@ Then, in the repo you want to plan: ask Claude to *"plan this project with
 the harness-planning skill"*. It will interview you, write PRODUCT.md and
 FEATURES.json, and scaffold the whole harness from the templates.
 
+## Quickstart — template repository
+
+Prefer starting a project from a ready-made scaffold? Instantiate
+[agent-harness-template](https://github.com/SedyBenoitPeace/agent-harness-template)
+(*Use this template* on GitHub), open it with any agent, and say *"Read
+AGENTS.md and follow its initialization instructions."* The template mirrors
+`skill/harness-planning/templates/` — this repo stays the canonical source.
+
 ## Quickstart — any other agent
 
 You need exactly one file:

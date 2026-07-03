@@ -6,7 +6,8 @@
     "2": "harness-protocol.md (agent-neutral operating manual)",
     "3": "Claude skill front-end (SKILL.md)",
     "4": "Release: README + acceptance test",
-    "5": "CI enforcement (mechanical invariants)"
+    "5": "CI enforcement (mechanical invariants)",
+    "6": "Template repository (option C)"
   },
   "features": [
     {
@@ -104,6 +105,14 @@
       "status": "passing",
       "verify": "gh run list --workflow=gate.yml shows a successful run for the head SHA (proven: run 28664106358 green on ddaad6c, PR #2)",
       "notes": "Entry lands one commit after the workflow: its proof (a green CI run) only exists after a push. See plan decision log."
+    },
+    {
+      "id": "M6-001",
+      "milestone": 6,
+      "title": "Standalone template repo (agent-harness-template) extracted from templates/",
+      "status": "passing",
+      "verify": "gh repo view SedyBenoitPeace/agent-harness-template --json isTemplate returns true; repo contains AGENTS.md (bootstrap banner), FEATURES.json, PROGRESS.md, docs/agents/harness-protocol.md, scripts/{dev,e2e}.sh at final paths; scaffold passed the parent gate's checks (JSON-after-substitution, shellcheck, AGENTS.md <= 100 lines, no personal paths)",
+      "notes": "Mirror of skill/harness-planning/templates/ at 229bce8; this repo remains canonical. Built as a single root commit on the owner's instruction (no plan/branch/PR phases)."
     }
   ]
 }
