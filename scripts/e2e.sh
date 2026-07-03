@@ -88,4 +88,7 @@ grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-ses
 grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
 grep -q 'ONE feature' "$PROTO" || fail "protocol: one-feature-per-session rule missing"
 
+grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
+grep -qi 'entropy' "$PROTO" || fail "protocol: maintenance section must cover entropy GC"
+
 echo "GATE GREEN"

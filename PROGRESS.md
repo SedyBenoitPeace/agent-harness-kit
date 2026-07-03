@@ -23,5 +23,8 @@ Newest-first session log. One entry per working session. Read this (plus
 - Done: M2-002 — §2 Coding-session protocol: context recovery order,
   feature selection, green-baseline rule ("fixing the gate IS the session"),
   test-first loop, close-out checklist, branch discipline, session prompt.
+- Done: M2-003 — §3 Maintenance protocol: entropy GC, doc gardening,
+  FEATURES.json gardening, "what's missing?" rule. Milestone 2 complete —
+  the protocol doc is whole.
 - Gate: green (`bash scripts/e2e.sh`).
-- Next: M2-003 — §3 Maintenance protocol.
+- Next: M3-001 — SKILL.md.

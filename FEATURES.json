@@ -63,6 +63,14 @@
       "status": "passing",
       "verify": "Gate: '## 2. Coding-session protocol' present with 'git log -20' and 'ONE feature' rules",
       "notes": ""
+    },
+    {
+      "id": "M2-003",
+      "milestone": 2,
+      "title": "harness-protocol.md: maintenance protocol section",
+      "status": "passing",
+      "verify": "Gate: '## 3. Maintenance protocol' present and covers entropy GC",
+      "notes": ""
     }
   ]
 }
