@@ -201,7 +201,9 @@ the status `"failing"`, and write exactly where things stand in PROGRESS.md
 - One branch per milestone-chunk of work; small, focused commits within it
   (ideally one per feature).
 - Integrate via pull request, not local fast-forward. After merge, update
-  the local default branch before cutting the next branch.
+  the local default branch before cutting the next branch. If the repo has
+  no remote yet, merge locally with `--no-ff` and note the deviation in
+  PROGRESS.md.
 - Stage explicit paths; avoid `git add -A` (it picks up stray build output).
 
 Copy-paste session prompt:

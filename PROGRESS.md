@@ -33,5 +33,14 @@ Newest-first session log. One entry per working session. Read this (plus
 - Done: M4-001 — full README: what/why, both quickstarts (skill install;
   single-file protocol for any agent), layout, dogfood note. Gate check
   reworded to '.claude/skills' after shellcheck SC2088 (quoted tilde).
+- Done: M4-002 — acceptance test PASSED first try. Scaffolded a slugify
+  sandbox from the templates (1 passing + 2 failing features); a fresh
+  context-free subagent given only "read AGENTS.md and perform one session"
+  picked M0-002, confirmed green baseline, worked test-first, flipped only
+  its feature, appended PROGRESS.md, and logged a --no-ff deviation for the
+  no-remote case. Fed back: protocol §2.6 now covers repos without remotes.
+- Closed out: plan moved to docs/plans/completed/, AGENTS.md state → v1
+  complete. All 11 features (M0–M4) passing.
 - Gate: green (`bash scripts/e2e.sh`).
-- Next: M4-002 — acceptance test (context-free agent, one session).
+- Next: integration into master (awaiting owner's decision on push/PR) and,
+  later, the deferred spec items: template-repo extraction, CI enforcement.

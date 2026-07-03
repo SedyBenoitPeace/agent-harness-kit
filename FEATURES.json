@@ -14,7 +14,7 @@
       "title": "Repo gate (scripts/e2e.sh) + FEATURES.json + PROGRESS.md scaffolded",
       "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 and prints GATE GREEN",
-      "notes": "Backlog for remaining features lives in docs/plans/active/2026-07-03-harness-planning-skill-implementation.md; entries are appended here in the commit that proves them."
+      "notes": "Backlog lived in the implementation plan (now docs/plans/completed/2026-07-03-harness-planning-skill-implementation.md); entries were appended here in the commit that proved them."
     },
     {
       "id": "M0-002",
@@ -87,6 +87,14 @@
       "status": "passing",
       "verify": "Gate: README mentions .claude/skills install and harness-protocol.md pointer",
       "notes": ""
+    },
+    {
+      "id": "M4-002",
+      "milestone": 4,
+      "title": "Acceptance test: context-free agent completes a correct one-feature session",
+      "status": "passing",
+      "verify": "Manual: fresh subagent given only 'read AGENTS.md and do one session' in a template-scaffolded sandbox meets all 4 criteria (right feature, gate ran, legal flip, PROGRESS.md entry)",
+      "notes": "Passed first try (sandbox: slugify, picked M0-002, test-first, --no-ff merge). One doc gap found and fixed: protocol §2.6 now covers the no-remote case."
     }
   ]
 }

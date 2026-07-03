@@ -49,17 +49,17 @@
 - Produces: `bash scripts/e2e.sh` — exit 0 = green, prints `GATE GREEN`; `fail()` helper prints `GATE FAIL: <msg>` and exits 1. All later tasks append checks to this script above the final `echo "GATE GREEN"` line.
 - Produces: `FEATURES.json` with top-level keys `_instructions` (string), `milestones` (object), `features` (array of `{id, milestone, title, status, verify, notes}`).
 
-- [ ] **Step 1: Verify the failing baseline**
+- [x] **Step 1: Verify the failing baseline**
 
 Run: `bash scripts/e2e.sh`
 Expected: FAIL — `bash: scripts/e2e.sh: No such file or directory`
 
-- [ ] **Step 2: Check tool availability**
+- [x] **Step 2: Check tool availability**
 
 Run: `command -v jq && command -v shellcheck`
 If either is missing: `brew install jq shellcheck`
 
-- [ ] **Step 3: Write `scripts/e2e.sh`**
+- [x] **Step 3: Write `scripts/e2e.sh`**
 
 ```bash
 #!/usr/bin/env bash
@@ -102,7 +102,7 @@ shellcheck scripts/*.sh
 echo "GATE GREEN"
 ```
 
-- [ ] **Step 4: Write `FEATURES.json`**
+- [x] **Step 4: Write `FEATURES.json`**
 
 The `_instructions` string is the spec §5 text verbatim. Milestones are declared upfront (they are not `failing` entries); only the feature this commit proves is present.
 
@@ -129,7 +129,7 @@ The `_instructions` string is the spec §5 text verbatim. Milestones are declare
 }
 ```
 
-- [ ] **Step 5: Write `PROGRESS.md`**
+- [x] **Step 5: Write `PROGRESS.md`**
 
 ```markdown
 # PROGRESS
@@ -145,12 +145,12 @@ Newest-first session log. One entry per working session. Read this (plus
 - Next: M0-002 — LICENSE, .gitignore, README stub, AGENTS.md refresh.
 ```
 
-- [ ] **Step 6: Make executable and run the gate**
+- [x] **Step 6: Make executable and run the gate**
 
 Run: `chmod +x scripts/e2e.sh && bash scripts/e2e.sh`
 Expected: `GATE GREEN`, exit 0
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/e2e.sh FEATURES.json PROGRESS.md
@@ -173,7 +173,7 @@ git commit -m "feat(M0-001): repo gate + FEATURES.json + PROGRESS.md"
 - Consumes: `scripts/e2e.sh` gate from Task 1.
 - Produces: `README.md` with a `## Status` line Task 10 will replace.
 
-- [ ] **Step 1: Add the failing gate check**
+- [x] **Step 1: Add the failing gate check**
 
 Append to `scripts/e2e.sh` above `echo "GATE GREEN"`:
 
@@ -188,7 +188,7 @@ Append to `scripts/e2e.sh` above `echo "GATE GREEN"`:
 Run: `bash scripts/e2e.sh`
 Expected: `GATE FAIL: LICENSE missing or not MIT`
 
-- [ ] **Step 2: Write `LICENSE`** — standard MIT text, header lines:
+- [x] **Step 2: Write `LICENSE`** — standard MIT text, header lines:
 
 ```
 MIT License
@@ -198,7 +198,7 @@ Copyright (c) 2026 Stefano Rifici
 
 (then the canonical MIT permission/warranty paragraphs, unmodified)
 
-- [ ] **Step 3: Write `.gitignore`**
+- [x] **Step 3: Write `.gitignore`**
 
 ```gitignore
 .DS_Store
@@ -210,7 +210,7 @@ Thumbs.db
 .claude/settings.local.json
 ```
 
-- [ ] **Step 4: Write `README.md` stub**
+- [x] **Step 4: Write `README.md` stub**
 
 ```markdown
 # harness-planning
@@ -232,7 +232,7 @@ built with its own harness.
 MIT
 ```
 
-- [ ] **Step 5: Refresh `AGENTS.md`**
+- [x] **Step 5: Refresh `AGENTS.md`**
 
 Replace the "State" and "Next action" content (spec pointer stays):
 
@@ -266,12 +266,12 @@ feature to FEATURES.json as passing in the same commit → PROGRESS.md entry.
 - Local branches only for now — no remotes/PRs until the owner says so.
 ```
 
-- [ ] **Step 6: Run the gate**
+- [x] **Step 6: Run the gate**
 
 Run: `bash scripts/e2e.sh`
 Expected: `GATE GREEN`
 
-- [ ] **Step 7: Append M0-002 to `FEATURES.json`, update `PROGRESS.md`, commit**
+- [x] **Step 7: Append M0-002 to `FEATURES.json`, update `PROGRESS.md`, commit**
 
 New feature entry:
 
@@ -304,7 +304,7 @@ git commit -m "feat(M0-002): open-source hygiene (LICENSE, .gitignore, README st
 - Produces: `TMPL_DIR="skill/harness-planning/templates"` shell variable in the gate — later template tasks reuse it.
 - Produces: placeholder convention `{{UPPER_SNAKE_CASE}}` — all templates use it; the gate substitutes with regex `{{[A-Za-z0-9_]*}}`.
 
-- [ ] **Step 1: Add the failing gate check**
+- [x] **Step 1: Add the failing gate check**
 
 Append to `scripts/e2e.sh` above `echo "GATE GREEN"`:
 
@@ -325,7 +325,7 @@ grep -q '{{' "$TMPL_DIR/PROGRESS.md.tmpl" || fail "PROGRESS.md.tmpl has no {{pla
 
 Run: `bash scripts/e2e.sh` — Expected: `GATE FAIL` (template missing)
 
-- [ ] **Step 2: Write `FEATURES.json.tmpl`**
+- [x] **Step 2: Write `FEATURES.json.tmpl`**
 
 Same `_instructions` string as this repo's FEATURES.json (spec §5 verbatim):
 
@@ -349,7 +349,7 @@ Same `_instructions` string as this repo's FEATURES.json (spec §5 verbatim):
 }
 ```
 
-- [ ] **Step 3: Write `PROGRESS.md.tmpl`**
+- [x] **Step 3: Write `PROGRESS.md.tmpl`**
 
 ```markdown
 # PROGRESS
@@ -366,9 +366,9 @@ every session; append an entry before ending one.
 - Next: M0-001 — {{FIRST_FEATURE_TITLE}}
 ```
 
-- [ ] **Step 4: Run gate** — Expected: `GATE GREEN`
+- [x] **Step 4: Run gate** — Expected: `GATE GREEN`
 
-- [ ] **Step 5: Append M1-001 (passing) to FEATURES.json, PROGRESS.md entry, commit**
+- [x] **Step 5: Append M1-001 (passing) to FEATURES.json, PROGRESS.md entry, commit**
 
 ```json
 {
@@ -399,7 +399,7 @@ git commit -m "feat(M1-001): FEATURES.json and PROGRESS.md templates"
 - Consumes: `TMPL_DIR` gate variable (Task 3).
 - Produces: `AGENTS.md.tmpl` referencing `docs/agents/harness-protocol.md` — the path where the skill copies the protocol doc into target repos (Tasks 6–9 depend on this exact path).
 
-- [ ] **Step 1: Add the failing gate check** (above `echo "GATE GREEN"`):
+- [x] **Step 1: Add the failing gate check** (above `echo "GATE GREEN"`):
 
 ```bash
 # AGENTS.md.tmpl: map-not-encyclopedia, with adaptation headroom
@@ -415,7 +415,7 @@ grep -q 'docs/agents/harness-protocol.md' "$TMPL_DIR/AGENTS.md.tmpl" \
 
 Run: `bash scripts/e2e.sh` — Expected: `GATE FAIL: AGENTS.md.tmpl missing`
 
-- [ ] **Step 2: Write `AGENTS.md.tmpl`** (complete content):
+- [x] **Step 2: Write `AGENTS.md.tmpl`** (complete content):
 
 ```markdown
 # AGENTS.md — {{PROJECT_NAME}}
@@ -460,15 +460,15 @@ first session. This file is only the map.
 {{PROJECT_SPECIFIC_SECTIONS}}
 ```
 
-- [ ] **Step 3: Write `pointer.md.tmpl`**:
+- [x] **Step 3: Write `pointer.md.tmpl`**:
 
 ```markdown
 See [AGENTS.md](AGENTS.md) — the single agent entry point for this repository.
 ```
 
-- [ ] **Step 4: Run gate** — Expected: `GATE GREEN`
+- [x] **Step 4: Run gate** — Expected: `GATE GREEN`
 
-- [ ] **Step 5: Append M1-002 (passing), PROGRESS.md entry, commit**
+- [x] **Step 5: Append M1-002 (passing), PROGRESS.md entry, commit**
 
 ```json
 {
@@ -499,7 +499,7 @@ git commit -m "feat(M1-002): AGENTS.md and pointer templates"
 - Consumes: `TMPL_DIR`, `{{UPPER_SNAKE_CASE}}` placeholder convention.
 - Produces: script templates that pass shellcheck after placeholder substitution (placeholders sit on their own command lines so substitution yields runnable shell).
 
-- [ ] **Step 1: Add the failing gate check** (above `echo "GATE GREEN"`):
+- [x] **Step 1: Add the failing gate check** (above `echo "GATE GREEN"`):
 
 ```bash
 # script templates: must be clean shell once placeholders are substituted
@@ -517,7 +517,7 @@ done
 
 Run: `bash scripts/e2e.sh` — Expected: `GATE FAIL: no *.sh.tmpl templates found`
 
-- [ ] **Step 2: Write `dev.sh.tmpl`**:
+- [x] **Step 2: Write `dev.sh.tmpl`**:
 
 ```bash
 #!/usr/bin/env bash
@@ -532,7 +532,7 @@ cd "$(dirname "$0")/.."
 {{DEV_BOOT_COMMAND}}
 ```
 
-- [ ] **Step 3: Write `e2e.sh.tmpl`**:
+- [x] **Step 3: Write `e2e.sh.tmpl`**:
 
 ```bash
 #!/usr/bin/env bash
@@ -552,9 +552,9 @@ cd "$(dirname "$0")/.."
 echo "GATE GREEN"
 ```
 
-- [ ] **Step 4: Run gate** — Expected: `GATE GREEN`
+- [x] **Step 4: Run gate** — Expected: `GATE GREEN`
 
-- [ ] **Step 5: Append M1-003 (passing), PROGRESS.md entry, commit**
+- [x] **Step 5: Append M1-003 (passing), PROGRESS.md entry, commit**
 
 ```json
 {
@@ -586,7 +586,7 @@ git commit -m "feat(M1-003): dev.sh and e2e.sh script templates"
 - Produces: `harness-protocol.md` with top-level heading structure `## 1. Planning protocol`, `## 2. Coding-session protocol`, `## 3. Maintenance protocol` (Tasks 7–8 append §2/§3; Task 9's SKILL.md references this file by path).
 - Constraint: plain markdown, **zero Claude-isms** (no "Claude", no skill/tool names) — usable via Codex AGENTS.md, Cursor rules, or pasted into any chat model.
 
-- [ ] **Step 1: Add the failing gate check** (above `echo "GATE GREEN"`):
+- [x] **Step 1: Add the failing gate check** (above `echo "GATE GREEN"`):
 
 ```bash
 # protocol doc: exists, has the planning section, no Claude-isms
@@ -600,7 +600,7 @@ grep -qi 'verify' "$PROTO" || fail "protocol: planning section never teaches the
 
 Run: `bash scripts/e2e.sh` — Expected: `GATE FAIL: harness-protocol.md missing`
 
-- [ ] **Step 2: Write the file** — header + §1 complete; §2/§3 headings present as stubs so the doc's shape is stable (their gate checks land in Tasks 7–8):
+- [x] **Step 2: Write the file** — header + §1 complete; §2/§3 headings present as stubs so the doc's shape is stable (their gate checks land in Tasks 7–8):
 
 Required structure and content of §1 (write full prose for each element; this is the checklist, not the text):
 
@@ -641,9 +641,9 @@ harness itself)
 (placeholder sentence — replaced by Task 8)
 ```
 
-- [ ] **Step 3: Run gate** — Expected: `GATE GREEN`
+- [x] **Step 3: Run gate** — Expected: `GATE GREEN`
 
-- [ ] **Step 4: Append M2-001 (passing), PROGRESS.md entry, commit**
+- [x] **Step 4: Append M2-001 (passing), PROGRESS.md entry, commit**
 
 ```json
 {
@@ -669,7 +669,7 @@ git commit -m "feat(M2-001): protocol doc with planning section"
 - Modify: `skill/harness-planning/templates/harness-protocol.md`
 - Modify: `scripts/e2e.sh`, `FEATURES.json`, `PROGRESS.md`
 
-- [ ] **Step 1: Add the failing gate check**:
+- [x] **Step 1: Add the failing gate check**:
 
 ```bash
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
@@ -679,7 +679,7 @@ grep -q 'ONE feature' "$PROTO" || fail "protocol: one-feature-per-session rule m
 
 Run: `bash scripts/e2e.sh` — Expected: FAIL (stub section has no `git log -20`)
 
-- [ ] **Step 2: Replace the §2 stub with the full section.** Required content (write full prose; spec §6.2 is the source):
+- [x] **Step 2: Replace the §2 stub with the full section.** Required content (write full prose; spec §6.2 is the source):
 
 - Context recovery: read `git log -20`, `PROGRESS.md`, `FEATURES.json` — in that order, before anything else.
 - Feature selection: lowest milestone, then lowest id, among `failing`; skip `deferred`/`superseded`; work exactly ONE feature per session.
@@ -693,9 +693,9 @@ Run: `bash scripts/e2e.sh` — Expected: FAIL (stub section has no `git log -20`
   perform exactly one coding session.
   ```
 
-- [ ] **Step 3: Run gate** — Expected: `GATE GREEN`
+- [x] **Step 3: Run gate** — Expected: `GATE GREEN`
 
-- [ ] **Step 4: Append M2-002 (passing), PROGRESS.md entry, commit**
+- [x] **Step 4: Append M2-002 (passing), PROGRESS.md entry, commit**
 
 ```json
 {
@@ -721,7 +721,7 @@ git commit -m "feat(M2-002): protocol coding-session section"
 - Modify: `skill/harness-planning/templates/harness-protocol.md`
 - Modify: `scripts/e2e.sh`, `FEATURES.json`, `PROGRESS.md`
 
-- [ ] **Step 1: Add the failing gate check**:
+- [x] **Step 1: Add the failing gate check**:
 
 ```bash
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
@@ -730,7 +730,7 @@ grep -qi 'entropy' "$PROTO" || fail "protocol: maintenance section must cover en
 
 Run: `bash scripts/e2e.sh` — Expected: FAIL
 
-- [ ] **Step 2: Replace the §3 stub with the full section.** Required content (from spec §6.3, OpenAI pillar):
+- [x] **Step 2: Replace the §3 stub with the full section.** Required content (from spec §6.3, OpenAI pillar):
 
 - Cadence-based entropy GC: scan for drift from the repo's documented conventions; fix in small, focused cleanup PRs — never big-bang rewrites.
 - Doc gardening: AGENTS.md stays ≤100 lines; stale docs updated or deleted; completed plans moved `active/` → `completed/`.
@@ -738,9 +738,9 @@ Run: `bash scripts/e2e.sh` — Expected: FAIL
 - "What's missing?" rule: when a session fails, the fix is usually a missing tool, guardrail, or doc — feed it back into the repo.
 - A copy-paste maintenance prompt block, same style as §2's.
 
-- [ ] **Step 3: Run gate** — Expected: `GATE GREEN`
+- [x] **Step 3: Run gate** — Expected: `GATE GREEN`
 
-- [ ] **Step 4: Append M2-003 (passing), PROGRESS.md entry, commit**
+- [x] **Step 4: Append M2-003 (passing), PROGRESS.md entry, commit**
 
 ```json
 {
@@ -770,7 +770,7 @@ git commit -m "feat(M2-003): protocol maintenance section"
 - Consumes: every template from Tasks 3–8 (SKILL.md references them by relative path `templates/<name>`).
 - Constraint: SKILL.md is **thin orchestration** — all substance stays in the templates; the skill's core instruction is "copy and adapt templates; never improvise the schema".
 
-- [ ] **Step 1: Add the failing gate check**:
+- [x] **Step 1: Add the failing gate check**:
 
 ```bash
 # SKILL.md: valid frontmatter, references only templates that exist
@@ -786,7 +786,7 @@ done < <(grep -o 'templates/[A-Za-z0-9._-]*' "$SKILL" | sort -u)
 
 Run: `bash scripts/e2e.sh` — Expected: `GATE FAIL: SKILL.md missing`
 
-- [ ] **Step 2: Write `SKILL.md`.** Required structure:
+- [x] **Step 2: Write `SKILL.md`.** Required structure:
 
 ```markdown
 ---
@@ -819,9 +819,9 @@ description: Use when planning a new application or feature-set, or when a
  | "Existing AGENTS.md is messy, I'll rewrite it" | Retrofit extends and links; it never clobbers. |)
 ```
 
-- [ ] **Step 3: Run gate** — Expected: `GATE GREEN`
+- [x] **Step 3: Run gate** — Expected: `GATE GREEN`
 
-- [ ] **Step 4: Append M3-001 (passing), PROGRESS.md entry, commit**
+- [x] **Step 4: Append M3-001 (passing), PROGRESS.md entry, commit**
 
 ```json
 {
@@ -846,7 +846,7 @@ git commit -m "feat(M3-001): SKILL.md orchestration layer"
 **Files:**
 - Modify: `README.md`, `scripts/e2e.sh`, `FEATURES.json`, `PROGRESS.md`
 
-- [ ] **Step 1: Add the failing gate check**:
+- [x] **Step 1: Add the failing gate check**:
 
 ```bash
 # README: both quickstarts present
@@ -856,11 +856,11 @@ grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart m
 
 Run: `bash scripts/e2e.sh` — Expected: FAIL
 
-- [ ] **Step 2: Complete `README.md`.** Required sections (spec §9): what the harness approach is (link both pillars); **Quickstart — Claude Code users**: copy/symlink `skill/harness-planning/` into `~/.claude/skills/harness-planning`; **Quickstart — any other agent**: point your agent at `skill/harness-planning/templates/harness-protocol.md` ("read this and run section 1"); repository layout; dogfood note ("this repo is built with its own harness — see FEATURES.json / PROGRESS.md"); license (MIT). Replace the stub's "Status: under construction" section.
+- [x] **Step 2: Complete `README.md`.** Required sections (spec §9): what the harness approach is (link both pillars); **Quickstart — Claude Code users**: copy/symlink `skill/harness-planning/` into `~/.claude/skills/harness-planning`; **Quickstart — any other agent**: point your agent at `skill/harness-planning/templates/harness-protocol.md` ("read this and run section 1"); repository layout; dogfood note ("this repo is built with its own harness — see FEATURES.json / PROGRESS.md"); license (MIT). Replace the stub's "Status: under construction" section.
 
-- [ ] **Step 3: Run gate** — Expected: `GATE GREEN`
+- [x] **Step 3: Run gate** — Expected: `GATE GREEN`
 
-- [ ] **Step 4: Append M4-001 (passing), PROGRESS.md entry, commit**
+- [x] **Step 4: Append M4-001 (passing), PROGRESS.md entry, commit**
 
 ```json
 {
@@ -888,17 +888,17 @@ git commit -m "feat(M4-001): full README"
 
 This is the spec's acceptance test: *"hand a scaffolded repo to a non-Claude agent whose only instruction is 'read AGENTS.md and do one session' — it must complete a correct one-feature session."* We approximate "non-Claude" with a fresh subagent that receives ONLY that instruction (no skill, no spec, no conversation context).
 
-- [ ] **Step 1: Scaffold a sandbox by hand from the templates** — in the scratchpad, create a tiny fake project (e.g. a bash utility with one function), `git init`, copy/substitute every template exactly as SKILL.md step 3 prescribes, add 2–3 FEATURES.json entries with real `verify` criteria (one `passing`, two `failing`), working `scripts/e2e.sh` (e.g. runs a bats/bash test file), commit.
+- [x] **Step 1: Scaffold a sandbox by hand from the templates** — in the scratchpad, create a tiny fake project (e.g. a bash utility with one function), `git init`, copy/substitute every template exactly as SKILL.md step 3 prescribes, add 2–3 FEATURES.json entries with real `verify` criteria (one `passing`, two `failing`), working `scripts/e2e.sh` (e.g. runs a bats/bash test file), commit.
 
-- [ ] **Step 2: Verify the sandbox gate is green**: `bash scripts/e2e.sh` in the sandbox → exit 0.
+- [x] **Step 2: Verify the sandbox gate is green**: `bash scripts/e2e.sh` in the sandbox → exit 0.
 
-- [ ] **Step 3: Dispatch a fresh general-purpose subagent** with exactly this prompt (plus the sandbox path):
+- [x] **Step 3: Dispatch a fresh general-purpose subagent** with exactly this prompt (plus the sandbox path):
 
 ```
 You are working in <sandbox path>. Read AGENTS.md and perform one session.
 ```
 
-- [ ] **Step 4: Grade the result against the four criteria** (all must hold):
+- [x] **Step 4: Grade the result against the four criteria** (all must hold):
   1. It picked the correct feature (lowest milestone, lowest id, `failing`).
   2. It ran the gate before and after.
   3. It flipped only that feature's status, and only with `verify` satisfied.
@@ -906,7 +906,7 @@ You are working in <sandbox path>. Read AGENTS.md and perform one session.
 
 If any criterion fails: the fix is a template/protocol wording change (what was ambiguous?), not a re-roll. Apply it, re-run the test, and log the change in this plan's Decision log.
 
-- [ ] **Step 5: Append M4-002 to FEATURES.json, record the outcome, commit**
+- [x] **Step 5: Append M4-002 to FEATURES.json, record the outcome, commit**
 
 ```json
 {
@@ -924,7 +924,7 @@ git add FEATURES.json PROGRESS.md
 git commit -m "feat(M4-002): acceptance test passed by context-free agent"
 ```
 
-- [ ] **Step 6: Close out the plan** — move this file to `docs/plans/completed/`, update AGENTS.md state line, commit. Integration into `master` waits for the user's go-ahead (local-only constraint).
+- [x] **Step 6: Close out the plan** — move this file to `docs/plans/completed/`, update AGENTS.md state line, commit. Integration into `master` waits for the user's go-ahead (local-only constraint).
 
 ---
 
@@ -934,3 +934,5 @@ git commit -m "feat(M4-002): acceptance test passed by context-free agent"
 - 2026-07-03 — Per the owner's harness rules, FEATURES.json entries are appended in the commit that proves them passing; the full backlog lives in this plan, not as pre-committed `failing` entries.
 - 2026-07-03 — Template AGENTS.md budget set at 80 lines (below the 100 cap) to leave adaptation headroom for target repos.
 - 2026-07-03 — `PRODUCT.md.tmpl` deliberately not shipped: spec §7's template list omits it; PRODUCT.md content is project-specific and produced by the protocol's interview (§1.2). YAGNI.
+- 2026-07-03 — Gate fixes discovered by running it: LICENSE check rewritten (shellcheck SC2015); SKILL.md template-reference regex needed `+` not `*` (bare `templates/` in prose matched); README tilde pattern → `.claude/skills` (SC2088). The agent-neutrality check caught the protocol's layout diagram naming a vendor entry-file — reworded.
+- 2026-07-03 — Acceptance test (M4-002) PASSED first try: fresh context-free subagent in a slugify sandbox picked M0-002 (lowest failing), confirmed green baseline, worked test-first, flipped only its feature, appended PROGRESS.md, and handled the no-remote case with a logged `--no-ff` deviation. Fed back: protocol §2.6 now documents the no-remote fallback.
