@@ -148,7 +148,68 @@ protocol for this repository. Interview me before writing anything.
 
 ## 2. Coding-session protocol
 
-Completed in the next revision.
+Run this every working session. A session delivers exactly **ONE feature**,
+proven and committed. Resist the urge to batch — the one-feature discipline
+is what keeps every session recoverable and every commit reviewable.
+
+### 2.1 Recover context
+
+In this order, before anything else:
+
+1. `git log -20` — what actually happened recently.
+2. `PROGRESS.md` — what the last session did, and what it said comes next.
+3. `FEATURES.json` — read `_instructions`, then the feature list.
+
+Trust the repo over your assumptions. If PROGRESS.md and the git log
+disagree, the git log wins; note the discrepancy in your session entry.
+
+### 2.2 Pick the feature
+
+Among features with `status: "failing"`: lowest milestone, then lowest id.
+Skip `deferred` and `superseded`. Do not pick by interest or apparent ease —
+the ordering is the plan.
+
+### 2.3 Confirm a green baseline
+
+Run `bash scripts/e2e.sh` before touching code. If it is red, **fixing the
+gate is the session** — do that instead, and log it as such. Never build on
+a red baseline: you can't tell your breakage from inherited breakage.
+
+### 2.4 Implement, test-first
+
+Write the test (or set up the manual check) that proves the feature's
+`verify` criterion. Watch it fail. Implement the minimum that makes it pass.
+Watch it pass. Then re-run the full gate.
+
+### 2.5 Close out
+
+1. Re-run `bash scripts/e2e.sh` — must be green.
+2. Flip your feature's status to `"passing"` — only yours, and only because
+   its `verify` criterion is now demonstrably satisfied. Never touch other
+   entries; append notes if something surprising happened.
+3. Commit with a message naming the feature id.
+4. Append a PROGRESS.md entry at the top: branch, what was done, gate
+   status, and the next feature.
+
+If the feature is not done when you must stop: commit what is safe, leave
+the status `"failing"`, and write exactly where things stand in PROGRESS.md
+— the next session starts from that note.
+
+### 2.6 Branch discipline
+
+- Branch off the default branch. Never branch off another feature branch.
+- One branch per milestone-chunk of work; small, focused commits within it
+  (ideally one per feature).
+- Integrate via pull request, not local fast-forward. After merge, update
+  the local default branch before cutting the next branch.
+- Stage explicit paths; avoid `git add -A` (it picks up stray build output).
+
+Copy-paste session prompt:
+
+```
+Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and
+perform exactly one coding session.
+```
 
 ## 3. Maintenance protocol
 

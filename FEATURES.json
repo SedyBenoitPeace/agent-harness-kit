@@ -55,6 +55,14 @@
       "status": "passing",
       "verify": "Gate: doc exists with '## 1. Planning protocol', mentions PRODUCT.md and verify, contains no 'claude' string",
       "notes": "Sections 2 and 3 are stubs until M2-002/M2-003."
+    },
+    {
+      "id": "M2-002",
+      "milestone": 2,
+      "title": "harness-protocol.md: coding-session protocol section",
+      "status": "passing",
+      "verify": "Gate: '## 2. Coding-session protocol' present with 'git log -20' and 'ONE feature' rules",
+      "notes": ""
     }
   ]
 }

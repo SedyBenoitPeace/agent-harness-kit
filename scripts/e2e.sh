@@ -84,4 +84,8 @@ grep -q 'PRODUCT\.md' "$PROTO" || fail "protocol: planning section never mention
 grep -qi 'verify' "$PROTO" || fail "protocol: planning section never teaches the verify field"
 ! grep -qi 'claude' "$PROTO" || fail "protocol doc must be agent-neutral (found 'claude')"
 
+grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
+grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
+grep -q 'ONE feature' "$PROTO" || fail "protocol: one-feature-per-session rule missing"
+
 echo "GATE GREEN"

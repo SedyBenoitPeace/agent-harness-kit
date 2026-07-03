@@ -20,5 +20,8 @@ Newest-first session log. One entry per working session. Read this (plus
   milestones, verify-field examples, plan, gate, retrofit rules). Gate
   enforces agent-neutrality (no 'claude' string) — it caught the layout
   diagram mentioning a vendor entry-file by name; wording made neutral.
+- Done: M2-002 — §2 Coding-session protocol: context recovery order,
+  feature selection, green-baseline rule ("fixing the gate IS the session"),
+  test-first loop, close-out checklist, branch discipline, session prompt.
 - Gate: green (`bash scripts/e2e.sh`).
-- Next: M2-002 — §2 Coding-session protocol.
+- Next: M2-003 — §3 Maintenance protocol.
