@@ -31,6 +31,14 @@
       "status": "passing",
       "verify": "Gate: FEATURES.json.tmpl parses as JSON after {{placeholder}} substitution; both templates contain placeholders",
       "notes": ""
+    },
+    {
+      "id": "M1-002",
+      "milestone": 1,
+      "title": "AGENTS.md.tmpl + pointer.md.tmpl",
+      "status": "passing",
+      "verify": "Gate: AGENTS.md.tmpl <= 80 lines and references docs/agents/harness-protocol.md; pointer.md.tmpl <= 5 lines",
+      "notes": ""
     }
   ]
 }

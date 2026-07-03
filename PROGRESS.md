@@ -11,5 +11,7 @@ Newest-first session log. One entry per working session. Read this (plus
   Gate fix along the way: LICENSE check rewritten to avoid shellcheck SC2015.
 - Done: M1-001 — FEATURES.json.tmpl + PROGRESS.md.tmpl; gate now validates
   templates (JSON-after-substitution, placeholder presence).
+- Done: M1-002 — AGENTS.md.tmpl (40 lines, map + session loop + rules) and
+  pointer.md.tmpl (one-liner for CLAUDE.md/GEMINI.md).
 - Gate: green (`bash scripts/e2e.sh`).
-- Next: M1-002 — AGENTS.md.tmpl + pointer.md.tmpl.
+- Next: M1-003 — dev.sh.tmpl + e2e.sh.tmpl.
