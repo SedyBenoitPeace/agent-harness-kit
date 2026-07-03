@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Gate for the harness-planning-skill repo. Exit 0 = green.
+# Run at the start (baseline) and end (proof) of every session.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+fail() { echo "GATE FAIL: $*" >&2; exit 1; }
+
+command -v jq >/dev/null || fail "jq is required (brew install jq)"
+command -v shellcheck >/dev/null || fail "shellcheck is required (brew install shellcheck)"
+
+# --- repo harness ---------------------------------------------------------
+
+# FEATURES.json: valid JSON with the required top-level shape
+jq -e '(.milestones | type == "object") and (.features | type == "array")' \
+  FEATURES.json >/dev/null 2>&1 \
+  || fail "FEATURES.json: invalid JSON or missing milestones/features"
+
+# every feature entry is complete and uses a legal status
+jq -e '[ .features[]
+         | select( ((.id? // "") == "") or ((.title? // "") == "")
+                   or ((.verify? // "") == "")
+                   or ((.status? // "") | IN("failing","passing","deferred","superseded") | not) )
+       ] | length == 0' FEATURES.json >/dev/null \
+  || fail "FEATURES.json: entry missing id/title/verify or has illegal status"
+
+# AGENTS.md stays a table of contents
+[ "$(wc -l < AGENTS.md)" -le 100 ] || fail "AGENTS.md exceeds 100 lines"
+
+# no personal/local paths leaked into tracked files
+if git grep -nIE '/Users/[a-z]|/home/[a-z]' -- ':!scripts/e2e.sh' >/dev/null 2>&1; then
+  fail "personal path leaked into a tracked file"
+fi
+
+# this repo's scripts are clean shell
+shellcheck scripts/*.sh
+
+echo "GATE GREEN"

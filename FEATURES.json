@@ -1,0 +1,20 @@
+{
+  "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
+  "milestones": {
+    "0": "Harness scaffolding & open-source hygiene",
+    "1": "Portable templates",
+    "2": "harness-protocol.md (agent-neutral operating manual)",
+    "3": "Claude skill front-end (SKILL.md)",
+    "4": "Release: README + acceptance test"
+  },
+  "features": [
+    {
+      "id": "M0-001",
+      "milestone": 0,
+      "title": "Repo gate (scripts/e2e.sh) + FEATURES.json + PROGRESS.md scaffolded",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 and prints GATE GREEN",
+      "notes": "Backlog for remaining features lives in docs/plans/active/2026-07-03-harness-planning-skill-implementation.md; entries are appended here in the commit that proves them."
+    }
+  ]
+}
