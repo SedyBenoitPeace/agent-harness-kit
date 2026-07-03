@@ -35,4 +35,10 @@ fi
 # this repo's scripts are clean shell
 shellcheck scripts/*.sh
 
+# --- open-source hygiene --------------------------------------------------
+
+grep -q "MIT License" LICENSE 2>/dev/null || fail "LICENSE missing or not MIT"
+[ -f .gitignore ] || fail ".gitignore missing"
+[ -f README.md ] || fail "README.md missing"
+
 echo "GATE GREEN"

@@ -15,6 +15,14 @@
       "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 and prints GATE GREEN",
       "notes": "Backlog for remaining features lives in docs/plans/active/2026-07-03-harness-planning-skill-implementation.md; entries are appended here in the commit that proves them."
+    },
+    {
+      "id": "M0-002",
+      "milestone": 0,
+      "title": "Open-source hygiene: MIT LICENSE, .gitignore, README stub, AGENTS.md refresh",
+      "status": "passing",
+      "verify": "Gate checks LICENSE (MIT), .gitignore, README.md exist; AGENTS.md <= 100 lines; no personal paths tracked",
+      "notes": ""
     }
   ]
 }
