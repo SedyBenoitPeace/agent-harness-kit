@@ -64,4 +64,16 @@ grep -q 'docs/agents/harness-protocol.md' "$TMPL_DIR/AGENTS.md.tmpl" \
 [ -f "$TMPL_DIR/pointer.md.tmpl" ] || fail "pointer.md.tmpl missing"
 [ "$(wc -l < "$TMPL_DIR/pointer.md.tmpl")" -le 5 ] || fail "pointer.md.tmpl must stay a one-line pointer"
 
+# script templates: must be clean shell once placeholders are substituted
+found_sh_tmpl=0
+for t in "$TMPL_DIR"/*.sh.tmpl; do
+  [ -e "$t" ] || continue
+  found_sh_tmpl=1
+  sub="$(mktemp)"
+  sed 's/{{[A-Za-z0-9_]*}}/true/g' "$t" > "$sub"
+  shellcheck -s bash "$sub" || fail "$(basename "$t") fails shellcheck after substitution"
+  rm -f "$sub"
+done
+[ "$found_sh_tmpl" -eq 1 ] || fail "no *.sh.tmpl templates found"
+
 echo "GATE GREEN"

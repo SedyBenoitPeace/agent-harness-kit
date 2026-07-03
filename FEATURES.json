@@ -39,6 +39,14 @@
       "status": "passing",
       "verify": "Gate: AGENTS.md.tmpl <= 80 lines and references docs/agents/harness-protocol.md; pointer.md.tmpl <= 5 lines",
       "notes": ""
+    },
+    {
+      "id": "M1-003",
+      "milestone": 1,
+      "title": "dev.sh.tmpl + e2e.sh.tmpl script templates",
+      "status": "passing",
+      "verify": "Gate: every *.sh.tmpl passes shellcheck after {{placeholder}} substitution",
+      "notes": ""
     }
   ]
 }

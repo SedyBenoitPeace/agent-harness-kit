@@ -13,5 +13,7 @@ Newest-first session log. One entry per working session. Read this (plus
   templates (JSON-after-substitution, placeholder presence).
 - Done: M1-002 — AGENTS.md.tmpl (40 lines, map + session loop + rules) and
   pointer.md.tmpl (one-liner for CLAUDE.md/GEMINI.md).
+- Done: M1-003 — dev.sh.tmpl + e2e.sh.tmpl; gate shellchecks all *.sh.tmpl
+  after substituting {{placeholders}} with `true`. Milestone 1 complete.
 - Gate: green (`bash scripts/e2e.sh`).
-- Next: M1-003 — dev.sh.tmpl + e2e.sh.tmpl.
+- Next: M2-001 — harness-protocol.md §1 Planning protocol.

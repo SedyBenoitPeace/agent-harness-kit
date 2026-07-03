@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Boots the dev environment for {{PROJECT_NAME}}.
+# Adapt the placeholder line to your stack, e.g.:
+#   npm:     npm install && npm run dev
+#   flutter: flutter pub get && flutter run
+#   python:  uv sync && uv run python -m your_package
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+{{DEV_BOOT_COMMAND}}
