@@ -1,0 +1,16 @@
+name: gate
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install gate dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq shellcheck
+      - name: Run the gate
+        run: bash scripts/e2e.sh

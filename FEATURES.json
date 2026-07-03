@@ -5,7 +5,8 @@
     "1": "Portable templates",
     "2": "harness-protocol.md (agent-neutral operating manual)",
     "3": "Claude skill front-end (SKILL.md)",
-    "4": "Release: README + acceptance test"
+    "4": "Release: README + acceptance test",
+    "5": "CI enforcement (mechanical invariants)"
   },
   "features": [
     {
@@ -95,6 +96,14 @@
       "status": "passing",
       "verify": "Manual: fresh subagent given only 'read AGENTS.md and do one session' in a template-scaffolded sandbox meets all 4 criteria (right feature, gate ran, legal flip, PROGRESS.md entry)",
       "notes": "Passed first try (sandbox: slugify, picked M0-002, test-first, --no-ff merge). One doc gap found and fixed: protocol §2.6 now covers the no-remote case."
+    },
+    {
+      "id": "M5-001",
+      "milestone": 5,
+      "title": "GitHub Actions workflow runs the gate on push to master and on PRs",
+      "status": "passing",
+      "verify": "gh run list --workflow=gate.yml shows a successful run for the head SHA (proven: run 28664106358 green on ddaad6c, PR #2)",
+      "notes": "Entry lands one commit after the workflow: its proof (a green CI run) only exists after a push. See plan decision log."
     }
   ]
 }

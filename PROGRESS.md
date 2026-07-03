@@ -3,6 +3,16 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-03 — session 2
+
+- Branch: `m5-ci-gate` (PR #2); PR #1 (v1, M0–M4) merged to master by owner.
+  Repo published: private, SedyBenoitPeace/harness-planning-skill.
+- Done: M5-001 — `.github/workflows/gate.yml` runs the gate on push to
+  master and on PRs; proven by green Actions run 28664106358 on the PR.
+- Gate: green (locally and in CI).
+- Next: none failing. Remaining deferred spec item: standalone template-repo
+  extraction (option C). Repo is private; going public is the owner's call.
+
 ## 2026-07-03 — session 1
 
 - Branch: `m0-harness-scaffolding`
