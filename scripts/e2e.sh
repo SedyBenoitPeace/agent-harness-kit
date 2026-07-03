@@ -76,4 +76,12 @@ for t in "$TMPL_DIR"/*.sh.tmpl; do
 done
 [ "$found_sh_tmpl" -eq 1 ] || fail "no *.sh.tmpl templates found"
 
+# protocol doc: exists, has the planning section, no Claude-isms
+PROTO="$TMPL_DIR/harness-protocol.md"
+[ -f "$PROTO" ] || fail "harness-protocol.md missing"
+grep -q '^## 1\. Planning protocol' "$PROTO" || fail "protocol: '## 1. Planning protocol' missing"
+grep -q 'PRODUCT\.md' "$PROTO" || fail "protocol: planning section never mentions PRODUCT.md"
+grep -qi 'verify' "$PROTO" || fail "protocol: planning section never teaches the verify field"
+! grep -qi 'claude' "$PROTO" || fail "protocol doc must be agent-neutral (found 'claude')"
+
 echo "GATE GREEN"

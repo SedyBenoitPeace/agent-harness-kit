@@ -47,6 +47,14 @@
       "status": "passing",
       "verify": "Gate: every *.sh.tmpl passes shellcheck after {{placeholder}} substitution",
       "notes": ""
+    },
+    {
+      "id": "M2-001",
+      "milestone": 2,
+      "title": "harness-protocol.md: planning protocol section",
+      "status": "passing",
+      "verify": "Gate: doc exists with '## 1. Planning protocol', mentions PRODUCT.md and verify, contains no 'claude' string",
+      "notes": "Sections 2 and 3 are stubs until M2-002/M2-003."
     }
   ]
 }

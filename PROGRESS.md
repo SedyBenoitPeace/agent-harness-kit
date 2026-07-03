@@ -15,5 +15,10 @@ Newest-first session log. One entry per working session. Read this (plus
   pointer.md.tmpl (one-liner for CLAUDE.md/GEMINI.md).
 - Done: M1-003 — dev.sh.tmpl + e2e.sh.tmpl; gate shellchecks all *.sh.tmpl
   after substituting {{placeholders}} with `true`. Milestone 1 complete.
+- Done: M2-001 — harness-protocol.md created: intro (core principle, pillar
+  links, layout diagram) + full §1 Planning protocol (interview, PRODUCT.md,
+  milestones, verify-field examples, plan, gate, retrofit rules). Gate
+  enforces agent-neutrality (no 'claude' string) — it caught the layout
+  diagram mentioning a vendor entry-file by name; wording made neutral.
 - Gate: green (`bash scripts/e2e.sh`).
-- Next: M2-001 — harness-protocol.md §1 Planning protocol.
+- Next: M2-002 — §2 Coding-session protocol.
