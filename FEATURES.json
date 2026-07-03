@@ -79,6 +79,14 @@
       "status": "passing",
       "verify": "Gate: frontmatter valid (name harness-planning, description present); every templates/ path referenced in SKILL.md exists",
       "notes": ""
+    },
+    {
+      "id": "M4-001",
+      "milestone": 4,
+      "title": "Full README with both quickstarts",
+      "status": "passing",
+      "verify": "Gate: README mentions .claude/skills install and harness-protocol.md pointer",
+      "notes": ""
     }
   ]
 }

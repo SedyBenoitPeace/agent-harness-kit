@@ -30,5 +30,8 @@ Newest-first session log. One entry per working session. Read this (plus
   template→destination copy table, retrofit rules, verify+commit, red-flags
   table. Gate bug found by its own run: template-reference regex allowed
   zero-length matches (bare `templates/` in prose); tightened to `+`.
+- Done: M4-001 — full README: what/why, both quickstarts (skill install;
+  single-file protocol for any agent), layout, dogfood note. Gate check
+  reworded to '.claude/skills' after shellcheck SC2088 (quoted tilde).
 - Gate: green (`bash scripts/e2e.sh`).
-- Next: M4-001 — full README.
+- Next: M4-002 — acceptance test (context-free agent, one session).
