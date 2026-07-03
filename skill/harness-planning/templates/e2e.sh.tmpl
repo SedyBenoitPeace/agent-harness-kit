@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# The gate for {{PROJECT_NAME}}: exit 0 = green.
+# Run at the START of every session (confirm green baseline) and at the END
+# (prove the feature). Keep it fast; keep it honest — a gate that lies is
+# worse than no gate.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+# Tests (adapt to your stack, e.g. "npm test", "flutter test", "pytest")
+{{TEST_COMMAND}}
+
+# Static analysis / linters (e.g. "npm run lint", "dart analyze", "ruff check .")
+{{ANALYZER_COMMAND}}
+
+echo "GATE GREEN"

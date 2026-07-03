@@ -1,0 +1,100 @@
+{
+  "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
+  "milestones": {
+    "0": "Harness scaffolding & open-source hygiene",
+    "1": "Portable templates",
+    "2": "harness-protocol.md (agent-neutral operating manual)",
+    "3": "Claude skill front-end (SKILL.md)",
+    "4": "Release: README + acceptance test"
+  },
+  "features": [
+    {
+      "id": "M0-001",
+      "milestone": 0,
+      "title": "Repo gate (scripts/e2e.sh) + FEATURES.json + PROGRESS.md scaffolded",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 and prints GATE GREEN",
+      "notes": "Backlog lived in the implementation plan (now docs/plans/completed/2026-07-03-harness-planning-skill-implementation.md); entries were appended here in the commit that proved them."
+    },
+    {
+      "id": "M0-002",
+      "milestone": 0,
+      "title": "Open-source hygiene: MIT LICENSE, .gitignore, README stub, AGENTS.md refresh",
+      "status": "passing",
+      "verify": "Gate checks LICENSE (MIT), .gitignore, README.md exist; AGENTS.md <= 100 lines; no personal paths tracked",
+      "notes": ""
+    },
+    {
+      "id": "M1-001",
+      "milestone": 1,
+      "title": "FEATURES.json.tmpl + PROGRESS.md.tmpl",
+      "status": "passing",
+      "verify": "Gate: FEATURES.json.tmpl parses as JSON after {{placeholder}} substitution; both templates contain placeholders",
+      "notes": ""
+    },
+    {
+      "id": "M1-002",
+      "milestone": 1,
+      "title": "AGENTS.md.tmpl + pointer.md.tmpl",
+      "status": "passing",
+      "verify": "Gate: AGENTS.md.tmpl <= 80 lines and references docs/agents/harness-protocol.md; pointer.md.tmpl <= 5 lines",
+      "notes": ""
+    },
+    {
+      "id": "M1-003",
+      "milestone": 1,
+      "title": "dev.sh.tmpl + e2e.sh.tmpl script templates",
+      "status": "passing",
+      "verify": "Gate: every *.sh.tmpl passes shellcheck after {{placeholder}} substitution",
+      "notes": ""
+    },
+    {
+      "id": "M2-001",
+      "milestone": 2,
+      "title": "harness-protocol.md: planning protocol section",
+      "status": "passing",
+      "verify": "Gate: doc exists with '## 1. Planning protocol', mentions PRODUCT.md and verify, contains no 'claude' string",
+      "notes": "Sections 2 and 3 are stubs until M2-002/M2-003."
+    },
+    {
+      "id": "M2-002",
+      "milestone": 2,
+      "title": "harness-protocol.md: coding-session protocol section",
+      "status": "passing",
+      "verify": "Gate: '## 2. Coding-session protocol' present with 'git log -20' and 'ONE feature' rules",
+      "notes": ""
+    },
+    {
+      "id": "M2-003",
+      "milestone": 2,
+      "title": "harness-protocol.md: maintenance protocol section",
+      "status": "passing",
+      "verify": "Gate: '## 3. Maintenance protocol' present and covers entropy GC",
+      "notes": ""
+    },
+    {
+      "id": "M3-001",
+      "milestone": 3,
+      "title": "SKILL.md thin orchestration layer",
+      "status": "passing",
+      "verify": "Gate: frontmatter valid (name harness-planning, description present); every templates/ path referenced in SKILL.md exists",
+      "notes": ""
+    },
+    {
+      "id": "M4-001",
+      "milestone": 4,
+      "title": "Full README with both quickstarts",
+      "status": "passing",
+      "verify": "Gate: README mentions .claude/skills install and harness-protocol.md pointer",
+      "notes": ""
+    },
+    {
+      "id": "M4-002",
+      "milestone": 4,
+      "title": "Acceptance test: context-free agent completes a correct one-feature session",
+      "status": "passing",
+      "verify": "Manual: fresh subagent given only 'read AGENTS.md and do one session' in a template-scaffolded sandbox meets all 4 criteria (right feature, gate ran, legal flip, PROGRESS.md entry)",
+      "notes": "Passed first try (sandbox: slugify, picked M0-002, test-first, --no-ff merge). One doc gap found and fixed: protocol §2.6 now covers the no-remote case."
+    }
+  ]
+}
