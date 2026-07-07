@@ -3,6 +3,14 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-07 — session 5
+
+- Branch: `m8-audit` (PR).
+- Done: M8-001 — check.sh + scripts/test-audit.sh fixture suite, gate-wired.
+- Done: M8-002 — harness-audit SKILL.md (report + offer fix, never auto-fix).
+- Gate: green.
+- Next: M9-001 — PRD/requirements input guidance.
+
 ## 2026-07-07 — session 4
 
 - Branch: `m7-plugin` (PR); repo renamed on GitHub to agent-harness-kit
