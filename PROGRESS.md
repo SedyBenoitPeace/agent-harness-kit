@@ -3,6 +3,15 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-07 — session 4
+
+- Branch: `m7-plugin` (PR); repo renamed on GitHub to agent-harness-kit
+  (local dir intentionally unchanged).
+- Done: M7-001 — skills/harness-setup restructure, gate re-pointed.
+- Done: M7-002 — .claude-plugin manifests; README plugin quickstart.
+- Gate: green.
+- Next: M8-001 — harness-audit checker + fixture tests.
+
 ## 2026-07-03 — session 3
 
 - Branch: `master` (single direct commit — owner waived plan/branch/PR

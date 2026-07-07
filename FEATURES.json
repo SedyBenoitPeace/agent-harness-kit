@@ -7,7 +7,8 @@
     "3": "Claude skill front-end (SKILL.md)",
     "4": "Release: README + acceptance test",
     "5": "CI enforcement (mechanical invariants)",
-    "6": "Template repository (option C)"
+    "6": "Template repository (option C)",
+    "7": "Plugin packaging (agent-harness-kit)"
   },
   "features": [
     {
@@ -113,6 +114,22 @@
       "status": "passing",
       "verify": "gh repo view SedyBenoitPeace/agent-harness-template --json isTemplate returns true; repo contains AGENTS.md (bootstrap banner), FEATURES.json, PROGRESS.md, docs/agents/harness-protocol.md, scripts/{dev,e2e}.sh at final paths; scaffold passed the parent gate's checks (JSON-after-substitution, shellcheck, AGENTS.md <= 100 lines, no personal paths)",
       "notes": "Mirror of skill/harness-planning/templates/ at 229bce8; this repo remains canonical. Built as a single root commit on the owner's instruction (no plan/branch/PR phases)."
+    },
+    {
+      "id": "M7-001",
+      "milestone": 7,
+      "title": "Repo renamed to agent-harness-kit; skill/ -> skills/harness-setup restructure",
+      "status": "passing",
+      "verify": "gh repo view SedyBenoitPeace/agent-harness-kit --json name -q .name prints agent-harness-kit; bash scripts/e2e.sh exits 0 with skills/harness-setup paths and 'name: harness-setup' frontmatter check",
+      "notes": "Local working directory intentionally NOT renamed (session history is keyed by path); only GitHub + origin changed."
+    },
+    {
+      "id": "M7-002",
+      "milestone": 7,
+      "title": "Plugin packaging: plugin.json + marketplace.json + README install story",
+      "status": "passing",
+      "verify": "Gate: both manifests parse with name agent-harness-kit and source ./; README contains '/plugin marketplace add'. Manual (Task 10): local marketplace add + plugin install exposes harness-setup",
+      "notes": ""
     }
   ]
 }
