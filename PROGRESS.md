@@ -3,6 +3,19 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-07 — session 6
+
+- Branch: `m9-final` (single consolidated PR — owner asked to pack M9 and
+  plan close-out together for time).
+- Done: M9-001 — PRD/requirements input documented in README, protocol
+  §1.1, and harness-setup SKILL.md.
+- Done: plan moved to docs/plans/completed/; agent-harness-template README
+  links updated to the renamed repo.
+- Gate: green.
+- Next: none failing. Pending owner decisions: repo public flip; run
+  `claude plugin update agent-harness-kit` after merge to expose
+  harness-audit.
+
 ## 2026-07-07 — session 5
 
 - Branch: `m8-audit` (PR).
