@@ -8,7 +8,8 @@
     "4": "Release: README + acceptance test",
     "5": "CI enforcement (mechanical invariants)",
     "6": "Template repository (option C)",
-    "7": "Plugin packaging (agent-harness-kit)"
+    "7": "Plugin packaging (agent-harness-kit)",
+    "8": "harness-audit skill"
   },
   "features": [
     {
@@ -129,6 +130,22 @@
       "title": "Plugin packaging: plugin.json + marketplace.json + README install story",
       "status": "passing",
       "verify": "Gate: both manifests parse with name agent-harness-kit and source ./; README contains '/plugin marketplace add'. Manual (Task 10): local marketplace add + plugin install exposes harness-setup",
+      "notes": ""
+    },
+    {
+      "id": "M8-001",
+      "milestone": 8,
+      "title": "harness-audit deterministic checker (check.sh) + fixture tests",
+      "status": "passing",
+      "verify": "bash scripts/test-audit.sh exits 0: good fixture READY, drifted protocol WARNs without failing, five defect fixtures each produce their expected FAIL line and non-zero exit; gate runs it",
+      "notes": "Checker is plugin-only by design (not copied into target repos); statuses accept all four legal values, not the spec's two — see plan decision log."
+    },
+    {
+      "id": "M8-002",
+      "milestone": 8,
+      "title": "harness-audit SKILL.md judgment layer (report + offer fix)",
+      "status": "passing",
+      "verify": "Gate: frontmatter checks pass. Manual: check.sh run against this repo exits 1 flagging only the expected gap (no installed protocol doc) — proven in plan Task 9 step 3",
       "notes": ""
     }
   ]

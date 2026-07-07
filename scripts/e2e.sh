@@ -120,6 +120,10 @@ grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart m
 AUDIT="skills/harness-audit"
 [ -f "$AUDIT/scripts/check.sh" ] || fail "harness-audit check.sh missing"
 shellcheck "$AUDIT/scripts/check.sh"
+[ -f "$AUDIT/SKILL.md" ] || fail "harness-audit SKILL.md missing"
+[ "$(head -1 "$AUDIT/SKILL.md")" = "---" ] || fail "harness-audit SKILL.md: missing frontmatter"
+grep -q '^name: harness-audit$' "$AUDIT/SKILL.md" || fail "harness-audit SKILL.md: frontmatter name wrong"
+grep -q '^description: ' "$AUDIT/SKILL.md" || fail "harness-audit SKILL.md: description missing"
 bash scripts/test-audit.sh
 
 echo "GATE GREEN"
