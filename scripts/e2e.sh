@@ -110,8 +110,9 @@ while read -r ref; do
   [ -f "skills/harness-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
 
-# README: both quickstarts present
-grep -q '\.claude/skills' README.md || fail "README: Claude install quickstart missing"
+# README: all three quickstarts present
+grep -q '/plugin marketplace add' README.md || fail "README: plugin install quickstart missing"
+grep -q '\.claude/skills' README.md || fail "README: manual copy fallback missing"
 grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart missing"
 
 echo "GATE GREEN"
