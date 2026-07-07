@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Gate for the harness-planning-skill repo. Exit 0 = green.
+# Gate for the agent-harness-kit repo. Exit 0 = green.
 # Run at the start (baseline) and end (proof) of every session.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -41,9 +41,18 @@ grep -q "MIT License" LICENSE 2>/dev/null || fail "LICENSE missing or not MIT"
 [ -f .gitignore ] || fail ".gitignore missing"
 [ -f README.md ] || fail "README.md missing"
 
+# --- plugin packaging -------------------------------------------------------
+
+jq -e '.name == "agent-harness-kit" and (.version | type == "string")' \
+  .claude-plugin/plugin.json >/dev/null 2>&1 \
+  || fail "plugin.json missing, invalid, or wrong name"
+jq -e '.plugins[0].name == "agent-harness-kit" and .plugins[0].source == "./"' \
+  .claude-plugin/marketplace.json >/dev/null 2>&1 \
+  || fail "marketplace.json missing, invalid, or wrong plugin entry"
+
 # --- templates ------------------------------------------------------------
 
-TMPL_DIR="skill/harness-planning/templates"
+TMPL_DIR="skills/harness-setup/templates"
 
 # FEATURES.json.tmpl: contains placeholders, valid JSON once they are substituted
 grep -q '{{' "$TMPL_DIR/FEATURES.json.tmpl" \
@@ -92,17 +101,18 @@ grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance s
 grep -qi 'entropy' "$PROTO" || fail "protocol: maintenance section must cover entropy GC"
 
 # SKILL.md: valid frontmatter, references only templates that exist
-SKILL="skill/harness-planning/SKILL.md"
+SKILL="skills/harness-setup/SKILL.md"
 [ -f "$SKILL" ] || fail "SKILL.md missing"
 [ "$(head -1 "$SKILL")" = "---" ] || fail "SKILL.md: missing frontmatter"
-grep -q '^name: harness-planning$' "$SKILL" || fail "SKILL.md: frontmatter name wrong"
+grep -q '^name: harness-setup$' "$SKILL" || fail "SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SKILL" || fail "SKILL.md: frontmatter description missing"
 while read -r ref; do
-  [ -f "skill/harness-planning/$ref" ] || fail "SKILL.md references missing file: $ref"
+  [ -f "skills/harness-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
 
-# README: both quickstarts present
-grep -q '\.claude/skills' README.md || fail "README: Claude install quickstart missing"
+# README: all three quickstarts present
+grep -q '/plugin marketplace add' README.md || fail "README: plugin install quickstart missing"
+grep -q '\.claude/skills' README.md || fail "README: manual copy fallback missing"
 grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart missing"
 
 echo "GATE GREEN"

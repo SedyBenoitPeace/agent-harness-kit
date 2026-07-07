@@ -1,8 +1,9 @@
-# harness-planning
+# agent-harness-kit
 
-Plan applications with the long-running-agent harness approach — in-repo
-FEATURES.json / PROGRESS.md / execution plans / e2e gate — as a Claude Code
-skill plus a portable protocol usable by any AI agent.
+Full long-running-agent harness toolkit — scaffold in-repo
+FEATURES.json / PROGRESS.md / execution plans / e2e gate into any project,
+and audit repos for harness-readiness. Ships as a Claude Code plugin plus a
+portable protocol usable by any AI agent.
 
 ## What is the harness approach?
 
@@ -19,18 +20,22 @@ The approach distills two published practices:
 [Anthropic — Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
 and [OpenAI — Harness engineering](https://openai.com/index/harness-engineering/).
 
-## Quickstart — Claude Code users
+## Quickstart — Claude Code (plugin, recommended)
 
-Install the skill by copying (or symlinking) it into your skills directory:
-
-```bash
-git clone <this-repo>
-cp -r harness-planning-skill/skill/harness-planning ~/.claude/skills/harness-planning
+```
+/plugin marketplace add SedyBenoitPeace/agent-harness-kit
+/plugin install agent-harness-kit
 ```
 
-Then, in the repo you want to plan: ask Claude to *"plan this project with
-the harness-planning skill"*. It will interview you, write PRODUCT.md and
-FEATURES.json, and scaffold the whole harness from the templates.
+Two skills come with it:
+
+- **harness-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
+  whole harness. Say *"set up the agent harness in this repo"*.
+- **harness-audit** — check any repo's harness-readiness. Say *"audit this
+  repo's harness"*.
+
+Manual fallback (no plugin): copy `skills/harness-setup` into
+`~/.claude/skills/`.
 
 ## Quickstart — template repository
 
@@ -38,12 +43,12 @@ Prefer starting a project from a ready-made scaffold? Instantiate
 [agent-harness-template](https://github.com/SedyBenoitPeace/agent-harness-template)
 (*Use this template* on GitHub), open it with any agent, and say *"Read
 AGENTS.md and follow its initialization instructions."* The template mirrors
-`skill/harness-planning/templates/` — this repo stays the canonical source.
+`skills/harness-setup/templates/` — this repo stays the canonical source.
 
 ## Quickstart — any other agent
 
 You need exactly one file:
-[`skill/harness-planning/templates/harness-protocol.md`](skill/harness-planning/templates/harness-protocol.md).
+[`skills/harness-setup/templates/harness-protocol.md`](skills/harness-setup/templates/harness-protocol.md).
 
 Copy it into your repo as `docs/agents/harness-protocol.md` (bring the
 `templates/` directory too if you want the ready-made scaffolds), then tell
@@ -60,16 +65,21 @@ works as a Codex/Cursor rules file or pasted straight into a chat model.
 ## Repository layout
 
 ```
-skill/harness-planning/
-├── SKILL.md            Claude Code orchestration (thin — substance is below)
-└── templates/
-    ├── harness-protocol.md   ★ the agent-neutral operating manual
-    ├── AGENTS.md.tmpl        entry point scaffold (≤100-line map)
-    ├── FEATURES.json.tmpl    scope/status source of truth
-    ├── PROGRESS.md.tmpl      session log
-    ├── dev.sh.tmpl           dev-environment boot
-    ├── e2e.sh.tmpl           the gate
-    └── pointer.md.tmpl       one-line CLAUDE.md/GEMINI.md pointer
+.claude-plugin/         plugin + marketplace manifests
+skills/
+├── harness-setup/
+│   ├── SKILL.md        planning/scaffolding orchestration (thin)
+│   └── templates/
+│       ├── harness-protocol.md   ★ the agent-neutral operating manual
+│       ├── AGENTS.md.tmpl        entry point scaffold (≤100-line map)
+│       ├── FEATURES.json.tmpl    scope/status source of truth
+│       ├── PROGRESS.md.tmpl      session log
+│       ├── dev.sh.tmpl           dev-environment boot
+│       ├── e2e.sh.tmpl           the gate
+│       └── pointer.md.tmpl       one-line CLAUDE.md/GEMINI.md pointer
+└── harness-audit/
+    ├── SKILL.md        audit orchestration: report + offer fixes
+    └── scripts/check.sh          deterministic readiness checker
 ```
 
 ## Dogfood

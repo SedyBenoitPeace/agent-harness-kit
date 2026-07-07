@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agent-harness-kit",
+  "description": "Long-running-agent harness toolkit",
+  "owner": { "name": "Stefano Rifici" },
+  "plugins": [
+    {
+      "name": "agent-harness-kit",
+      "source": "./",
+      "description": "Scaffold and audit the long-running-agent harness",
+      "version": "1.0.0",
+      "category": "productivity"
+    }
+  ]
+}
