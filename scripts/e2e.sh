@@ -41,6 +41,15 @@ grep -q "MIT License" LICENSE 2>/dev/null || fail "LICENSE missing or not MIT"
 [ -f .gitignore ] || fail ".gitignore missing"
 [ -f README.md ] || fail "README.md missing"
 
+# --- plugin packaging -------------------------------------------------------
+
+jq -e '.name == "agent-harness-kit" and (.version | type == "string")' \
+  .claude-plugin/plugin.json >/dev/null 2>&1 \
+  || fail "plugin.json missing, invalid, or wrong name"
+jq -e '.plugins[0].name == "agent-harness-kit" and .plugins[0].source == "./"' \
+  .claude-plugin/marketplace.json >/dev/null 2>&1 \
+  || fail "marketplace.json missing, invalid, or wrong plugin entry"
+
 # --- templates ------------------------------------------------------------
 
 TMPL_DIR="skills/harness-setup/templates"
