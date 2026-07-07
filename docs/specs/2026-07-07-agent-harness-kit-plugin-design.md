@@ -32,9 +32,11 @@ gets updated to the new name). Creating a fresh repo and deprecating this one
 achieves the same end state with more debris; only choose it if the old name
 must remain visible.
 
-> ⚠️ Flagged for user review: the brainstorm said "new repo"; a GitHub rename
-> *is* a new repo name with history and redirects for free. Confirm or
-> override before implementation.
+> ✅ Confirmed by user 2026-07-07: rename on GitHub. **The local working-copy
+> directory is NOT renamed** — it stays `~/Source/harness-planning-skill` so
+> Claude Code conversation history (keyed by path) survives. Locally only
+> `git remote set-url origin` changes (and GitHub redirects the old URL
+> regardless).
 
 After the rename, all remaining work happens in `agent-harness-kit` via the
 normal harness loop (branch per milestone, PR integration).
