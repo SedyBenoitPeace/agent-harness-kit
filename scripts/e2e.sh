@@ -115,4 +115,11 @@ grep -q '/plugin marketplace add' README.md || fail "README: plugin install quic
 grep -q '\.claude/skills' README.md || fail "README: manual copy fallback missing"
 grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart missing"
 
+# --- harness-audit skill ----------------------------------------------------
+
+AUDIT="skills/harness-audit"
+[ -f "$AUDIT/scripts/check.sh" ] || fail "harness-audit check.sh missing"
+shellcheck "$AUDIT/scripts/check.sh"
+bash scripts/test-audit.sh
+
 echo "GATE GREEN"
