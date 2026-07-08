@@ -11,7 +11,8 @@
     "7": "Plugin packaging (agent-harness-kit)",
     "8": "harness-audit skill",
     "9": "PRD/requirements input guidance",
-    "10": "Verification tooling & usage guidance"
+    "10": "Verification tooling & usage guidance",
+    "11": "harness-status skill + lifecycle guidance"
   },
   "features": [
     {
@@ -173,6 +174,38 @@
       "status": "passing",
       "verify": "Gate: README contains a 'Using the skills' section; the six prompts cover setup, retrofit, PRD, audit, session, maintenance",
       "notes": ""
+    },
+    {
+      "id": "M11-001",
+      "milestone": 11,
+      "title": "harness-status skill: deterministic status.sh + fixture tests + SKILL.md",
+      "status": "passing",
+      "verify": "bash scripts/test-status.sh exits 0: bare dir exits 3 naming harness-setup; harnessed fixture reports per-milestone rollup, NEXT: M1-001 selection, and only the newest PROGRESS.md entry; all-passing prints NEXT: none; broken JSON exits 2 naming harness-audit. Gate runs it and checks SKILL.md frontmatter",
+      "notes": "Read-only by design. status.sh parses only FEATURES.json/PROGRESS.md (no git) so fixtures stay plain dirs; git context is added by the SKILL.md layer."
+    },
+    {
+      "id": "M11-002",
+      "milestone": 11,
+      "title": "harness-setup already-initialized guard (STOP + point to status/audit)",
+      "status": "passing",
+      "verify": "Gate: harness-setup SKILL.md contains the 'Already harnessed' mode in section 1 with STOP and pointers to harness-status/harness-audit",
+      "notes": ""
+    },
+    {
+      "id": "M11-003",
+      "milestone": 11,
+      "title": "README lifecycle section + slash-command forms + harness-status coverage",
+      "status": "passing",
+      "verify": "Gate: README contains '## Lifecycle', '/agent-harness-kit:harness-setup', and 'harness-status'; all pre-existing README checks still pass",
+      "notes": ""
+    },
+    {
+      "id": "M11-004",
+      "milestone": 11,
+      "title": "Release 1.2.0 + manifest version-sync gate check",
+      "status": "passing",
+      "verify": "Gate: jq reads identical version from plugin.json and marketplace.json plugins[0]; both say 1.2.0",
+      "notes": "Bump required for plugin cache refresh (cache keyed by version; update compares version strings only)."
     }
   ]
 }
