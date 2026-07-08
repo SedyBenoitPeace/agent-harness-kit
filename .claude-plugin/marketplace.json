@@ -10,7 +10,7 @@
       "name": "agent-harness-kit",
       "source": "./",
       "description": "Scaffold and audit the long-running-agent harness",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "category": "productivity"
     }
   ]

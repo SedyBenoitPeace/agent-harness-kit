@@ -49,6 +49,8 @@ jq -e '.name == "agent-harness-kit" and (.version | type == "string")' \
 jq -e '.plugins[0].name == "agent-harness-kit" and .plugins[0].source == "./"' \
   .claude-plugin/marketplace.json >/dev/null 2>&1 \
   || fail "marketplace.json missing, invalid, or wrong plugin entry"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)" ] \
+  || fail "plugin.json / marketplace.json version mismatch"
 
 # --- templates ------------------------------------------------------------
 
