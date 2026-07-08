@@ -27,15 +27,38 @@ and [OpenAI — Harness engineering](https://openai.com/index/harness-engineerin
 /plugin install agent-harness-kit
 ```
 
-Two skills come with it:
+Three skills come with it — invoke each as a slash command or in plain
+English:
 
 - **harness-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
-  whole harness. Say *"set up the agent harness in this repo"*.
-- **harness-audit** — check any repo's harness-readiness. Say *"audit this
-  repo's harness"*.
+  whole harness. `/agent-harness-kit:harness-setup` or *"set up the agent
+  harness in this repo"*.
+- **harness-status** — where the project stands: progress per milestone,
+  last session, exact next feature. `/agent-harness-kit:harness-status` or
+  *"what's the harness status?"*.
+- **harness-audit** — check any repo's harness-readiness.
+  `/agent-harness-kit:harness-audit` or *"audit this repo's harness"*.
 
 Manual fallback (no plugin): copy `skills/harness-setup` into
 `~/.claude/skills/`.
+
+## Lifecycle — how the pieces fit
+
+1. **Set up once** — `/agent-harness-kit:harness-setup`. Expect an
+   interview about the product before anything is written; it ends with
+   the full scaffold (AGENTS.md, FEATURES.json, PROGRESS.md, docs/plans/,
+   docs/agents/harness-protocol.md, scripts/e2e.sh). Repos that are
+   already harnessed are detected and left alone.
+2. **Build one feature per session** — say *"Read AGENTS.md, then
+   docs/agents/harness-protocol.md section 2, and perform exactly one
+   coding session."* Repeat until the milestone is done.
+3. **Check where you are** — `/agent-harness-kit:harness-status` any
+   time: progress per milestone, what the last session did, and exactly
+   which feature the next session will pick. If the harness isn't set up
+   yet, it says so and points you to setup.
+4. **Keep it honest** — `/agent-harness-kit:harness-audit` when a repo
+   drifts or before working in an unfamiliar one, plus a periodic
+   maintenance pass (protocol section 3).
 
 ## Using the skills — copy-paste prompts
 
@@ -45,6 +68,7 @@ Manual fallback (no plugin): copy `skills/harness-setup` into
 | Retrofit an existing codebase | *"Set up the agent harness in this repo — it's an existing codebase, preserve what's there."* |
 | Start from an existing PRD | *"Set up the harness using docs/PRD.md as the product requirements."* |
 | Check a repo is harness-ready | *"Audit this repo's harness."* |
+| See progress + what's next | *"What's the harness status?"* |
 | Do one unit of work | *"Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and perform exactly one coding session."* |
 | Periodic cleanup | *"Read AGENTS.md, then docs/agents/harness-protocol.md section 3, and perform one maintenance pass."* |
 
@@ -101,9 +125,12 @@ skills/
 │       ├── dev.sh.tmpl           dev-environment boot
 │       ├── e2e.sh.tmpl           the gate
 │       └── pointer.md.tmpl       one-line CLAUDE.md/GEMINI.md pointer
-└── harness-audit/
-    ├── SKILL.md        audit orchestration: report + offer fixes
-    └── scripts/check.sh          deterministic readiness checker
+├── harness-audit/
+│   ├── SKILL.md        audit orchestration: report + offer fixes
+│   └── scripts/check.sh          deterministic readiness checker
+└── harness-status/
+    ├── SKILL.md        status orchestration: read-only report
+    └── scripts/status.sh         deterministic progress/next-feature report
 ```
 
 ## Dogfood

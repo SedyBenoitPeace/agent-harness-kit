@@ -49,6 +49,8 @@ jq -e '.name == "agent-harness-kit" and (.version | type == "string")' \
 jq -e '.plugins[0].name == "agent-harness-kit" and .plugins[0].source == "./"' \
   .claude-plugin/marketplace.json >/dev/null 2>&1 \
   || fail "marketplace.json missing, invalid, or wrong plugin entry"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)" ] \
+  || fail "plugin.json / marketplace.json version mismatch"
 
 # --- templates ------------------------------------------------------------
 
@@ -108,6 +110,7 @@ SKILL="skills/harness-setup/SKILL.md"
 [ "$(head -1 "$SKILL")" = "---" ] || fail "SKILL.md: missing frontmatter"
 grep -q '^name: harness-setup$' "$SKILL" || fail "SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SKILL" || fail "SKILL.md: frontmatter description missing"
+grep -q 'Already harnessed' "$SKILL" || fail "SKILL.md: already-initialized guard missing"
 while read -r ref; do
   [ -f "skills/harness-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
@@ -118,6 +121,9 @@ grep -q '\.claude/skills' README.md || fail "README: manual copy fallback missin
 grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart missing"
 grep -q 'PRD' README.md || fail "README: PRD-input section missing"
 grep -q 'Using the skills' README.md || fail "README: using-the-skills prompts section missing"
+grep -q 'harness-status' README.md || fail "README: harness-status skill missing"
+grep -q '/agent-harness-kit:harness-setup' README.md || fail "README: slash-command forms missing"
+grep -q '## Lifecycle' README.md || fail "README: lifecycle section missing"
 
 # --- harness-audit skill ----------------------------------------------------
 
@@ -129,5 +135,16 @@ shellcheck "$AUDIT/scripts/check.sh"
 grep -q '^name: harness-audit$' "$AUDIT/SKILL.md" || fail "harness-audit SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$AUDIT/SKILL.md" || fail "harness-audit SKILL.md: description missing"
 bash scripts/test-audit.sh
+
+# --- harness-status skill -----------------------------------------------------
+
+STATUS_SKILL="skills/harness-status"
+[ -f "$STATUS_SKILL/scripts/status.sh" ] || fail "harness-status status.sh missing"
+shellcheck "$STATUS_SKILL/scripts/status.sh"
+[ -f "$STATUS_SKILL/SKILL.md" ] || fail "harness-status SKILL.md missing"
+[ "$(head -1 "$STATUS_SKILL/SKILL.md")" = "---" ] || fail "harness-status SKILL.md: missing frontmatter"
+grep -q '^name: harness-status$' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: frontmatter name wrong"
+grep -q '^description: ' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: description missing"
+bash scripts/test-status.sh
 
 echo "GATE GREEN"

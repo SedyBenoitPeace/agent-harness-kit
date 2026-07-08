@@ -3,6 +3,16 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-08 — session 8
+
+- Branch: `m11-status` (PR).
+- Done: M11-001 — harness-status skill (status.sh + fixtures + SKILL.md).
+- Done: M11-002 — harness-setup already-initialized guard.
+- Done: M11-003 — README lifecycle section + slash-command forms.
+- Done: M11-004 — 1.2.0 bump + manifest version-sync gate check.
+- Gate: green.
+- Next: none failing. Plan moves to docs/plans/completed/ after merge.
+
 ## 2026-07-08 — session 7
 
 - Branch: `m10-verification-guidance` (PR).
