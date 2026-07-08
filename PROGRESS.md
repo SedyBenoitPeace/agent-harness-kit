@@ -3,6 +3,16 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-08 — session 7
+
+- Branch: `m10-verification-guidance` (PR).
+- Done: M10-001 — protocol §1.7 per-stack verification tooling (web→browser
+  automation, API→curl, CLI→binary run) + end-to-end-proof rule;
+  e2e.sh.tmpl gains E2E_PROOF_COMMAND.
+- Done: M10-002 — README "Using the skills" prompt cheatsheet.
+- Gate: green. Template repo protocol re-synced on its open PR #1.
+- Next: none failing. Owner field-tests the kit on a real repo.
+
 ## 2026-07-07 — session 6
 
 - Branch: `m9-final` (single consolidated PR — owner asked to pack M9 and

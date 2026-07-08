@@ -93,6 +93,7 @@ grep -q 'PRODUCT\.md' "$PROTO" || fail "protocol: planning section never mention
 grep -qi 'verify' "$PROTO" || fail "protocol: planning section never teaches the verify field"
 ! grep -qi 'claude' "$PROTO" || fail "protocol doc must be agent-neutral (found 'claude')"
 grep -q 'Already have requirements' "$PROTO" || fail "protocol: PRD-input rule missing from section 1.1"
+grep -q 'Choose the verification tooling' "$PROTO" || fail "protocol: verification tooling section (1.7) missing"
 
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
 grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
@@ -116,6 +117,7 @@ grep -q '/plugin marketplace add' README.md || fail "README: plugin install quic
 grep -q '\.claude/skills' README.md || fail "README: manual copy fallback missing"
 grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart missing"
 grep -q 'PRD' README.md || fail "README: PRD-input section missing"
+grep -q 'Using the skills' README.md || fail "README: using-the-skills prompts section missing"
 
 # --- harness-audit skill ----------------------------------------------------
 
