@@ -130,4 +130,15 @@ grep -q '^name: harness-audit$' "$AUDIT/SKILL.md" || fail "harness-audit SKILL.m
 grep -q '^description: ' "$AUDIT/SKILL.md" || fail "harness-audit SKILL.md: description missing"
 bash scripts/test-audit.sh
 
+# --- harness-status skill -----------------------------------------------------
+
+STATUS_SKILL="skills/harness-status"
+[ -f "$STATUS_SKILL/scripts/status.sh" ] || fail "harness-status status.sh missing"
+shellcheck "$STATUS_SKILL/scripts/status.sh"
+[ -f "$STATUS_SKILL/SKILL.md" ] || fail "harness-status SKILL.md missing"
+[ "$(head -1 "$STATUS_SKILL/SKILL.md")" = "---" ] || fail "harness-status SKILL.md: missing frontmatter"
+grep -q '^name: harness-status$' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: frontmatter name wrong"
+grep -q '^description: ' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: description missing"
+bash scripts/test-status.sh
+
 echo "GATE GREEN"
