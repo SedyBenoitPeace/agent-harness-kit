@@ -119,6 +119,9 @@ grep -q '\.claude/skills' README.md || fail "README: manual copy fallback missin
 grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart missing"
 grep -q 'PRD' README.md || fail "README: PRD-input section missing"
 grep -q 'Using the skills' README.md || fail "README: using-the-skills prompts section missing"
+grep -q 'harness-status' README.md || fail "README: harness-status skill missing"
+grep -q '/agent-harness-kit:harness-setup' README.md || fail "README: slash-command forms missing"
+grep -q '## Lifecycle' README.md || fail "README: lifecycle section missing"
 
 # --- harness-audit skill ----------------------------------------------------
 
