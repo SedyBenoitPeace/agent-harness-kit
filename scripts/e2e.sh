@@ -108,6 +108,7 @@ SKILL="skills/harness-setup/SKILL.md"
 [ "$(head -1 "$SKILL")" = "---" ] || fail "SKILL.md: missing frontmatter"
 grep -q '^name: harness-setup$' "$SKILL" || fail "SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SKILL" || fail "SKILL.md: frontmatter description missing"
+grep -q 'Already harnessed' "$SKILL" || fail "SKILL.md: already-initialized guard missing"
 while read -r ref; do
   [ -f "skills/harness-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
