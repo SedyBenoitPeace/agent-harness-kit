@@ -9,7 +9,8 @@
     "5": "CI enforcement (mechanical invariants)",
     "6": "Template repository (option C)",
     "7": "Plugin packaging (agent-harness-kit)",
-    "8": "harness-audit skill"
+    "8": "harness-audit skill",
+    "9": "PRD/requirements input guidance"
   },
   "features": [
     {
@@ -146,6 +147,14 @@
       "title": "harness-audit SKILL.md judgment layer (report + offer fix)",
       "status": "passing",
       "verify": "Gate: frontmatter checks pass. Manual: check.sh run against this repo exits 1 flagging only the expected gap (no installed protocol doc) — proven in plan Task 9 step 3",
+      "notes": ""
+    },
+    {
+      "id": "M9-001",
+      "milestone": 9,
+      "title": "PRD-input guidance: README section + protocol section 1.1 rule + SKILL.md bullet",
+      "status": "passing",
+      "verify": "Gate: protocol contains 'Already have requirements' in section 1.1 and stays agent-neutral; README contains a PRD section; all line budgets hold",
       "notes": ""
     }
   ]

@@ -62,6 +62,19 @@ protocol for this repository. Interview me before writing anything.
 The protocol is plain markdown with zero vendor-specific instructions — it
 works as a Codex/Cursor rules file or pasted straight into a chat model.
 
+## Already have requirements?
+
+You don't have to start the planning interview from zero. Put your
+existing requirements in the repo — markdown preferred (`docs/PRD.md` is a
+good spot), but PDF or HTML work too, agents read those — and say:
+
+```
+Set up the harness using docs/PRD.md as the product requirements.
+```
+
+The interview extracts what it can from the document and only asks you
+about the gaps.
+
 ## Repository layout
 
 ```

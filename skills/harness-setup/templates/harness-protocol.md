@@ -58,6 +58,14 @@ write the answers down in the artifacts that follow. The required questions:
 5. How will we run and test it locally, from a clean checkout?
 6. What does "done" look like for the first milestone?
 
+**Already have requirements?** If the human provides a requirements
+document (a PRD, spec, or brief — markdown, PDF, or HTML all work), read
+it first and extract answers to the questions above from it. Then
+interview only the gaps and ambiguities, quoting the document when
+confirming an interpretation. A provided document never waives §1.4:
+every feature still needs a falsifiable `verify`, whoever authored the
+requirement.
+
 If an answer is vague, push back once with a concrete alternative ("do you
 mean X or Y?"). Ambiguity you accept here becomes an unfalsifiable feature
 later.

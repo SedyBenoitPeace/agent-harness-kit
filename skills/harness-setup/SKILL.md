@@ -27,6 +27,9 @@ skill follows its own shipped manual. In particular:
 
 - Interview the human first (§1.1 has the required questions). Do not
   answer the questions yourself.
+- If the human supplied a requirements document (markdown, PDF, or HTML),
+  follow §1.1's rule: extract interview answers from it and ask only
+  about the gaps.
 - Refuse to write a FEATURES.json entry without a falsifiable `verify`
   criterion (§1.4 has good/bad examples).
 - Produce `docs/PRODUCT.md`, milestones, and the first execution plan in
