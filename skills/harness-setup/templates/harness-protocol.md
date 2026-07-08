@@ -147,6 +147,24 @@ enters as `failing` with honest notes.
 Finish by running the gate, committing everything above, and writing the
 first PROGRESS.md entry (copy `PROGRESS.md.tmpl`).
 
+### 1.7 Choose the verification tooling
+
+A `verify` criterion is only as strong as the tool that executes it.
+During the interview (§1.1, question 5), name the proof tooling for the
+stack and wire it into the gate:
+
+| Stack | Feature proof |
+|---|---|
+| Web UI | Drive the running app with browser automation (e.g. Playwright): assert on rendered DOM or a screenshot, never on unit tests alone |
+| HTTP API / backend | Call the real endpoint (e.g. curl or an integration test): assert status code and response body |
+| CLI tool | Run the built binary with real arguments; assert stdout/stderr and exit code |
+| Mobile | Widget/UI tests, plus a simulator or emulator run for demoable flows |
+| Library | Unit tests against the public API; a runnable example doubles as proof |
+
+**Rule: every demoable milestone gets at least one end-to-end proof in the
+gate — a check that exercises the product the way its user would. Unit
+tests alone cannot flip a user-facing feature to `passing`.**
+
 Copy-paste planning prompt:
 
 ```

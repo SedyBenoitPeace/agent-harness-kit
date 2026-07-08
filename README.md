@@ -37,6 +37,17 @@ Two skills come with it:
 Manual fallback (no plugin): copy `skills/harness-setup` into
 `~/.claude/skills/`.
 
+## Using the skills — copy-paste prompts
+
+| You want to… | Say |
+|---|---|
+| Plan + scaffold a new project | *"Set up the agent harness in this repo."* |
+| Retrofit an existing codebase | *"Set up the agent harness in this repo — it's an existing codebase, preserve what's there."* |
+| Start from an existing PRD | *"Set up the harness using docs/PRD.md as the product requirements."* |
+| Check a repo is harness-ready | *"Audit this repo's harness."* |
+| Do one unit of work | *"Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and perform exactly one coding session."* |
+| Periodic cleanup | *"Read AGENTS.md, then docs/agents/harness-protocol.md section 3, and perform one maintenance pass."* |
+
 ## Quickstart — template repository
 
 Prefer starting a project from a ready-made scaffold? Instantiate

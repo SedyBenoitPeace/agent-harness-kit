@@ -12,4 +12,9 @@ cd "$(dirname "$0")/.."
 # Static analysis / linters (e.g. "npm run lint", "dart analyze", "ruff check .")
 {{ANALYZER_COMMAND}}
 
+# End-to-end proof for demoable features — exercise the product like a user
+# would (protocol §1.7: Playwright for web UIs, curl for APIs, run the
+# binary for CLIs). Delete only if this project truly has no user surface.
+{{E2E_PROOF_COMMAND}}
+
 echo "GATE GREEN"

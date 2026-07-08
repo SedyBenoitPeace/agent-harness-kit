@@ -10,7 +10,8 @@
     "6": "Template repository (option C)",
     "7": "Plugin packaging (agent-harness-kit)",
     "8": "harness-audit skill",
-    "9": "PRD/requirements input guidance"
+    "9": "PRD/requirements input guidance",
+    "10": "Verification tooling & usage guidance"
   },
   "features": [
     {
@@ -155,6 +156,22 @@
       "title": "PRD-input guidance: README section + protocol section 1.1 rule + SKILL.md bullet",
       "status": "passing",
       "verify": "Gate: protocol contains 'Already have requirements' in section 1.1 and stays agent-neutral; README contains a PRD section; all line budgets hold",
+      "notes": ""
+    },
+    {
+      "id": "M10-001",
+      "milestone": 10,
+      "title": "Protocol section 1.7: per-stack verification tooling + end-to-end proof rule; e2e.sh.tmpl E2E_PROOF_COMMAND",
+      "status": "passing",
+      "verify": "Gate: protocol contains 'Choose the verification tooling' and stays agent-neutral; e2e.sh.tmpl still shellcheck-clean after placeholder substitution",
+      "notes": "Playwright/curl named as example tools (agent-neutral); rule: unit tests alone cannot flip a user-facing feature."
+    },
+    {
+      "id": "M10-002",
+      "milestone": 10,
+      "title": "README 'Using the skills' copy-paste prompt cheatsheet",
+      "status": "passing",
+      "verify": "Gate: README contains a 'Using the skills' section; the six prompts cover setup, retrofit, PRD, audit, session, maintenance",
       "notes": ""
     }
   ]
