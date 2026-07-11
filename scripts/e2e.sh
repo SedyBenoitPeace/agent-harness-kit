@@ -125,6 +125,7 @@ SKILL="skills/harness-setup/SKILL.md"
 grep -q '^name: harness-setup$' "$SKILL" || fail "SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SKILL" || fail "SKILL.md: frontmatter description missing"
 grep -q 'Already harnessed' "$SKILL" || fail "SKILL.md: already-initialized guard missing"
+grep -q 'ARCHITECTURE.md' "$SKILL" || fail "SKILL.md: architecture scaffold step missing"
 while read -r ref; do
   [ -f "skills/harness-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
@@ -150,6 +151,7 @@ shellcheck "$AUDIT/scripts/check.sh"
 [ "$(head -1 "$AUDIT/SKILL.md")" = "---" ] || fail "harness-audit SKILL.md: missing frontmatter"
 grep -q '^name: harness-audit$' "$AUDIT/SKILL.md" || fail "harness-audit SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$AUDIT/SKILL.md" || fail "harness-audit SKILL.md: description missing"
+grep -q 'ARCHITECTURE.md' "$AUDIT/SKILL.md" || fail "harness-audit SKILL.md: architecture repair flow missing"
 bash scripts/test-audit.sh
 
 # --- harness-status skill -----------------------------------------------------

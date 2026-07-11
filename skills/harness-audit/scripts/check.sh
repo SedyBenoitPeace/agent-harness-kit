@@ -87,6 +87,14 @@ else
   failc "docs/agents/harness-protocol.md missing"
 fi
 
+# Architecture doc (WARN only: repos harnessed before 1.4.0 may lack it;
+# the skill layer offers the repair flow — derive from code / interview / skip)
+if [ -f ARCHITECTURE.md ]; then
+  pass "ARCHITECTURE.md exists"
+else
+  warn "ARCHITECTURE.md missing — offer to derive it from the code or interview the human"
+fi
+
 # Pointer file (WARN only: non-vendor repos may use a different entry file)
 if [ -f CLAUDE.md ]; then pass "CLAUDE.md pointer exists"; else warn "CLAUDE.md pointer missing"; fi
 
