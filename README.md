@@ -44,7 +44,11 @@ English:
   any vendor. `/agent-harness-kit:harness-handoff` or *"prepare the
   handoff for the next agent"*.
 
-Update to the latest release with `claude plugin update agent-harness-kit`.
+Update to the latest release:
+
+```
+claude plugin update agent-harness-kit
+```
 
 Manual fallback (no plugin): copy `skills/harness-setup` into
 `~/.claude/skills/`.
@@ -58,7 +62,12 @@ codex plugin marketplace add https://github.com/SedyBenoitPeace/agent-harness-ki
 codex plugin add agent-harness-kit@agent-harness-kit
 ```
 
-Update later with `codex plugin marketplace upgrade agent-harness-kit`.
+Update to the latest release:
+
+```
+codex plugin marketplace upgrade agent-harness-kit
+```
+
 While this repo is private, the machine's GitHub credentials must be able
 to see it.
 
