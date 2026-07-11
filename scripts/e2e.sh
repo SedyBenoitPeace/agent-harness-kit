@@ -84,6 +84,7 @@ grep -q '^## Module map' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: module map 
 grep -q '^## Key entities' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: key entities section missing"
 grep -q '^## Cross-cutting invariants' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: invariants section missing"
 grep -q '^## Subsystem notes' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: subsystem notes section missing"
+grep -q '{{LOGGING_STRATEGY}}' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: logging/observability placeholder missing"
 ! grep -qi 'claude' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl must be agent-neutral"
 grep -q 'ARCHITECTURE.md' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl does not map ARCHITECTURE.md"
 
@@ -110,6 +111,7 @@ grep -q 'Already have requirements' "$PROTO" || fail "protocol: PRD-input rule m
 grep -q 'Choose the verification tooling' "$PROTO" || fail "protocol: verification tooling section (1.7) missing"
 grep -q 'Write ARCHITECTURE.md' "$PROTO" || fail "protocol: architecture section (1.8) missing"
 grep -q 'update ARCHITECTURE.md in the same commit' "$PROTO" || fail "protocol: session architecture-update rule missing"
+grep -q 'Choose the logging/observability approach' "$PROTO" || fail "protocol: logging/observability section (1.9) missing"
 
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
 grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
@@ -126,6 +128,7 @@ grep -q '^name: harness-setup$' "$SKILL" || fail "SKILL.md: frontmatter name wro
 grep -q '^description: ' "$SKILL" || fail "SKILL.md: frontmatter description missing"
 grep -q 'Already harnessed' "$SKILL" || fail "SKILL.md: already-initialized guard missing"
 grep -q 'ARCHITECTURE.md' "$SKILL" || fail "SKILL.md: architecture scaffold step missing"
+grep -q 'logging/observability' "$SKILL" || fail "SKILL.md: logging/observability scaffold step missing"
 while read -r ref; do
   [ -f "skills/harness-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
@@ -144,6 +147,7 @@ grep -q 'Switching agents' README.md || fail "README: switching-agents section m
 grep -q 'codex plugin marketplace add' README.md || fail "README: Codex quickstart missing"
 grep -q 'claude plugin update' README.md || fail "README: Claude update command missing"
 grep -q 'ARCHITECTURE.md' README.md || fail "README: ARCHITECTURE.md coverage missing"
+grep -qi 'logging/observability' README.md || fail "README: logging/observability coverage missing"
 
 # --- harness-audit skill ----------------------------------------------------
 

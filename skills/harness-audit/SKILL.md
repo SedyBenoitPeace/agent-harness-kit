@@ -50,6 +50,29 @@ the warning: offer the human a choice of repair and follow their pick.
 A blend of (a)+(b) is often best: derive a draft, then interview only
 the gaps and uncertainties — same pattern as §1.1's PRD rule.
 
+## Missing logging/observability strategy — repair flow
+
+When check.sh warns that `ARCHITECTURE.md` doesn't record a
+logging/observability approach, offer the same three-way choice as the
+ARCHITECTURE.md repair flow above:
+
+- **(a) Derive it** — read the codebase for existing logging usage (a
+  logger library, `console.log`/`print` calls, structured output), summarize
+  it as a Cross-cutting invariants entry, show it for review before
+  committing.
+- **(b) Interview** — ask directly per protocol §1.9's table: where should
+  logs land, and how does a future session inspect them?
+- **(c) Skip** — legal; "none yet, revisit at milestone N" is a complete
+  answer. Note it in the verdict so the gap stays visible, not silently
+  dropped.
+
+**The harness only surfaces the gap and records the decision — it never
+picks a logging technology for the human.** If the repair reveals the repo
+has no logging infrastructure at all and the human wants it built, that is
+ordinary feature work: add a `FEATURES.json` entry with a falsifiable
+`verify`, built through the normal one-feature-per-session loop — not part
+of this flow, and not a reason to write a bespoke plan just for logging.
+
 ## Red flags
 
 | Thought | Reality |

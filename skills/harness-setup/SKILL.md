@@ -42,6 +42,9 @@ skill follows its own shipped manual. In particular:
 - Produce `ARCHITECTURE.md` per §1.8: greenfield fills it from the
   interview (intended architecture, marked as such); retrofit derives it
   from reading the code and the human reviews it before commit.
+- Record the logging/observability approach per §1.9 in
+  `ARCHITECTURE.md`'s cross-cutting invariants — or explicitly note that
+  none exists yet. The human picks the technology; do not choose for them.
 
 ### 3. Scaffold by copying templates
 

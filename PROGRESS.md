@@ -3,6 +3,35 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-11 — session 11
+
+- Branch: `m14-observability` (PR).
+- Why: owner ran the harness on two field repos — both healthy, but
+  logging was never raised by planning or audit; retrofitting it would
+  have meant a bespoke ad-hoc plan per repo. Same shape as the M13
+  ARCHITECTURE.md gap.
+- Done: M14-001 — protocol §1.9 (per-stack logging/observability table,
+  appended after §1.8, never renumbering); `ARCHITECTURE.md.tmpl` gained a
+  named `{{LOGGING_STRATEGY}}` invariant slot; harness-setup SKILL.md
+  references it.
+- Done: M14-002 — `check.sh` WARNs (never FAILs) when `ARCHITECTURE.md`
+  doesn't record a logging/observability approach; harness-audit SKILL.md
+  gained the same derive/interview/skip repair flow as ARCHITECTURE.md's,
+  plus an explicit note that building real logging infra is ordinary
+  feature work, not part of the flow. test-audit.sh covers the new WARN.
+- Done: M14-003 — README coverage; 1.5.0.
+- Done: M14-004 — dogfood: this repo's own ARCHITECTURE.md now records its
+  answer (the PASS/FAIL/WARN grammar is the observability layer for a
+  service-less CLI tool).
+- Design decision (owner-confirmed): no new `harness-*` skill for this —
+  folds into the existing audit + repair-flow mechanism, same reasoning as
+  M13. The harness only surfaces the gap and records the decision; it
+  never picks a logging technology for the human.
+- Gate: green.
+- Next: none failing. Owner runs `harness-audit` on the two field repos
+  post-merge to pick up the new WARN (ordinary audit → repair-flow path,
+  not harness-kit work).
+
 ## 2026-07-11 — session 10
 
 - Branch: `m13-architecture` (PR). M12 plan moved to completed/ (folded in,
