@@ -147,4 +147,15 @@ grep -q '^name: harness-status$' "$STATUS_SKILL/SKILL.md" || fail "harness-statu
 grep -q '^description: ' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: description missing"
 bash scripts/test-status.sh
 
+# --- harness-handoff skill ----------------------------------------------------
+
+HANDOFF_SKILL="skills/harness-handoff"
+[ -f "$HANDOFF_SKILL/scripts/handoff.sh" ] || fail "harness-handoff handoff.sh missing"
+shellcheck "$HANDOFF_SKILL/scripts/handoff.sh"
+[ -f "$HANDOFF_SKILL/SKILL.md" ] || fail "harness-handoff SKILL.md missing"
+[ "$(head -1 "$HANDOFF_SKILL/SKILL.md")" = "---" ] || fail "harness-handoff SKILL.md: missing frontmatter"
+grep -q '^name: harness-handoff$' "$HANDOFF_SKILL/SKILL.md" || fail "harness-handoff SKILL.md: frontmatter name wrong"
+grep -q '^description: ' "$HANDOFF_SKILL/SKILL.md" || fail "harness-handoff SKILL.md: description missing"
+bash scripts/test-handoff.sh
+
 echo "GATE GREEN"
