@@ -12,8 +12,9 @@ scrollback, scope kept in the model's head, and decisions made verbally all
 die when the session ends. The harness fixes this by making **the repo the
 only interface**: scope lives in `FEATURES.json` (every feature with a
 falsifiable `verify` criterion), history in a newest-first `PROGRESS.md`,
-plans in `docs/plans/`, and health behind one command — `scripts/e2e.sh`,
-exit 0 = green. Any agent, from any vendor, recovers full context from the
+plans in `docs/plans/`, the technical shape in `ARCHITECTURE.md` (module
+map + cross-cutting invariants), and health behind one command —
+`scripts/e2e.sh`, exit 0 = green. Any agent, from any vendor, recovers full context from the
 repo alone and delivers exactly one proven feature per session.
 
 The approach distills two published practices:
@@ -43,16 +44,32 @@ English:
   any vendor. `/agent-harness-kit:harness-handoff` or *"prepare the
   handoff for the next agent"*.
 
+Update to the latest release with `claude plugin update agent-harness-kit`.
+
 Manual fallback (no plugin): copy `skills/harness-setup` into
 `~/.claude/skills/`.
+
+## Quickstart — Codex (plugin)
+
+Codex CLI installs the same plugin — the skills work there unchanged:
+
+```
+codex plugin marketplace add https://github.com/SedyBenoitPeace/agent-harness-kit
+codex plugin add agent-harness-kit@agent-harness-kit
+```
+
+Update later with `codex plugin marketplace upgrade agent-harness-kit`.
+While this repo is private, the machine's GitHub credentials must be able
+to see it.
 
 ## Lifecycle — how the pieces fit
 
 1. **Set up once** — `/agent-harness-kit:harness-setup`. Expect an
    interview about the product before anything is written; it ends with
-   the full scaffold (AGENTS.md, FEATURES.json, PROGRESS.md, docs/plans/,
-   docs/agents/harness-protocol.md, scripts/e2e.sh). Repos that are
-   already harnessed are detected and left alone.
+   the full scaffold (AGENTS.md, FEATURES.json, PROGRESS.md,
+   ARCHITECTURE.md, docs/plans/, docs/agents/harness-protocol.md,
+   scripts/e2e.sh). Repos that are already harnessed are detected and
+   left alone.
 2. **Build one feature per session** — say *"Read AGENTS.md, then
    docs/agents/harness-protocol.md section 2, and perform exactly one
    coding session."* Repeat until the milestone is done.
@@ -149,6 +166,7 @@ skills/
 │       ├── AGENTS.md.tmpl        entry point scaffold (≤100-line map)
 │       ├── FEATURES.json.tmpl    scope/status source of truth
 │       ├── PROGRESS.md.tmpl      session log
+│       ├── ARCHITECTURE.md.tmpl  system diagram + invariants (living doc)
 │       ├── dev.sh.tmpl           dev-environment boot
 │       ├── e2e.sh.tmpl           the gate
 │       └── pointer.md.tmpl       one-line CLAUDE.md/GEMINI.md pointer

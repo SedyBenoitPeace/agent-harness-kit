@@ -141,6 +141,9 @@ grep -q '/agent-harness-kit:harness-setup' README.md || fail "README: slash-comm
 grep -q '## Lifecycle' README.md || fail "README: lifecycle section missing"
 grep -q 'harness-handoff' README.md || fail "README: harness-handoff skill missing"
 grep -q 'Switching agents' README.md || fail "README: switching-agents section missing"
+grep -q 'codex plugin marketplace add' README.md || fail "README: Codex quickstart missing"
+grep -q 'claude plugin update' README.md || fail "README: Claude update command missing"
+grep -q 'ARCHITECTURE.md' README.md || fail "README: ARCHITECTURE.md coverage missing"
 
 # --- harness-audit skill ----------------------------------------------------
 
