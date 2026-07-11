@@ -23,6 +23,7 @@ AGENTS.md                      ≤100 lines: table of contents + session loop su
 <vendor entry-files>           one-line pointers to AGENTS.md (never copies)
 FEATURES.json                  source of truth for scope and status
 PROGRESS.md                    newest-first session log for context recovery
+ARCHITECTURE.md                system diagram, module map, cross-cutting invariants (the technical shape)
 scripts/dev.sh                 boots the dev environment
 scripts/e2e.sh                 the gate: tests + analyzers, exit 0 = green
 docs/
@@ -165,6 +166,27 @@ stack and wire it into the gate:
 gate — a check that exercises the product the way its user would. Unit
 tests alone cannot flip a user-facing feature to `passing`.**
 
+### 1.8 Write ARCHITECTURE.md
+
+PRODUCT.md captures the why and FEATURES.json the scope; `ARCHITECTURE.md`
+(repo root) captures the technical shape, so sessions stop re-deriving it
+from code. Copy `ARCHITECTURE.md.tmpl` and fill every section: system
+diagram, module map with real paths, key entities & data flow,
+**cross-cutting invariants** (the rules no feature may violate — the
+section agents need most), and per-milestone subsystem notes.
+
+- **Greenfield:** fill it from the interview and the first plan. It
+  describes the *intended* architecture — say so in the opening line, and
+  correct it as reality lands.
+- **Retrofit:** derive it from reading the codebase, then have the human
+  review it before committing. A wrong invariant is worse than a missing
+  one.
+
+**Detail rule:** record shape and invariants — the scoping rule every
+query honors, a queue's dedup key format, "the daily import updates,
+never inserts" — not code listings or API signatures. Depth accumulates
+per milestone through §2.5, not up front.
+
 Copy-paste planning prompt:
 
 ```
@@ -213,8 +235,12 @@ Watch it pass. Then re-run the full gate.
 2. Flip your feature's status to `"passing"` — only yours, and only because
    its `verify` criterion is now demonstrably satisfied. Never touch other
    entries; append notes if something surprising happened.
-3. Commit with a message naming the feature id.
-4. Append a PROGRESS.md entry at the top: branch, what was done, gate
+3. If the feature changed the technical shape — a new module, entity,
+   cross-cutting invariant, or dependency direction —
+   update ARCHITECTURE.md in the same commit, while the knowledge is
+   fresh. New subsystems get their note under "Subsystem notes".
+4. Commit with a message naming the feature id.
+5. Append a PROGRESS.md entry at the top: branch, what was done, gate
    status, and the next feature.
 
 If the feature is not done when you must stop: commit what is safe, leave
@@ -258,6 +284,9 @@ context and is unreviewable.
 
 - AGENTS.md stays ≤100 lines and current — it must never claim a state the
   repo isn't in.
+- ARCHITECTURE.md is read against the code it describes. A section reality
+  contradicts gets corrected — or the code does: a violated invariant is a
+  defect to fix, not a doc line to soften.
 - Stale docs are updated or deleted; a doc that lies is worse than no doc.
 - Plans whose work is done move from `docs/plans/active/` to
   `docs/plans/completed/`.

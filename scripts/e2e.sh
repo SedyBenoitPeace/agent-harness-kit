@@ -75,6 +75,18 @@ grep -q 'docs/agents/harness-protocol.md' "$TMPL_DIR/AGENTS.md.tmpl" \
 [ -f "$TMPL_DIR/pointer.md.tmpl" ] || fail "pointer.md.tmpl missing"
 [ "$(wc -l < "$TMPL_DIR/pointer.md.tmpl")" -le 5 ] || fail "pointer.md.tmpl must stay a one-line pointer"
 
+# ARCHITECTURE.md.tmpl: living shape doc with all required sections
+ARCH_TMPL="$TMPL_DIR/ARCHITECTURE.md.tmpl"
+[ -f "$ARCH_TMPL" ] || fail "ARCHITECTURE.md.tmpl missing"
+grep -q '{{' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl has no {{placeholders}}"
+grep -q '^## System diagram' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: system diagram section missing"
+grep -q '^## Module map' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: module map section missing"
+grep -q '^## Key entities' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: key entities section missing"
+grep -q '^## Cross-cutting invariants' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: invariants section missing"
+grep -q '^## Subsystem notes' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl: subsystem notes section missing"
+! grep -qi 'claude' "$ARCH_TMPL" || fail "ARCHITECTURE.md.tmpl must be agent-neutral"
+grep -q 'ARCHITECTURE.md' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl does not map ARCHITECTURE.md"
+
 # script templates: must be clean shell once placeholders are substituted
 found_sh_tmpl=0
 for t in "$TMPL_DIR"/*.sh.tmpl; do
@@ -96,6 +108,8 @@ grep -qi 'verify' "$PROTO" || fail "protocol: planning section never teaches the
 ! grep -qi 'claude' "$PROTO" || fail "protocol doc must be agent-neutral (found 'claude')"
 grep -q 'Already have requirements' "$PROTO" || fail "protocol: PRD-input rule missing from section 1.1"
 grep -q 'Choose the verification tooling' "$PROTO" || fail "protocol: verification tooling section (1.7) missing"
+grep -q 'Write ARCHITECTURE.md' "$PROTO" || fail "protocol: architecture section (1.8) missing"
+grep -q 'update ARCHITECTURE.md in the same commit' "$PROTO" || fail "protocol: session architecture-update rule missing"
 
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
 grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
