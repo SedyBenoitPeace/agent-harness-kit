@@ -3,6 +3,19 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-11 — session 9
+
+- Branch: `m12-handoff` (PR).
+- Done: M12-001 — harness-handoff skill (handoff.sh + git-repo fixtures +
+  SKILL.md). Ritual checks: clean tree, green gate (default-on,
+  --skip-gate opt-out with WARNING); prints an agent-neutral one-feature
+  prompt for the next agent.
+- Done: M12-002 — README four-skills list, lifecycle handoff step,
+  "Switching agents (Claude Code ↔ Codex)" section, prompts-table row.
+- Done: M12-003 — 1.3.0 bump.
+- Gate: green. Smoke: handoff.sh on this repo → READY + planning prompt.
+- Next: none failing. Plan moves to docs/plans/completed/ after merge.
+
 ## 2026-07-08 — session 8
 
 - Branch: `m11-status` (PR).
