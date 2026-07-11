@@ -27,7 +27,7 @@ and [OpenAI — Harness engineering](https://openai.com/index/harness-engineerin
 /plugin install agent-harness-kit
 ```
 
-Three skills come with it — invoke each as a slash command or in plain
+Four skills come with it — invoke each as a slash command or in plain
 English:
 
 - **harness-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
@@ -38,6 +38,10 @@ English:
   *"what's the harness status?"*.
 - **harness-audit** — check any repo's harness-readiness.
   `/agent-harness-kit:harness-audit` or *"audit this repo's harness"*.
+- **harness-handoff** — verify the session-end ritual (clean tree, green
+  gate, logged session) and get a paste-ready prompt for the next agent,
+  any vendor. `/agent-harness-kit:harness-handoff` or *"prepare the
+  handoff for the next agent"*.
 
 Manual fallback (no plugin): copy `skills/harness-setup` into
 `~/.claude/skills/`.
@@ -56,9 +60,31 @@ Manual fallback (no plugin): copy `skills/harness-setup` into
    time: progress per milestone, what the last session did, and exactly
    which feature the next session will pick. If the harness isn't set up
    yet, it says so and points you to setup.
-4. **Keep it honest** — `/agent-harness-kit:harness-audit` when a repo
+4. **Hand off cleanly** — `/agent-harness-kit:harness-handoff` when a
+   session ends or you switch agents. It refuses to hand off a dirty tree
+   or a red gate, and prints the exact one-feature prompt the next agent
+   should be given.
+5. **Keep it honest** — `/agent-harness-kit:harness-audit` when a repo
    drifts or before working in an unfamiliar one, plus a periodic
    maintenance pass (protocol section 3).
+
+## Switching agents (e.g. Claude Code ↔ Codex)
+
+The harness keeps all state in the repo, so agents from different vendors
+can work the same project in shifts — plan and review with one, grind
+features with another when you hit a usage limit. The ritual:
+
+1. End the session with `/agent-harness-kit:harness-handoff` (or *"prepare
+   the handoff"*). Blocked = fix first; ready = copy the printed prompt.
+2. Feed the prompt to the next agent: paste it into the chat, or from a
+   terminal `codex "<prompt>"` (interactive) / `codex exec "<prompt>"`
+   (non-interactive). Codex, Cursor, and Gemini CLI read `AGENTS.md`
+   natively, so the prompt plus the repo is the entire handoff.
+3. When you come back, `/agent-harness-kit:harness-status` shows what the
+   other agent did; review its diff before continuing.
+
+One branch, one agent at a time — never point two agents at the same
+branch concurrently.
 
 ## Using the skills — copy-paste prompts
 
@@ -70,6 +96,7 @@ Manual fallback (no plugin): copy `skills/harness-setup` into
 | Check a repo is harness-ready | *"Audit this repo's harness."* |
 | See progress + what's next | *"What's the harness status?"* |
 | Do one unit of work | *"Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and perform exactly one coding session."* |
+| End a session / switch agents | *"Prepare the handoff for the next agent."* |
 | Periodic cleanup | *"Read AGENTS.md, then docs/agents/harness-protocol.md section 3, and perform one maintenance pass."* |
 
 ## Quickstart — template repository
@@ -128,9 +155,12 @@ skills/
 ├── harness-audit/
 │   ├── SKILL.md        audit orchestration: report + offer fixes
 │   └── scripts/check.sh          deterministic readiness checker
-└── harness-status/
-    ├── SKILL.md        status orchestration: read-only report
-    └── scripts/status.sh         deterministic progress/next-feature report
+├── harness-status/
+│   ├── SKILL.md        status orchestration: read-only report
+│   └── scripts/status.sh         deterministic progress/next-feature report
+└── harness-handoff/
+    ├── SKILL.md        handoff orchestration: ritual check + prompt relay
+    └── scripts/handoff.sh        session-end checks + next-agent prompt
 ```
 
 ## Dogfood
