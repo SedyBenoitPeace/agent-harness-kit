@@ -124,6 +124,8 @@ grep -q 'Using the skills' README.md || fail "README: using-the-skills prompts s
 grep -q 'harness-status' README.md || fail "README: harness-status skill missing"
 grep -q '/agent-harness-kit:harness-setup' README.md || fail "README: slash-command forms missing"
 grep -q '## Lifecycle' README.md || fail "README: lifecycle section missing"
+grep -q 'harness-handoff' README.md || fail "README: harness-handoff skill missing"
+grep -q 'Switching agents' README.md || fail "README: switching-agents section missing"
 
 # --- harness-audit skill ----------------------------------------------------
 
@@ -146,5 +148,16 @@ shellcheck "$STATUS_SKILL/scripts/status.sh"
 grep -q '^name: harness-status$' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: description missing"
 bash scripts/test-status.sh
+
+# --- harness-handoff skill ----------------------------------------------------
+
+HANDOFF_SKILL="skills/harness-handoff"
+[ -f "$HANDOFF_SKILL/scripts/handoff.sh" ] || fail "harness-handoff handoff.sh missing"
+shellcheck "$HANDOFF_SKILL/scripts/handoff.sh"
+[ -f "$HANDOFF_SKILL/SKILL.md" ] || fail "harness-handoff SKILL.md missing"
+[ "$(head -1 "$HANDOFF_SKILL/SKILL.md")" = "---" ] || fail "harness-handoff SKILL.md: missing frontmatter"
+grep -q '^name: harness-handoff$' "$HANDOFF_SKILL/SKILL.md" || fail "harness-handoff SKILL.md: frontmatter name wrong"
+grep -q '^description: ' "$HANDOFF_SKILL/SKILL.md" || fail "harness-handoff SKILL.md: description missing"
+bash scripts/test-handoff.sh
 
 echo "GATE GREEN"
