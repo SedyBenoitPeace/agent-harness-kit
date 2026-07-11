@@ -14,9 +14,11 @@ Newest-first session log. One entry per working session. Read this (plus
   SKILL.md offers derive/interview/skip (human chooses).
 - Done: M13-003 — README ARCHITECTURE coverage, Codex quickstart
   (owner-tested commands), claude/codex update commands, 1.4.0.
-- Gate: green. Follow-ups: resync agent-harness-template; this repo has no
-  ARCHITECTURE.md of its own yet (audit will WARN — candidate dogfood).
-- Next: none failing. Publish decision (repo → public) after merge.
+- Done: M13-004 — dogfood ARCHITECTURE.md for this repo (audit PASS line
+  proven) + AGENTS.md pointer; M13 plan moved to completed/ (owner: no
+  separate closeout PR). agent-harness-template resynced same day.
+- Gate: green.
+- Next: none failing. Publish decision (repo → public) deferred by owner.
 
 ## 2026-07-11 — session 9
 

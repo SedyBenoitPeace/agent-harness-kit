@@ -256,6 +256,14 @@
       "status": "passing",
       "verify": "Gate: README contains 'codex plugin marketplace add', 'claude plugin update', and 'ARCHITECTURE.md'; manifests both say 1.4.0",
       "notes": "Codex commands field-tested by the owner (codex plugin marketplace add <url>; codex plugin add agent-harness-kit@agent-harness-kit; codex plugin marketplace upgrade agent-harness-kit)."
+    },
+    {
+      "id": "M13-004",
+      "milestone": 13,
+      "title": "Dogfood ARCHITECTURE.md for this repo + AGENTS.md pointer",
+      "status": "passing",
+      "verify": "bash skills/harness-audit/scripts/check.sh . prints 'PASS  ARCHITECTURE.md exists' (no ARCHITECTURE WARN); AGENTS.md maps it; gate green",
+      "notes": "Doubles as the worked example of the template. check.sh still exits 1 on this repo for the known no-installed-protocol gap (M8 note) — unchanged and expected."
     }
   ]
 }
