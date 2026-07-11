@@ -13,7 +13,8 @@
     "9": "PRD/requirements input guidance",
     "10": "Verification tooling & usage guidance",
     "11": "harness-status skill + lifecycle guidance",
-    "12": "harness-handoff skill (cross-agent session handoff)"
+    "12": "harness-handoff skill (cross-agent session handoff)",
+    "13": "ARCHITECTURE.md scaffolding + audit repair flow"
   },
   "features": [
     {
@@ -231,6 +232,30 @@
       "status": "passing",
       "verify": "Gate: jq reads identical version from plugin.json and marketplace.json plugins[0]; both say 1.3.0",
       "notes": ""
+    },
+    {
+      "id": "M13-001",
+      "milestone": 13,
+      "title": "ARCHITECTURE.md.tmpl + protocol architecture rules (1.8 create, 2.5 same-commit update, 3.2 drift check)",
+      "status": "passing",
+      "verify": "Gate: tmpl exists with {{placeholders}}, all five required sections (System diagram, Module map, Key entities, Cross-cutting invariants, Subsystem notes), agent-neutral; protocol contains 'Write ARCHITECTURE.md' and 'update ARCHITECTURE.md in the same commit'; AGENTS.md.tmpl maps ARCHITECTURE.md",
+      "notes": "Root location (matches field practice + matklad convention). Detail-vs-staleness resolved by accretion: shape/invariants only, per-milestone subsystem notes appended by the building session. Section 1.8 appended, 1.1-1.7 untouched (greps and cross-refs depend on numbering)."
+    },
+    {
+      "id": "M13-002",
+      "milestone": 13,
+      "title": "harness-setup scaffolds ARCHITECTURE.md; harness-audit WARN + derive/interview/skip repair flow",
+      "status": "passing",
+      "verify": "bash scripts/test-audit.sh exits 0 with new cases: fixtures carry ARCHITECTURE.md; removing it still exits 0 but emits the WARN line. Gate: both SKILL.mds grep for ARCHITECTURE coverage",
+      "notes": "check.sh WARNs (never FAILs) so pre-1.4.0 harnessed repos stay legal; the human-chooses repair flow (derive from code / interview / skip, blend encouraged) is judgment and lives in the audit SKILL.md — user's explicit request."
+    },
+    {
+      "id": "M13-003",
+      "milestone": 13,
+      "title": "README: ARCHITECTURE.md coverage + Codex quickstart + plugin update commands; release 1.4.0",
+      "status": "passing",
+      "verify": "Gate: README contains 'codex plugin marketplace add', 'claude plugin update', and 'ARCHITECTURE.md'; manifests both say 1.4.0",
+      "notes": "Codex commands field-tested by the owner (codex plugin marketplace add <url>; codex plugin add agent-harness-kit@agent-harness-kit; codex plugin marketplace upgrade agent-harness-kit)."
     }
   ]
 }

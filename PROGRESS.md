@@ -3,6 +3,21 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-07-11 — session 10
+
+- Branch: `m13-architecture` (PR). M12 plan moved to completed/ (folded in,
+  M9-style, to spare a separate closeout PR).
+- Done: M13-001 — ARCHITECTURE.md.tmpl (5 required sections, living-doc
+  banner) + protocol §1.8 create / §2.5 same-commit update / §3.2 drift
+  check + AGENTS.md.tmpl map line.
+- Done: M13-002 — setup scaffolds it; audit WARNs when missing and the
+  SKILL.md offers derive/interview/skip (human chooses).
+- Done: M13-003 — README ARCHITECTURE coverage, Codex quickstart
+  (owner-tested commands), claude/codex update commands, 1.4.0.
+- Gate: green. Follow-ups: resync agent-harness-template; this repo has no
+  ARCHITECTURE.md of its own yet (audit will WARN — candidate dogfood).
+- Next: none failing. Publish decision (repo → public) after merge.
+
 ## 2026-07-11 — session 9
 
 - Branch: `m12-handoff` (PR).
