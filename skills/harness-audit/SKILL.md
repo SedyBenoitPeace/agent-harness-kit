@@ -30,6 +30,26 @@ checks live in `scripts/check.sh` — run it, never re-derive it by hand.
    - Unfalsifiable verify fields: propose a falsifiable rewrite for each;
      apply only on approval.
 
+## Missing ARCHITECTURE.md — repair flow
+
+When check.sh warns that `ARCHITECTURE.md` is missing, don't just relay
+the warning: offer the human a choice of repair and follow their pick.
+
+- **(a) Derive it** — read the codebase (entry points, module layout,
+  schema/migrations, queues/jobs), draft `ARCHITECTURE.md` from
+  `../harness-setup/templates/ARCHITECTURE.md.tmpl`'s sections, and show
+  it for review before committing. Mark anything uncertain with a
+  question to the human — never present a guess as an invariant.
+- **(b) Interview** — ask the human directly: what are the layers and
+  modules, the key entities, and above all the cross-cutting invariants
+  no feature may violate? Write the doc from their answers.
+- **(c) Skip** — legal (repos harnessed before 1.4.0 lack the doc);
+  note in the verdict that sessions will keep re-deriving the shape
+  from code until it exists.
+
+A blend of (a)+(b) is often best: derive a draft, then interview only
+the gaps and uncertainties — same pattern as §1.1's PRD rule.
+
 ## Red flags
 
 | Thought | Reality |

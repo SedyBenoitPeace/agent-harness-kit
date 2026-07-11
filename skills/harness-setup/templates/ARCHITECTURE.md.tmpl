@@ -1,0 +1,54 @@
+# Architecture — {{PROJECT_NAME}}
+
+> Living document. Any session whose feature changes the shape described
+> here — a new module, entity, cross-cutting invariant, or dependency
+> direction — updates the relevant section **in the same commit**
+> (harness-protocol.md §2.5). Record shape and invariants, not code
+> listings: code churns, invariants rarely do.
+
+## System diagram
+
+```
+{{ASCII_SYSTEM_DIAGRAM}}
+```
+
+Layers/services and the arrows between them. Keep it honest over pretty —
+a fresh session orients itself here first.
+
+## Module map
+
+| Path | Responsibility |
+|---|---|
+| {{MODULE_PATH}} | {{MODULE_RESPONSIBILITY}} |
+
+Real paths in this repo, one row per top-level module or service. A module
+missing from this table is a smell: either map it or question it.
+
+## Key entities & data flow
+
+{{ENTITIES_AND_DATA_FLOW}}
+
+The domain objects, who owns them, how they relate, and where state lives
+(database, queue, cache, files).
+
+## Cross-cutting invariants
+
+Rules **no feature may violate**, whoever implements it. Read this section
+before every session; violating an invariant is a defect even when the
+gate is green.
+
+- {{INVARIANT_1}}
+- {{INVARIANT_2}}
+
+Good invariants are falsifiable and specific: a scoping rule every query
+must honor, a queue's dedup key format, "the daily import updates and
+never inserts". Where possible, enforce them in the gate too.
+
+## Subsystem notes (per milestone)
+
+Appended by the session that builds each subsystem, while the knowledge is
+fresh — this is where the document earns its detail over time.
+
+### M0 — {{MILESTONE_0_NAME}}
+
+{{SUBSYSTEM_NOTES}}

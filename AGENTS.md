@@ -8,7 +8,7 @@ FEATURES.json / PROGRESS.md / plans / e2e gate), consumable by any AI agent.
 
 1. Spec: `docs/specs/2026-07-03-harness-planning-skill-design.md`
 2. Executed plan: `docs/plans/completed/2026-07-03-harness-planning-skill-implementation.md`
-3. Scope/status: `FEATURES.json` · Session log: `PROGRESS.md`
+3. Scope/status: `FEATURES.json` · Session log: `PROGRESS.md` · Shape: `ARCHITECTURE.md`
 4. Gate: `bash scripts/e2e.sh` (exit 0 = green; run at session start and end)
 5. Deliverables: `.claude-plugin/` (manifests), `skills/harness-setup/`, `skills/harness-audit/`, README.
 

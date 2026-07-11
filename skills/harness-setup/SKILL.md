@@ -39,6 +39,9 @@ skill follows its own shipped manual. In particular:
   criterion (§1.4 has good/bad examples).
 - Produce `docs/PRODUCT.md`, milestones, and the first execution plan in
   `docs/plans/active/` before scaffolding.
+- Produce `ARCHITECTURE.md` per §1.8: greenfield fills it from the
+  interview (intended architecture, marked as such); retrofit derives it
+  from reading the code and the human reviews it before commit.
 
 ### 3. Scaffold by copying templates
 
@@ -50,6 +53,7 @@ Copy each template and substitute every `{{PLACEHOLDER}}`:
 | `templates/pointer.md.tmpl` | `CLAUDE.md` (and `GEMINI.md` etc. if asked) |
 | `templates/FEATURES.json.tmpl` | `FEATURES.json` |
 | `templates/PROGRESS.md.tmpl` | `PROGRESS.md` |
+| `templates/ARCHITECTURE.md.tmpl` | `ARCHITECTURE.md` (content from §1.8, not placeholders) |
 | `templates/dev.sh.tmpl` | `scripts/dev.sh` (chmod +x) |
 | `templates/e2e.sh.tmpl` | `scripts/e2e.sh` (chmod +x) |
 | `templates/harness-protocol.md` | `docs/agents/harness-protocol.md` — **copied whole, never generated or summarized** |
