@@ -14,7 +14,8 @@
     "10": "Verification tooling & usage guidance",
     "11": "harness-status skill + lifecycle guidance",
     "12": "harness-handoff skill (cross-agent session handoff)",
-    "13": "ARCHITECTURE.md scaffolding + audit repair flow"
+    "13": "ARCHITECTURE.md scaffolding + audit repair flow",
+    "14": "Logging/observability planning gap + audit repair flow"
   },
   "features": [
     {
@@ -264,6 +265,38 @@
       "status": "passing",
       "verify": "bash skills/harness-audit/scripts/check.sh . prints 'PASS  ARCHITECTURE.md exists' (no ARCHITECTURE WARN); AGENTS.md maps it; gate green",
       "notes": "Doubles as the worked example of the template. check.sh still exits 1 on this repo for the known no-installed-protocol gap (M8 note) — unchanged and expected."
+    },
+    {
+      "id": "M14-001",
+      "milestone": 14,
+      "title": "Protocol §1.9 per-stack logging/observability table; ARCHITECTURE.md.tmpl {{LOGGING_STRATEGY}} invariant slot; harness-setup step",
+      "status": "passing",
+      "verify": "Gate: protocol contains 'Choose the logging/observability approach' and stays agent-neutral; ARCHITECTURE.md.tmpl contains {{LOGGING_STRATEGY}}; harness-setup SKILL.md references it",
+      "notes": "Planning decision, not a build task — 'none yet, revisit at milestone N' is a legal answer. §1.9 appended after §1.8 (never renumber 1.1-1.8; greps/cross-refs depend on it)."
+    },
+    {
+      "id": "M14-002",
+      "milestone": 14,
+      "title": "harness-audit WARN when ARCHITECTURE.md doesn't record a logging strategy; derive/interview/skip repair flow",
+      "status": "passing",
+      "verify": "bash scripts/test-audit.sh exits 0 with new case: stripping the logging mention from a fixture's ARCHITECTURE.md still exits 0 but emits the WARN line. Gate: harness-audit SKILL.md and check.sh cover it",
+      "notes": "WARN only, never FAIL — same non-blocking treatment as the ARCHITECTURE.md-missing check; a documentation-presence proxy, not a real logging audit. Repair flow explicitly notes: actual logging infra work is an ordinary FEATURES.json entry, not part of this flow."
+    },
+    {
+      "id": "M14-003",
+      "milestone": 14,
+      "title": "README logging/observability coverage; release 1.5.0",
+      "status": "passing",
+      "verify": "Gate: README mentions 'logging/observability'; both manifests say 1.5.0",
+      "notes": ""
+    },
+    {
+      "id": "M14-004",
+      "milestone": 14,
+      "title": "Dogfood: this repo's own ARCHITECTURE.md records its logging/observability approach",
+      "status": "passing",
+      "verify": "bash skills/harness-audit/scripts/check.sh . prints 'PASS  ARCHITECTURE.md documents a logging/observability approach'; gate green",
+      "notes": "This repo has no running service: the PASS/FAIL/WARN report grammar (established M7-M8) is its observability layer, recorded under Cross-cutting invariants + an M14 subsystem note."
     }
   ]
 }

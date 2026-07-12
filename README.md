@@ -13,7 +13,8 @@ die when the session ends. The harness fixes this by making **the repo the
 only interface**: scope lives in `FEATURES.json` (every feature with a
 falsifiable `verify` criterion), history in a newest-first `PROGRESS.md`,
 plans in `docs/plans/`, the technical shape in `ARCHITECTURE.md` (module
-map + cross-cutting invariants), and health behind one command —
+map, cross-cutting invariants, and the chosen logging/observability
+approach), and health behind one command —
 `scripts/e2e.sh`, exit 0 = green. Any agent, from any vendor, recovers full context from the
 repo alone and delivers exactly one proven feature per session.
 

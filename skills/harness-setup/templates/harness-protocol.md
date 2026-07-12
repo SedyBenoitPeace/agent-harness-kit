@@ -187,6 +187,34 @@ query honors, a queue's dedup key format, "the daily import updates,
 never inserts" — not code listings or API signatures. Depth accumulates
 per milestone through §2.5, not up front.
 
+### 1.9 Choose the logging/observability approach
+
+Name where logs land and how a future session inspects them — the same way
+§1.7 names the verification tool. This is a **planning decision, not a
+build task**: the human picks the technology (or that none is needed yet);
+the harness only makes sure the choice is recorded and revisited instead of
+silently skipped.
+
+| Stack | Where logs land / how a session inspects them |
+|---|---|
+| Web UI | Browser console + a server-side request log; note the command that tails both |
+| HTTP API / backend | Structured logs to stdout (or a file), one line per request with a correlation id; note the tail command |
+| CLI tool | stderr for diagnostics, stdout reserved for real output; a `--verbose`/`--debug` flag |
+| Mobile | OS-native log viewer (e.g. Console.app, `adb logcat`) plus any in-app diagnostic screen |
+| Library | Caller-injected logger interface; no framework choice imposed on consumers |
+
+Record the answer in `ARCHITECTURE.md`'s Cross-cutting invariants (e.g.
+"every request logs a request id"; "errors always go to stderr as JSON").
+If the repo has no logging infrastructure yet and building it is real work,
+that becomes an ordinary `FEATURES.json` entry with a falsifiable `verify`
+(e.g., "hit /health, confirm a JSON log line with request_id appears in
+stdout") — built through the normal one-feature-per-session loop, not a
+special flow.
+
+**Rule: this step never blocks planning.** "No logging yet, revisit at
+milestone N" is a legal, complete answer — the point is a decision on
+record, not a silent gap.
+
 Copy-paste planning prompt:
 
 ```

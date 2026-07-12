@@ -91,6 +91,15 @@ fi
 # the skill layer offers the repair flow — derive from code / interview / skip)
 if [ -f ARCHITECTURE.md ]; then
   pass "ARCHITECTURE.md exists"
+
+  # Logging/observability strategy (WARN only, same non-blocking treatment:
+  # a documentation-presence proxy, not a real logging audit — the repair
+  # flow lives in harness-audit's SKILL.md, protocol §1.9)
+  if grep -qiE 'logging/observability|logging strategy' ARCHITECTURE.md; then
+    pass "ARCHITECTURE.md documents a logging/observability approach"
+  else
+    warn "ARCHITECTURE.md doesn't record a logging/observability approach — offer the repair flow (protocol §1.9)"
+  fi
 else
   warn "ARCHITECTURE.md missing — offer to derive it from the code or interview the human"
 fi

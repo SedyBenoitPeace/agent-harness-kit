@@ -73,6 +73,11 @@ gate is green.
   templates use `{{PLACEHOLDERS}}` only.
 - **Line budgets:** AGENTS.md ≤ 100 lines; AGENTS.md.tmpl ≤ 80;
   pointer.md.tmpl ≤ 5.
+- **Logging/observability:** this repo has no running service, so it has
+  no separate logging system — the PASS/FAIL/WARN report grammar the
+  skill scripts already emit (established M7-M8) *is* the observability
+  layer. Any future stateful component (a daemon, a server) gets a real
+  logging entry here before it ships.
 
 ## Subsystem notes (per milestone)
 
@@ -102,3 +107,11 @@ empty-array expansion.
 `ARCHITECTURE.md` became a scaffolded artifact (template + protocol
 §1.8/§2.5/§3.2); audit WARNs when missing and offers
 derive/interview/skip. This file is the dogfood instance.
+
+### M14 — observability
+Protocol §1.9 asks planning to name a logging/observability approach
+(never picks one for the human); `ARCHITECTURE.md.tmpl` gained a named
+`{{LOGGING_STRATEGY}}` invariant slot; `check.sh` WARNs when a repo's
+`ARCHITECTURE.md` doesn't record one. This repo's own answer: the
+PASS/FAIL/WARN grammar is the observability layer (see Cross-cutting
+invariants) — no separate logging system needed for a CLI tool.

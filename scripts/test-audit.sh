@@ -53,6 +53,14 @@ rm "$WORK/no-arch/ARCHITECTURE.md"
 out="$(bash "$CHECK" "$WORK/no-arch")" || fail "missing ARCHITECTURE.md must not fail the audit"
 echo "$out" | grep -q "^WARN.*ARCHITECTURE.md" || fail "missing ARCHITECTURE.md: expected WARN line"
 
+# 2c. missing logging/observability strategy: WARN (repair flow lives in
+# SKILL.md), still exit 0 — strip the mention while keeping ARCHITECTURE.md
+make_fixture "$WORK/no-logging"
+grep -vi 'logging' "$WORK/no-logging/ARCHITECTURE.md" > "$WORK/no-logging/ARCH.tmp"
+mv "$WORK/no-logging/ARCH.tmp" "$WORK/no-logging/ARCHITECTURE.md"
+out="$(bash "$CHECK" "$WORK/no-logging")" || fail "missing logging strategy must not fail the audit"
+echo "$out" | grep -q "^WARN.*logging/observability" || fail "missing logging strategy: expected WARN line"
+
 # 3. defect fixtures: each must FAIL with its specific line
 make_fixture "$WORK/big-agents"
 for _ in $(seq 1 101); do echo "filler line" >> "$WORK/big-agents/AGENTS.md"; done
