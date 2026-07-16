@@ -33,17 +33,17 @@ Four skills come with it — invoke each as a slash command or in plain
 English:
 
 - **harness-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
-  whole harness. `/agent-harness-kit:harness-setup` or *"set up the agent
-  harness in this repo"*.
+  whole harness. `/agent-harness-kit:harness-setup` or _"set up the agent
+  harness in this repo"_.
 - **harness-status** — where the project stands: progress per milestone,
   last session, exact next feature. `/agent-harness-kit:harness-status` or
-  *"what's the harness status?"*.
+  _"what's the harness status?"_.
 - **harness-audit** — check any repo's harness-readiness.
-  `/agent-harness-kit:harness-audit` or *"audit this repo's harness"*.
+  `/agent-harness-kit:harness-audit` or _"audit this repo's harness"_.
 - **harness-handoff** — verify the session-end ritual (clean tree, green
   gate, logged session) and get a paste-ready prompt for the next agent,
-  any vendor. `/agent-harness-kit:harness-handoff` or *"prepare the
-  handoff for the next agent"*.
+  any vendor. `/agent-harness-kit:harness-handoff` or _"prepare the
+  handoff for the next agent"_.
 
 Update to the latest release:
 
@@ -69,9 +69,6 @@ Update to the latest release:
 codex plugin marketplace upgrade agent-harness-kit
 ```
 
-While this repo is private, the machine's GitHub credentials must be able
-to see it.
-
 ## Lifecycle — how the pieces fit
 
 1. **Set up once** — `/agent-harness-kit:harness-setup`. Expect an
@@ -80,9 +77,9 @@ to see it.
    ARCHITECTURE.md, docs/plans/, docs/agents/harness-protocol.md,
    scripts/e2e.sh). Repos that are already harnessed are detected and
    left alone.
-2. **Build one feature per session** — say *"Read AGENTS.md, then
+2. **Build one feature per session** — say _"Read AGENTS.md, then
    docs/agents/harness-protocol.md section 2, and perform exactly one
-   coding session."* Repeat until the milestone is done.
+   coding session."_ Repeat until the milestone is done.
 3. **Check where you are** — `/agent-harness-kit:harness-status` any
    time: progress per milestone, what the last session did, and exactly
    which feature the next session will pick. If the harness isn't set up
@@ -101,8 +98,8 @@ The harness keeps all state in the repo, so agents from different vendors
 can work the same project in shifts — plan and review with one, grind
 features with another when you hit a usage limit. The ritual:
 
-1. End the session with `/agent-harness-kit:harness-handoff` (or *"prepare
-   the handoff"*). Blocked = fix first; ready = copy the printed prompt.
+1. End the session with `/agent-harness-kit:harness-handoff` (or _"prepare
+   the handoff"_). Blocked = fix first; ready = copy the printed prompt.
 2. Feed the prompt to the next agent: paste it into the chat, or from a
    terminal `codex "<prompt>"` (interactive) / `codex exec "<prompt>"`
    (non-interactive). Codex, Cursor, and Gemini CLI read `AGENTS.md`
@@ -115,23 +112,23 @@ branch concurrently.
 
 ## Using the skills — copy-paste prompts
 
-| You want to… | Say |
-|---|---|
-| Plan + scaffold a new project | *"Set up the agent harness in this repo."* |
-| Retrofit an existing codebase | *"Set up the agent harness in this repo — it's an existing codebase, preserve what's there."* |
-| Start from an existing PRD | *"Set up the harness using docs/PRD.md as the product requirements."* |
-| Check a repo is harness-ready | *"Audit this repo's harness."* |
-| See progress + what's next | *"What's the harness status?"* |
-| Do one unit of work | *"Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and perform exactly one coding session."* |
-| End a session / switch agents | *"Prepare the handoff for the next agent."* |
-| Periodic cleanup | *"Read AGENTS.md, then docs/agents/harness-protocol.md section 3, and perform one maintenance pass."* |
+| You want to…                  | Say                                                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Plan + scaffold a new project | _"Set up the agent harness in this repo."_                                                                  |
+| Retrofit an existing codebase | _"Set up the agent harness in this repo — it's an existing codebase, preserve what's there."_               |
+| Start from an existing PRD    | _"Set up the harness using docs/PRD.md as the product requirements."_                                       |
+| Check a repo is harness-ready | _"Audit this repo's harness."_                                                                              |
+| See progress + what's next    | _"What's the harness status?"_                                                                              |
+| Do one unit of work           | _"Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and perform exactly one coding session."_ |
+| End a session / switch agents | _"Prepare the handoff for the next agent."_                                                                 |
+| Periodic cleanup              | _"Read AGENTS.md, then docs/agents/harness-protocol.md section 3, and perform one maintenance pass."_       |
 
 ## Quickstart — template repository
 
 Prefer starting a project from a ready-made scaffold? Instantiate
 [agent-harness-template](https://github.com/SedyBenoitPeace/agent-harness-template)
-(*Use this template* on GitHub), open it with any agent, and say *"Read
-AGENTS.md and follow its initialization instructions."* The template mirrors
+(_Use this template_ on GitHub), open it with any agent, and say _"Read
+AGENTS.md and follow its initialization instructions."_ The template mirrors
 `skills/harness-setup/templates/` — this repo stays the canonical source.
 
 ## Quickstart — any other agent
