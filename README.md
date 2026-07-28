@@ -69,6 +69,19 @@ Update to the latest release:
 codex plugin marketplace upgrade agent-harness-kit
 ```
 
+## Quickstart - Pi Coding Agent
+
+```
+pi install git:github.com/SedyBenoitPeace/agent-harness-kit
+```
+
+Update to latest
+
+```
+pi update --extensions
+
+```
+
 ## Lifecycle — how the pieces fit
 
 1. **Set up once** — `/agent-harness-kit:harness-setup`. Expect an
