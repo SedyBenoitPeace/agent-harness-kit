@@ -1,0 +1,25 @@
+{
+  "name": "agent-harness-kit",
+  "version": "1.5.0",
+  "description": "Full long-running-agent harness toolkit: scaffold FEATURES.json / PROGRESS.md / plans / e2e gate into any repo, and audit repos for harness-readiness.",
+  "author": {
+    "name": "Stefano Rifici"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/SedyBenoitPeace/agent-harness-kit",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SedyBenoitPeace/agent-harness-kit"
+  },
+  "keywords": [
+    "pi-package",
+    "harness",
+    "planning",
+    "agents",
+    "scaffolding",
+    "audit"
+  ],
+  "pi": {
+    "skills": ["./skills"]
+  }
+}
