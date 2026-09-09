@@ -3,6 +3,101 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-09 — session 16 (M15-004)
+
+- Branch: `m15-efficient-sessions`.
+- Done: M15-004 — released `harness-session` as plugin `1.6.0` and closed
+  the M15 milestone. Extended the root gate's manifest-sync check to also
+  assert `package.json`'s version matches `plugin.json`/`marketplace.json`
+  (previously only the two plugin manifests were compared). Bumped all
+  three version fields to `1.6.0` and moved
+  `docs/plans/active/2026-09-09-m15-efficient-coding-sessions.md` to
+  `docs/plans/completed/`.
+- Since versions already agreed at `1.5.0`, this task used the existing
+  synchronization gate rather than manufacturing a production-code RED
+  failure, per the plan's Task 4 note.
+- Verified: `bash scripts/e2e.sh` green; `bash
+  skills/harness-session/scripts/context.sh .` reports M15 4/4 passing
+  and `NEXT: none`.
+- Gate: green.
+- Next: no failing feature — plan new work or run a maintenance pass.
+
+## 2026-09-09 — session 15 (M15-003)
+
+- Branch: `m15-efficient-sessions`.
+- Done: M15-003 — integrated the shipped `harness-session` skill into the
+  agent-neutral protocol, the scaffold template, and this repo's own
+  README/ARCHITECTURE. `harness-protocol.md` §2.3 now states the
+  git-status check before claiming a clean baseline, the three-way
+  clean/CONTINUING-INTERRUPTED-FEATURE/ambiguous branch, and the optional
+  target `scripts/preflight.sh` step; §2.4 adds the
+  out-of-scope-tracked-warning rule; §2.5 mentions the gate wrapper as an
+  alternative to the raw gate call. All portable manual commands remain
+  the fallback. `AGENTS.md.tmpl` gained an "accelerator, not a
+  dependency" note (still 46/80 lines). README gained the harness-session
+  skill entry, lifecycle step, usage-table row, and repository-layout
+  entry. `ARCHITECTURE.md` gained the `run-gate.sh` module/diagram
+  coverage, a session-data-flow bullet, four new cross-cutting invariants
+  (status is the sole selector; session scripts are read-only except
+  executing the target's own commands; full gate logs are always
+  retained; dirty ownership is never inferred mechanically), and an
+  expanded M15 subsystem note.
+- Proven test-first: added the seven new gate grep checks first (root
+  `scripts/e2e.sh`), watched the gate fail on the first missing phrase,
+  then edited docs until `bash scripts/e2e.sh` was green again.
+- Gate: green.
+- Next: **M15-004** — release `harness-session` as plugin 1.6.0 and close
+  the milestone.
+
+## 2026-09-09 — session 14 (M15-002)
+
+- Branch: `m15-efficient-sessions`.
+- Done: M15-002 — `skills/harness-session/scripts/run-gate.sh <baseline|final>
+  [TARGET_DIR]` wraps, but never replaces, the target's own
+  `scripts/e2e.sh`: retains the complete captured output in a timestamped
+  log under `${TMPDIR:-/tmp}`, prints an absolute `FULL_LOG` path, and
+  bounds the terminal report to the final 20 lines on success or 80 on
+  failure while returning the target gate's own exit code unchanged.
+  Invalid phase input is a usage error (exit 2). `SKILL.md` now routes
+  both the baseline and final gate through the wrapper and states
+  explicitly that a bounded report never licenses ignoring a non-zero
+  exit.
+- Proven by `bash scripts/test-session.sh` (300-line success log retains
+  >=301 lines while the terminal report stays <=25 lines; a failing fake
+  gate exposes its sentinel while preserving exit 7; invalid phase
+  returns 2) and `bash scripts/e2e.sh`.
+- Gate: green.
+- Next: **M15-003** — protocol, setup template, and lifecycle
+  documentation integration.
+
+## 2026-09-09 — session 13 (M15-001)
+
+- Branch: `m15-efficient-sessions`.
+- Done: M15-001 — `skills/harness-session/scripts/context.sh` delegates
+  feature selection to `harness-status`, then adds `git log -5 --oneline`,
+  a clean/dirty worktree report (`git status --short`), active-plan
+  matching against the selected feature's id under `docs/plans/active/`,
+  and discovery (never execution) of an optional target
+  `scripts/preflight.sh`. Exit codes 3/2 propagate unchanged from the
+  delegated `status.sh` call via `set -e`. `SKILL.md` covers clean start,
+  continuing an interrupted feature, and stopping on ambiguous dirty
+  state; it invokes `bash scripts/e2e.sh` directly until M15-002 adds the
+  concise `run-gate.sh` wrapper.
+- Proven by `bash scripts/test-session.sh` (bare/broken delegation, clean
+  report contents, five-commit cap, dirty-tree facts, preflight
+  discovery) and `bash scripts/e2e.sh`.
+- Gate: green.
+- Next: **M15-002** — concise gate runner retaining full evidence.
+
+## 2026-09-09 — session 12 (M15 efficient coding sessions planned)
+
+- Branch: `m15-efficient-sessions` (planning branch from updated `master`).
+- Why: a field M1-003 coding session took roughly 43 minutes and consumed excessive context because the plugin has setup, audit, status, and handoff skills but no skill that owns protocol §2 execution.
+- Planned only — no implementation: added the approved design spec and a four-feature implementation plan for `harness-session`: bounded context and interrupted-work safety (M15-001), concise retained gate logs (M15-002), protocol/docs/architecture integration (M15-003), and release 1.6.0 (M15-004).
+- Owner-approved boundaries: keep the final full gate and one-feature rule; reuse `harness-status` as the sole selector; never infer ambiguous dirty-file ownership; keep stack-specific service checks in an optional target `scripts/preflight.sh`; do not modify target gates.
+- Baseline and planning gate: **GREEN**.
+- Next: **M15-001** — implement the `harness-session` bounded context script, skill workflow, and fixture tests exactly as planned.
+
 ## 2026-07-11 — session 11
 
 - Branch: `m14-observability` (PR).
