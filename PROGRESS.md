@@ -3,6 +3,15 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-09 — session 12 (M15 efficient coding sessions planned)
+
+- Branch: `m15-efficient-sessions` (planning branch from updated `master`).
+- Why: a field M1-003 coding session took roughly 43 minutes and consumed excessive context because the plugin has setup, audit, status, and handoff skills but no skill that owns protocol §2 execution.
+- Planned only — no implementation: added the approved design spec and a four-feature implementation plan for `harness-session`: bounded context and interrupted-work safety (M15-001), concise retained gate logs (M15-002), protocol/docs/architecture integration (M15-003), and release 1.6.0 (M15-004).
+- Owner-approved boundaries: keep the final full gate and one-feature rule; reuse `harness-status` as the sole selector; never infer ambiguous dirty-file ownership; keep stack-specific service checks in an optional target `scripts/preflight.sh`; do not modify target gates.
+- Baseline and planning gate: **GREEN**.
+- Next: **M15-001** — implement the `harness-session` bounded context script, skill workflow, and fixture tests exactly as planned.
+
 ## 2026-07-11 — session 11
 
 - Branch: `m14-observability` (PR).

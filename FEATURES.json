@@ -15,7 +15,8 @@
     "11": "harness-status skill + lifecycle guidance",
     "12": "harness-handoff skill (cross-agent session handoff)",
     "13": "ARCHITECTURE.md scaffolding + audit repair flow",
-    "14": "Logging/observability planning gap + audit repair flow"
+    "14": "Logging/observability planning gap + audit repair flow",
+    "15": "Efficient coding sessions (harness-session skill)"
   },
   "features": [
     {
@@ -297,6 +298,38 @@
       "status": "passing",
       "verify": "bash skills/harness-audit/scripts/check.sh . prints 'PASS  ARCHITECTURE.md documents a logging/observability approach'; gate green",
       "notes": "This repo has no running service: the PASS/FAIL/WARN report grammar (established M7-M8) is its observability layer, recorded under Cross-cutting invariants + an M14 subsystem note."
+    },
+    {
+      "id": "M15-001",
+      "milestone": 15,
+      "title": "harness-session skill: bounded context and safe session start",
+      "status": "failing",
+      "verify": "bash scripts/test-session.sh exits 0 with fixtures proving context.sh delegates next-feature selection to harness-status, prints only the newest PROGRESS entry plus five commits, reports clean/dirty worktrees and matching active plans without writes, preserves uninitialized/broken exit codes 3/2, and discovers but does not execute optional scripts/preflight.sh; SKILL.md explicitly handles clean start, selected-feature continuation, and ambiguous dirty state",
+      "notes": "New lifecycle skill. Judgment stays in SKILL.md; deterministic facts stay in scripts. M15-001 invokes the target gate directly until M15-002 adds the concise wrapper."
+    },
+    {
+      "id": "M15-002",
+      "milestone": 15,
+      "title": "Concise gate runner retains full evidence",
+      "status": "failing",
+      "verify": "bash scripts/test-session.sh exits 0 with a 300-line successful fake gate producing at most 25 report lines and a complete readable FULL_LOG, a failing fake gate exposing its final failure sentinel while preserving exit 7, and invalid phase input returning 2; harness-session uses it for both baseline and final gates",
+      "notes": "Wraps the target repo's scripts/e2e.sh; never replaces or weakens it. Framework-neutral caps: 20 success lines, 80 failure lines."
+    },
+    {
+      "id": "M15-003",
+      "milestone": 15,
+      "title": "Efficient-session protocol, lifecycle docs and architecture integration",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 and checks that the agent-neutral protocol documents CONTINUING INTERRUPTED FEATURE, optional scripts/preflight.sh, concise retained gate logs, and tracked non-blocking warnings; AGENTS.md.tmpl, README.md and ARCHITECTURE.md all map harness-session without making it a target-repo dependency",
+      "notes": "Manual protocol commands remain as fallback for agents without the plugin. No stack-specific readiness logic enters the plugin."
+    },
+    {
+      "id": "M15-004",
+      "milestone": 15,
+      "title": "Release harness-session as plugin 1.6.0",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with package.json, plugin.json and marketplace.json versions all equal to 1.6.0; the M15 plan is under docs/plans/completed; bash skills/harness-session/scripts/context.sh . reports M15 4/4 passing and NEXT: none",
+      "notes": "Version bump is last because installed plugin caches are version-keyed. Owner merges the PR."
     }
   ]
 }
