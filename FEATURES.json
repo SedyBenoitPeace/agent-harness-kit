@@ -319,7 +319,7 @@
       "id": "M15-003",
       "milestone": 15,
       "title": "Efficient-session protocol, lifecycle docs and architecture integration",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 and checks that the agent-neutral protocol documents CONTINUING INTERRUPTED FEATURE, optional scripts/preflight.sh, concise retained gate logs, and tracked non-blocking warnings; AGENTS.md.tmpl, README.md and ARCHITECTURE.md all map harness-session without making it a target-repo dependency",
       "notes": "Manual protocol commands remain as fallback for agents without the plugin. No stack-specific readiness logic enters the plugin."
     },

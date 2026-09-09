@@ -28,6 +28,11 @@ first session. This file is only the map.
    `verify` criterion proves it — never touch other entries.
 6. Commit, then append an entry to `PROGRESS.md`.
 
+If the harness-session plugin skill is installed, it bundles steps 1 and
+3 into one non-mutating call and compresses the gate output while
+retaining the full log — an accelerator, not a file this repo depends
+on. The six manual steps above always work as the fallback.
+
 ## Rules
 
 - The repo is the only interface: if it's not committed here, it doesn't

@@ -40,6 +40,7 @@ shellcheck scripts/*.sh
 grep -q "MIT License" LICENSE 2>/dev/null || fail "LICENSE missing or not MIT"
 [ -f .gitignore ] || fail ".gitignore missing"
 [ -f README.md ] || fail "README.md missing"
+grep -q 'harness-session' ARCHITECTURE.md || fail "ARCHITECTURE.md: harness-session dogfood coverage missing"
 
 # --- plugin packaging -------------------------------------------------------
 
@@ -70,6 +71,8 @@ grep -q '{{' "$TMPL_DIR/PROGRESS.md.tmpl" || fail "PROGRESS.md.tmpl has no {{pla
 [ "$(wc -l < "$TMPL_DIR/AGENTS.md.tmpl")" -le 80 ] || fail "AGENTS.md.tmpl exceeds 80 lines"
 grep -q 'docs/agents/harness-protocol.md' "$TMPL_DIR/AGENTS.md.tmpl" \
   || fail "AGENTS.md.tmpl does not point at the protocol doc"
+grep -q 'harness-session' "$TMPL_DIR/AGENTS.md.tmpl" \
+  || fail "AGENTS.md.tmpl does not mention harness-session"
 
 # pointer.md.tmpl: a pointer, nothing more
 [ -f "$TMPL_DIR/pointer.md.tmpl" ] || fail "pointer.md.tmpl missing"
@@ -116,6 +119,9 @@ grep -q 'Choose the logging/observability approach' "$PROTO" || fail "protocol: 
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
 grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
 grep -q 'ONE feature' "$PROTO" || fail "protocol: one-feature-per-session rule missing"
+grep -q 'CONTINUING INTERRUPTED FEATURE' "$PROTO" || fail "protocol: interrupted-feature continuation rule missing"
+grep -q 'scripts/preflight.sh' "$PROTO" || fail "protocol: optional target preflight rule missing"
+grep -q 'tracked by another failing or deferred feature' "$PROTO" || fail "protocol: out-of-scope-warning rule missing"
 
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
 grep -qi 'entropy' "$PROTO" || fail "protocol: maintenance section must cover entropy GC"
@@ -148,6 +154,8 @@ grep -q 'codex plugin marketplace add' README.md || fail "README: Codex quicksta
 grep -q 'claude plugin update' README.md || fail "README: Claude update command missing"
 grep -q 'ARCHITECTURE.md' README.md || fail "README: ARCHITECTURE.md coverage missing"
 grep -qi 'logging/observability' README.md || fail "README: logging/observability coverage missing"
+grep -q 'harness-session' README.md || fail "README: harness-session skill missing"
+grep -q 'run-gate.sh' README.md || fail "README: run-gate.sh coverage missing"
 
 # --- harness-audit skill ----------------------------------------------------
 

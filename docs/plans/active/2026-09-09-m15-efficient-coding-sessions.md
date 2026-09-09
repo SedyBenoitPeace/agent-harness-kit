@@ -277,7 +277,7 @@ git commit -m "feat(M15-002): summarize full gate output"
 - Consumes: the shipped `harness-session` skill and scripts from M15-001/M15-002.
 - Produces: agent-neutral session rules inherited by new repositories, plugin usage documentation, updated architectural map.
 
-- [ ] **Step 1: Add failing documentation checks to the root gate**
+- [x] **Step 1: Add failing documentation checks to the root gate**
 
 Require these stable single-line phrases:
 
@@ -293,13 +293,13 @@ grep -q 'harness-session' ARCHITECTURE.md
 
 Run `bash scripts/e2e.sh` and expect failure on the first missing phrase.
 
-- [ ] **Step 2: Update protocol section 2 without renumbering later sections**
+- [x] **Step 2: Update protocol section 2 without renumbering later sections**
 
 Revise §2.1–§2.5 to require bounded deterministic recovery when the session skill is available, check git status before claiming a clean baseline, define the three-way clean/continuation/ambiguous branch, run optional target `scripts/preflight.sh`, use concise gate presentation with a retained full log, and prohibit expanding an exit-zero tracked warning into another feature.
 
 Retain the portable manual commands as the fallback for agents that do not have the plugin. Preserve the mandatory final gate and one-feature discipline.
 
-- [ ] **Step 3: Update the setup map and README**
+- [x] **Step 3: Update the setup map and README**
 
 Add `harness-session` to `AGENTS.md.tmpl` as an optional installed-plugin accelerator, not as a repository file dependency. Add lifecycle and usage examples to README:
 
@@ -310,11 +310,11 @@ Continue the current harness feature.
 
 Document that orchestration and log compression live in the plugin; project-specific readiness may optionally live in `scripts/preflight.sh`.
 
-- [ ] **Step 4: Complete architecture dogfood**
+- [x] **Step 4: Complete architecture dogfood**
 
 Update the system diagram, module map, key data flow, and M15 subsystem note. Record invariants: status remains the sole deterministic feature selector; session scripts are read-only except executing the target's own commands; complete gate logs are retained; dirty ownership is never inferred mechanically.
 
-- [ ] **Step 5: Verify and close**
+- [x] **Step 5: Verify and close**
 
 Run `bash scripts/e2e.sh`; flip only M15-003, update `PROGRESS.md`, and commit:
 

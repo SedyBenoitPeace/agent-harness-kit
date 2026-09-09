@@ -247,9 +247,28 @@ the ordering is the plan.
 
 ### 2.3 Confirm a green baseline
 
-Run `bash scripts/e2e.sh` before touching code. If it is red, **fixing the
-gate is the session** — do that instead, and log it as such. Never build on
-a red baseline: you can't tell your breakage from inherited breakage.
+Check `git status` before claiming anything about the baseline — never
+assume the tree is clean.
+
+- **Clean tree:** run `bash scripts/e2e.sh` (or, with the harness-session
+  plugin skill installed, its gate wrapper — same gate underneath, a
+  concise report, and the complete output retained on disk). If it is
+  red, **fixing the gate is the session** — do that instead, and log it
+  as such. Never build on a red baseline: you can't tell your breakage
+  from inherited breakage.
+- **Dirty tree that clearly matches the selected feature** (the diff and
+  an in-flight plan both point at the same feature id): announce
+  CONTINUING INTERRUPTED FEATURE, inspect the existing diff, run the
+  feature's own `verify` check first, and never claim a clean baseline —
+  state plainly that the full gate has not been re-confirmed from
+  scratch.
+- **Dirty tree that is unrelated or ambiguous:** stop and ask before doing
+  anything else. Ownership of an unexpected dirty file is never inferred
+  mechanically.
+
+If the repo carries an optional executable `scripts/preflight.sh`, run it
+before the gate — a non-zero exit blocks the session exactly like a red
+gate.
 
 ### 2.4 Implement, test-first
 
@@ -257,9 +276,15 @@ Write the test (or set up the manual check) that proves the feature's
 `verify` criterion. Watch it fail. Implement the minimum that makes it pass.
 Watch it pass. Then re-run the full gate.
 
+Stay inside the selected feature: a passing gate's warning that is
+already tracked by another failing or deferred feature is out of scope —
+do not investigate or fix it unless your feature's own `verify` criterion
+requires it.
+
 ### 2.5 Close out
 
-1. Re-run `bash scripts/e2e.sh` — must be green.
+1. Re-run `bash scripts/e2e.sh` (or the harness-session gate wrapper's
+   final phase) — must be green.
 2. Flip your feature's status to `"passing"` — only yours, and only because
    its `verify` criterion is now demonstrably satisfied. Never touch other
    entries; append notes if something surprising happened.

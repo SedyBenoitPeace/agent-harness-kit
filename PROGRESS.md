@@ -3,6 +3,33 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-09 — session 15 (M15-003)
+
+- Branch: `m15-efficient-sessions`.
+- Done: M15-003 — integrated the shipped `harness-session` skill into the
+  agent-neutral protocol, the scaffold template, and this repo's own
+  README/ARCHITECTURE. `harness-protocol.md` §2.3 now states the
+  git-status check before claiming a clean baseline, the three-way
+  clean/CONTINUING-INTERRUPTED-FEATURE/ambiguous branch, and the optional
+  target `scripts/preflight.sh` step; §2.4 adds the
+  out-of-scope-tracked-warning rule; §2.5 mentions the gate wrapper as an
+  alternative to the raw gate call. All portable manual commands remain
+  the fallback. `AGENTS.md.tmpl` gained an "accelerator, not a
+  dependency" note (still 46/80 lines). README gained the harness-session
+  skill entry, lifecycle step, usage-table row, and repository-layout
+  entry. `ARCHITECTURE.md` gained the `run-gate.sh` module/diagram
+  coverage, a session-data-flow bullet, four new cross-cutting invariants
+  (status is the sole selector; session scripts are read-only except
+  executing the target's own commands; full gate logs are always
+  retained; dirty ownership is never inferred mechanically), and an
+  expanded M15 subsystem note.
+- Proven test-first: added the seven new gate grep checks first (root
+  `scripts/e2e.sh`), watched the gate fail on the first missing phrase,
+  then edited docs until `bash scripts/e2e.sh` was green again.
+- Gate: green.
+- Next: **M15-004** — release `harness-session` as plugin 1.6.0 and close
+  the milestone.
+
 ## 2026-09-09 — session 14 (M15-002)
 
 - Branch: `m15-efficient-sessions`.

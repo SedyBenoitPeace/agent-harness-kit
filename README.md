@@ -29,12 +29,19 @@ and [OpenAI — Harness engineering](https://openai.com/index/harness-engineerin
 /plugin install agent-harness-kit
 ```
 
-Four skills come with it — invoke each as a slash command or in plain
+Five skills come with it — invoke each as a slash command or in plain
 English:
 
 - **harness-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
   whole harness. `/agent-harness-kit:harness-setup` or _"set up the agent
   harness in this repo"_.
+- **harness-session** — run one coding session with bounded, non-mutating
+  context recovery and a concise gate report. `/agent-harness-kit:harness-session`,
+  _"Implement M1-004 following the harness."_, or _"Continue the current
+  harness feature."_ Orchestration and gate-log compression (the
+  `run-gate.sh` wrapper retains the full log while keeping the terminal
+  report short) live in the plugin; project-specific readiness checks are
+  optional and live in the target repo's own `scripts/preflight.sh`.
 - **harness-status** — where the project stands: progress per milestone,
   last session, exact next feature. `/agent-harness-kit:harness-status` or
   _"what's the harness status?"_.
@@ -92,7 +99,11 @@ pi update --extensions
    left alone.
 2. **Build one feature per session** — say _"Read AGENTS.md, then
    docs/agents/harness-protocol.md section 2, and perform exactly one
-   coding session."_ Repeat until the milestone is done.
+   coding session."_ With the plugin installed, `/agent-harness-kit:harness-session`
+   (or _"Implement M1-004 following the harness."_ / _"Continue the
+   current harness feature."_) runs the same protocol with bounded
+   context recovery and a concise gate report. Repeat until the milestone
+   is done.
 3. **Check where you are** — `/agent-harness-kit:harness-status` any
    time: progress per milestone, what the last session did, and exactly
    which feature the next session will pick. If the harness isn't set up
@@ -132,7 +143,8 @@ branch concurrently.
 | Start from an existing PRD    | _"Set up the harness using docs/PRD.md as the product requirements."_                                       |
 | Check a repo is harness-ready | _"Audit this repo's harness."_                                                                              |
 | See progress + what's next    | _"What's the harness status?"_                                                                              |
-| Do one unit of work           | _"Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and perform exactly one coding session."_ |
+| Do one unit of work           | _"Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and perform exactly one coding session."_ (manual fallback, any agent) |
+| Do one unit of work (plugin installed) | _"Implement M1-004 following the harness."_ or _"Continue the current harness feature."_ |
 | End a session / switch agents | _"Prepare the handoff for the next agent."_                                                                 |
 | Periodic cleanup              | _"Read AGENTS.md, then docs/agents/harness-protocol.md section 3, and perform one maintenance pass."_       |
 
@@ -196,9 +208,14 @@ skills/
 ├── harness-status/
 │   ├── SKILL.md        status orchestration: read-only report
 │   └── scripts/status.sh         deterministic progress/next-feature report
-└── harness-handoff/
-    ├── SKILL.md        handoff orchestration: ritual check + prompt relay
-    └── scripts/handoff.sh        session-end checks + next-agent prompt
+├── harness-handoff/
+│   ├── SKILL.md        handoff orchestration: ritual check + prompt relay
+│   └── scripts/handoff.sh        session-end checks + next-agent prompt
+└── harness-session/
+    ├── SKILL.md        session orchestration: bounded recovery + gate
+    └── scripts/
+        ├── context.sh             bounded, non-mutating session context
+        └── run-gate.sh            concise gate wrapper, full log retained
 ```
 
 ## Dogfood
