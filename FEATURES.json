@@ -327,7 +327,7 @@
       "id": "M15-004",
       "milestone": 15,
       "title": "Release harness-session as plugin 1.6.0",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with package.json, plugin.json and marketplace.json versions all equal to 1.6.0; the M15 plan is under docs/plans/completed; bash skills/harness-session/scripts/context.sh . reports M15 4/4 passing and NEXT: none",
       "notes": "Version bump is last because installed plugin caches are version-keyed. Owner merges the PR."
     }

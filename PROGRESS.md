@@ -3,6 +3,25 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-09 — session 16 (M15-004)
+
+- Branch: `m15-efficient-sessions`.
+- Done: M15-004 — released `harness-session` as plugin `1.6.0` and closed
+  the M15 milestone. Extended the root gate's manifest-sync check to also
+  assert `package.json`'s version matches `plugin.json`/`marketplace.json`
+  (previously only the two plugin manifests were compared). Bumped all
+  three version fields to `1.6.0` and moved
+  `docs/plans/active/2026-09-09-m15-efficient-coding-sessions.md` to
+  `docs/plans/completed/`.
+- Since versions already agreed at `1.5.0`, this task used the existing
+  synchronization gate rather than manufacturing a production-code RED
+  failure, per the plan's Task 4 note.
+- Verified: `bash scripts/e2e.sh` green; `bash
+  skills/harness-session/scripts/context.sh .` reports M15 4/4 passing
+  and `NEXT: none`.
+- Gate: green.
+- Next: no failing feature — plan new work or run a maintenance pass.
+
 ## 2026-09-09 — session 15 (M15-003)
 
 - Branch: `m15-efficient-sessions`.
