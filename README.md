@@ -88,6 +88,15 @@ Update to latest
 pi update --extensions
 
 ```
+## Quickstart - Copilot CLI (plugin)
+
+```
+copilot plugin marketplace add https://github.com/SedyBenoitPeace/agent-harness-kit
+```
+
+```
+copilot plugin install agent-harness-kit                                                     
+```
 
 ## Lifecycle — how the pieces fit
 
