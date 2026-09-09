@@ -311,7 +311,7 @@
       "id": "M15-002",
       "milestone": 15,
       "title": "Concise gate runner retains full evidence",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/test-session.sh exits 0 with a 300-line successful fake gate producing at most 25 report lines and a complete readable FULL_LOG, a failing fake gate exposing its final failure sentinel while preserving exit 7, and invalid phase input returning 2; harness-session uses it for both baseline and final gates",
       "notes": "Wraps the target repo's scripts/e2e.sh; never replaces or weakens it. Framework-neutral caps: 20 success lines, 80 failure lines."
     },

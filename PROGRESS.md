@@ -3,6 +3,27 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-09 — session 14 (M15-002)
+
+- Branch: `m15-efficient-sessions`.
+- Done: M15-002 — `skills/harness-session/scripts/run-gate.sh <baseline|final>
+  [TARGET_DIR]` wraps, but never replaces, the target's own
+  `scripts/e2e.sh`: retains the complete captured output in a timestamped
+  log under `${TMPDIR:-/tmp}`, prints an absolute `FULL_LOG` path, and
+  bounds the terminal report to the final 20 lines on success or 80 on
+  failure while returning the target gate's own exit code unchanged.
+  Invalid phase input is a usage error (exit 2). `SKILL.md` now routes
+  both the baseline and final gate through the wrapper and states
+  explicitly that a bounded report never licenses ignoring a non-zero
+  exit.
+- Proven by `bash scripts/test-session.sh` (300-line success log retains
+  >=301 lines while the terminal report stays <=25 lines; a failing fake
+  gate exposes its sentinel while preserving exit 7; invalid phase
+  returns 2) and `bash scripts/e2e.sh`.
+- Gate: green.
+- Next: **M15-003** — protocol, setup template, and lifecycle
+  documentation integration.
+
 ## 2026-09-09 — session 13 (M15-001)
 
 - Branch: `m15-efficient-sessions`.

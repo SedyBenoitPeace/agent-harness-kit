@@ -197,7 +197,7 @@ git commit -m "feat(M15-001): add efficient harness session startup"
 - Consumes: phase `baseline|final`, optional target directory, target `scripts/e2e.sh`, `${TMPDIR:-/tmp}`.
 - Produces: `run-gate.sh <baseline|final> [TARGET_DIR]`; full combined log; concise success/failure report; original gate exit code.
 
-- [ ] **Step 1: Add failing gate-wrapper fixtures**
+- [x] **Step 1: Add failing gate-wrapper fixtures**
 
 Extend `scripts/test-session.sh` with fake target gates:
 
@@ -222,19 +222,19 @@ bash "$RUN_GATE" middle "$WORK/green" >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 2 ]
 ```
 
-- [ ] **Step 2: Run the fixture test to verify RED**
+- [x] **Step 2: Run the fixture test to verify RED**
 
 Run `bash scripts/test-session.sh`.
 
 Expected: non-zero because `run-gate.sh` does not exist.
 
-- [ ] **Step 3: Implement `run-gate.sh`**
+- [x] **Step 3: Implement `run-gate.sh`**
 
 Implement Bash 3.2-compatible phase validation, timestamped log creation, duration measurement with `date +%s`, and `set +e` around the target gate so its status can be captured. Success prints at most the final 20 non-empty log lines; failure prints the final 80 lines. Always print the absolute full-log path and return the target status.
 
 Do not parse framework-specific Jest, pytest, npm, or Gradle output. The cap is the generic token-control mechanism.
 
-- [ ] **Step 4: Switch the skill to the wrapper**
+- [x] **Step 4: Switch the skill to the wrapper**
 
 Update `SKILL.md` so clean starts use:
 
@@ -250,7 +250,7 @@ bash <plugin>/skills/harness-session/scripts/run-gate.sh final <target>
 
 On red, inspect more of `FULL_LOG` only if the printed tail is insufficient. State explicitly that concise output does not permit ignoring a non-zero gate.
 
-- [ ] **Step 5: Verify and close**
+- [x] **Step 5: Verify and close**
 
 Run `bash scripts/test-session.sh` and `bash scripts/e2e.sh`; flip only M15-002, update `PROGRESS.md`, and commit:
 
