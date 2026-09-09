@@ -38,7 +38,7 @@
 - Consumes: `skills/harness-status/scripts/status.sh [TARGET_DIR]`, target `FEATURES.json`, `PROGRESS.md`, git metadata, optional executable `scripts/preflight.sh`.
 - Produces: `context.sh [TARGET_DIR]` with exit `0`, `2`, or `3`; `harness-session` skill workflow for exactly one feature.
 
-- [ ] **Step 1: Write the failing fixture tests**
+- [x] **Step 1: Write the failing fixture tests**
 
 Create `scripts/test-session.sh` with temporary fixtures covering:
 
@@ -72,7 +72,7 @@ echo "$out" | grep -q 'PREFLIGHT: scripts/preflight.sh'
 
 Also assert that only five commit subjects appear and only the newest `PROGRESS.md` session is emitted through delegated status output.
 
-- [ ] **Step 2: Run the fixture test to verify RED**
+- [x] **Step 2: Run the fixture test to verify RED**
 
 Run:
 
@@ -82,7 +82,7 @@ bash scripts/test-session.sh
 
 Expected: non-zero because `skills/harness-session/scripts/context.sh` does not exist.
 
-- [ ] **Step 3: Implement deterministic bounded context**
+- [x] **Step 3: Implement deterministic bounded context**
 
 Create `context.sh` with this control flow:
 
@@ -134,7 +134,7 @@ fi
 
 Keep the script read-only and do not reimplement status rollups or next-feature formatting.
 
-- [ ] **Step 4: Write `harness-session/SKILL.md`**
+- [x] **Step 4: Write `harness-session/SKILL.md`**
 
 The frontmatter name is `harness-session`. Its description explicitly triggers for “implement”, “continue”, “carry on”, and “execute” a harness feature.
 
@@ -156,11 +156,11 @@ The workflow must state:
 
 Reference `run-gate.sh` as arriving in M15-002; until then the skill invokes `bash scripts/e2e.sh` directly so M15-001 is independently usable.
 
-- [ ] **Step 5: Wire the gate and architecture**
+- [x] **Step 5: Wire the gate and architecture**
 
 Add shellcheck and `bash scripts/test-session.sh` to the root gate. Add `harness-session` to the system diagram/module map and an M15 subsystem note explaining bounded context plus script/judgment separation.
 
-- [ ] **Step 6: Verify GREEN**
+- [x] **Step 6: Verify GREEN**
 
 Run:
 
@@ -171,7 +171,7 @@ bash scripts/e2e.sh
 
 Expected: `SESSION TESTS GREEN` and `GATE GREEN`.
 
-- [ ] **Step 7: Close the feature**
+- [x] **Step 7: Close the feature**
 
 Flip only M15-001 to `passing`, prepend the session entry to `PROGRESS.md`, and commit:
 

@@ -3,6 +3,25 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-09 — session 13 (M15-001)
+
+- Branch: `m15-efficient-sessions`.
+- Done: M15-001 — `skills/harness-session/scripts/context.sh` delegates
+  feature selection to `harness-status`, then adds `git log -5 --oneline`,
+  a clean/dirty worktree report (`git status --short`), active-plan
+  matching against the selected feature's id under `docs/plans/active/`,
+  and discovery (never execution) of an optional target
+  `scripts/preflight.sh`. Exit codes 3/2 propagate unchanged from the
+  delegated `status.sh` call via `set -e`. `SKILL.md` covers clean start,
+  continuing an interrupted feature, and stopping on ambiguous dirty
+  state; it invokes `bash scripts/e2e.sh` directly until M15-002 adds the
+  concise `run-gate.sh` wrapper.
+- Proven by `bash scripts/test-session.sh` (bare/broken delegation, clean
+  report contents, five-commit cap, dirty-tree facts, preflight
+  discovery) and `bash scripts/e2e.sh`.
+- Gate: green.
+- Next: **M15-002** — concise gate runner retaining full evidence.
+
 ## 2026-09-09 — session 12 (M15 efficient coding sessions planned)
 
 - Branch: `m15-efficient-sessions` (planning branch from updated `master`).

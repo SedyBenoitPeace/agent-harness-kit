@@ -303,7 +303,7 @@
       "id": "M15-001",
       "milestone": 15,
       "title": "harness-session skill: bounded context and safe session start",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/test-session.sh exits 0 with fixtures proving context.sh delegates next-feature selection to harness-status, prints only the newest PROGRESS entry plus five commits, reports clean/dirty worktrees and matching active plans without writes, preserves uninitialized/broken exit codes 3/2, and discovers but does not execute optional scripts/preflight.sh; SKILL.md explicitly handles clean start, selected-feature continuation, and ambiguous dirty state",
       "notes": "New lifecycle skill. Judgment stays in SKILL.md; deterministic facts stay in scripts. M15-001 invokes the target gate directly until M15-002 adds the concise wrapper."
     },

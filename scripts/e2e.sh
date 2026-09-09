@@ -183,4 +183,15 @@ grep -q '^name: harness-handoff$' "$HANDOFF_SKILL/SKILL.md" || fail "harness-han
 grep -q '^description: ' "$HANDOFF_SKILL/SKILL.md" || fail "harness-handoff SKILL.md: description missing"
 bash scripts/test-handoff.sh
 
+# --- harness-session skill -----------------------------------------------
+
+SESSION_SKILL="skills/harness-session"
+[ -f "$SESSION_SKILL/scripts/context.sh" ] || fail "harness-session context.sh missing"
+shellcheck "$SESSION_SKILL/scripts/context.sh"
+[ -f "$SESSION_SKILL/SKILL.md" ] || fail "harness-session SKILL.md missing"
+[ "$(head -1 "$SESSION_SKILL/SKILL.md")" = "---" ] || fail "harness-session SKILL.md: missing frontmatter"
+grep -q '^name: harness-session$' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: frontmatter name wrong"
+grep -q '^description: ' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description missing"
+bash scripts/test-session.sh
+
 echo "GATE GREEN"

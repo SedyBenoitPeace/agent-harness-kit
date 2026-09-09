@@ -13,13 +13,13 @@
     ↓ reads
 [.claude-plugin/  plugin.json + marketplace.json (versions in lockstep)]
     ↓ exposes
-[skills/  harness-setup | harness-audit | harness-status | harness-handoff]
-    │         │                │               │              │
-    │    templates/ ★      scripts/check.sh  scripts/     scripts/
-    │    (canonical          │               status.sh    handoff.sh
-    │     scaffold source)   └──────── two-layer pattern ────────┘
+[skills/  harness-setup | harness-audit | harness-status | harness-handoff | harness-session]
+    │         │                │               │              │                 │
+    │    templates/ ★      scripts/check.sh  scripts/     scripts/          scripts/
+    │    (canonical          │               status.sh    handoff.sh        context.sh
+    │     scaffold source)   └───────────── two-layer pattern ─────────────────┘
     ↓                                  (script = mechanics, SKILL.md = judgment)
-[scripts/  e2e.sh (the gate) + test-audit.sh + test-status.sh + test-handoff.sh]
+[scripts/  e2e.sh (the gate) + test-audit.sh + test-status.sh + test-handoff.sh + test-session.sh]
     ↑ run by
 [.github/workflows/gate.yml  CI on push/PR]
 ```
@@ -34,6 +34,7 @@
 | `skills/harness-audit/` | Readiness checker (`scripts/check.sh`) + report/repair judgment layer |
 | `skills/harness-status/` | Read-only progress report (`scripts/status.sh`) |
 | `skills/harness-handoff/` | Session-end ritual check + next-agent prompt (`scripts/handoff.sh`) |
+| `skills/harness-session/` | Bounded session context report (`scripts/context.sh`); wraps harness-status |
 | `scripts/` | This repo's gate (`e2e.sh`) and the per-skill fixture test suites |
 | `docs/plans/`, `docs/specs/` | Execution plans (active/completed) and the original design spec |
 
@@ -107,6 +108,15 @@ empty-array expansion.
 `ARCHITECTURE.md` became a scaffolded artifact (template + protocol
 §1.8/§2.5/§3.2); audit WARNs when missing and offers
 derive/interview/skip. This file is the dogfood instance.
+
+### M15 — session
+`context.sh` bundles harness-status's report with the git/plan facts a
+coding session also needs (recent commits, worktree clean/dirty, matching
+active plan, optional target `scripts/preflight.sh` discovery) into one
+non-mutating call, so an agent starts a session with one round trip
+instead of several. It delegates feature selection to `status.sh` rather
+than re-deriving it — the two-layer split stays: the script stops at
+facts, `SKILL.md` carries the clean/continuation/ambiguous judgment.
 
 ### M14 — observability
 Protocol §1.9 asks planning to name a logging/observability approach
