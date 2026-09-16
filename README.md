@@ -111,8 +111,11 @@ copilot plugin install agent-harness-kit
    coding session."_ With the plugin installed, `/agent-harness-kit:harness-session`
    (or _"Implement M1-004 following the harness."_ / _"Continue the
    current harness feature."_) runs the same protocol with bounded
-   context recovery and a concise gate report. Repeat until the milestone
-   is done.
+   context recovery and a concise gate report. The session proposes an
+   execution mode — inline (default) or delegated to the agent's own
+   built-in subagents — and never loads a third-party workflow plugin;
+   plans are written with the agent's native plan mode (protocol §1.5).
+   Repeat until the milestone is done.
 3. **Check where you are** — `/agent-harness-kit:harness-status` any
    time: progress per milestone, what the last session did, and exactly
    which feature the next session will pick. If the harness isn't set up

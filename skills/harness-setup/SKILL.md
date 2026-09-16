@@ -32,6 +32,9 @@ skill follows its own shipped manual. In particular:
 
 - Interview the human first (§1.1 has the required questions). Do not
   answer the questions yourself.
+- Write the plan with the agent's own native plan mode (§1.5). No
+  third-party planning/workflow plugin, and no plan header that mandates
+  one for execution.
 - If the human supplied a requirements document (markdown, PDF, or HTML),
   follow §1.1's rule: extract interview answers from it and ask only
   about the gaps.
@@ -91,3 +94,4 @@ directories (the first plan from step 2 goes in `active/`).
 | "I'll put the plan in my head / a gist / chat" | If it's not in the repo, it doesn't exist. |
 | "Existing AGENTS.md is messy, I'll rewrite it" | Retrofit extends and links; it never clobbers. |
 | "I'll summarize the protocol doc to save space" | It ships whole. Other agents depend on the full text. |
+| "I'll add 'REQUIRED SUB-SKILL: X' to the plan header" | Plans never mandate external skills. The next agent may not have X. |

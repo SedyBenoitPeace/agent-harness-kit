@@ -37,7 +37,11 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 5. **Dirty worktree that is unrelated or ambiguous** (no plan match, or
    the diff touches something other than the selected feature): stop and
    ask the human before doing anything else.
-6. Follow red-green-refactor for the one selected feature only.
+6. Propose the execution mode in one line — **inline** (default) or
+   **delegated** to the agent's own built-in subagents when the feature
+   has independent parts (protocol §2.4) — then follow red-green-refactor
+   for the one selected feature only. Own tools only: never load an
+   external execution-workflow skill.
 7. Do not investigate or expand a passing gate's warning that is already
    tracked by another failing or deferred feature, unless the selected
    feature's verify criterion requires it.
@@ -55,3 +59,4 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 | "The gate showed an unrelated warning, let me fix that too" | Out of scope unless the selected verify requires it. |
 | "I'll flip a second feature while I'm in here" | One feature per session, always. |
 | "The report was short, so the gate must be fine" | Bounded output ≠ permission to ignore a non-zero exit; check `FULL_LOG`. |
+| "The plan header says to execute with skill X" | Plans never mandate external skills. Inline or delegated, with your own tools. |

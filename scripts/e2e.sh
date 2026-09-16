@@ -118,6 +118,7 @@ grep -q 'Choose the verification tooling' "$PROTO" || fail "protocol: verificati
 grep -q 'Write ARCHITECTURE.md' "$PROTO" || fail "protocol: architecture section (1.8) missing"
 grep -q 'update ARCHITECTURE.md in the same commit' "$PROTO" || fail "protocol: session architecture-update rule missing"
 grep -q 'Choose the logging/observability approach' "$PROTO" || fail "protocol: logging/observability section (1.9) missing"
+grep -q 'native plan mode' "$PROTO" || fail "protocol: native-plan-mode rule (1.5) missing"
 
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
 grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
@@ -125,6 +126,8 @@ grep -q 'ONE feature' "$PROTO" || fail "protocol: one-feature-per-session rule m
 grep -q 'CONTINUING INTERRUPTED FEATURE' "$PROTO" || fail "protocol: interrupted-feature continuation rule missing"
 grep -q 'scripts/preflight.sh' "$PROTO" || fail "protocol: optional target preflight rule missing"
 grep -q 'tracked by another failing or deferred feature' "$PROTO" || fail "protocol: out-of-scope-warning rule missing"
+grep -q 'Execution mode' "$PROTO" || fail "protocol: execution-mode choice (2.4) missing"
+grep -q 'own built-in' "$PROTO" || fail "protocol: own-tools-only execution rule missing"
 
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
 grep -qi 'entropy' "$PROTO" || fail "protocol: maintenance section must cover entropy GC"
@@ -138,6 +141,7 @@ grep -q '^description: ' "$SKILL" || fail "SKILL.md: frontmatter description mis
 grep -q 'Already harnessed' "$SKILL" || fail "SKILL.md: already-initialized guard missing"
 grep -q 'ARCHITECTURE.md' "$SKILL" || fail "SKILL.md: architecture scaffold step missing"
 grep -q 'logging/observability' "$SKILL" || fail "SKILL.md: logging/observability scaffold step missing"
+grep -q 'native plan mode' "$SKILL" || fail "SKILL.md: native plan mode step missing"
 while read -r ref; do
   [ -f "skills/harness-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
@@ -159,6 +163,9 @@ grep -q 'ARCHITECTURE.md' README.md || fail "README: ARCHITECTURE.md coverage mi
 grep -qi 'logging/observability' README.md || fail "README: logging/observability coverage missing"
 grep -q 'harness-session' README.md || fail "README: harness-session skill missing"
 grep -q 'run-gate.sh' README.md || fail "README: run-gate.sh coverage missing"
+grep -q 'native plan mode' README.md || fail "README: native plan mode coverage missing"
+# no third-party workflow plugin is ever required to plan or execute
+! grep -rqi 'superpowers' skills README.md || fail "a skill/template/README references a third-party workflow plugin"
 
 # --- harness-audit skill ----------------------------------------------------
 
@@ -202,6 +209,7 @@ shellcheck "$SESSION_SKILL/scripts/context.sh"
 [ -f "$SESSION_SKILL/scripts/run-gate.sh" ] || fail "harness-session run-gate.sh missing"
 shellcheck "$SESSION_SKILL/scripts/run-gate.sh"
 grep -q 'run-gate.sh' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: does not reference run-gate.sh"
+grep -qi 'delegated' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: execution-mode proposal missing"
 [ -f "$SESSION_SKILL/SKILL.md" ] || fail "harness-session SKILL.md missing"
 [ "$(head -1 "$SESSION_SKILL/SKILL.md")" = "---" ] || fail "harness-session SKILL.md: missing frontmatter"
 grep -q '^name: harness-session$' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: frontmatter name wrong"

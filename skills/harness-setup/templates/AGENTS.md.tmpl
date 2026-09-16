@@ -23,7 +23,9 @@ first session. This file is only the map.
 2. Pick the feature to work on: lowest milestone, then lowest id, among
    `status: "failing"` (skip `deferred` and `superseded`).
 3. Run `bash scripts/e2e.sh` — confirm a green baseline before touching code.
-4. Implement that ONE feature, test-first.
+4. Implement that ONE feature, test-first — inline, or delegated to your
+   own built-in subagents when it has independent parts (protocol §2.4).
+   Own tools only; never load an external workflow plugin.
 5. Re-run the gate. Flip the feature to `"passing"` only when its own
    `verify` criterion proves it — never touch other entries.
 6. Commit, then append an entry to `PROGRESS.md`.

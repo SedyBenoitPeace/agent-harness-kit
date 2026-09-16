@@ -122,12 +122,24 @@ it doesn't fit, split it and let the ids reflect the order.
 
 ### 1.5 Write the first execution plan
 
+Write the plan with the agent's own **native plan mode** — whatever the
+tool you are running in ships for planning (a plan/architect mode, a
+planning subagent, or plain reasoning). Do not load a third-party
+planning or workflow plugin to do it, and never put a header in the plan
+that mandates one for execution: the next session may run in a different
+agent, and such a skill front-loads hundreds of lines of process text
+into context before any work starts.
+
 Create `docs/plans/active/<date>-<milestone-name>.md` covering the first
 milestone: the ordered task list, per-task verification, and a **decision
 log** section at the bottom. Every non-obvious choice made during planning
 gets a dated entry there. Plans are first-class artifacts: they are
 committed, updated as work proceeds, and moved to `docs/plans/completed/`
 when done.
+
+Head each task section with its feature id and keep it self-contained, so
+a session reads only the section for its selected feature, never the
+whole file.
 
 ### 1.6 Scaffold or adapt the gate
 
@@ -271,6 +283,23 @@ before the gate — a non-zero exit blocks the session exactly like a red
 gate.
 
 ### 2.4 Implement, test-first
+
+**Execution mode.** Before touching code, propose one mode in a single
+line — the human can override:
+
+- **Inline** (default): you edit, test, and commit yourself. Right for
+  almost every one-session feature.
+- **Delegated**: the feature has two or more independent parts (say, a
+  script and its fixture suite). Dispatch each part to the agent's
+  **own built-in** subagent or task tool, hand it only that task section
+  plus the `verify` criterion, and keep just its one-paragraph summary in
+  your context. You still own the gate, the status flip, the commit, and the
+  PROGRESS.md entry.
+
+Either way, use only the tools the agent ships with. Never load an
+external execution-workflow skill or plugin to run a session: it
+front-loads its whole manual into context and tends to batch many tasks
+into one session, which breaks the ONE-feature rule.
 
 Write the test (or set up the manual check) that proves the feature's
 `verify` criterion. Watch it fail. Implement the minimum that makes it pass.

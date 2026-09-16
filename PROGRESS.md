@@ -3,6 +3,24 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-16 — session 17 (M16-001)
+
+- Branch: `m16-native-workflows`.
+- Done: M16-001 — protocol §1.5 now tells the agent to plan with its own
+  native plan mode and forbids plan headers that mandate an external
+  skill; §2.4 gains an "Execution mode" choice (inline by default, or
+  delegated to the agent's own built-in subagents for independent parts,
+  own tools only). harness-setup and harness-session SKILL.md, the
+  AGENTS.md template, and the README carry the same rule. Gate greps the
+  new text and rejects any third-party workflow plugin name under
+  `skills/` or in the README. Released as 1.7.0; plan filed directly
+  under `docs/plans/completed/`.
+- Trigger: a Copilot CLI session in a harnessed repo followed an external
+  `REQUIRED SUB-SKILL` plan header, front-loaded ~800 lines of process
+  text, and ran 16 subagent round-trips for 7 tasks in one session.
+- Gate: green.
+- Next: no failing feature — plan new work or run a maintenance pass.
+
 ## 2026-09-09 — session 16 (M15-004)
 
 - Branch: `m15-efficient-sessions`.
