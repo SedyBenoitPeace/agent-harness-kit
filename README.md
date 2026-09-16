@@ -58,6 +58,12 @@ Update to the latest release:
 claude plugin update agent-harness-kit
 ```
 
+After an update, the next harness-session context report checks the
+target repo against the shipped templates: an unbounded gate
+(`GATE_OUTPUT: unbounded`) or an older protocol copy (`PROTOCOL: outdated`)
+ends the report with `UPGRADE: offer`, and the agent proposes the
+five-minute upgrade as its own commit before starting the feature.
+
 Manual fallback (no plugin): copy `skills/harness-setup` into
 `~/.claude/skills/`.
 

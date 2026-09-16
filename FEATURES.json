@@ -363,6 +363,14 @@
       "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with: protocol §2 telling agents to use the show-me skill if installed whenever they explain or summarize for the human; AGENTS.md.tmpl carrying the same rule; harness-status SKILL.md using it for the relay; README crediting https://www.humanlayer.com/blog/show-me-skill",
       "notes": "show-me is HumanLayer's skill (Dex Horthy). The harness recommends it and never bundles it; the rule is conditional on it being installed."
+    },
+    {
+      "id": "M16-005",
+      "milestone": 16,
+      "title": "Sessions notice a harness scaffolded by an older plugin and offer the upgrade",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with scripts/test-session.sh proving context.sh prints GATE_OUTPUT: unbounded for a gate without FULL_LOG, PROTOCOL: outdated for a protocol copy differing from the shipped one, UPGRADE: offer when either applies, and bounded/current/UPGRADE: none otherwise; harness-session SKILL.md instructs to offer the upgrade once as its own commit; README documents the post-update notice",
+      "notes": "Facts only in the script; the offer/decision stays with the skill and the human. FULL_LOG is a marker heuristic: this plugin repo's own gate matches it because its template tests mention FULL_LOG."
     }
   ]
 }

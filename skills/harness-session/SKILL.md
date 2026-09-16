@@ -19,10 +19,21 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    selects which one.
    - Exit 3 / 2 → relayed from harness-status: not initialized or broken.
      Offer harness-setup / harness-audit, STOP.
-2. If the report names `PREFLIGHT: scripts/<path>`, execute it now — it is
+2. If the report ends with `UPGRADE: offer`, the repo was scaffolded by
+   an older plugin. Tell the human once, in two lines, and offer the
+   upgrade as its own commit before the feature — they decide:
+   - `GATE_OUTPUT: unbounded` → wrap each command in `scripts/e2e.sh`
+     with the `step` function from `templates/e2e.sh.tmpl` (harness-setup
+     skill) and add `echo "FULL_LOG: $LOG"` after `GATE GREEN`.
+   - `PROTOCOL: outdated` → recopy the shipped
+     `templates/harness-protocol.md` over `docs/agents/harness-protocol.md`
+     whole; re-append any local notes the old copy had below it.
+   Never apply silently, never repeat the offer in the same session, and
+   never let it replace the feature.
+3. If the report names `PREFLIGHT: scripts/<path>`, execute it now — it is
    discovered, never auto-run. Non-zero blocks the session; report it and
    STOP.
-3. **Clean worktree:** run the baseline full gate through the wrapper —
+4. **Clean worktree:** run the baseline full gate through the wrapper —
    `bash scripts/run-gate.sh baseline <target>` (path relative to this
    skill). It runs the target's own `scripts/e2e.sh` unchanged, retains
    the complete output in the printed `FULL_LOG` path, and prints a
@@ -30,24 +41,24 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    be ignored — treat a non-zero `run-gate.sh` exit exactly as a red
    gate, and read more of `FULL_LOG` if the printed tail isn't enough to
    diagnose it. Confirm green before touching code.
-4. **Dirty worktree clearly matching the selected feature and plan**
+5. **Dirty worktree clearly matching the selected feature and plan**
    (the diff and the `PLAN:` match both point at the same `NEXT:` id):
    announce "CONTINUING INTERRUPTED FEATURE", inspect the existing diff,
    run the feature's focused verify command first, and never claim a
    clean baseline — state plainly that the full gate has not been
    re-confirmed from scratch.
-5. **Dirty worktree that is unrelated or ambiguous** (no plan match, or
+6. **Dirty worktree that is unrelated or ambiguous** (no plan match, or
    the diff touches something other than the selected feature): stop and
    ask the human before doing anything else.
-6. Propose the execution mode in one line — **inline** (default) or
+7. Propose the execution mode in one line — **inline** (default) or
    **delegated** to the agent's own built-in subagents when the feature
    has independent parts (protocol §2.4) — then follow red-green-refactor
    for the one selected feature only. Own tools only: never load an
    external execution-workflow skill.
-7. Do not investigate or expand a passing gate's warning that is already
+8. Do not investigate or expand a passing gate's warning that is already
    tracked by another failing or deferred feature, unless the selected
    feature's verify criterion requires it.
-8. Run the final full gate through `bash scripts/run-gate.sh final
+9. Run the final full gate through `bash scripts/run-gate.sh final
    <target>`, flip only the selected feature's status to `passing`,
    append one `PROGRESS.md` entry, commit explicit paths, then STOP —
    do not start a second feature.
@@ -61,4 +72,5 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 | "The gate showed an unrelated warning, let me fix that too" | Out of scope unless the selected verify requires it. |
 | "I'll flip a second feature while I'm in here" | One feature per session, always. |
 | "The report was short, so the gate must be fine" | Bounded output ≠ permission to ignore a non-zero exit; check `FULL_LOG`. |
+| "UPGRADE: offer — I'll just apply it, it's quick" | Offer once; the human decides. Own commit, never silent. |
 | "The plan header says to execute with skill X" | Plans never mandate external skills. Inline or delegated, with your own tools. |

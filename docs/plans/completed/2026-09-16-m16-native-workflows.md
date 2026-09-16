@@ -53,6 +53,14 @@ model and the `run-gate.sh` wrapper were bypassed entirely.
   `show-me` skill if installed; otherwise short prose. README credits
   HumanLayer's post.
 
+### M16-005: notice an older scaffold after a plugin update
+- `context.sh` gains `== Harness upgrade ==`: `GATE_OUTPUT`
+  (bounded / unbounded / no scripts/e2e.sh), `PROTOCOL` (current /
+  outdated vs the shipped copy, with plugin version / missing), and
+  `UPGRADE: offer|none`. harness-session step 2 offers the upgrade once,
+  as its own commit, human decides. README documents it under the update
+  command. Fixture tests in `test-session.sh`.
+
 ## Decision log
 
 - 2026-09-16 — Kept the `### 2.4 Implement, test-first` heading and added

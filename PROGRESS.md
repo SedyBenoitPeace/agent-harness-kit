@@ -37,6 +37,10 @@ Newest-first session log. One entry per working session. Read this (plus
 - Done: M16-004 — protocol §2, AGENTS.md.tmpl and harness-status tell
   agents to use the `show-me` skill, when installed, for explanations and
   summaries; README credits HumanLayer.
+- Done: M16-005 — `context.sh` reports `GATE_OUTPUT`, `PROTOCOL` and
+  `UPGRADE: offer|none` so a session notices a repo scaffolded by an
+  older plugin; harness-session offers the upgrade once as its own
+  commit before the feature.
 - Gate: green.
 - Next: no failing feature — plan new work or run a maintenance pass.
 
