@@ -135,6 +135,8 @@ grep -q 'update ARCHITECTURE.md in the same commit' "$PROTO" || fail "protocol: 
 grep -q 'Choose the logging/observability approach' "$PROTO" || fail "protocol: logging/observability section (1.9) missing"
 grep -q 'bounded' "$PROTO" || fail "protocol: bounded-gate-output contract (1.6) missing"
 grep -q 'native plan mode' "$PROTO" || fail "protocol: native-plan-mode rule (1.5) missing"
+grep -q 'one harness coding session' "$PROTO" || fail "protocol: plan header routing tasks through harness sessions (1.5) missing"
+grep -q 'one harness coding session' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: plan-execution rule missing"
 
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
 grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
@@ -230,6 +232,7 @@ grep -qi 'delegated' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md
 [ "$(head -1 "$SESSION_SKILL/SKILL.md")" = "---" ] || fail "harness-session SKILL.md: missing frontmatter"
 grep -q '^name: harness-session$' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description missing"
+grep -q '^description: .*execution plan' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description does not trigger on executing a plan"
 bash scripts/test-session.sh
 
 echo "GATE GREEN"

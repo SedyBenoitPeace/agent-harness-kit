@@ -30,10 +30,12 @@ first session. This file is only the map.
    `verify` criterion proves it — never touch other entries.
 6. Commit, then append an entry to `PROGRESS.md`.
 
-If the harness-session plugin skill is installed, it bundles steps 1 and
-3 into one non-mutating call and compresses the gate output while
-retaining the full log — an accelerator, not a file this repo depends
-on. The six manual steps above always work as the fallback.
+If the harness-session plugin skill is installed, **use it** — it is the
+session entry point: it bundles steps 1 and 3 into one non-mutating call
+and compresses the gate output while retaining the full log. The six
+manual steps above are the fallback when it is not installed. Executing
+a plan means running its tasks as one harness coding session each; a
+plan is never a reason to load a different workflow.
 
 ## Rules
 

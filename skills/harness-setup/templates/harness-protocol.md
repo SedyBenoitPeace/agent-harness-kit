@@ -141,6 +141,16 @@ Head each task section with its feature id and keep it self-contained, so
 a session reads only the section for its selected feature, never the
 whole file.
 
+Every plan opens with this header, verbatim, so that whoever picks it up
+executes it through the harness and not through some other workflow:
+
+```
+> **For agentic workers:** each task below is one harness coding session.
+> Run it with the harness-session skill if it is installed; otherwise
+> follow docs/agents/harness-protocol.md section 2. Do not load any other
+> workflow skill or plugin to execute this plan.
+```
+
 ### 1.6 Scaffold or adapt the gate
 
 Copy `e2e.sh.tmpl` to `scripts/e2e.sh` and `dev.sh.tmpl` to

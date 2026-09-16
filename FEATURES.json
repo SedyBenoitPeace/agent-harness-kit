@@ -347,6 +347,14 @@
       "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with: e2e.sh.tmpl substituted with true printing GATE GREEN plus a FULL_LOG path in <= 10 lines; substituted with a 300-line failing test command exiting non-zero, naming 'FAIL  tests', printing <= 70 lines, and retaining all 300 lines in the log; harness-audit WARNs 'not bounded' on a gate without a FULL_LOG marker and not on the template gate (scripts/test-audit.sh); protocol §1.6 states the bounded-output contract",
       "notes": "Agents reported that raw test-runner/coverage output varies by stack and floods context. run-gate.sh only helps when harness-session is used; this makes the target repo's own gate concise for any agent, any vendor. GATE_VERBOSE=1 streams everything."
+    },
+    {
+      "id": "M16-003",
+      "milestone": 16,
+      "title": "Plans route every task through a harness coding session",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with: protocol §1.5 shipping a verbatim plan header stating each task is 'one harness coding session' (harness-session skill if installed, else protocol §2, no other workflow skill); AGENTS.md.tmpl carrying the same rule and naming harness-session as the session entry point; harness-session SKILL.md description triggering on 'execution plan'",
+      "notes": "Replaces the external REQUIRED SUB-SKILL header that sent a Copilot session around the harness entirely (raw gate, 16 subagent round-trips). Plans now name the harness as their own executor."
     }
   ]
 }

@@ -1,6 +1,6 @@
 ---
 name: harness-session
-description: Use when asked to implement, continue, carry on, or execute a feature in a repo using the long-running-agent harness — runs one bounded coding session (context recovery, gate, red-green-refactor, close-out) instead of separate manual status/gate/log calls.
+description: Use when asked to implement, continue, carry on, or execute a feature or an execution plan (docs/plans/) in a repo using the long-running-agent harness — runs one bounded coding session (context recovery, gate, red-green-refactor, close-out) instead of separate manual status/gate/log calls.
 ---
 
 # Harness Session
@@ -14,7 +14,9 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 ## Workflow
 
 1. Run `bash scripts/context.sh` (path relative to this skill) from the
-   target repo root.
+   target repo root. If you were handed a plan file, this still applies:
+   the plan's tasks are executed one per session, and `context.sh`
+   selects which one.
    - Exit 3 / 2 → relayed from harness-status: not initialized or broken.
      Offer harness-setup / harness-audit, STOP.
 2. If the report names `PREFLIGHT: scripts/<path>`, execute it now — it is
