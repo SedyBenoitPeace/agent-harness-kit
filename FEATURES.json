@@ -355,6 +355,14 @@
       "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with: protocol §1.5 shipping a verbatim plan header stating each task is 'one harness coding session' (harness-session skill if installed, else protocol §2, no other workflow skill); AGENTS.md.tmpl carrying the same rule and naming harness-session as the session entry point; harness-session SKILL.md description triggering on 'execution plan'",
       "notes": "Replaces the external REQUIRED SUB-SKILL header that sent a Copilot session around the harness entirely (raw gate, 16 subagent round-trips). Plans now name the harness as their own executor."
+    },
+    {
+      "id": "M16-004",
+      "milestone": 16,
+      "title": "Use the show-me skill, when installed, for explanations and summaries",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with: protocol §2 telling agents to use the show-me skill if installed whenever they explain or summarize for the human; AGENTS.md.tmpl carrying the same rule; harness-status SKILL.md using it for the relay; README crediting https://www.humanlayer.com/blog/show-me-skill",
+      "notes": "show-me is HumanLayer's skill (Dex Horthy). The harness recommends it and never bundles it; the rule is conditional on it being installed."
     }
   ]
 }

@@ -238,6 +238,14 @@ and a lint gate in [`scripts/e2e.sh`](scripts/e2e.sh) that validates the
 templates themselves (JSON-after-substitution, shellcheck, agent-neutrality,
 line budgets).
 
+## Credits
+
+- **show-me** — the visual-explanation skill by Dex Horthy / HumanLayer:
+  <https://www.humanlayer.com/blog/show-me-skill>. The harness asks agents
+  to use it, when installed, for explanations and summaries (status
+  reports, close-outs, architecture walkthroughs) instead of prose. It is
+  not bundled; install it with `npx skills add humanlayer/skills --skill show-me`.
+
 ## License
 
 MIT

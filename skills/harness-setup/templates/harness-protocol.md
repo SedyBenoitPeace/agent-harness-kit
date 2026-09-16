@@ -269,6 +269,13 @@ In this order, before anything else:
 Trust the repo over your assumptions. If PROGRESS.md and the git log
 disagree, the git log wins; note the discrepancy in your session entry.
 
+**Explaining and summarizing.** Whenever you explain or summarize
+something for the human — a status report, a close-out summary, an
+architecture walkthrough, a design choice — use the `show-me` skill if
+it is installed: a component tree, call stack, or diagram in place of
+prose. Without it, keep the prose short. (show-me is HumanLayer's skill;
+the harness recommends it, it does not ship it.)
+
 ### 2.2 Pick the feature
 
 Among features with `status: "failing"`: lowest milestone, then lowest id.

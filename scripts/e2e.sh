@@ -145,6 +145,8 @@ grep -q 'CONTINUING INTERRUPTED FEATURE' "$PROTO" || fail "protocol: interrupted
 grep -q 'scripts/preflight.sh' "$PROTO" || fail "protocol: optional target preflight rule missing"
 grep -q 'tracked by another failing or deferred feature' "$PROTO" || fail "protocol: out-of-scope-warning rule missing"
 grep -q 'Execution mode' "$PROTO" || fail "protocol: execution-mode choice (2.4) missing"
+grep -q 'show-me' "$PROTO" || fail "protocol: show-me rule for explanations and summaries missing"
+grep -q 'show-me' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: show-me rule missing"
 grep -q 'own built-in' "$PROTO" || fail "protocol: own-tools-only execution rule missing"
 
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
@@ -182,6 +184,7 @@ grep -qi 'logging/observability' README.md || fail "README: logging/observabilit
 grep -q 'harness-session' README.md || fail "README: harness-session skill missing"
 grep -q 'run-gate.sh' README.md || fail "README: run-gate.sh coverage missing"
 grep -q 'native plan mode' README.md || fail "README: native plan mode coverage missing"
+grep -q 'humanlayer.com/blog/show-me-skill' README.md || fail "README: show-me credit missing"
 # no third-party workflow plugin is ever required to plan or execute
 ! grep -rqi 'superpowers' skills README.md || fail "a skill/template/README references a third-party workflow plugin"
 
@@ -206,6 +209,7 @@ shellcheck "$STATUS_SKILL/scripts/status.sh"
 [ "$(head -1 "$STATUS_SKILL/SKILL.md")" = "---" ] || fail "harness-status SKILL.md: missing frontmatter"
 grep -q '^name: harness-status$' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: description missing"
+grep -q 'show-me' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: show-me relay step missing"
 bash scripts/test-status.sh
 
 # --- harness-handoff skill ----------------------------------------------------

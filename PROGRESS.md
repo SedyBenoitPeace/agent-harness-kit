@@ -21,6 +21,25 @@ Newest-first session log. One entry per working session. Read this (plus
 - Gate: green.
 - Next: no failing feature — plan new work or run a maintenance pass.
 
+## 2026-09-16 — session 17b (M16-002, M16-003, M16-004)
+
+- Branch: `m16-native-workflows` (same PR #17, still 1.7.0).
+- Deviation: three features in one session at the owner's request; one
+  commit each, red-green per feature.
+- Done: M16-002 — `e2e.sh.tmpl` bounds its own output with a `step`
+  wrapper (full log as `FULL_LOG`, one line per passing step, tail on
+  failure, `GATE_VERBOSE=1` to stream); harness-audit WARNs on a gate
+  with no `FULL_LOG` marker; protocol §1.6 states the contract.
+- Done: M16-003 — protocol §1.5 ships a verbatim plan header routing each
+  task through one harness coding session (harness-session if installed,
+  else §2); AGENTS.md.tmpl names harness-session as the entry point;
+  harness-session triggers on "execute a plan".
+- Done: M16-004 — protocol §2, AGENTS.md.tmpl and harness-status tell
+  agents to use the `show-me` skill, when installed, for explanations and
+  summaries; README credits HumanLayer.
+- Gate: green.
+- Next: no failing feature — plan new work or run a maintenance pass.
+
 ## 2026-09-09 — session 16 (M15-004)
 
 - Branch: `m15-efficient-sessions`.
