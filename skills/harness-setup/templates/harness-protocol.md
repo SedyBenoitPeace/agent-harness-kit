@@ -150,6 +150,14 @@ and analyzer commands. The gate's contract:
 - `bash scripts/e2e.sh` exits 0 **if and only if** the repo is healthy.
 - It runs from a clean checkout with documented dependencies.
 - It is fast enough to run twice per session without resentment.
+- Its terminal output is **bounded**: the template's `step` wrapper writes
+  every command's full output to a log file, prints one line per passing
+  step, and shows only the log's tail (plus its path as `FULL_LOG`) for
+  the first failing step. Test runners and coverage tools are verbose in
+  ways that vary by stack; the gate absorbs that so a session never
+  spends context on it. `GATE_VERBOSE=1` streams everything when a human
+  wants it. **Retrofit:** wrap the existing test commands in the same
+  `step` calls rather than pasting them bare.
 
 **Retrofit rules** (existing codebase): existing agent entry-files
 (AGENTS.md or equivalents) are preserved — extend and link, never clobber.

@@ -106,6 +106,21 @@ for t in "$TMPL_DIR"/*.sh.tmpl; do
 done
 [ "$found_sh_tmpl" -eq 1 ] || fail "no *.sh.tmpl templates found"
 
+# e2e.sh.tmpl: bounded output by construction (full log on disk, short terminal report)
+gate_tmp="$(mktemp -d)"
+sed 's/{{[A-Za-z0-9_]*}}/true/g' "$TMPL_DIR/e2e.sh.tmpl" > "$gate_tmp/green.sh"
+green_out="$(bash "$gate_tmp/green.sh")" || fail "e2e.sh.tmpl: green substitution exited non-zero"
+echo "$green_out" | grep -q 'GATE GREEN' || fail "e2e.sh.tmpl: green run missing GATE GREEN"
+echo "$green_out" | grep -q 'FULL_LOG:' || fail "e2e.sh.tmpl: green run does not name FULL_LOG"
+[ "$(echo "$green_out" | wc -l)" -le 10 ] || fail "e2e.sh.tmpl: green run prints more than 10 lines"
+sed -e 's/{{TEST_COMMAND}}/seq 1 300; false/' -e 's/{{[A-Za-z0-9_]*}}/true/g' "$TMPL_DIR/e2e.sh.tmpl" > "$gate_tmp/red.sh"
+if red_out="$(bash "$gate_tmp/red.sh" 2>&1)"; then fail "e2e.sh.tmpl: red substitution exited 0"; fi
+echo "$red_out" | grep -q 'FAIL  tests' || fail "e2e.sh.tmpl: red run does not name the failing step"
+[ "$(echo "$red_out" | wc -l)" -le 70 ] || fail "e2e.sh.tmpl: red run prints more than 70 lines"
+red_log="$(echo "$red_out" | sed -n 's/^FULL_LOG: //p')"
+[ "$(grep -c '^[0-9]' "$red_log")" -eq 300 ] || fail "e2e.sh.tmpl: full log does not retain the noisy output"
+rm -rf "$gate_tmp"
+
 # protocol doc: exists, has the planning section, no Claude-isms
 PROTO="$TMPL_DIR/harness-protocol.md"
 [ -f "$PROTO" ] || fail "harness-protocol.md missing"
@@ -118,6 +133,7 @@ grep -q 'Choose the verification tooling' "$PROTO" || fail "protocol: verificati
 grep -q 'Write ARCHITECTURE.md' "$PROTO" || fail "protocol: architecture section (1.8) missing"
 grep -q 'update ARCHITECTURE.md in the same commit' "$PROTO" || fail "protocol: session architecture-update rule missing"
 grep -q 'Choose the logging/observability approach' "$PROTO" || fail "protocol: logging/observability section (1.9) missing"
+grep -q 'bounded' "$PROTO" || fail "protocol: bounded-gate-output contract (1.6) missing"
 grep -q 'native plan mode' "$PROTO" || fail "protocol: native-plan-mode rule (1.5) missing"
 
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"

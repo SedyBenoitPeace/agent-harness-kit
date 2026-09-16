@@ -61,6 +61,15 @@ mv "$WORK/no-logging/ARCH.tmp" "$WORK/no-logging/ARCHITECTURE.md"
 out="$(bash "$CHECK" "$WORK/no-logging")" || fail "missing logging strategy must not fail the audit"
 echo "$out" | grep -q "^WARN.*logging/observability" || fail "missing logging strategy: expected WARN line"
 
+# 2d. legacy unbounded gate (no FULL_LOG marker): WARN, still exit 0; the
+# template-built good fixture must not get that WARN
+make_fixture "$WORK/loud-gate"
+printf '#!/usr/bin/env bash\ntrue\n' > "$WORK/loud-gate/scripts/e2e.sh"
+out="$(bash "$CHECK" "$WORK/loud-gate")" || fail "unbounded gate must not fail the audit"
+echo "$out" | grep -q "^WARN.*not bounded" || fail "unbounded gate: expected WARN line"
+out="$(bash "$CHECK" "$WORK/good")" || fail "good fixture re-run exited non-zero"
+if echo "$out" | grep -q "^WARN.*not bounded"; then fail "template gate wrongly flagged as unbounded"; fi
+
 # 3. defect fixtures: each must FAIL with its specific line
 make_fixture "$WORK/big-agents"
 for _ in $(seq 1 101); do echo "filler line" >> "$WORK/big-agents/AGENTS.md"; done

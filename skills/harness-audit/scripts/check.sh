@@ -58,6 +58,14 @@ if [ -f PROGRESS.md ]; then pass "PROGRESS.md exists"; else failc "PROGRESS.md m
 # The gate
 if [ -x scripts/e2e.sh ]; then
   pass "scripts/e2e.sh exists and is executable"
+  # Bounded output (WARN only): the shipped template logs every step to a
+  # file and names it as FULL_LOG; a gate without that marker streams
+  # everything into the agent's context (protocol §1.6).
+  if grep -q 'FULL_LOG' scripts/e2e.sh; then
+    pass "scripts/e2e.sh bounds its output (FULL_LOG marker present)"
+  else
+    warn "scripts/e2e.sh output is not bounded (no FULL_LOG marker) — wrap each step as in e2e.sh.tmpl, or run it through harness-session's run-gate.sh"
+  fi
 elif [ -f scripts/e2e.sh ]; then
   failc "scripts/e2e.sh is not executable (chmod +x scripts/e2e.sh)"
 else

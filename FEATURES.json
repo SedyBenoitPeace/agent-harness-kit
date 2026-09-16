@@ -339,6 +339,14 @@
       "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with: protocol §1.5 naming the agent's native plan mode and forbidding plan headers that mandate an external skill; §2.4 offering an inline (default) or delegated execution mode using the agent's own built-in subagents; harness-session SKILL.md proposing that mode; no file under skills/ or README.md mentioning a third-party workflow plugin; package.json, plugin.json and marketplace.json all at 1.7.0",
       "notes": "Field evidence: a Copilot session in a harnessed repo followed a plan header requiring an external subagent-driven workflow skill, loaded ~800 lines of process text, ran 16 subagent round-trips for 7 tasks in one session, and dumped the raw gate three times. The harness itself was not the cause, but it did nothing to stop it. Owner merges the PR."
+    },
+    {
+      "id": "M16-002",
+      "milestone": 16,
+      "title": "Gate output bounded by construction in scaffolded repos",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with: e2e.sh.tmpl substituted with true printing GATE GREEN plus a FULL_LOG path in <= 10 lines; substituted with a 300-line failing test command exiting non-zero, naming 'FAIL  tests', printing <= 70 lines, and retaining all 300 lines in the log; harness-audit WARNs 'not bounded' on a gate without a FULL_LOG marker and not on the template gate (scripts/test-audit.sh); protocol §1.6 states the bounded-output contract",
+      "notes": "Agents reported that raw test-runner/coverage output varies by stack and floods context. run-gate.sh only helps when harness-session is used; this makes the target repo's own gate concise for any agent, any vendor. GATE_VERBOSE=1 streams everything."
     }
   ]
 }

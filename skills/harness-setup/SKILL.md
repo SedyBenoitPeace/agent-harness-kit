@@ -72,7 +72,8 @@ directories (the first plan from step 2 goes in `active/`).
 - Existing `AGENTS.md` / `CLAUDE.md` content is **preserved and linked**,
   never clobbered. Merge the harness map into what's there; move displaced
   depth into `docs/`.
-- Existing tests become the initial gate: wire `scripts/e2e.sh` to run them.
+- Existing tests become the initial gate: wire `scripts/e2e.sh` to run them
+  through the template's `step` wrapper so the output stays bounded (§1.6).
 - Existing code maps to `passing` features **only** when a `verify`
   criterion actually proves it. Otherwise it enters as `failing` with honest
   notes about what's unverified.
