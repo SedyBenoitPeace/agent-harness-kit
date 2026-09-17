@@ -16,7 +16,8 @@
     "12": "harness-handoff skill (cross-agent session handoff)",
     "13": "ARCHITECTURE.md scaffolding + audit repair flow",
     "14": "Logging/observability planning gap + audit repair flow",
-    "15": "Efficient coding sessions (harness-session skill)"
+    "15": "Efficient coding sessions (harness-session skill)",
+    "16": "Native planning and execution modes"
   },
   "features": [
     {
@@ -330,6 +331,46 @@
       "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with package.json, plugin.json and marketplace.json versions all equal to 1.6.0; the M15 plan is under docs/plans/completed; bash skills/harness-session/scripts/context.sh . reports M15 4/4 passing and NEXT: none",
       "notes": "Version bump is last because installed plugin caches are version-keyed. Owner merges the PR."
+    },
+    {
+      "id": "M16-001",
+      "milestone": 16,
+      "title": "Plan with the agent's native plan mode; execute inline or delegated with its own tools",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with: protocol §1.5 naming the agent's native plan mode and forbidding plan headers that mandate an external skill; §2.4 offering an inline (default) or delegated execution mode using the agent's own built-in subagents; harness-session SKILL.md proposing that mode; no file under skills/ or README.md mentioning a third-party workflow plugin; package.json, plugin.json and marketplace.json all at 1.7.0",
+      "notes": "Field evidence: a Copilot session in a harnessed repo followed a plan header requiring an external subagent-driven workflow skill, loaded ~800 lines of process text, ran 16 subagent round-trips for 7 tasks in one session, and dumped the raw gate three times. The harness itself was not the cause, but it did nothing to stop it. Owner merges the PR."
+    },
+    {
+      "id": "M16-002",
+      "milestone": 16,
+      "title": "Gate output bounded by construction in scaffolded repos",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with: e2e.sh.tmpl substituted with true printing GATE GREEN plus a FULL_LOG path in <= 10 lines; substituted with a 300-line failing test command exiting non-zero, naming 'FAIL  tests', printing <= 70 lines, and retaining all 300 lines in the log; harness-audit WARNs 'not bounded' on a gate without a FULL_LOG marker and not on the template gate (scripts/test-audit.sh); protocol §1.6 states the bounded-output contract",
+      "notes": "Agents reported that raw test-runner/coverage output varies by stack and floods context. run-gate.sh only helps when harness-session is used; this makes the target repo's own gate concise for any agent, any vendor. GATE_VERBOSE=1 streams everything."
+    },
+    {
+      "id": "M16-003",
+      "milestone": 16,
+      "title": "Plans route every task through a harness coding session",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with: protocol §1.5 shipping a verbatim plan header stating each task is 'one harness coding session' (harness-session skill if installed, else protocol §2, no other workflow skill); AGENTS.md.tmpl carrying the same rule and naming harness-session as the session entry point; harness-session SKILL.md description triggering on 'execution plan'",
+      "notes": "Replaces the external REQUIRED SUB-SKILL header that sent a Copilot session around the harness entirely (raw gate, 16 subagent round-trips). Plans now name the harness as their own executor."
+    },
+    {
+      "id": "M16-004",
+      "milestone": 16,
+      "title": "Use the show-me skill, when installed, for explanations and summaries",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with: protocol §2 telling agents to use the show-me skill if installed whenever they explain or summarize for the human; AGENTS.md.tmpl carrying the same rule; harness-status SKILL.md using it for the relay; README crediting https://www.humanlayer.com/blog/show-me-skill",
+      "notes": "show-me is HumanLayer's skill (Dex Horthy). The harness recommends it and never bundles it; the rule is conditional on it being installed."
+    },
+    {
+      "id": "M16-005",
+      "milestone": 16,
+      "title": "Sessions notice a harness scaffolded by an older plugin and offer the upgrade",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with scripts/test-session.sh proving context.sh prints GATE_OUTPUT: unbounded for a gate without FULL_LOG, PROTOCOL: outdated for a protocol copy differing from the shipped one, UPGRADE: offer when either applies, and bounded/current/UPGRADE: none otherwise; harness-session SKILL.md instructs to offer the upgrade once as its own commit; README documents the post-update notice",
+      "notes": "Facts only in the script; the offer/decision stays with the skill and the human. FULL_LOG is a marker heuristic: this plugin repo's own gate matches it because its template tests mention FULL_LOG."
     }
   ]
 }

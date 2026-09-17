@@ -23,15 +23,19 @@ first session. This file is only the map.
 2. Pick the feature to work on: lowest milestone, then lowest id, among
    `status: "failing"` (skip `deferred` and `superseded`).
 3. Run `bash scripts/e2e.sh` — confirm a green baseline before touching code.
-4. Implement that ONE feature, test-first.
+4. Implement that ONE feature, test-first — inline, or delegated to your
+   own built-in subagents when it has independent parts (protocol §2.4).
+   Own tools only; never load an external workflow plugin.
 5. Re-run the gate. Flip the feature to `"passing"` only when its own
    `verify` criterion proves it — never touch other entries.
 6. Commit, then append an entry to `PROGRESS.md`.
 
-If the harness-session plugin skill is installed, it bundles steps 1 and
-3 into one non-mutating call and compresses the gate output while
-retaining the full log — an accelerator, not a file this repo depends
-on. The six manual steps above always work as the fallback.
+If the harness-session plugin skill is installed, **use it** — it is the
+session entry point: it bundles steps 1 and 3 into one non-mutating call
+and compresses the gate output while retaining the full log. The six
+manual steps above are the fallback when it is not installed. Executing
+a plan means running its tasks as one harness coding session each; a
+plan is never a reason to load a different workflow.
 
 ## Rules
 
@@ -42,5 +46,7 @@ on. The six manual steps above always work as the fallback.
 - Branch off `{{DEFAULT_BRANCH}}`; one branch per milestone-chunk of work;
   integrate via pull request, not local fast-forward.
 - Keep this file ≤100 lines; anything deeper goes in `docs/`.
+- When explaining or summarizing for the human, use the `show-me` skill if
+  it is installed (diagrams over prose); otherwise keep prose short.
 
 {{PROJECT_SPECIFIC_SECTIONS}}

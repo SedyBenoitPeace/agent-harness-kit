@@ -58,6 +58,12 @@ Update to the latest release:
 claude plugin update agent-harness-kit
 ```
 
+After an update, the next harness-session context report checks the
+target repo against the shipped templates: an unbounded gate
+(`GATE_OUTPUT: unbounded`) or an older protocol copy (`PROTOCOL: outdated`)
+ends the report with `UPGRADE: offer`, and the agent proposes the
+five-minute upgrade as its own commit before starting the feature.
+
 Manual fallback (no plugin): copy `skills/harness-setup` into
 `~/.claude/skills/`.
 
@@ -111,8 +117,11 @@ copilot plugin install agent-harness-kit
    coding session."_ With the plugin installed, `/agent-harness-kit:harness-session`
    (or _"Implement M1-004 following the harness."_ / _"Continue the
    current harness feature."_) runs the same protocol with bounded
-   context recovery and a concise gate report. Repeat until the milestone
-   is done.
+   context recovery and a concise gate report. The session proposes an
+   execution mode — inline (default) or delegated to the agent's own
+   built-in subagents — and never loads a third-party workflow plugin;
+   plans are written with the agent's native plan mode (protocol §1.5).
+   Repeat until the milestone is done.
 3. **Check where you are** — `/agent-harness-kit:harness-status` any
    time: progress per milestone, what the last session did, and exactly
    which feature the next session will pick. If the harness isn't set up
@@ -234,6 +243,14 @@ sessions in [`PROGRESS.md`](PROGRESS.md), plans in [`docs/plans/`](docs/plans/),
 and a lint gate in [`scripts/e2e.sh`](scripts/e2e.sh) that validates the
 templates themselves (JSON-after-substitution, shellcheck, agent-neutrality,
 line budgets).
+
+## Credits
+
+- **show-me** — the visual-explanation skill by Dex Horthy / HumanLayer:
+  <https://www.humanlayer.com/blog/show-me-skill>. The harness asks agents
+  to use it, when installed, for explanations and summaries (status
+  reports, close-outs, architecture walkthroughs) instead of prose. It is
+  not bundled; install it with `npx skills add humanlayer/skills --skill show-me`.
 
 ## License
 

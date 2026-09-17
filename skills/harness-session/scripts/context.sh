@@ -53,3 +53,34 @@ if [ -x scripts/preflight.sh ]; then
 else
   echo 'PREFLIGHT: absent'
 fi
+
+# Harness-upgrade notices: the plugin ships newer templates than the ones
+# a repo was scaffolded with. Report the two that matter as facts; the
+# skill decides what to offer.
+echo
+echo "== Harness upgrade =="
+upgrade=0
+if [ ! -f scripts/e2e.sh ]; then
+  echo 'GATE_OUTPUT: no scripts/e2e.sh'
+elif grep -q 'FULL_LOG' scripts/e2e.sh; then
+  echo 'GATE_OUTPUT: bounded'
+else
+  echo 'GATE_OUTPUT: unbounded — scripts/e2e.sh has no step wrapper (protocol §1.6, ~5 min retrofit)'
+  upgrade=1
+fi
+SHIPPED_PROTOCOL="$SCRIPT_DIR/../../harness-setup/templates/harness-protocol.md"
+PLUGIN_JSON="$SCRIPT_DIR/../../../.claude-plugin/plugin.json"
+plugin_version="$(jq -r '.version // "unknown"' "$PLUGIN_JSON" 2>/dev/null || echo unknown)"
+if [ ! -f docs/agents/harness-protocol.md ]; then
+  echo 'PROTOCOL: missing'
+elif cmp -s "$SHIPPED_PROTOCOL" docs/agents/harness-protocol.md; then
+  echo "PROTOCOL: current (plugin $plugin_version)"
+else
+  echo "PROTOCOL: outdated — docs/agents/harness-protocol.md differs from the copy shipped with plugin $plugin_version"
+  upgrade=1
+fi
+if [ "$upgrade" -eq 1 ]; then
+  echo 'UPGRADE: offer — tell the human once; apply only if they say so, as its own commit before the feature'
+else
+  echo 'UPGRADE: none'
+fi

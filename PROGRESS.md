@@ -3,6 +3,47 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-16 — session 17 (M16-001)
+
+- Branch: `m16-native-workflows`.
+- Done: M16-001 — protocol §1.5 now tells the agent to plan with its own
+  native plan mode and forbids plan headers that mandate an external
+  skill; §2.4 gains an "Execution mode" choice (inline by default, or
+  delegated to the agent's own built-in subagents for independent parts,
+  own tools only). harness-setup and harness-session SKILL.md, the
+  AGENTS.md template, and the README carry the same rule. Gate greps the
+  new text and rejects any third-party workflow plugin name under
+  `skills/` or in the README. Released as 1.7.0; plan filed directly
+  under `docs/plans/completed/`.
+- Trigger: a Copilot CLI session in a harnessed repo followed an external
+  `REQUIRED SUB-SKILL` plan header, front-loaded ~800 lines of process
+  text, and ran 16 subagent round-trips for 7 tasks in one session.
+- Gate: green.
+- Next: no failing feature — plan new work or run a maintenance pass.
+
+## 2026-09-16 — session 17b (M16-002, M16-003, M16-004)
+
+- Branch: `m16-native-workflows` (same PR #17, still 1.7.0).
+- Deviation: three features in one session at the owner's request; one
+  commit each, red-green per feature.
+- Done: M16-002 — `e2e.sh.tmpl` bounds its own output with a `step`
+  wrapper (full log as `FULL_LOG`, one line per passing step, tail on
+  failure, `GATE_VERBOSE=1` to stream); harness-audit WARNs on a gate
+  with no `FULL_LOG` marker; protocol §1.6 states the contract.
+- Done: M16-003 — protocol §1.5 ships a verbatim plan header routing each
+  task through one harness coding session (harness-session if installed,
+  else §2); AGENTS.md.tmpl names harness-session as the entry point;
+  harness-session triggers on "execute a plan".
+- Done: M16-004 — protocol §2, AGENTS.md.tmpl and harness-status tell
+  agents to use the `show-me` skill, when installed, for explanations and
+  summaries; README credits HumanLayer.
+- Done: M16-005 — `context.sh` reports `GATE_OUTPUT`, `PROTOCOL` and
+  `UPGRADE: offer|none` so a session notices a repo scaffolded by an
+  older plugin; harness-session offers the upgrade once as its own
+  commit before the feature.
+- Gate: green.
+- Next: no failing feature — plan new work or run a maintenance pass.
+
 ## 2026-09-09 — session 16 (M15-004)
 
 - Branch: `m15-efficient-sessions`.

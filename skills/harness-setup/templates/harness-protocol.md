@@ -122,12 +122,34 @@ it doesn't fit, split it and let the ids reflect the order.
 
 ### 1.5 Write the first execution plan
 
+Write the plan with the agent's own **native plan mode** — whatever the
+tool you are running in ships for planning (a plan/architect mode, a
+planning subagent, or plain reasoning). Do not load a third-party
+planning or workflow plugin to do it, and never put a header in the plan
+that mandates one for execution: the next session may run in a different
+agent, and such a skill front-loads hundreds of lines of process text
+into context before any work starts.
+
 Create `docs/plans/active/<date>-<milestone-name>.md` covering the first
 milestone: the ordered task list, per-task verification, and a **decision
 log** section at the bottom. Every non-obvious choice made during planning
 gets a dated entry there. Plans are first-class artifacts: they are
 committed, updated as work proceeds, and moved to `docs/plans/completed/`
 when done.
+
+Head each task section with its feature id and keep it self-contained, so
+a session reads only the section for its selected feature, never the
+whole file.
+
+Every plan opens with this header, verbatim, so that whoever picks it up
+executes it through the harness and not through some other workflow:
+
+```
+> **For agentic workers:** each task below is one harness coding session.
+> Run it with the harness-session skill if it is installed; otherwise
+> follow docs/agents/harness-protocol.md section 2. Do not load any other
+> workflow skill or plugin to execute this plan.
+```
 
 ### 1.6 Scaffold or adapt the gate
 
@@ -138,6 +160,14 @@ and analyzer commands. The gate's contract:
 - `bash scripts/e2e.sh` exits 0 **if and only if** the repo is healthy.
 - It runs from a clean checkout with documented dependencies.
 - It is fast enough to run twice per session without resentment.
+- Its terminal output is **bounded**: the template's `step` wrapper writes
+  every command's full output to a log file, prints one line per passing
+  step, and shows only the log's tail (plus its path as `FULL_LOG`) for
+  the first failing step. Test runners and coverage tools are verbose in
+  ways that vary by stack; the gate absorbs that so a session never
+  spends context on it. `GATE_VERBOSE=1` streams everything when a human
+  wants it. **Retrofit:** wrap the existing test commands in the same
+  `step` calls rather than pasting them bare.
 
 **Retrofit rules** (existing codebase): existing agent entry-files
 (AGENTS.md or equivalents) are preserved — extend and link, never clobber.
@@ -239,6 +269,13 @@ In this order, before anything else:
 Trust the repo over your assumptions. If PROGRESS.md and the git log
 disagree, the git log wins; note the discrepancy in your session entry.
 
+**Explaining and summarizing.** Whenever you explain or summarize
+something for the human — a status report, a close-out summary, an
+architecture walkthrough, a design choice — use the `show-me` skill if
+it is installed: a component tree, call stack, or diagram in place of
+prose. Without it, keep the prose short. (show-me is HumanLayer's skill;
+the harness recommends it, it does not ship it.)
+
 ### 2.2 Pick the feature
 
 Among features with `status: "failing"`: lowest milestone, then lowest id.
@@ -271,6 +308,23 @@ before the gate — a non-zero exit blocks the session exactly like a red
 gate.
 
 ### 2.4 Implement, test-first
+
+**Execution mode.** Before touching code, propose one mode in a single
+line — the human can override:
+
+- **Inline** (default): you edit, test, and commit yourself. Right for
+  almost every one-session feature.
+- **Delegated**: the feature has two or more independent parts (say, a
+  script and its fixture suite). Dispatch each part to the agent's
+  **own built-in** subagent or task tool, hand it only that task section
+  plus the `verify` criterion, and keep just its one-paragraph summary in
+  your context. You still own the gate, the status flip, the commit, and the
+  PROGRESS.md entry.
+
+Either way, use only the tools the agent ships with. Never load an
+external execution-workflow skill or plugin to run a session: it
+front-loads its whole manual into context and tends to batch many tasks
+into one session, which breaks the ONE-feature rule.
 
 Write the test (or set up the manual check) that proves the feature's
 `verify` criterion. Watch it fail. Implement the minimum that makes it pass.

@@ -106,6 +106,21 @@ for t in "$TMPL_DIR"/*.sh.tmpl; do
 done
 [ "$found_sh_tmpl" -eq 1 ] || fail "no *.sh.tmpl templates found"
 
+# e2e.sh.tmpl: bounded output by construction (full log on disk, short terminal report)
+gate_tmp="$(mktemp -d)"
+sed 's/{{[A-Za-z0-9_]*}}/true/g' "$TMPL_DIR/e2e.sh.tmpl" > "$gate_tmp/green.sh"
+green_out="$(bash "$gate_tmp/green.sh")" || fail "e2e.sh.tmpl: green substitution exited non-zero"
+echo "$green_out" | grep -q 'GATE GREEN' || fail "e2e.sh.tmpl: green run missing GATE GREEN"
+echo "$green_out" | grep -q 'FULL_LOG:' || fail "e2e.sh.tmpl: green run does not name FULL_LOG"
+[ "$(echo "$green_out" | wc -l)" -le 10 ] || fail "e2e.sh.tmpl: green run prints more than 10 lines"
+sed -e 's/{{TEST_COMMAND}}/seq 1 300; false/' -e 's/{{[A-Za-z0-9_]*}}/true/g' "$TMPL_DIR/e2e.sh.tmpl" > "$gate_tmp/red.sh"
+if red_out="$(bash "$gate_tmp/red.sh" 2>&1)"; then fail "e2e.sh.tmpl: red substitution exited 0"; fi
+echo "$red_out" | grep -q 'FAIL  tests' || fail "e2e.sh.tmpl: red run does not name the failing step"
+[ "$(echo "$red_out" | wc -l)" -le 70 ] || fail "e2e.sh.tmpl: red run prints more than 70 lines"
+red_log="$(echo "$red_out" | sed -n 's/^FULL_LOG: //p')"
+[ "$(grep -c '^[0-9]' "$red_log")" -eq 300 ] || fail "e2e.sh.tmpl: full log does not retain the noisy output"
+rm -rf "$gate_tmp"
+
 # protocol doc: exists, has the planning section, no Claude-isms
 PROTO="$TMPL_DIR/harness-protocol.md"
 [ -f "$PROTO" ] || fail "harness-protocol.md missing"
@@ -118,6 +133,10 @@ grep -q 'Choose the verification tooling' "$PROTO" || fail "protocol: verificati
 grep -q 'Write ARCHITECTURE.md' "$PROTO" || fail "protocol: architecture section (1.8) missing"
 grep -q 'update ARCHITECTURE.md in the same commit' "$PROTO" || fail "protocol: session architecture-update rule missing"
 grep -q 'Choose the logging/observability approach' "$PROTO" || fail "protocol: logging/observability section (1.9) missing"
+grep -q 'bounded' "$PROTO" || fail "protocol: bounded-gate-output contract (1.6) missing"
+grep -q 'native plan mode' "$PROTO" || fail "protocol: native-plan-mode rule (1.5) missing"
+grep -q 'one harness coding session' "$PROTO" || fail "protocol: plan header routing tasks through harness sessions (1.5) missing"
+grep -q 'one harness coding session' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: plan-execution rule missing"
 
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
 grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
@@ -125,6 +144,10 @@ grep -q 'ONE feature' "$PROTO" || fail "protocol: one-feature-per-session rule m
 grep -q 'CONTINUING INTERRUPTED FEATURE' "$PROTO" || fail "protocol: interrupted-feature continuation rule missing"
 grep -q 'scripts/preflight.sh' "$PROTO" || fail "protocol: optional target preflight rule missing"
 grep -q 'tracked by another failing or deferred feature' "$PROTO" || fail "protocol: out-of-scope-warning rule missing"
+grep -q 'Execution mode' "$PROTO" || fail "protocol: execution-mode choice (2.4) missing"
+grep -q 'show-me' "$PROTO" || fail "protocol: show-me rule for explanations and summaries missing"
+grep -q 'show-me' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: show-me rule missing"
+grep -q 'own built-in' "$PROTO" || fail "protocol: own-tools-only execution rule missing"
 
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
 grep -qi 'entropy' "$PROTO" || fail "protocol: maintenance section must cover entropy GC"
@@ -138,6 +161,7 @@ grep -q '^description: ' "$SKILL" || fail "SKILL.md: frontmatter description mis
 grep -q 'Already harnessed' "$SKILL" || fail "SKILL.md: already-initialized guard missing"
 grep -q 'ARCHITECTURE.md' "$SKILL" || fail "SKILL.md: architecture scaffold step missing"
 grep -q 'logging/observability' "$SKILL" || fail "SKILL.md: logging/observability scaffold step missing"
+grep -q 'native plan mode' "$SKILL" || fail "SKILL.md: native plan mode step missing"
 while read -r ref; do
   [ -f "skills/harness-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
@@ -159,6 +183,10 @@ grep -q 'ARCHITECTURE.md' README.md || fail "README: ARCHITECTURE.md coverage mi
 grep -qi 'logging/observability' README.md || fail "README: logging/observability coverage missing"
 grep -q 'harness-session' README.md || fail "README: harness-session skill missing"
 grep -q 'run-gate.sh' README.md || fail "README: run-gate.sh coverage missing"
+grep -q 'native plan mode' README.md || fail "README: native plan mode coverage missing"
+grep -q 'humanlayer.com/blog/show-me-skill' README.md || fail "README: show-me credit missing"
+# no third-party workflow plugin is ever required to plan or execute
+! grep -rqi 'superpowers' skills README.md || fail "a skill/template/README references a third-party workflow plugin"
 
 # --- harness-audit skill ----------------------------------------------------
 
@@ -181,6 +209,7 @@ shellcheck "$STATUS_SKILL/scripts/status.sh"
 [ "$(head -1 "$STATUS_SKILL/SKILL.md")" = "---" ] || fail "harness-status SKILL.md: missing frontmatter"
 grep -q '^name: harness-status$' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: description missing"
+grep -q 'show-me' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: show-me relay step missing"
 bash scripts/test-status.sh
 
 # --- harness-handoff skill ----------------------------------------------------
@@ -202,10 +231,14 @@ shellcheck "$SESSION_SKILL/scripts/context.sh"
 [ -f "$SESSION_SKILL/scripts/run-gate.sh" ] || fail "harness-session run-gate.sh missing"
 shellcheck "$SESSION_SKILL/scripts/run-gate.sh"
 grep -q 'run-gate.sh' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: does not reference run-gate.sh"
+grep -qi 'delegated' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: execution-mode proposal missing"
+grep -q 'UPGRADE: offer' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: upgrade-offer step missing"
+grep -q 'UPGRADE: offer' README.md || fail "README: plugin-upgrade notice coverage missing"
 [ -f "$SESSION_SKILL/SKILL.md" ] || fail "harness-session SKILL.md missing"
 [ "$(head -1 "$SESSION_SKILL/SKILL.md")" = "---" ] || fail "harness-session SKILL.md: missing frontmatter"
 grep -q '^name: harness-session$' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description missing"
+grep -q '^description: .*execution plan' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description does not trigger on executing a plan"
 bash scripts/test-session.sh
 
 echo "GATE GREEN"

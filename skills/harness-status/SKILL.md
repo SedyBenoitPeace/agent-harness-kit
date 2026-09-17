@@ -22,7 +22,9 @@ parsing lives in `scripts/status.sh` — run it, never re-derive it by hand.
    recent commit context.
 3. Relay the report: milestone rollup, totals, last session, and the
    NEXT feature — this is the same pick a coding session (protocol §2)
-   would make, so "what to do next" is deterministic.
+   would make, so "what to do next" is deterministic. If the `show-me`
+   skill is installed, use it for the relay (a milestone tree beats a
+   paragraph); otherwise keep the prose short.
 4. Offer `--run-gate` only if the human wants health confirmed — gates
    can be slow.
 5. Status is read-only. Change nothing, flip no statuses. To do the

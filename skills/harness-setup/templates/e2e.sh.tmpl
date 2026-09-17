@@ -3,18 +3,51 @@
 # Run at the START of every session (confirm green baseline) and at the END
 # (prove the feature). Keep it fast; keep it honest — a gate that lies is
 # worse than no gate.
+#
+# Output is bounded by construction so it never floods an agent's context:
+# every step's full output goes to $LOG; the terminal gets one line per
+# passing step and only the tail of the log for the first failing step.
+#   GATE_VERBOSE=1 bash scripts/e2e.sh   # stream everything to the terminal
+#   GATE_TAIL=120  bash scripts/e2e.sh   # longer failure tail (default 60)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+LOG="${GATE_LOG:-${TMPDIR:-/tmp}/gate-$(date +%Y%m%d-%H%M%S)-$$.log}"
+: > "$LOG"
+
+step() {  # step <name> "<shell command>"
+  local name="$1" cmd="$2" start status
+  start="$(date +%s)"
+  printf '=== %s: %s ===\n' "$name" "$cmd" >> "$LOG"
+  set +e
+  if [ "${GATE_VERBOSE:-0}" = "1" ]; then
+    bash -c "$cmd" 2>&1 | tee -a "$LOG"
+    status="${PIPESTATUS[0]}"
+  else
+    bash -c "$cmd" >> "$LOG" 2>&1
+    status=$?
+  fi
+  set -e
+  if [ "$status" -eq 0 ]; then
+    echo "OK    $name ($(( $(date +%s) - start ))s)"
+    return 0
+  fi
+  echo "FAIL  $name (exit $status)"
+  echo "FULL_LOG: $LOG"
+  [ "${GATE_VERBOSE:-0}" = "1" ] || tail -n "${GATE_TAIL:-60}" "$LOG"
+  exit "$status"
+}
+
 # Tests (adapt to your stack, e.g. "npm test", "flutter test", "pytest")
-{{TEST_COMMAND}}
+step tests "{{TEST_COMMAND}}"
 
 # Static analysis / linters (e.g. "npm run lint", "dart analyze", "ruff check .")
-{{ANALYZER_COMMAND}}
+step analyzers "{{ANALYZER_COMMAND}}"
 
 # End-to-end proof for demoable features — exercise the product like a user
 # would (protocol §1.7: Playwright for web UIs, curl for APIs, run the
 # binary for CLIs). Delete only if this project truly has no user surface.
-{{E2E_PROOF_COMMAND}}
+step e2e-proof "{{E2E_PROOF_COMMAND}}"
 
 echo "GATE GREEN"
+echo "FULL_LOG: $LOG"

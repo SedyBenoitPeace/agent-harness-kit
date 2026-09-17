@@ -80,6 +80,26 @@ chmod +x "$WORK/repo/scripts/preflight.sh"
 out="$(bash "$CONTEXT" "$WORK/repo")" || fail "preflight repo: expected exit 0"
 echo "$out" | grep -q 'PREFLIGHT: scripts/preflight.sh' || fail "preflight repo: not discovered"
 
+# 5b. harness-upgrade notices: legacy gate and drifted/missing protocol copy
+#     are reported as facts; the current shapes report as fine
+out="$(bash "$CONTEXT" "$WORK/repo")" || fail "upgrade repo: expected exit 0"
+echo "$out" | grep -q 'GATE_OUTPUT: no scripts/e2e.sh' || fail "upgrade repo: missing-gate line absent"
+echo "$out" | grep -q 'PROTOCOL: missing' || fail "upgrade repo: missing-protocol line absent"
+printf '#!/usr/bin/env bash\ntrue\n' > "$WORK/repo/scripts/e2e.sh"
+mkdir -p "$WORK/repo/docs/agents"
+cp skills/harness-setup/templates/harness-protocol.md "$WORK/repo/docs/agents/harness-protocol.md"
+echo "local note" >> "$WORK/repo/docs/agents/harness-protocol.md"
+out="$(bash "$CONTEXT" "$WORK/repo")" || fail "legacy repo: expected exit 0"
+echo "$out" | grep -q 'GATE_OUTPUT: unbounded' || fail "legacy repo: unbounded gate not noticed"
+echo "$out" | grep -q 'PROTOCOL: outdated' || fail "legacy repo: drifted protocol not noticed"
+echo "$out" | grep -q 'UPGRADE: offer' || fail "legacy repo: no upgrade offer line"
+printf '#!/usr/bin/env bash\necho "FULL_LOG: x"\n' > "$WORK/repo/scripts/e2e.sh"
+cp skills/harness-setup/templates/harness-protocol.md "$WORK/repo/docs/agents/harness-protocol.md"
+out="$(bash "$CONTEXT" "$WORK/repo")" || fail "current repo: expected exit 0"
+echo "$out" | grep -q 'GATE_OUTPUT: bounded' || fail "current repo: bounded gate not recognized"
+echo "$out" | grep -q 'PROTOCOL: current' || fail "current repo: matching protocol not recognized"
+echo "$out" | grep -q 'UPGRADE: none' || fail "current repo: expected no upgrade offer"
+
 # builds a target fixture at $1 whose scripts/e2e.sh prints $2 noisy lines
 # then exits $3, with $4 appended right before exiting (failure sentinel)
 make_gate_target() {

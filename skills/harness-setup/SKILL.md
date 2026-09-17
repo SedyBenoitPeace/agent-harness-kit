@@ -32,6 +32,9 @@ skill follows its own shipped manual. In particular:
 
 - Interview the human first (§1.1 has the required questions). Do not
   answer the questions yourself.
+- Write the plan with the agent's own native plan mode (§1.5). No
+  third-party planning/workflow plugin, and no plan header that mandates
+  one for execution.
 - If the human supplied a requirements document (markdown, PDF, or HTML),
   follow §1.1's rule: extract interview answers from it and ask only
   about the gaps.
@@ -69,7 +72,8 @@ directories (the first plan from step 2 goes in `active/`).
 - Existing `AGENTS.md` / `CLAUDE.md` content is **preserved and linked**,
   never clobbered. Merge the harness map into what's there; move displaced
   depth into `docs/`.
-- Existing tests become the initial gate: wire `scripts/e2e.sh` to run them.
+- Existing tests become the initial gate: wire `scripts/e2e.sh` to run them
+  through the template's `step` wrapper so the output stays bounded (§1.6).
 - Existing code maps to `passing` features **only** when a `verify`
   criterion actually proves it. Otherwise it enters as `failing` with honest
   notes about what's unverified.
@@ -91,3 +95,4 @@ directories (the first plan from step 2 goes in `active/`).
 | "I'll put the plan in my head / a gist / chat" | If it's not in the repo, it doesn't exist. |
 | "Existing AGENTS.md is messy, I'll rewrite it" | Retrofit extends and links; it never clobbers. |
 | "I'll summarize the protocol doc to save space" | It ships whole. Other agents depend on the full text. |
+| "I'll add 'REQUIRED SUB-SKILL: X' to the plan header" | Plans never mandate external skills. The next agent may not have X. |
