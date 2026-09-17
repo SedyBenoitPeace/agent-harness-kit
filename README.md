@@ -104,6 +104,12 @@ copilot plugin marketplace add https://github.com/SedyBenoitPeace/agent-harness-
 copilot plugin install agent-harness-kit                                                     
 ```
 
+Update to latest
+
+```
+copilot plugin update agent-harness-kit
+```
+
 ## Lifecycle — how the pieces fit
 
 1. **Set up once** — `/agent-harness-kit:harness-setup`. Expect an
