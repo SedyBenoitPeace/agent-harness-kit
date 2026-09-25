@@ -50,6 +50,11 @@ was missing is something that starts them.
   paths touched?); §2 gains "Orchestrated runs". FEATURES.json.tmpl
   `_instructions` documents the fields. README lifecycle adds
   harness-run. AGENTS.md.tmpl names it. Version bump to 1.8.0.
+- Existing repos: the recopied protocol (existing `PROTOCOL: outdated`
+  upgrade offer) carries the new rules; the same upgrade commit adds the
+  harness-run line to AGENTS.md. harness-audit suggests `depends_on` /
+  `paths` for the remaining failing features, human approves. Absent
+  fields stay legal (sequential). README update section says so.
 
 ### Chore (no feature id): drop third-party plan headers
 - Remove the `REQUIRED SUB-SKILL` header lines from the four completed
