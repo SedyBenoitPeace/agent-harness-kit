@@ -1,7 +1,5 @@
 # agent-harness-kit Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Turn this repo into the canonical **agent-harness-kit** Claude Code plugin: rename repo (GitHub-only), restructure `skill/` → `skills/harness-setup`, add plugin manifests, add a `harness-audit` skill with a deterministic checker + fixture tests, and document PRD input.
 
 **Architecture:** The repo root becomes the plugin root (`.claude-plugin/` manifests + `skills/`). The existing gate (`scripts/e2e.sh`) stays the single test entry point; every new invariant is enforced there (TDD: add the gate check RED, make it GREEN). The audit is two layers: deterministic `check.sh` (repeatable, CI-usable) + a thin SKILL.md judgment layer.

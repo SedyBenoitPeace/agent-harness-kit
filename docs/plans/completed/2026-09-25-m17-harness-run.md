@@ -72,3 +72,7 @@ was missing is something that starts them.
   removing the shared-file conflict that ruled out parallel worktrees.
 - 2026-09-25 — Outer headless loop deferred until someone needs
   unattended overnight runs.
+- 2026-09-25 — Reverses M16's "keep historical `REQUIRED SUB-SKILL`
+  headers": harness-run agents open completed plans for context, and a
+  header there still reads as an instruction. Removed from the four
+  completed plans.
