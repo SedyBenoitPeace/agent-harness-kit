@@ -1,5 +1,5 @@
 {
-  "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
+  "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'. Optional per feature: depends_on (ids that must pass first) and paths (dirs/globs it changes) let an orchestrated run build independent features in parallel; omit either and the feature runs sequentially.",
   "milestones": {
     "0": "{{MILESTONE_0_TITLE}}",
     "1": "{{MILESTONE_1_TITLE}}"

@@ -1,7 +1,5 @@
 # M11: harness-status skill + lifecycle guidance — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Add a third skill, `harness-status` ("where does this project stand, what's next?"), guard `harness-setup` against already-harnessed repos, and give the README a lifecycle section with the slash-command forms users actually see — released as plugin 1.2.0.
 
 **Architecture:** Same two-layer pattern as harness-audit: a deterministic script (`skills/harness-status/scripts/status.sh`, parses only FEATURES.json + PROGRESS.md, no git — so fixtures stay plain directories) plus a thin SKILL.md judgment layer that adds `git log` context and enforces read-only behavior. Every new invariant lands in `scripts/e2e.sh` RED→GREEN. Boundary kept sharp: **audit = "is the harness well-formed?", status = "how is the work going?"**.

@@ -27,7 +27,9 @@ status + `git log` + `git status` + plan-grep sequence with one call.
      skill) and add `echo "FULL_LOG: $LOG"` after `GATE GREEN`.
    - `PROTOCOL: outdated` → recopy the shipped
      `templates/harness-protocol.md` over `docs/agents/harness-protocol.md`
-     whole; re-append any local notes the old copy had below it.
+     whole; re-append any local notes the old copy had below it. In the
+     same commit, add the harness-run line to AGENTS.md if it is missing
+     (see `templates/AGENTS.md.tmpl`).
    Never apply silently, never repeat the offer in the same session, and
    never let it replace the feature.
 3. If the report names `PREFLIGHT: scripts/<path>`, execute it now — it is
@@ -55,6 +57,7 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    has independent parts (protocol §2.4) — then follow red-green-refactor
    for the one selected feature only. Own tools only: never load an
    external execution-workflow skill.
+   Running inside a subagent (dispatched by harness-run)? Always inline.
 8. Do not investigate or expand a passing gate's warning that is already
    tracked by another failing or deferred feature, unless the selected
    feature's verify criterion requires it.
@@ -62,6 +65,14 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    <target>`, flip only the selected feature's status to `passing`,
    append one `PROGRESS.md` entry, commit explicit paths, then STOP —
    do not start a second feature.
+   **As a parallel lane** (harness-run said so): work only in the named
+   worktree, skip the baseline gate (the orchestrator started green),
+   run the feature's own verify, commit explicit paths —
+   and never touch FEATURES.json or PROGRESS.md;
+   the orchestrator runs the full gate and flips status.
+10. End with this one-line summary as your last output (harness-run
+    parses it; a blocked session stops at the blocker and still prints it):
+    `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`
 
 ## Red flags
 

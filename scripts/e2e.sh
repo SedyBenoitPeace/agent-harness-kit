@@ -24,6 +24,13 @@ jq -e '[ .features[]
        ] | length == 0' FEATURES.json >/dev/null \
   || fail "FEATURES.json: entry missing id/title/verify or has illegal status"
 
+# optional parallel-lane fields (harness-run), when present, are string arrays
+# (key presence, not value: an explicit null is rejected, not skipped)
+jq -e '[ .features[] | to_entries[] | select(.key == "depends_on" or .key == "paths")
+         | .value | select(type != "array" or any(.[]; type != "string")) ] | length == 0' \
+  FEATURES.json >/dev/null \
+  || fail "FEATURES.json: depends_on/paths must be arrays of strings"
+
 # AGENTS.md stays a table of contents
 [ "$(wc -l < AGENTS.md)" -le 100 ] || fail "AGENTS.md exceeds 100 lines"
 
@@ -59,6 +66,7 @@ jq -e '.plugins[0].name == "agent-harness-kit" and .plugins[0].source == "./"' \
 # --- templates ------------------------------------------------------------
 
 TMPL_DIR="skills/harness-setup/templates"
+SESSION_SKILL_MD="skills/harness-session/SKILL.md"
 
 # FEATURES.json.tmpl: contains placeholders, valid JSON once they are substituted
 grep -q '{{' "$TMPL_DIR/FEATURES.json.tmpl" \
@@ -152,6 +160,18 @@ grep -q 'own built-in' "$PROTO" || fail "protocol: own-tools-only execution rule
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
 grep -qi 'entropy' "$PROTO" || fail "protocol: maintenance section must cover entropy GC"
 
+# orchestrated runs (M17): optional lane fields, documented end to end
+grep -q 'Depends on' "$PROTO" || fail "protocol: depends_on planning question missing (1.4)"
+grep -q 'Paths touched' "$PROTO" || fail "protocol: paths planning question missing (1.4)"
+grep -q '### 2.7 Orchestrated runs' "$PROTO" || fail "protocol: orchestrated-runs section (2.7) missing"
+grep -q 'depends_on' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: optional lane fields undocumented"
+grep -q 'harness-run' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl does not mention harness-run"
+grep -q 'harness-run' README.md || fail "README: harness-run skill missing"
+grep -q 'absent fields stay sequential' README.md || fail "README: upgrade note for lane fields missing"
+grep -q 'depends_on' skills/harness-audit/SKILL.md || fail "harness-audit SKILL.md: lane-field suggestion missing"
+grep -qi 'never touch FEATURES.json or PROGRESS.md' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: lane rule must forbid FEATURES.json/PROGRESS.md writes"
+grep -q 'harness-run line' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: upgrade must add the harness-run line to AGENTS.md"
+
 # SKILL.md: valid frontmatter, references only templates that exist
 SKILL="skills/harness-setup/SKILL.md"
 [ -f "$SKILL" ] || fail "SKILL.md missing"
@@ -239,6 +259,24 @@ grep -q 'UPGRADE: offer' README.md || fail "README: plugin-upgrade notice covera
 grep -q '^name: harness-session$' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description missing"
 grep -q '^description: .*execution plan' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description does not trigger on executing a plan"
+grep -q 'SESSION: <id> · <passing|blocked>' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: end-of-session summary contract missing"
+grep -qi 'inside a subagent.*inline' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: subagent sessions must run inline"
 bash scripts/test-session.sh
+
+# --- harness-run skill ---------------------------------------------------
+
+RUN_SKILL="skills/harness-run"
+[ -f "$RUN_SKILL/SKILL.md" ] || fail "harness-run SKILL.md missing"
+[ "$(head -1 "$RUN_SKILL/SKILL.md")" = "---" ] || fail "harness-run SKILL.md: missing frontmatter"
+grep -q '^name: harness-run$' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: frontmatter name wrong"
+grep -q '^description: ' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: description missing"
+grep -q 'SESSION: <id> · <passing|blocked>' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: summary contract missing"
+grep -q 'status.sh' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: status.sh verification missing"
+grep -qi 'cap.*default 10' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: run cap missing"
+grep -qi 'no subagent' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: no-subagent fallback missing"
+grep -q 'PARALLEL:' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: parallel lanes missing"
+grep -q 'git worktree' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: lane worktrees missing"
+grep -qi 'never touch FEATURES.json' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: lanes must not write FEATURES.json"
+grep -qi 'redo.*sequentially' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: merge-conflict fallback missing"
 
 echo "GATE GREEN"

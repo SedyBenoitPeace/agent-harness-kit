@@ -1,7 +1,5 @@
 # M15 Efficient Coding Sessions Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Add a plugin-owned `harness-session` workflow that executes one harness feature with bounded recovery, safe interrupted-work handling, optional project preflight, and concise full-gate reporting.
 
 **Architecture:** A new two-layer skill keeps deterministic mechanics in `context.sh` and `run-gate.sh`, with workflow judgment in `SKILL.md`. `context.sh` delegates feature selection to the existing `harness-status` script; `run-gate.sh` wraps, but never replaces, a target repository's gate.

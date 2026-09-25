@@ -1,7 +1,5 @@
 # harness-planning Skill Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Build the open-source `harness-planning` Claude Code skill + portable protocol pack described in `docs/specs/2026-07-03-harness-planning-skill-design.md`, dogfooding the harness in this repo itself.
 
 **Architecture:** Everything of substance lives in portable markdown templates under `skill/harness-planning/templates/`; `SKILL.md` is a thin Claude orchestration layer on top. This repo runs its own harness (FEATURES.json, PROGRESS.md, `scripts/e2e.sh` lint gate), and every task below follows a TDD analog: extend the gate with a failing check → create the artifact → gate green → record feature as passing → commit.

@@ -54,6 +54,30 @@ else
   echo 'PREFLIGHT: absent'
 fi
 
+# Parallel lanes for harness-run: declared at planning time, never inferred.
+# Eligible = failing, in NEXT's milestone, declares depends_on (all passing)
+# and non-empty paths. Greedy from NEXT over non-overlapping glob prefixes,
+# max 3; fewer than 2 lanes, or NEXT itself ineligible → sequential.
+jq -r '
+  def prefix: sub("[*?\\[].*$"; "");
+  def overlaps($a; $b): any($a[]; . as $x | any($b[]; . as $y
+    | ($x | startswith($y)) or ($y | startswith($x))));
+  (.features | map({key: .id, value: .status}) | from_entries) as $st
+  | ([.features[] | select(.status == "failing")] | sort_by(.milestone, .id)) as $f
+  | if ($f | length) == 0 then "PARALLEL: none" else
+      [ $f[] | select(.milestone == $f[0].milestone
+          and (.depends_on | type) == "array" and all(.depends_on[]; $st[.] == "passing")
+          and (.paths | type) == "array" and (.paths | length) > 0) ] as $el
+      | if ($el | length) == 0 or $el[0].id != $f[0].id then "PARALLEL: none" else
+          reduce $el[] as $e ([];
+            ($e.paths | map(prefix)) as $p
+            | if length < 3 and all(.[]; overlaps(.p; $p) | not)
+              then . + [{id: $e.id, p: $p}] else . end)
+          | if length >= 2 then "PARALLEL: " + (map(.id) | join(" ")) else "PARALLEL: none" end
+        end
+    end
+' FEATURES.json
+
 # Harness-upgrade notices: the plugin ships newer templates than the ones
 # a repo was scaffolded with. Report the two that matter as facts; the
 # skill decides what to offer.

@@ -3,6 +3,53 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-25 — session 20 (M17-003)
+
+- Branch: `m17-harness-run`.
+- Done: M17-003 — protocol §1.4 asks the optional "Depends on?" /
+  "Paths touched?" questions and new §2.7 "Orchestrated runs" states the
+  harness-run rules (agent-neutral). FEATURES.json.tmpl `_instructions`
+  documents the fields; AGENTS.md.tmpl and README (skill list,
+  lifecycle, prompts, layout, update note) name harness-run. Existing
+  repos: the `PROTOCOL: outdated` upgrade now also adds the harness-run
+  line to AGENTS.md; harness-audit proposes lane fields on approval;
+  absent fields stay sequential. Released as 1.8.0. M17 plan moved to
+  `docs/plans/completed/`.
+- Gate: green.
+- Next: no failing feature — M17 complete; open the PR.
+
+## 2026-09-25 — session 19 (M17-002)
+
+- Branch: `m17-harness-run`.
+- Done: M17-002 — `context.sh` prints `PARALLEL: <id> …` (max 3) or
+  `PARALLEL: none`, computed in jq from optional `depends_on` / `paths`:
+  lanes start at NEXT, stay in its milestone, need all deps passing and
+  non-overlapping glob prefixes; any missing field → sequential.
+  harness-run gains a "Parallel lanes" section (worktree + `lane/<id>`
+  branch per lane, orchestrator merges, runs one gate, flips statuses,
+  writes one PROGRESS entry; conflict → redo sequentially).
+  harness-session gains the lane variant (own verify + commit only).
+  Gate type-checks the optional fields; M17-002's own entry uses them.
+- Gate: green.
+- Next: M17-003 — docs, planning interview, AGENTS.md template, 1.8.0.
+
+## 2026-09-25 — session 18 (M17-001)
+
+- Branch: `m17-harness-run`.
+- Done: M17-001 — new `skills/harness-run/SKILL.md`: a sequential
+  orchestrator that loops context.sh → dispatches one fresh built-in
+  subagent per feature ("harness-session for <id>, inline") → verifies
+  via status.sh + clean tree → stops on a blocker, the milestone
+  boundary, or the cap (default 10). No subagent tool → one normal
+  session, then stop. harness-session now ends with a fixed
+  `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`
+  line and always runs inline inside a subagent. Gate greps both.
+- Gotcha: gate greps are line-based, so contract phrases must sit on one
+  line in SKILL.md.
+- Gate: green.
+- Next: M17-002 — parallel lanes (add its FEATURES.json entry with the
+  implementing commit).
+
 ## 2026-09-16 — session 17 (M16-001)
 
 - Branch: `m16-native-workflows`.

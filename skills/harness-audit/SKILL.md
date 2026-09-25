@@ -29,6 +29,10 @@ checks live in `scripts/check.sh` — run it, never re-derive it by hand.
      templates).
    - Unfalsifiable verify fields: propose a falsifiable rewrite for each;
      apply only on approval.
+   - Remaining `failing` features without `depends_on` / `paths`
+     (protocol §1.4): propose values so harness-run can build independent
+     ones in parallel; apply only on approval. Absent fields stay legal —
+     those features simply run sequentially.
 
 ## Missing ARCHITECTURE.md — repair flow
 
