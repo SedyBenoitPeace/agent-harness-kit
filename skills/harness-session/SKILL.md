@@ -67,8 +67,9 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    do not start a second feature.
    **As a parallel lane** (harness-run said so): work only in the named
    worktree, skip the baseline gate (the orchestrator started green),
-   run the feature's own verify, commit explicit paths — and never touch FEATURES.json or
-   PROGRESS.md; the orchestrator runs the full gate and flips status.
+   run the feature's own verify, commit explicit paths —
+   and never touch FEATURES.json or PROGRESS.md;
+   the orchestrator runs the full gate and flips status.
 10. End with this one-line summary as your last output (harness-run
     parses it; a blocked session stops at the blocker and still prints it):
     `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`

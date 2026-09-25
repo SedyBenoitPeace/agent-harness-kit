@@ -25,8 +25,9 @@ jq -e '[ .features[]
   || fail "FEATURES.json: entry missing id/title/verify or has illegal status"
 
 # optional parallel-lane fields (harness-run), when present, are string arrays
-jq -e '[ .features[] | (.depends_on?, .paths?) | select(. != null)
-         | select(type != "array" or any(.[]; type != "string")) ] | length == 0' \
+# (key presence, not value: an explicit null is rejected, not skipped)
+jq -e '[ .features[] | to_entries[] | select(.key == "depends_on" or .key == "paths")
+         | .value | select(type != "array" or any(.[]; type != "string")) ] | length == 0' \
   FEATURES.json >/dev/null \
   || fail "FEATURES.json: depends_on/paths must be arrays of strings"
 
@@ -168,6 +169,7 @@ grep -q 'harness-run' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl does no
 grep -q 'harness-run' README.md || fail "README: harness-run skill missing"
 grep -q 'absent fields stay sequential' README.md || fail "README: upgrade note for lane fields missing"
 grep -q 'depends_on' skills/harness-audit/SKILL.md || fail "harness-audit SKILL.md: lane-field suggestion missing"
+grep -qi 'never touch FEATURES.json or PROGRESS.md' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: lane rule must forbid FEATURES.json/PROGRESS.md writes"
 grep -q 'harness-run line' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: upgrade must add the harness-run line to AGENTS.md"
 
 # SKILL.md: valid frontmatter, references only templates that exist
