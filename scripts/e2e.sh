@@ -65,6 +65,7 @@ jq -e '.plugins[0].name == "agent-harness-kit" and .plugins[0].source == "./"' \
 # --- templates ------------------------------------------------------------
 
 TMPL_DIR="skills/harness-setup/templates"
+SESSION_SKILL_MD="skills/harness-session/SKILL.md"
 
 # FEATURES.json.tmpl: contains placeholders, valid JSON once they are substituted
 grep -q '{{' "$TMPL_DIR/FEATURES.json.tmpl" \
@@ -157,6 +158,17 @@ grep -q 'own built-in' "$PROTO" || fail "protocol: own-tools-only execution rule
 
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
 grep -qi 'entropy' "$PROTO" || fail "protocol: maintenance section must cover entropy GC"
+
+# orchestrated runs (M17): optional lane fields, documented end to end
+grep -q 'Depends on' "$PROTO" || fail "protocol: depends_on planning question missing (1.4)"
+grep -q 'Paths touched' "$PROTO" || fail "protocol: paths planning question missing (1.4)"
+grep -q '### 2.7 Orchestrated runs' "$PROTO" || fail "protocol: orchestrated-runs section (2.7) missing"
+grep -q 'depends_on' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: optional lane fields undocumented"
+grep -q 'harness-run' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl does not mention harness-run"
+grep -q 'harness-run' README.md || fail "README: harness-run skill missing"
+grep -q 'absent fields stay sequential' README.md || fail "README: upgrade note for lane fields missing"
+grep -q 'depends_on' skills/harness-audit/SKILL.md || fail "harness-audit SKILL.md: lane-field suggestion missing"
+grep -q 'harness-run line' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: upgrade must add the harness-run line to AGENTS.md"
 
 # SKILL.md: valid frontmatter, references only templates that exist
 SKILL="skills/harness-setup/SKILL.md"

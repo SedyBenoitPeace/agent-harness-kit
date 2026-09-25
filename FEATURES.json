@@ -396,6 +396,26 @@
       ],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-session.sh proving context.sh prints PARALLEL: <ids> for disjoint-path same-milestone features and PARALLEL: none for a failing dependency, overlapping path prefixes, or missing fields on NEXT, capped at 3; the gate accepts depends_on/paths only as string arrays; harness-run SKILL.md documents lane worktrees, lanes never touching FEATURES.json/PROGRESS.md, one orchestrator gate, and the sequential redo on merge conflict",
       "notes": "Eligible = failing, NEXT milestone, declares depends_on (all passing) and non-empty paths; NEXT must be eligible or lanes are none. Prefix = glob text before the first *?[ ; overlap = either prefix starts with the other."
+    },
+    {
+      "id": "M17-003",
+      "milestone": 17,
+      "title": "Orchestrated runs documented end to end, with an upgrade path for existing repos; released as 1.8.0",
+      "status": "passing",
+      "depends_on": [
+        "M17-002"
+      ],
+      "paths": [
+        "skills/harness-setup/templates/",
+        "skills/harness-audit/",
+        "skills/harness-session/SKILL.md",
+        "README.md",
+        ".claude-plugin/",
+        "package.json",
+        "scripts/e2e.sh"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with checks that the protocol asks the Depends on / Paths touched questions (1.4) and has 2.7 Orchestrated runs; FEATURES.json.tmpl documents depends_on/paths; AGENTS.md.tmpl, README (skill list, lifecycle, prompts, layout) name harness-run; README says absent fields stay sequential; harness-audit proposes lane fields on approval; harness-session upgrade step adds the harness-run line to AGENTS.md; plugin.json/marketplace.json/package.json are 1.8.0",
+      "notes": "Existing repos upgrade via the existing PROTOCOL: outdated offer; no new detection needed."
     }
   ]
 }

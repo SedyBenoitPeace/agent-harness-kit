@@ -3,6 +3,21 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-25 — session 20 (M17-003)
+
+- Branch: `m17-harness-run`.
+- Done: M17-003 — protocol §1.4 asks the optional "Depends on?" /
+  "Paths touched?" questions and new §2.7 "Orchestrated runs" states the
+  harness-run rules (agent-neutral). FEATURES.json.tmpl `_instructions`
+  documents the fields; AGENTS.md.tmpl and README (skill list,
+  lifecycle, prompts, layout, update note) name harness-run. Existing
+  repos: the `PROTOCOL: outdated` upgrade now also adds the harness-run
+  line to AGENTS.md; harness-audit proposes lane fields on approval;
+  absent fields stay sequential. Released as 1.8.0. M17 plan moved to
+  `docs/plans/completed/`.
+- Gate: green.
+- Next: no failing feature — M17 complete; open the PR.
+
 ## 2026-09-25 — session 19 (M17-002)
 
 - Branch: `m17-harness-run`.

@@ -120,6 +120,18 @@ back to the interview.
 Size each feature to be completable in one session, including its test. If
 it doesn't fit, split it and let the ids reflect the order.
 
+Two optional fields let an orchestrated run (§2.7) build independent
+features side by side. Ask for each feature, and record them only when the
+answer is clear:
+
+- **Depends on?** → `depends_on`: ids that must be `passing` first, e.g.
+  `["M1-002"]`. Use `[]` for "nothing".
+- **Paths touched?** → `paths`: the directories or globs the feature
+  changes, e.g. `["src/billing/", "tests/billing/**"]`.
+
+A feature with either field missing always runs sequentially — leaving
+them out is always safe.
+
 ### 1.5 Write the first execution plan
 
 Write the plan with the agent's own **native plan mode** — whatever the
@@ -371,6 +383,26 @@ Copy-paste session prompt:
 Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and
 perform exactly one coding session.
 ```
+
+### 2.7 Orchestrated runs
+
+To work through many features without one conversation's context growing
+per feature, an orchestrator conversation (the harness-run plugin skill)
+dispatches each coding session to a fresh built-in subagent, then checks
+the repo — not the subagent's word — before starting the next. Rules:
+
+- Every dispatched session is a normal §2 session, run inline, ending
+  with one line: `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`.
+- The orchestrator never reads diffs or gate logs; a blocked session is
+  relayed to the human and the run stops. It also stops at a milestone
+  boundary and at a feature cap.
+- Parallel lanes run only for features whose `depends_on` / `paths`
+  (§1.4) prove them independent, computed by script, never guessed. Each
+  lane works in its own worktree and never touches FEATURES.json or
+  PROGRESS.md; the orchestrator merges, runs one full gate, flips the
+  statuses, and writes one PROGRESS.md entry. A merge conflict means that
+  feature is redone sequentially.
+- No subagents available → run one normal session and stop.
 
 ## 3. Maintenance protocol
 

@@ -29,7 +29,7 @@ and [OpenAI — Harness engineering](https://openai.com/index/harness-engineerin
 /plugin install agent-harness-kit
 ```
 
-Five skills come with it — invoke each as a slash command or in plain
+Six skills come with it — invoke each as a slash command or in plain
 English:
 
 - **harness-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
@@ -42,6 +42,11 @@ English:
   `run-gate.sh` wrapper retains the full log while keeping the terminal
   report short) live in the plugin; project-specific readiness checks are
   optional and live in the target repo's own `scripts/preflight.sh`.
+- **harness-run** — work through many features in one conversation
+  without its context growing: each feature runs as a harness-session in
+  a fresh subagent, verified from the repo before the next starts;
+  script-proven independent features run as parallel lanes.
+  `/agent-harness-kit:harness-run` or _"Run the rest of milestone 3."_
 - **harness-status** — where the project stands: progress per milestone,
   last session, exact next feature. `/agent-harness-kit:harness-status` or
   _"what's the harness status?"_.
@@ -63,6 +68,11 @@ target repo against the shipped templates: an unbounded gate
 (`GATE_OUTPUT: unbounded`) or an older protocol copy (`PROTOCOL: outdated`)
 ends the report with `UPGRADE: offer`, and the agent proposes the
 five-minute upgrade as its own commit before starting the feature.
+Recopying the protocol brings in the orchestrated-run rules (§2.7), and
+the same commit adds the harness-run line to AGENTS.md. The new
+`depends_on` / `paths` fields in FEATURES.json are optional — absent fields stay sequential,
+so existing repos keep working unchanged; harness-audit can propose
+values for the remaining failing features, applied only on approval.
 
 Manual fallback (no plugin): copy `skills/harness-setup` into
 `~/.claude/skills/`.
@@ -127,7 +137,11 @@ copilot plugin update agent-harness-kit
    execution mode — inline (default) or delegated to the agent's own
    built-in subagents — and never loads a third-party workflow plugin;
    plans are written with the agent's native plan mode (protocol §1.5).
-   Repeat until the milestone is done.
+   Repeat until the milestone is done — or let
+   `/agent-harness-kit:harness-run` repeat it for you: one fresh subagent
+   per feature, stopping at a blocker, the milestone boundary, or a cap
+   of 10, and running independent features (declared `depends_on` /
+   `paths`) as parallel lanes.
 3. **Check where you are** — `/agent-harness-kit:harness-status` any
    time: progress per milestone, what the last session did, and exactly
    which feature the next session will pick. If the harness isn't set up
@@ -169,6 +183,7 @@ branch concurrently.
 | See progress + what's next    | _"What's the harness status?"_                                                                              |
 | Do one unit of work           | _"Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and perform exactly one coding session."_ (manual fallback, any agent) |
 | Do one unit of work (plugin installed) | _"Implement M1-004 following the harness."_ or _"Continue the current harness feature."_ |
+| Do many units of work (plugin installed) | _"Run the rest of milestone 3 with harness-run."_ |
 | End a session / switch agents | _"Prepare the handoff for the next agent."_                                                                 |
 | Periodic cleanup              | _"Read AGENTS.md, then docs/agents/harness-protocol.md section 3, and perform one maintenance pass."_       |
 
@@ -235,11 +250,13 @@ skills/
 ├── harness-handoff/
 │   ├── SKILL.md        handoff orchestration: ritual check + prompt relay
 │   └── scripts/handoff.sh        session-end checks + next-agent prompt
-└── harness-session/
-    ├── SKILL.md        session orchestration: bounded recovery + gate
-    └── scripts/
-        ├── context.sh             bounded, non-mutating session context
-        └── run-gate.sh            concise gate wrapper, full log retained
+├── harness-session/
+│   ├── SKILL.md        session orchestration: bounded recovery + gate
+│   └── scripts/
+│       ├── context.sh             bounded session context + PARALLEL lanes
+│       └── run-gate.sh            concise gate wrapper, full log retained
+└── harness-run/
+    └── SKILL.md        multi-feature orchestrator: one subagent per feature
 ```
 
 ## Dogfood
