@@ -3,6 +3,21 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-25 — session 19 (M17-002)
+
+- Branch: `m17-harness-run`.
+- Done: M17-002 — `context.sh` prints `PARALLEL: <id> …` (max 3) or
+  `PARALLEL: none`, computed in jq from optional `depends_on` / `paths`:
+  lanes start at NEXT, stay in its milestone, need all deps passing and
+  non-overlapping glob prefixes; any missing field → sequential.
+  harness-run gains a "Parallel lanes" section (worktree + `lane/<id>`
+  branch per lane, orchestrator merges, runs one gate, flips statuses,
+  writes one PROGRESS entry; conflict → redo sequentially).
+  harness-session gains the lane variant (own verify + commit only).
+  Gate type-checks the optional fields; M17-002's own entry uses them.
+- Gate: green.
+- Next: M17-003 — docs, planning interview, AGENTS.md template, 1.8.0.
+
 ## 2026-09-25 — session 18 (M17-001)
 
 - Branch: `m17-harness-run`.

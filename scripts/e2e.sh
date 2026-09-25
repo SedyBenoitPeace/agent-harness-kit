@@ -24,6 +24,12 @@ jq -e '[ .features[]
        ] | length == 0' FEATURES.json >/dev/null \
   || fail "FEATURES.json: entry missing id/title/verify or has illegal status"
 
+# optional parallel-lane fields (harness-run), when present, are string arrays
+jq -e '[ .features[] | (.depends_on?, .paths?) | select(. != null)
+         | select(type != "array" or any(.[]; type != "string")) ] | length == 0' \
+  FEATURES.json >/dev/null \
+  || fail "FEATURES.json: depends_on/paths must be arrays of strings"
+
 # AGENTS.md stays a table of contents
 [ "$(wc -l < AGENTS.md)" -le 100 ] || fail "AGENTS.md exceeds 100 lines"
 
@@ -254,5 +260,9 @@ grep -q 'SESSION: <id> · <passing|blocked>' "$RUN_SKILL/SKILL.md" || fail "harn
 grep -q 'status.sh' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: status.sh verification missing"
 grep -qi 'cap.*default 10' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: run cap missing"
 grep -qi 'no subagent' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: no-subagent fallback missing"
+grep -q 'PARALLEL:' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: parallel lanes missing"
+grep -q 'git worktree' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: lane worktrees missing"
+grep -qi 'never touch FEATURES.json' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: lanes must not write FEATURES.json"
+grep -qi 'redo.*sequentially' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: merge-conflict fallback missing"
 
 echo "GATE GREEN"

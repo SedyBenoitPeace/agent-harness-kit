@@ -100,6 +100,33 @@ echo "$out" | grep -q 'GATE_OUTPUT: bounded' || fail "current repo: bounded gate
 echo "$out" | grep -q 'PROTOCOL: current' || fail "current repo: matching protocol not recognized"
 echo "$out" | grep -q 'UPGRADE: none' || fail "current repo: expected no upgrade offer"
 
+# 5c. parallel lanes: computed from declared depends_on/paths, never inferred
+# builds a repo at $1 whose FEATURES.json has feature entries $2 (JSON array)
+make_lanes_repo() {
+  local dir="$1"
+  mkdir -p "$dir"
+  printf '{"milestones":{"1":"A","2":"B"},"features":%s}\n' "$2" > "$dir/FEATURES.json"
+  printf '## s1\n' > "$dir/PROGRESS.md"
+  git -C "$dir" init -q -b main
+  git -C "$dir" -c user.email=t@t -c user.name=t add -A
+  git -C "$dir" -c user.email=t@t -c user.name=t commit -qm seed
+}
+lanes() { bash "$CONTEXT" "$1" | grep '^PARALLEL:'; }
+f() { # id milestone status depends_on paths
+  printf '{"id":"%s","milestone":%s,"title":"t","status":"%s","verify":"v"%s%s}' \
+    "$1" "$2" "$3" "${4:+,\"depends_on\":$4}" "${5:+,\"paths\":$5}"
+}
+make_lanes_repo "$WORK/l-disjoint" "[$(f M1-000 1 passing '[]' '["x/"]'),$(f M1-001 1 failing '["M1-000"]' '["src/a/**"]'),$(f M1-002 1 failing '[]' '["src/b/*.js"]'),$(f M2-001 2 failing '[]' '["src/c/"]')]"
+[ "$(lanes "$WORK/l-disjoint")" = 'PARALLEL: M1-001 M1-002' ] || fail "lanes: disjoint same-milestone features not listed"
+make_lanes_repo "$WORK/l-dep" "[$(f M1-001 1 failing '[]' '["src/a/"]'),$(f M1-002 1 failing '["M1-001"]' '["src/b/"]')]"
+[ "$(lanes "$WORK/l-dep")" = 'PARALLEL: none' ] || fail "lanes: dependency on a failing feature must be sequential"
+make_lanes_repo "$WORK/l-overlap" "[$(f M1-001 1 failing '[]' '["src/"]'),$(f M1-002 1 failing '[]' '["src/b/**"]')]"
+[ "$(lanes "$WORK/l-overlap")" = 'PARALLEL: none' ] || fail "lanes: overlapping path prefixes must be sequential"
+make_lanes_repo "$WORK/l-missing" "[$(f M1-001 1 failing '' '["src/a/"]'),$(f M1-002 1 failing '[]' '["src/b/"]')]"
+[ "$(lanes "$WORK/l-missing")" = 'PARALLEL: none' ] || fail "lanes: missing fields on NEXT must be sequential"
+make_lanes_repo "$WORK/l-cap" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]')]"
+[ "$(lanes "$WORK/l-cap")" = 'PARALLEL: M1-001 M1-002 M1-003' ] || fail "lanes: cap of 3 not applied"
+
 # builds a target fixture at $1 whose scripts/e2e.sh prints $2 noisy lines
 # then exits $3, with $4 appended right before exiting (failure sentinel)
 make_gate_target() {

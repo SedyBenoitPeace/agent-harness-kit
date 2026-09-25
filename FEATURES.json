@@ -380,6 +380,22 @@
       "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with checks that skills/harness-run/SKILL.md has valid frontmatter and names the SESSION summary contract, status.sh verification, the cap (default 10) and the no-subagent fallback; harness-session SKILL.md prints the SESSION line and runs inline inside a subagent",
       "notes": "Instruction-only skill; the orchestrator never reads diffs or gate logs. Parallel lanes are M17-002."
+    },
+    {
+      "id": "M17-002",
+      "milestone": 17,
+      "title": "harness-run runs script-proven independent features as parallel lanes",
+      "status": "passing",
+      "depends_on": [
+        "M17-001"
+      ],
+      "paths": [
+        "skills/harness-run/",
+        "skills/harness-session/",
+        "scripts/"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with scripts/test-session.sh proving context.sh prints PARALLEL: <ids> for disjoint-path same-milestone features and PARALLEL: none for a failing dependency, overlapping path prefixes, or missing fields on NEXT, capped at 3; the gate accepts depends_on/paths only as string arrays; harness-run SKILL.md documents lane worktrees, lanes never touching FEATURES.json/PROGRESS.md, one orchestrator gate, and the sequential redo on merge conflict",
+      "notes": "Eligible = failing, NEXT milestone, declares depends_on (all passing) and non-empty paths; NEXT must be eligible or lanes are none. Prefix = glob text before the first *?[ ; overlap = either prefix starts with the other."
     }
   ]
 }

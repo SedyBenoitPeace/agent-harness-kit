@@ -41,6 +41,30 @@ costs nothing.
 7. Print one progress line per feature (`<id> passing · <commit>`), then
    loop to step 1.
 
+## Parallel lanes
+
+When `context.sh` prints `PARALLEL: <id> <id> …` (instead of
+`PARALLEL: none`), those features declared `depends_on` / `paths` that
+the script proved independent — never infer lanes yourself. Instead of
+Workflow steps 3–5, for that batch:
+
+1. For each id, create a lane from the current branch:
+   `git worktree add ../<repo>-<id> -b lane/<id>`.
+2. Dispatch one subagent per lane, in parallel, with exactly:
+   "Use harness-session for <id>, inline, as a parallel lane in
+   ../<repo>-<id>. End with its SESSION line."
+   Lanes implement, run their own verify, commit, and never touch FEATURES.json or PROGRESS.md.
+3. Merge each `passing` lane into the current branch (`git merge --no-ff
+   lane/<id>`), then remove its worktree and branch. A blocked lane is
+   relayed to the human like step 6; its worktree stays for inspection.
+4. Merge conflict → `git merge --abort`, drop that lane, and redo that feature sequentially after the others land.
+5. Run one full gate (`bash ../harness-session/scripts/run-gate.sh final
+   <target>`). Green → flip the merged ids to `passing`, write one
+   `PROGRESS.md` entry naming them, commit explicit paths. Red → STOP and
+   report; flip nothing.
+6. Verify as in Workflow step 5 (status.sh + clean tree), count the
+   lanes toward the cap, and loop to Workflow step 1.
+
 **No subagent tool** (the agent cannot dispatch subagents): run one
 normal harness-session for `NEXT:` in this conversation and STOP — tell
 the human to clear the context and invoke harness-run again.
