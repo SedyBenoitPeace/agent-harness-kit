@@ -239,6 +239,20 @@ grep -q 'UPGRADE: offer' README.md || fail "README: plugin-upgrade notice covera
 grep -q '^name: harness-session$' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description missing"
 grep -q '^description: .*execution plan' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description does not trigger on executing a plan"
+grep -q 'SESSION: <id> · <passing|blocked>' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: end-of-session summary contract missing"
+grep -qi 'inside a subagent.*inline' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: subagent sessions must run inline"
 bash scripts/test-session.sh
+
+# --- harness-run skill ---------------------------------------------------
+
+RUN_SKILL="skills/harness-run"
+[ -f "$RUN_SKILL/SKILL.md" ] || fail "harness-run SKILL.md missing"
+[ "$(head -1 "$RUN_SKILL/SKILL.md")" = "---" ] || fail "harness-run SKILL.md: missing frontmatter"
+grep -q '^name: harness-run$' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: frontmatter name wrong"
+grep -q '^description: ' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: description missing"
+grep -q 'SESSION: <id> · <passing|blocked>' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: summary contract missing"
+grep -q 'status.sh' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: status.sh verification missing"
+grep -qi 'cap.*default 10' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: run cap missing"
+grep -qi 'no subagent' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: no-subagent fallback missing"
 
 echo "GATE GREEN"

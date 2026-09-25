@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-25 — session 18 (M17-001)
+
+- Branch: `m17-harness-run`.
+- Done: M17-001 — new `skills/harness-run/SKILL.md`: a sequential
+  orchestrator that loops context.sh → dispatches one fresh built-in
+  subagent per feature ("harness-session for <id>, inline") → verifies
+  via status.sh + clean tree → stops on a blocker, the milestone
+  boundary, or the cap (default 10). No subagent tool → one normal
+  session, then stop. harness-session now ends with a fixed
+  `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`
+  line and always runs inline inside a subagent. Gate greps both.
+- Gotcha: gate greps are line-based, so contract phrases must sit on one
+  line in SKILL.md.
+- Gate: green.
+- Next: M17-002 — parallel lanes (add its FEATURES.json entry with the
+  implementing commit).
+
 ## 2026-09-16 — session 17 (M16-001)
 
 - Branch: `m16-native-workflows`.

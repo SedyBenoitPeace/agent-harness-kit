@@ -55,6 +55,7 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    has independent parts (protocol §2.4) — then follow red-green-refactor
    for the one selected feature only. Own tools only: never load an
    external execution-workflow skill.
+   Running inside a subagent (dispatched by harness-run)? Always inline.
 8. Do not investigate or expand a passing gate's warning that is already
    tracked by another failing or deferred feature, unless the selected
    feature's verify criterion requires it.
@@ -62,6 +63,9 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    <target>`, flip only the selected feature's status to `passing`,
    append one `PROGRESS.md` entry, commit explicit paths, then STOP —
    do not start a second feature.
+10. End with this one-line summary as your last output (harness-run
+    parses it; a blocked session stops at the blocker and still prints it):
+    `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`
 
 ## Red flags
 
