@@ -132,6 +132,11 @@ copilot plugin update agent-harness-kit
 
 ## Lifecycle — how the pieces fit
 
+0. **Brief (optional)** — `/agent-harness-kit:harness-brief` turns a
+   rough prompt into `docs/briefs/<date>-<slug>.md`: at most three
+   questions, a mechanical check, and an independent read-only reviewer
+   (`READY`/`GAPS`). Lifecycle: brief → plan → run. Setup then interviews
+   only the gaps.
 1. **Set up once** — `/agent-harness-kit:harness-setup`. Expect an
    interview about the product before anything is written; it ends with
    the full scaffold (AGENTS.md, FEATURES.json, PROGRESS.md,

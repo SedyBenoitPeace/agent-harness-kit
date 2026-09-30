@@ -437,3 +437,17 @@ Newest-first session log. One entry per working session. Read this (plus
   reviewer contract; `test-brief.sh` checks the SKILL.md dispatch.
 - Gate: green.
 - Next: M19-003 (planning consumes briefs; Needs-a-human; release 1.10.0).
+
+## 2026-09-30 — session 26 (M19-003)
+
+- Branch: `m19-harness-brief`.
+- Done: M19-003 — protocol §1.1 "Already have a brief?" (Done-when seeds
+  `verify`, Quality bar seeds `evaluate`/`bar`, Needs-a-human is a
+  stop-and-ask boundary); AGENTS.md.tmpl gains a "Needs a human" section
+  with the six defaults (54→60 lines, under the 80 cap); README lifecycle
+  step 0 shows brief → plan → run. Released as 1.10.0 (plugin,
+  marketplace, package). M19 plan moved to `docs/plans/completed/`;
+  AGENTS.md state line and ARCHITECTURE.md updated. Existing repos see
+  `PROTOCOL: outdated` and are offered the recopy.
+- Gate: green.
+- Next: M20 (continuous runs) — plan is in `docs/plans/active/`; open the M19 PR.

@@ -458,7 +458,7 @@
       "depends_on": [],
       "paths": ["skills/harness-brief/", "scripts/test-brief.sh", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-brief.sh proving check-brief.sh passes a complete fixture and fails, each with its own FAIL line, on a missing section, a non-empty Open questions, and a Done-when line without a backticked command; SKILL.md frontmatter valid, agent-neutral, at most three questions, stranger test before saving",
-      "notes": "Plan: docs/plans/active/2026-09-28-m19-harness-brief.md"
+      "notes": "Plan: docs/plans/completed/2026-09-28-m19-harness-brief.md"
     },
     {
       "id": "M19-002",
@@ -474,7 +474,7 @@
       "id": "M19-003",
       "milestone": 19,
       "title": "Planning consumes briefs; Needs-a-human section in AGENTS.md.tmpl; release 1.10.0",
-      "status": "failing",
+      "status": "passing",
       "depends_on": ["M19-002", "M18-003"],
       "paths": ["skills/harness-setup/templates/", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with checks that protocol 1.1 contains 'Already have a brief', AGENTS.md.tmpl contains a 'Needs a human' section with the six defaults and stays <= 80 lines, README lifecycle shows brief -> plan -> run; versions 1.10.0",

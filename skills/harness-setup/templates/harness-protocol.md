@@ -67,6 +67,13 @@ confirming an interpretation. A provided document never waives §1.4:
 every feature still needs a falsifiable `verify`, whoever authored the
 requirement.
 
+**Already have a brief?** If `docs/briefs/` holds a brief written by the
+harness-brief skill (or the human names one), read it first: its
+Objective, Context and Non-goals answer the questions above, its Done-when
+lines seed each feature's `verify`, and its Quality bar seeds
+`evaluate`/`bar` (§1.4). Interview only the gaps. Its Needs-a-human list
+is a stop-and-ask boundary for sessions (a `blocked` outcome with a question), never an action taken.
+
 If an answer is vague, push back once with a concrete alternative ("do you
 mean X or Y?"). Ambiguity you accept here becomes an unfalsifiable feature
 later.
