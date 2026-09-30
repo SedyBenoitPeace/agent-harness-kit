@@ -100,6 +100,19 @@ interactive and unchanged, and points to harness-continuous.
   - Copilot CLI: `--allow-tool` for the specific commands,
     `--deny-tool` for push; `--no-ask-user`.
 - Versions 1.11.0.
+- README "Upgrading a repo and running continuously": one ordered
+  walkthrough, so the README is the guide and nobody needs a chat:
+  1. update the plugin; 2. branch, confirm a green gate; 3. accept the
+  UPGRADE offer (the protocol copy is outdated after this release);
+  4. run harness-audit and approve `depends_on` / `paths` — state
+  plainly that without declared `depends_on` a skipped feature stops
+  the run; 5. `scripts/gen-agents.sh` only when using the evaluator
+  (restart Copilot); 6. set permissions (the section above);
+  7. invoke harness-continuous, with the cap and milestone-range
+  options; 8. stop early with `.git/harness-run/STOP`;
+  9. afterwards: read `docs/runs/<date>.md`, answer each skipped
+  feature's question in its notes, recover stashed work via
+  `git stash list` (`harness-run skip <id>`), review the branch(es).
 
 ## Decision log
 
@@ -123,6 +136,9 @@ interactive and unchanged, and points to harness-continuous.
   CLIs load skills, so one SKILL.md serves Claude Code, Codex CLI and
   Copilot CLI. The exact invocation syntax per CLI is field-tested in
   M20-004 rather than assumed.
+- 2026-09-30 — Owner: the README must be clear enough to be the whole
+  guide. M20-004's verify now requires an ordered "Upgrading a repo and
+  running continuously" section, gate-enforced.
 - 2026-10-01 — M20-002: each run starts with an empty `skip` file and
   deletes a leftover `STOP`, so a rerun retries earlier skips (their
   notes carry the question; stashes stay recoverable). The cap counts
