@@ -434,7 +434,7 @@
       "id": "M18-002",
       "milestone": 18,
       "title": "review status, orchestrator evaluator step, integrity check and evidence file",
-      "status": "failing",
+      "status": "passing",
       "depends_on": ["M18-001"],
       "paths": ["skills/harness-run/", "skills/harness-session/", "skills/harness-status/", "scripts/"],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-session.sh fixtures proving status.sh never selects a review feature as NEXT and accepts evaluate/bar/eval_attempts; features without those fields behave exactly as before; harness-run SKILL.md names harness-builder/harness-evaluator, the post-evaluator clean-tree/HEAD check, docs/verification/<id>.md on PASS, notes + eval_attempts on NEEDS_WORK, and STOP at 2 attempts",

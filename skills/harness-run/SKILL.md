@@ -26,20 +26,49 @@ costs nothing.
    boundary: when the next id belongs to a different milestone than the
    first one this run dispatched, report and STOP.
    Also stop at the cap (default 10 features per run; the human may name another).
-3. Dispatch the agent's own built-in subagent with exactly:
+3. Dispatch the named agent `harness-builder` (generated per CLI by
+   `scripts/gen-agents.sh`; if absent, the agent's own built-in subagent) with exactly:
    "Use harness-session for <id>, inline. End with its SESSION line."
    Own tools only — never load an external workflow skill.
 4. Read only the subagent's final line:
-   `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`
+   `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
+   A `review` line means the feature opted in (`evaluate` set): do the
+   evaluator step below before step 5.
 5. Verify from the repo, not from the subagent's word: run
    `bash ../harness-status/scripts/status.sh` and `git status --short`.
    The run continues only when `NEXT:` no longer names <id> and the
    worktree is clean.
+   A `review` feature is not "next" (status.sh never selects it) but is not
+   done either: it must leave `review` through the evaluator step.
 6. Anything else — `blocked`, `gate red`, a missing SESSION line, <id>
    still next, or a dirty tree → relay the subagent's reason to the human
    in one or two lines and STOP. Do not retry or fix it yourself.
 7. Print one progress line per feature (`<id> passing · <commit>`), then
    loop to step 1.
+
+## Evaluator step
+
+For a `review` session (only features with `evaluate` set; absent means no
+evaluation and today's flow):
+
+1. Record `git rev-parse HEAD`. Dispatch the named agent
+   `harness-evaluator` with only: the feature entry, the commit range, its
+   `bar`, whether `evaluate` is `ui` (QA mode), and — when any `paths`
+   entry matches the sensitive globs in `agents/models.json` — the
+   security checklist. Never pass the builder's transcript. If the agent
+   is missing, run `scripts/gen-agents.sh` first, or STOP and tell the human.
+2. Integrity check: `git status --short` must be empty and HEAD unchanged.
+   Anything else rejects the verdict (the evaluator is read-only, but a
+   parent's elevated permissions can reach child agents): discard its
+   changes, relay to the human, STOP.
+3. First line `PASS` → write `docs/verification/<id>.md` (verdict,
+   findings, date, CLI), set the feature `passing`, one `PROGRESS.md`
+   line, commit explicit paths.
+4. First line `NEEDS_WORK` → put the findings in the feature's `notes`,
+   set it back to `failing`, add 1 to `eval_attempts`, commit explicit
+   paths; the next session starts from those notes.
+5. `eval_attempts` reaching 2 → relay the findings to the human and STOP.
+   Any other first line counts as `NEEDS_WORK`.
 
 ## Parallel lanes
 

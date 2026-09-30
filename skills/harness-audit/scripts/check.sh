@@ -42,7 +42,7 @@ if [ -f FEATURES.json ] && jq -e . FEATURES.json >/dev/null 2>&1; then
   if jq -e '[ .features[]?
               | select( ((.id? // "") == "") or ((.milestone? // null) == null)
                         or ((.verify? // "") == "")
-                        or ((.status? // "") | IN("failing","passing","deferred","superseded") | not) )
+                        or ((.status? // "") | IN("failing","passing","deferred","superseded","review") | not) )
             ] | length == 0' FEATURES.json >/dev/null; then
     pass "every feature has id/milestone/verify and a legal status"
   else

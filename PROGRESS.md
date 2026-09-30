@@ -3,6 +3,25 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-30 — session 22 (M18-002)
+
+- Branch: `m18-evaluator`.
+- Done: M18-002 — new status `review` (accepted by e2e.sh and
+  harness-audit); optional `evaluate` (ui|none) / `bar` / `eval_attempts`
+  validated by the gate. status.sh totals show `review N` and an
+  `REVIEW:` line only when present (output otherwise unchanged); review is
+  never NEXT and does not count as passing. harness-session ends
+  `evaluate` features in `review` (SESSION line gains `review`);
+  harness-run gets the evaluator step: dispatch `harness-evaluator`,
+  clean-tree + HEAD-unchanged check, PASS writes
+  `docs/verification/<id>.md`, NEEDS_WORK writes notes + `eval_attempts`,
+  STOP at 2. `agents/models.json` gains `sensitive_globs` (security
+  checklist trigger).
+- Noted, unchanged: NEXT ignores `depends_on` (only lanes use it), so a
+  failing feature depending on a `review` one can still be NEXT.
+- Gate: green.
+- Next: M18-003 (protocol, planning interview, audit, release 1.9.0).
+
 ## 2026-09-30 — session 21 (M18-001)
 
 - Branch: `m18-evaluator`.

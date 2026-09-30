@@ -64,7 +64,9 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 9. Run the final full gate through `bash scripts/run-gate.sh final
    <target>`, flip only the selected feature's status to `passing`,
    append one `PROGRESS.md` entry, commit explicit paths, then STOP —
-   do not start a second feature.
+   do not start a second feature. A feature with `evaluate` set (`ui`) is
+   not yours to pass: set it to `review`, never `passing`, and report
+   `review` — the orchestrator dispatches the evaluator and flips it.
    **As a parallel lane** (harness-run said so): work only in the named
    worktree, skip the baseline gate (the orchestrator started green),
    run the feature's own verify, commit explicit paths —
@@ -72,7 +74,7 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    the orchestrator runs the full gate and flips status.
 10. End with this one-line summary as your last output (harness-run
     parses it; a blocked session stops at the blocker and still prints it):
-    `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`
+    `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
 
 ## Red flags
 

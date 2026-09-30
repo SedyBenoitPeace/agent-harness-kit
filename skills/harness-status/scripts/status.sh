@@ -39,8 +39,10 @@ echo
 echo "== Totals =="
 jq -r '
   .features
-  | "passing \([.[] | select(.status == "passing")] | length), failing \([.[] | select(.status == "failing")] | length), deferred \([.[] | select(.status == "deferred")] | length), superseded \([.[] | select(.status == "superseded")] | length)"
+  | "passing \([.[] | select(.status == "passing")] | length), failing \([.[] | select(.status == "failing")] | length), deferred \([.[] | select(.status == "deferred")] | length), superseded \([.[] | select(.status == "superseded")] | length)\([.[] | select(.status == "review")] | length | if . > 0 then ", review \(.)" else "" end)"
 ' FEATURES.json
+
+jq -r '[.features[] | select(.status == "review") | .id] | if length > 0 then "\n== Awaiting evaluator ==\nREVIEW: \(join(" "))" else empty end' FEATURES.json
 
 echo
 echo "== Next feature (lowest milestone, then lowest id, among failing) =="

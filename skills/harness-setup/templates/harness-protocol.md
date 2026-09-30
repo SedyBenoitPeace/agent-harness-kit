@@ -392,7 +392,7 @@ dispatches each coding session to a fresh built-in subagent, then checks
 the repo — not the subagent's word — before starting the next. Rules:
 
 - Every dispatched session is a normal §2 session, run inline, ending
-  with one line: `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`.
+  with one line: `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`.
 - The orchestrator never reads diffs or gate logs; a blocked session is
   relayed to the human and the run stops. It also stops at a milestone
   boundary and at a feature cap.
