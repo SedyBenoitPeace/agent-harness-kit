@@ -410,3 +410,17 @@ Newest-first session log. One entry per working session. Read this (plus
 - Gate: green (`bash scripts/e2e.sh`).
 - Next: integration into master (awaiting owner's decision on push/PR) and,
   later, the deferred spec items: template-repo extraction, CI enforcement.
+
+## 2026-09-30 — session 24 (M19-001)
+
+- Branch: `m19-harness-brief` (cut from master after M18 merged).
+- Done: M19-001 — `skills/harness-brief/` (SKILL.md: at most three
+  questions, stranger test before saving, runs check-brief.sh;
+  `templates/brief.md.tmpl`; `scripts/check-brief.sh` emitting one
+  PASS/FAIL line per check: nine sections present and non-empty, Open
+  questions empty, every Done-when line carries a backticked command).
+  `scripts/test-brief.sh` proves a complete fixture passes and each defect
+  fixture (missing section, open question, vague Done-when) fails with its
+  own FAIL line; wired into `scripts/e2e.sh`.
+- Gate: green.
+- Next: M19-002 (independent brief reviewer agent).

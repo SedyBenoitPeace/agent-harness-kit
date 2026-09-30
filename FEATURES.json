@@ -454,7 +454,7 @@
       "id": "M19-001",
       "milestone": 19,
       "title": "harness-brief skill + brief template + deterministic check-brief.sh",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [],
       "paths": ["skills/harness-brief/", "scripts/test-brief.sh", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-brief.sh proving check-brief.sh passes a complete fixture and fails, each with its own FAIL line, on a missing section, a non-empty Open questions, and a Done-when line without a backticked command; SKILL.md frontmatter valid, agent-neutral, at most three questions, stranger test before saving",

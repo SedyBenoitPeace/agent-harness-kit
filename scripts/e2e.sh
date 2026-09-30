@@ -311,4 +311,10 @@ grep -qi 'independent evaluator' README.md || fail "README: evaluator missing"
 grep -q 'gen-agents.sh' skills/harness-setup/SKILL.md || fail "harness-setup SKILL.md: gen-agents step missing"
 [ "$(jq -r .version .claude-plugin/plugin.json)" = "1.9.0" ] || fail "plugin version must be 1.9.0"
 
+# --- harness-brief skill (M19) ---------------------------------------------
+
+BRIEF_SKILL="skills/harness-brief"
+shellcheck "$BRIEF_SKILL/scripts/check-brief.sh"
+bash scripts/test-brief.sh
+
 echo "GATE GREEN"
