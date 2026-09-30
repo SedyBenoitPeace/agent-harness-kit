@@ -5,3 +5,6 @@ Thumbs.db
 .idea/
 .vscode/
 .claude/settings.local.json
+
+# Private drafts, not for the open-source repo (deferred sandbox/night-run work)
+docs/plans/private/

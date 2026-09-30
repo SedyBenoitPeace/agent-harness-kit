@@ -20,7 +20,7 @@ jq -e '(.milestones | type == "object") and (.features | type == "array")' \
 jq -e '[ .features[]
          | select( ((.id? // "") == "") or ((.title? // "") == "")
                    or ((.verify? // "") == "")
-                   or ((.status? // "") | IN("failing","passing","deferred","superseded") | not) )
+                   or ((.status? // "") | IN("failing","passing","deferred","superseded","review") | not) )
        ] | length == 0' FEATURES.json >/dev/null \
   || fail "FEATURES.json: entry missing id/title/verify or has illegal status"
 
@@ -30,6 +30,14 @@ jq -e '[ .features[] | to_entries[] | select(.key == "depends_on" or .key == "pa
          | .value | select(type != "array" or any(.[]; type != "string")) ] | length == 0' \
   FEATURES.json >/dev/null \
   || fail "FEATURES.json: depends_on/paths must be arrays of strings"
+
+# optional evaluator fields (M18), when present: evaluate ui|none, bar string, eval_attempts integer
+jq -e '[ .features[]
+         | select( (has("evaluate") and (.evaluate | IN("ui","none") | not))
+                   or (has("bar") and (.bar | type != "string"))
+                   or (has("eval_attempts") and (.eval_attempts | type != "number" or . != floor)) ) ] | length == 0' \
+  FEATURES.json >/dev/null \
+  || fail "FEATURES.json: evaluate must be ui|none, bar a string, eval_attempts an integer"
 
 # AGENTS.md stays a table of contents
 [ "$(wc -l < AGENTS.md)" -le 100 ] || fail "AGENTS.md exceeds 100 lines"
@@ -259,7 +267,7 @@ grep -q 'UPGRADE: offer' README.md || fail "README: plugin-upgrade notice covera
 grep -q '^name: harness-session$' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description missing"
 grep -q '^description: .*execution plan' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: description does not trigger on executing a plan"
-grep -q 'SESSION: <id> · <passing|blocked>' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: end-of-session summary contract missing"
+grep -q 'SESSION: <id> · <passing|review|blocked>' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: end-of-session summary contract missing"
 grep -qi 'inside a subagent.*inline' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: subagent sessions must run inline"
 bash scripts/test-session.sh
 
@@ -270,7 +278,7 @@ RUN_SKILL="skills/harness-run"
 [ "$(head -1 "$RUN_SKILL/SKILL.md")" = "---" ] || fail "harness-run SKILL.md: missing frontmatter"
 grep -q '^name: harness-run$' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: description missing"
-grep -q 'SESSION: <id> · <passing|blocked>' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: summary contract missing"
+grep -q 'SESSION: <id> · <passing|review|blocked>' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: summary contract missing"
 grep -q 'status.sh' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: status.sh verification missing"
 grep -qi 'cap.*default 10' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: run cap missing"
 grep -qi 'no subagent' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: no-subagent fallback missing"
@@ -278,5 +286,29 @@ grep -q 'PARALLEL:' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: paralle
 grep -q 'git worktree' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: lane worktrees missing"
 grep -qi 'never touch FEATURES.json' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: lanes must not write FEATURES.json"
 grep -qi 'redo.*sequentially' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: merge-conflict fallback missing"
+grep -q 'harness-builder' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: named harness-builder missing"
+grep -q 'harness-evaluator' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: named harness-evaluator missing"
+grep -q 'HEAD unchanged' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: post-evaluator integrity check missing"
+grep -q 'docs/verification/<id>.md' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: evidence file missing"
+grep -q 'eval_attempts' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: eval_attempts rule missing"
+grep -q 'reaching 2' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: STOP-at-2-attempts rule missing"
+
+# --- agents (M18) --------------------------------------------------------
+
+jq -e '.models | (.claude and .copilot and .codex)' agents/models.json >/dev/null \
+  || fail "agents/models.json: missing a CLI model map"
+bash scripts/test-agents.sh
+
+# evaluator documented end to end (M18)
+grep -q 'Can the gate prove this' "$PROTO" || fail "protocol: 'Can the gate prove this?' question missing (1.4)"
+grep -q 'docs/verification/<id>.md' "$PROTO" || fail "protocol: evidence file (2.7) missing"
+grep -q 'NEEDS_WORK' "$PROTO" || fail "protocol: review step (2.7) missing"
+for w in review evaluate bar; do
+  grep -q "$w" "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: $w undocumented"
+done
+grep -q 'harness-evaluator' skills/harness-audit/scripts/check.sh || fail "harness-audit: missing-agent-files WARN missing"
+grep -qi 'independent evaluator' README.md || fail "README: evaluator missing"
+grep -q 'gen-agents.sh' skills/harness-setup/SKILL.md || fail "harness-setup SKILL.md: gen-agents step missing"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "1.9.0" ] || fail "plugin version must be 1.9.0"
 
 echo "GATE GREEN"

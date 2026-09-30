@@ -127,6 +127,20 @@ make_lanes_repo "$WORK/l-missing" "[$(f M1-001 1 failing '' '["src/a/"]'),$(f M1
 make_lanes_repo "$WORK/l-cap" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]')]"
 [ "$(lanes "$WORK/l-cap")" = 'PARALLEL: M1-001 M1-002 M1-003' ] || fail "lanes: cap of 3 not applied"
 
+# 5d. evaluator fields (M18): review is not-done and never NEXT; fields accepted;
+#     features without them behave exactly as before
+make_lanes_repo "$WORK/rv" "[$(f M1-001 1 review '[]' '["a/"]' | sed 's/}$/,"evaluate":"ui","bar":"matches the mockup","eval_attempts":1}/'),$(f M1-002 1 failing '["M1-001"]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]')]"
+out="$(bash "$CONTEXT" "$WORK/rv")" || fail "review repo: expected exit 0"
+echo "$out" | grep -q 'NEXT: M1-001' && fail "review repo: a review feature must never be NEXT"
+echo "$out" | grep -q 'NEXT: M1-002' || fail "review repo: NEXT ignores depends_on as before; expected M1-002"
+echo "$out" | grep -q 'M1: 0/3 passing' || fail "review repo: review must not count as passing"
+echo "$out" | grep -q 'review 1' || fail "review repo: totals must show review count"
+echo "$out" | grep -q 'REVIEW: M1-001' || fail "review repo: awaiting-evaluator line missing"
+echo "$out" | grep -q 'PARALLEL: none' || fail "review repo: dependency on review must stay sequential"
+out="$(bash "$CONTEXT" "$WORK/l-disjoint")"
+echo "$out" | grep -Eq 'review|REVIEW' && fail "no review features: output must be unchanged"
+echo "$out" | grep -q 'superseded 0$' || fail "no review features: totals line must end at superseded"
+
 # builds a target fixture at $1 whose scripts/e2e.sh prints $2 noisy lines
 # then exits $3, with $4 appended right before exiting (failure sentinel)
 make_gate_target() {

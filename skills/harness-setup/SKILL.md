@@ -64,6 +64,11 @@ Copy each template and substitute every `{{PLACEHOLDER}}`:
 | `templates/e2e.sh.tmpl` | `scripts/e2e.sh` (chmod +x) |
 | `templates/harness-protocol.md` | `docs/agents/harness-protocol.md` — **copied whole, never generated or summarized** |
 
+If any feature opted in to evaluation (`evaluate` set, protocol §1.4),
+run the plugin's `../../scripts/gen-agents.sh <target-repo>` (path
+relative to this skill) to write the builder and evaluator agent files
+for Claude Code, Copilot CLI and Codex CLI, and commit them with the scaffold.
+
 Also create the empty `docs/plans/active/` and `docs/plans/completed/`
 directories (the first plan from step 2 goes in `active/`).
 

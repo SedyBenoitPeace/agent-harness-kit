@@ -94,8 +94,9 @@ feature gets:
   never renumbered.
 - `title`: what the feature is, in one line.
 - `status`: `failing` (actionable), `passing` (done and proven), `deferred`
-  (postponed; notes say when it becomes actionable), or `superseded` (dead,
-  kept for history).
+  (postponed; notes say when it becomes actionable), `superseded` (dead,
+  kept for history), or `review` (built, awaiting the independent
+  evaluator, §2.7; only for features that opted in below).
 - `verify`: **the acceptance test.** How does an agent *prove* this feature
   works? This field is the whole game — it is what permits a status flip,
   and it doubles as the estimation unit when cutting scope.
@@ -131,6 +132,20 @@ answer is clear:
 
 A feature with either field missing always runs sequentially — leaving
 them out is always safe.
+
+Ask one more question per feature: **Can the gate prove this? If not, what
+is the bar?** A green gate proves tests pass, not that they test the right
+thing; stubs, display-only controls and API-only features slip through.
+When the gate cannot prove it (UI behaviour, look and feel, anything a
+human would check by using it), record:
+
+- `evaluate`: `"ui"` — an independent evaluator judges the feature (and
+  drives the real UI) before it can become `passing`. `"none"` or absent
+  means no evaluation.
+- `bar`: a concrete, fetchable reference the evaluator compares against —
+  a mockup file, a URL, a screenshot path, a numbered acceptance list.
+
+Leaving both out is always safe: the feature flips on its `verify` alone.
 
 ### 1.5 Write the first execution plan
 
@@ -392,7 +407,7 @@ dispatches each coding session to a fresh built-in subagent, then checks
 the repo — not the subagent's word — before starting the next. Rules:
 
 - Every dispatched session is a normal §2 session, run inline, ending
-  with one line: `SESSION: <id> · <passing|blocked> · gate <green|red> · <commit|reason>`.
+  with one line: `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`.
 - The orchestrator never reads diffs or gate logs; a blocked session is
   relayed to the human and the run stops. It also stops at a milestone
   boundary and at a feature cap.
@@ -402,6 +417,23 @@ the repo — not the subagent's word — before starting the next. Rules:
   PROGRESS.md; the orchestrator merges, runs one full gate, flips the
   statuses, and writes one PROGRESS.md entry. A merge conflict means that
   feature is redone sequentially.
+- Independent evaluation (opt-in per feature via `evaluate`, §1.4): the
+  session that builds such a feature ends it in `review`, never
+  `passing`. The orchestrator then dispatches the named agent
+  `harness-evaluator` — read-only, given only the feature entry, the
+  commit range and its `bar`, never the builder's transcript. It observes
+  before judging (runs the app or the named check) and replies with a
+  first line of exactly `PASS` or `NEEDS_WORK`, then numbered findings with
+  file:line or repro steps. When any of the feature's `paths` touches
+  auth, payments, personal data or migrations, it also runs a security
+  checklist. After it returns, the orchestrator checks the tree is clean
+  and HEAD unchanged; anything else rejects the verdict.
+  - `PASS` → write `docs/verification/<id>.md` (verdict, findings, date,
+    agent CLI) and flip the feature to `passing`.
+  - `NEEDS_WORK` → findings go into the feature's `notes`, the status
+    returns to `failing`, `eval_attempts` increases by one, and the next
+    session starts from those notes. At two attempts the orchestrator
+    stops and relays to the human.
 - No subagents available → run one normal session and stop.
 
 ## 3. Maintenance protocol

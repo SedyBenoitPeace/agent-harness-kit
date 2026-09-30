@@ -3,6 +3,56 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-30 — session 23 (M18-003)
+
+- Branch: `m18-evaluator`.
+- Done: M18-003 — protocol §1.4 asks "Can the gate prove this? If not,
+  what is the bar?" (`evaluate` / `bar`), §2.7 documents the review step,
+  security checklist and `docs/verification/<id>.md`; `review` added to the
+  status list. FEATURES.json.tmpl documents the status and fields.
+  harness-setup and the harness-session upgrade offer run
+  `../../scripts/gen-agents.sh`; harness-audit WARNs when features opt in
+  without an evaluator agent file and suggests `evaluate: "ui"` for
+  manual/UI-shaped verifies. README and ARCHITECTURE name the evaluator.
+  Released as 1.9.0 (plugin, marketplace, package). M18 plan moved to
+  `docs/plans/completed/`. Existing repos see `PROTOCOL: outdated` and are
+  offered the recopy; evaluation stays opt-in.
+- Gate: green.
+- Next: M19 (harness-brief) — plan is in `docs/plans/active/`; open the M18 PR.
+
+## 2026-09-30 — session 22 (M18-002)
+
+- Branch: `m18-evaluator`.
+- Done: M18-002 — new status `review` (accepted by e2e.sh and
+  harness-audit); optional `evaluate` (ui|none) / `bar` / `eval_attempts`
+  validated by the gate. status.sh totals show `review N` and an
+  `REVIEW:` line only when present (output otherwise unchanged); review is
+  never NEXT and does not count as passing. harness-session ends
+  `evaluate` features in `review` (SESSION line gains `review`);
+  harness-run gets the evaluator step: dispatch `harness-evaluator`,
+  clean-tree + HEAD-unchanged check, PASS writes
+  `docs/verification/<id>.md`, NEEDS_WORK writes notes + `eval_attempts`,
+  STOP at 2. `agents/models.json` gains `sensitive_globs` (security
+  checklist trigger).
+- Noted, unchanged: NEXT ignores `depends_on` (only lanes use it), so a
+  failing feature depending on a `review` one can still be NEXT.
+- Gate: green.
+- Next: M18-003 (protocol, planning interview, audit, release 1.9.0).
+
+## 2026-09-30 — session 21 (M18-001)
+
+- Branch: `m18-evaluator`.
+- Done: M18-001 — neutral `agents/src/harness-{builder,evaluator}.md`,
+  `agents/models.json` (tier -> model per CLI) and `scripts/gen-agents.sh`
+  emitting Claude (.md), Copilot (.agent.md) and Codex (.toml) files;
+  `scripts/test-agents.sh` wired into the gate. Evaluator: read-only tools
+  in every format, Codex `sandbox_mode = "read-only"`. Re-checked all three
+  vendor docs 2026-09-30: they match the plan table (Codex docs moved to
+  learn.chatgpt.com). Model names in models.json are editable defaults,
+  not verified against each CLI's current model list.
+- Gate: green.
+- Next: M18-002 (review status, orchestrator step, evidence file).
+
 ## 2026-09-25 — session 20 (M17-003)
 
 - Branch: `m17-harness-run`.

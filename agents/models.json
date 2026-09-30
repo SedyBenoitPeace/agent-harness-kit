@@ -1,0 +1,28 @@
+{
+  "_instructions": "Model tier -> model name per CLI. Edit to match the models you have access to; the generator copies these verbatim. sensitive_globs: a feature whose paths match one gets the evaluator's security checklist; override per repo.",
+  "models": {
+    "claude": {
+      "cheap": "haiku",
+      "standard": "sonnet",
+      "strong": "opus"
+    },
+    "copilot": {
+      "cheap": "claude-haiku-4.5",
+      "standard": "claude-sonnet-4.5",
+      "strong": "claude-opus-4.5"
+    },
+    "codex": {
+      "cheap": "gpt-5.4-mini",
+      "standard": "gpt-5.4",
+      "strong": "gpt-5.4"
+    }
+  },
+  "sensitive_globs": [
+    "**/auth*/**",
+    "**/*payment*/**",
+    "**/*billing*/**",
+    "**/migrations/**",
+    "**/*user*/**",
+    "**/*secret*"
+  ]
+}
