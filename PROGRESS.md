@@ -424,3 +424,16 @@ Newest-first session log. One entry per working session. Read this (plus
   own FAIL line; wired into `scripts/e2e.sh`.
 - Gate: green.
 - Next: M19-002 (independent brief reviewer agent).
+
+## 2026-09-30 — session 25 (M19-002)
+
+- Branch: `m19-harness-brief`.
+- Done: M19-002 — neutral source `agents/src/harness-brief-reviewer.md`
+  (read-only; input is only the brief file; first line exactly `READY` or
+  `GAPS`, then numbered gaps). gen-agents.sh emits it for all three CLIs
+  unchanged. harness-brief SKILL.md step 6 dispatches it after saving,
+  asks the human about GAPS, and stops after 2 review rounds.
+  `test-agents.sh` now checks both read-only agents per format plus the
+  reviewer contract; `test-brief.sh` checks the SKILL.md dispatch.
+- Gate: green.
+- Next: M19-003 (planning consumes briefs; Needs-a-human; release 1.10.0).

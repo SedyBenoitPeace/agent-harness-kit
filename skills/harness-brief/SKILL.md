@@ -33,7 +33,15 @@ runs in the main conversation because it must ask the human questions.
 5. Save to `docs/briefs/<YYYY-MM-DD>-<slug>.md`, then run
    `bash scripts/check-brief.sh <brief>` (path relative to this skill).
    Any FAIL line: fix the brief (or ask the human) and re-run.
-6. Show the human the saved path and hand off to planning
+6. **Independent review:** dispatch the `harness-brief-reviewer` agent
+   (generate it with `../../scripts/gen-agents.sh <target-repo>` if the
+   repo lacks it) giving it only the brief path — never your
+   conversation. Its first line is exactly `READY` or `GAPS`. On `GAPS`,
+   ask the human about the numbered gaps, revise, re-run check-brief.sh
+   and review again. After 2 review rounds, stop: show the human the
+   remaining gaps instead of looping. No subagent support: apply the same
+   checklist yourself, reading only the saved file.
+7. Show the human the saved path and hand off to planning
    (harness-setup) — do not start building.
 
 ## Red flags

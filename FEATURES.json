@@ -464,7 +464,7 @@
       "id": "M19-002",
       "milestone": 19,
       "title": "Independent read-only brief reviewer agent (harness-brief-reviewer) with a READY/GAPS verdict",
-      "status": "failing",
+      "status": "passing",
       "depends_on": ["M19-001", "M18-001"],
       "paths": ["agents/src/", "skills/harness-brief/", "scripts/test-agents.sh", "scripts/test-brief.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with checks that gen-agents.sh emits harness-brief-reviewer for all three CLIs, read-only in every format; its prompt receives only the brief file (never the conversation) and its first line is exactly READY or GAPS followed by numbered gaps; harness-brief SKILL.md dispatches it after writing the brief, asks the human about GAPS, and stops after 2 review rounds showing the remaining gaps",

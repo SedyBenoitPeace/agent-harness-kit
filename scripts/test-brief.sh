@@ -74,4 +74,11 @@ grep -qi 'stranger test' "$md" || fail "SKILL.md: stranger test missing"
 grep -q 'check-brief.sh' "$md" || fail "SKILL.md: does not run check-brief.sh"
 grep -q 'templates/brief.md.tmpl' "$md" || fail "SKILL.md: template not referenced"
 
+# reviewer dispatch (M19-002)
+grep -q 'harness-brief-reviewer' "$md" || fail "SKILL.md: reviewer dispatch missing"
+grep -q 'READY' "$md" || fail "SKILL.md: READY verdict missing"
+grep -q 'GAPS' "$md" || fail "SKILL.md: GAPS verdict missing"
+grep -qi 'only the brief' "$md" || fail "SKILL.md: reviewer must receive only the brief"
+grep -qi '2 review rounds' "$md" || fail "SKILL.md: 2-round stop missing"
+
 echo "BRIEF TESTS GREEN"
