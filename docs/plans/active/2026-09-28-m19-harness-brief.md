@@ -70,8 +70,8 @@ overnight costs a wasted run.
 - 2026-09-28 — Owner decision: the skill talks with the human, and a
   separate read-only reviewer agent checks the finished brief
   independently (M19-002). It depends on M18-001's generator.
-- 2026-09-28 — The needs-a-human list is taken from daybook's "Project
-  constraints", which ChatGPT wrote unprompted; making it a template
+- 2026-09-28 — The needs-a-human list is taken from the "Project
+  constraints" an agent wrote unprompted in a harnessed repo; making it a template
   section gives every repo the same boundary vocabulary.
 - 2026-09-28 — Prompt-level guardrails are advisory. Enforcement lives
   in the gate, the evaluator (M18) and each CLI's permission settings.
