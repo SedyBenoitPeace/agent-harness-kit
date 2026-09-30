@@ -3,6 +3,20 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-30 — session 21 (M18-001)
+
+- Branch: `m18-evaluator`.
+- Done: M18-001 — neutral `agents/src/harness-{builder,evaluator}.md`,
+  `agents/models.json` (tier -> model per CLI) and `scripts/gen-agents.sh`
+  emitting Claude (.md), Copilot (.agent.md) and Codex (.toml) files;
+  `scripts/test-agents.sh` wired into the gate. Evaluator: read-only tools
+  in every format, Codex `sandbox_mode = "read-only"`. Re-checked all three
+  vendor docs 2026-09-30: they match the plan table (Codex docs moved to
+  learn.chatgpt.com). Model names in models.json are editable defaults,
+  not verified against each CLI's current model list.
+- Gate: green.
+- Next: M18-002 (review status, orchestrator step, evidence file).
+
 ## 2026-09-25 — session 20 (M17-003)
 
 - Branch: `m17-harness-run`.

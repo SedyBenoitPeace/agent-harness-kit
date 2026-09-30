@@ -424,7 +424,7 @@
       "id": "M18-001",
       "milestone": 18,
       "title": "Neutral builder/evaluator agent sources + generator for Claude, Copilot and Codex formats",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [],
       "paths": ["agents/", "scripts/gen-agents.sh", "scripts/test-agents.sh", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-agents.sh proving gen-agents.sh emits .claude/agents/*.md, .github/agents/*.agent.md and .codex/agents/*.toml for harness-builder and harness-evaluator; evaluator excludes edit/write tools in every format and is sandbox_mode read-only for Codex; file names equal name fields; Copilot model is a string; a second run is idempotent",

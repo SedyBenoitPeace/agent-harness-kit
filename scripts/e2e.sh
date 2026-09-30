@@ -279,4 +279,10 @@ grep -q 'git worktree' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: lane
 grep -qi 'never touch FEATURES.json' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: lanes must not write FEATURES.json"
 grep -qi 'redo.*sequentially' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: merge-conflict fallback missing"
 
+# --- agents (M18) --------------------------------------------------------
+
+jq -e '.models | (.claude and .copilot and .codex)' agents/models.json >/dev/null \
+  || fail "agents/models.json: missing a CLI model map"
+bash scripts/test-agents.sh
+
 echo "GATE GREEN"
