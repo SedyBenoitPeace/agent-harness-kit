@@ -299,4 +299,16 @@ jq -e '.models | (.claude and .copilot and .codex)' agents/models.json >/dev/nul
   || fail "agents/models.json: missing a CLI model map"
 bash scripts/test-agents.sh
 
+# evaluator documented end to end (M18)
+grep -q 'Can the gate prove this' "$PROTO" || fail "protocol: 'Can the gate prove this?' question missing (1.4)"
+grep -q 'docs/verification/<id>.md' "$PROTO" || fail "protocol: evidence file (2.7) missing"
+grep -q 'NEEDS_WORK' "$PROTO" || fail "protocol: review step (2.7) missing"
+for w in review evaluate bar; do
+  grep -q "$w" "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: $w undocumented"
+done
+grep -q 'harness-evaluator' skills/harness-audit/scripts/check.sh || fail "harness-audit: missing-agent-files WARN missing"
+grep -qi 'independent evaluator' README.md || fail "README: evaluator missing"
+grep -q 'gen-agents.sh' skills/harness-setup/SKILL.md || fail "harness-setup SKILL.md: gen-agents step missing"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "1.9.0" ] || fail "plugin version must be 1.9.0"
+
 echo "GATE GREEN"

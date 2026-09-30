@@ -70,6 +70,17 @@ echo "$out" | grep -q "^WARN.*not bounded" || fail "unbounded gate: expected WAR
 out="$(bash "$CHECK" "$WORK/good")" || fail "good fixture re-run exited non-zero"
 if echo "$out" | grep -q "^WARN.*not bounded"; then fail "template gate wrongly flagged as unbounded"; fi
 
+# 2e. opted-in evaluator features without agent files: WARN, still exit 0;
+# generated agent files clear it
+make_fixture "$WORK/opt-in"
+jq '.features += [{"id":"M9-001","milestone":9,"title":"t","status":"failing","verify":"v","evaluate":"ui"}]' \
+  "$WORK/opt-in/FEATURES.json" > "$WORK/opt-in/F.tmp" && mv "$WORK/opt-in/F.tmp" "$WORK/opt-in/FEATURES.json"
+out="$(bash "$CHECK" "$WORK/opt-in")" || fail "missing evaluator agent files must not fail the audit"
+echo "$out" | grep -q "^WARN.*harness-evaluator" || fail "opt-in without agent files: expected WARN line"
+bash scripts/gen-agents.sh "$WORK/opt-in" >/dev/null
+out="$(bash "$CHECK" "$WORK/opt-in")" || fail "opt-in with agent files: exit non-zero"
+echo "$out" | grep -q "^WARN.*harness-evaluator" && fail "opt-in with agent files: WARN should clear"
+
 # 3. defect fixtures: each must FAIL with its specific line
 make_fixture "$WORK/big-agents"
 for _ in $(seq 1 101); do echo "filler line" >> "$WORK/big-agents/AGENTS.md"; done

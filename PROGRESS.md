@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-09-30 — session 23 (M18-003)
+
+- Branch: `m18-evaluator`.
+- Done: M18-003 — protocol §1.4 asks "Can the gate prove this? If not,
+  what is the bar?" (`evaluate` / `bar`), §2.7 documents the review step,
+  security checklist and `docs/verification/<id>.md`; `review` added to the
+  status list. FEATURES.json.tmpl documents the status and fields.
+  harness-setup and the harness-session upgrade offer run
+  `../../scripts/gen-agents.sh`; harness-audit WARNs when features opt in
+  without an evaluator agent file and suggests `evaluate: "ui"` for
+  manual/UI-shaped verifies. README and ARCHITECTURE name the evaluator.
+  Released as 1.9.0 (plugin, marketplace, package). M18 plan moved to
+  `docs/plans/completed/`. Existing repos see `PROTOCOL: outdated` and are
+  offered the recopy; evaluation stays opt-in.
+- Gate: green.
+- Next: M19 (harness-brief) — plan is in `docs/plans/active/`; open the M18 PR.
+
 ## 2026-09-30 — session 22 (M18-002)
 
 - Branch: `m18-evaluator`.

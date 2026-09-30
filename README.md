@@ -47,6 +47,13 @@ English:
   a fresh subagent, verified from the repo before the next starts;
   script-proven independent features run as parallel lanes.
   `/agent-harness-kit:harness-run` or _"Run the rest of milestone 3."_
+- **Independent evaluator** — features that opt in (`evaluate: "ui"` and a
+  `bar` in FEATURES.json) end their session in `review`; harness-run then
+  dispatches a separate, read-only `harness-evaluator` agent that returns
+  `PASS` or `NEEDS_WORK` with evidence before the feature can become
+  `passing`, and records `docs/verification/<id>.md`. The builder and
+  evaluator agents are generated for Claude Code, Copilot CLI and Codex CLI
+  by `scripts/gen-agents.sh` from one source in `agents/`.
 - **harness-status** — where the project stands: progress per milestone,
   last session, exact next feature. `/agent-harness-kit:harness-status` or
   _"what's the harness status?"_.
@@ -73,6 +80,9 @@ the same commit adds the harness-run line to AGENTS.md. The new
 `depends_on` / `paths` fields in FEATURES.json are optional — absent fields stay sequential,
 so existing repos keep working unchanged; harness-audit can propose
 values for the remaining failing features, applied only on approval.
+The evaluator is opt-in too: `evaluate` / `bar` are optional, and
+harness-audit warns when features opt in but no evaluator agent file
+exists (run `scripts/gen-agents.sh` to create them).
 
 Manual fallback (no plugin): copy `skills/harness-setup` into
 `~/.claude/skills/`.
@@ -257,6 +267,10 @@ skills/
 │       └── run-gate.sh            concise gate wrapper, full log retained
 └── harness-run/
     └── SKILL.md        multi-feature orchestrator: one subagent per feature
+agents/
+├── src/                neutral harness-builder / harness-evaluator roles
+└── models.json         tier -> model per CLI, sensitive-path globs
+scripts/gen-agents.sh   emits the roles as Claude / Copilot / Codex agent files
 ```
 
 ## Dogfood

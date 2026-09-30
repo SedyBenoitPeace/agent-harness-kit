@@ -444,7 +444,7 @@
       "id": "M18-003",
       "milestone": 18,
       "title": "Evaluator in protocol, planning interview, audit and README; release 1.9.0",
-      "status": "failing",
+      "status": "passing",
       "depends_on": ["M18-002"],
       "paths": ["skills/harness-setup/templates/", "skills/harness-audit/", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with checks that protocol 1.4 asks 'Can the gate prove this?', 2.7 documents the review step and evidence file, FEATURES.json.tmpl documents review/evaluate/bar, harness-audit WARNs on opted-in features without agent files, README names the evaluator; package.json, plugin.json and marketplace.json are 1.9.0",

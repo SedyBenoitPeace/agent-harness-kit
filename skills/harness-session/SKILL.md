@@ -30,6 +30,10 @@ status + `git log` + `git status` + plan-grep sequence with one call.
      whole; re-append any local notes the old copy had below it. In the
      same commit, add the harness-run line to AGENTS.md if it is missing
      (see `templates/AGENTS.md.tmpl`).
+   - Features with `evaluate` set but no `harness-evaluator` agent file
+     (`.claude/agents/`, `.github/agents/` or `.codex/agents/`) → run the
+     plugin's `../../scripts/gen-agents.sh <target-repo>` and commit the
+     generated files.
    Never apply silently, never repeat the offer in the same session, and
    never let it replace the feature.
 3. If the report names `PREFLIGHT: scripts/<path>`, execute it now — it is

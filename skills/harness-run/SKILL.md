@@ -27,7 +27,7 @@ costs nothing.
    first one this run dispatched, report and STOP.
    Also stop at the cap (default 10 features per run; the human may name another).
 3. Dispatch the named agent `harness-builder` (generated per CLI by
-   `scripts/gen-agents.sh`; if absent, the agent's own built-in subagent) with exactly:
+   `../../scripts/gen-agents.sh`; if absent, the agent's own built-in subagent) with exactly:
    "Use harness-session for <id>, inline. End with its SESSION line."
    Own tools only — never load an external workflow skill.
 4. Read only the subagent's final line:
@@ -54,9 +54,9 @@ evaluation and today's flow):
 1. Record `git rev-parse HEAD`. Dispatch the named agent
    `harness-evaluator` with only: the feature entry, the commit range, its
    `bar`, whether `evaluate` is `ui` (QA mode), and — when any `paths`
-   entry matches the sensitive globs in `agents/models.json` — the
+   entry matches the sensitive globs in `../../agents/models.json` — the
    security checklist. Never pass the builder's transcript. If the agent
-   is missing, run `scripts/gen-agents.sh` first, or STOP and tell the human.
+   is missing, run `../../scripts/gen-agents.sh <target>` first, or STOP and tell the human.
 2. Integrity check: `git status --short` must be empty and HEAD unchanged.
    Anything else rejects the verdict (the evaluator is read-only, but a
    parent's elevated permissions can reach child agents): discard its

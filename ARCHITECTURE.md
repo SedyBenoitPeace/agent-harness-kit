@@ -36,6 +36,7 @@
 | `skills/harness-handoff/` | Session-end ritual check + next-agent prompt (`scripts/handoff.sh`) |
 | `skills/harness-session/` | Bounded session context report (`scripts/context.sh`, wraps harness-status) + concise gate wrapper (`scripts/run-gate.sh`) |
 | `skills/harness-run/` | Orchestrator (SKILL.md only): one fresh subagent per feature, verified via status.sh |
+| `agents/` + `scripts/gen-agents.sh` | Neutral builder/evaluator role sources + tier→model map; generator emits Claude/Copilot/Codex agent files |
 | `scripts/` | This repo's gate (`e2e.sh`) and the per-skill fixture test suites |
 | `docs/plans/`, `docs/specs/` | Execution plans (active/completed) and the original design spec |
 

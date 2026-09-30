@@ -33,6 +33,12 @@ checks live in `scripts/check.sh` — run it, never re-derive it by hand.
      (protocol §1.4): propose values so harness-run can build independent
      ones in parallel; apply only on approval. Absent fields stay legal —
      those features simply run sequentially.
+   - `failing` features whose `verify` is manual or UI-shaped ("looks
+     right", "the page shows…") and that lack `evaluate`: suggest
+     `evaluate: "ui"` and a concrete `bar` (protocol §1.4); apply only on
+     approval.
+   - check.sh WARNs when features opt in but no evaluator agent file
+     exists: offer to run the plugin's `scripts/gen-agents.sh`.
 
 ## Missing ARCHITECTURE.md — repair flow
 

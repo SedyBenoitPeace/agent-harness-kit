@@ -95,6 +95,17 @@ else
   failc "docs/agents/harness-protocol.md missing"
 fi
 
+# Independent evaluator (WARN only): features opted in with evaluate:"ui"
+# need a harness-evaluator agent file for at least one CLI (protocol §2.7)
+if jq -e '[.features[]? | select(.evaluate? == "ui")] | length > 0' FEATURES.json >/dev/null 2>&1; then
+  if [ -f .claude/agents/harness-evaluator.md ] || [ -f .github/agents/harness-evaluator.agent.md ] \
+     || [ -f .codex/agents/harness-evaluator.toml ]; then
+    pass "evaluator agent file present for opted-in features"
+  else
+    warn "features opt in to evaluation (evaluate: ui) but no harness-evaluator agent file exists — run the plugin's scripts/gen-agents.sh"
+  fi
+fi
+
 # Architecture doc (WARN only: repos harnessed before 1.4.0 may lack it;
 # the skill layer offers the repair flow — derive from code / interview / skip)
 if [ -f ARCHITECTURE.md ]; then
