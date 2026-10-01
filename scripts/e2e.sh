@@ -332,7 +332,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.0.0" ] || fail "plugin version must be 3.0.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.0.1" ] || fail "plugin version must be 3.0.1"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -373,5 +373,14 @@ bash scripts/test-upgrade.sh
 grep -q '^## Upgrading existing repos' README.md || fail "README: 'Upgrading existing repos' section missing"
 grep -q 'harness-upgrade-structure/scripts/upgrade.sh' README.md || fail "README: by-hand upgrade.sh command missing"
 grep -q 'harness-upgrade-structure' <<< "$walk" || fail "README walkthrough: upgrade step must use harness-upgrade-structure"
+
+# --- strict-YAML-safe frontmatter (M22) ----------------------------------------
+# Copilot CLI and Codex CLI reject (silently skip) a skill whose unquoted
+# name/description contains ': ' — Claude Code does not, so check it here.
+for f in skills/*/SKILL.md agents/src/*.md; do
+  if grep -qE '^(name|description): .*: ' "$f"; then
+    fail "$f: unquoted ': ' in frontmatter name/description breaks strict YAML parsers (Copilot, Codex)"
+  fi
+done
 
 echo "GATE GREEN"
