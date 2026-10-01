@@ -32,8 +32,8 @@ and [OpenAI — Harness engineering](https://openai.com/index/harness-engineerin
 These skills come with it — invoke each as a slash command or in plain
 English:
 
-- **harness-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
-  whole harness. `/agent-harness-kit:harness-setup` or _"set up the agent
+- **harness-initial-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
+  whole harness. `/agent-harness-kit:harness-initial-setup` or _"set up the agent
   harness in this repo"_.
 - **harness-session** — run one coding session with bounded, non-mutating
   context recovery and a concise gate report. `/agent-harness-kit:harness-session`,
@@ -89,7 +89,7 @@ The evaluator is opt-in too: `evaluate` / `bar` are optional, and
 harness-audit warns when features opt in but no evaluator agent file
 exists (run `scripts/gen-agents.sh` to create them).
 
-Manual fallback (no plugin): copy `skills/harness-setup` into
+Manual fallback (no plugin): copy `skills/harness-initial-setup` into
 `~/.claude/skills/`.
 
 ## Quickstart — Codex (plugin)
@@ -142,7 +142,7 @@ copilot plugin update agent-harness-kit
    questions, a mechanical check, and an independent read-only reviewer
    (`READY`/`GAPS`). Lifecycle: brief → plan → run. Setup then interviews
    only the gaps.
-1. **Set up once** — `/agent-harness-kit:harness-setup`. Expect an
+1. **Set up once** — `/agent-harness-kit:harness-initial-setup`. Expect an
    interview about the product before anything is written; it ends with
    the full scaffold (AGENTS.md, FEATURES.json, PROGRESS.md,
    ARCHITECTURE.md, docs/plans/, docs/agents/harness-protocol.md,
@@ -300,12 +300,12 @@ Prefer starting a project from a ready-made scaffold? Instantiate
 [agent-harness-template](https://github.com/SedyBenoitPeace/agent-harness-template)
 (_Use this template_ on GitHub), open it with any agent, and say _"Read
 AGENTS.md and follow its initialization instructions."_ The template mirrors
-`skills/harness-setup/templates/` — this repo stays the canonical source.
+`skills/harness-initial-setup/templates/` — this repo stays the canonical source.
 
 ## Quickstart — any other agent
 
 You need exactly one file:
-[`skills/harness-setup/templates/harness-protocol.md`](skills/harness-setup/templates/harness-protocol.md).
+[`skills/harness-initial-setup/templates/harness-protocol.md`](skills/harness-initial-setup/templates/harness-protocol.md).
 
 Copy it into your repo as `docs/agents/harness-protocol.md` (bring the
 `templates/` directory too if you want the ready-made scaffolds), then tell
@@ -337,7 +337,7 @@ about the gaps.
 ```
 .claude-plugin/         plugin + marketplace manifests
 skills/
-├── harness-setup/
+├── harness-initial-setup/
 │   ├── SKILL.md        planning/scaffolding orchestration (thin)
 │   └── templates/
 │       ├── harness-protocol.md   ★ the agent-neutral operating manual

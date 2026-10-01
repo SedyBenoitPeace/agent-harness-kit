@@ -18,14 +18,14 @@ checks live in `scripts/check.sh` — run it, never re-derive it by hand.
 2. Relay the PASS/FAIL/WARN report verbatim.
 3. Do the one check the script can't: read every `verify` field in
    FEATURES.json and flag unfalsifiable ones ("works correctly"-style).
-   The standard is §1.4 of `../harness-setup/templates/harness-protocol.md`
+   The standard is §1.4 of `../harness-initial-setup/templates/harness-protocol.md`
    (worked GOOD/BAD examples inside).
 4. Give the verdict: harness-ready, or the ordered list of gaps.
 5. **Offer — never auto-apply — fixes:**
    - Structural gaps (no FEATURES.json, no gate, no AGENTS.md): offer to
-     run the harness-setup skill in retrofit mode.
+     run the harness-initial-setup skill in retrofit mode.
    - Trivial gaps (missing plans dirs, drifted or missing protocol doc):
-     offer the exact one-liner (mkdir -p / re-copy from harness-setup
+     offer the exact one-liner (mkdir -p / re-copy from harness-initial-setup
      templates).
    - Unfalsifiable verify fields: propose a falsifiable rewrite for each;
      apply only on approval.
@@ -47,7 +47,7 @@ the warning: offer the human a choice of repair and follow their pick.
 
 - **(a) Derive it** — read the codebase (entry points, module layout,
   schema/migrations, queues/jobs), draft `ARCHITECTURE.md` from
-  `../harness-setup/templates/ARCHITECTURE.md.tmpl`'s sections, and show
+  `../harness-initial-setup/templates/ARCHITECTURE.md.tmpl`'s sections, and show
   it for review before committing. Mark anything uncertain with a
   question to the human — never present a guess as an invariant.
 - **(b) Interview** — ask the human directly: what are the layers and

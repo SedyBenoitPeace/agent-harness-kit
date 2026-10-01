@@ -33,11 +33,11 @@ JSON
   git -C "$dir" -c user.email=t@t -c user.name=t commit -qm fixture
 }
 
-# 1. uninitialized dir: exit 3, points at harness-setup
+# 1. uninitialized dir: exit 3, points at harness-initial-setup
 mkdir "$WORK/bare"
 rc=0; out="$(bash "$HANDOFF" "$WORK/bare")" || rc=$?
 [ "$rc" -eq 3 ] || fail "bare dir: expected exit 3, got $rc"
-echo "$out" | grep -q "harness-setup" || fail "bare dir: must point at harness-setup"
+echo "$out" | grep -q "harness-initial-setup" || fail "bare dir: must point at harness-initial-setup"
 
 # 2. broken FEATURES.json: exit 2, points at harness-audit
 make_repo "$WORK/broken" 0

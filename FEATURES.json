@@ -21,7 +21,8 @@
     "17": "Orchestrated multi-feature runs (harness-run skill)",
     "18": "Independent evaluator, portable across CLIs",
     "19": "harness-brief: rough prompt to unambiguous brief",
-    "20": "Unattended runs: keep going past problems, run report"
+    "20": "Unattended runs: keep going past problems, run report",
+    "21": "Clear entry points: harness-initial-setup and harness-upgrade-structure"
   },
   "features": [
     {
@@ -519,6 +520,17 @@
       "paths": ["skills/harness-setup/templates/", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with checks that protocol section 2 documents continuous runs (skip rules, stop rules, the stop file, the report), README lists harness-continuous in its skills and has an 'Unattended runs' section saying to invoke harness-continuous by name (with the cap and milestone-range options) under the permissions already used for harness-session, with no CLI-specific setup and none of --yolo, --dangerously-skip-permissions or --allow-all, and an 'Upgrading a repo and running continuously' section that walks the whole sequence in order: update the plugin; branch and confirm a green gate; accept the UPGRADE offer; run harness-audit and approve depends_on/paths, stating that without declared depends_on a skipped feature stops the run; run scripts/gen-agents.sh only when using the evaluator (restart Copilot afterwards); invoke harness-continuous (with the cap and milestone-range options); stop early with .harness-run/STOP; afterwards read docs/runs/<date>.md, answer each skipped feature's question in its notes, recover stashed work via git stash list ('harness-run skip <id>'), and review the branch(es); and package.json, plugin.json and marketplace.json are 2.0.0",
       "notes": ""
+    },
+    {
+      "id": "M21-001",
+      "milestone": 21,
+      "title": "Rename harness-setup to harness-initial-setup, no alias, all live references updated",
+      "status": "passing",
+      "depends_on": [],
+      "paths": ["skills/harness-initial-setup/", "skills/", "scripts/", "README.md", "ARCHITECTURE.md", "AGENTS.md"],
+      "verify": "bash scripts/e2e.sh exits 0 with skills/harness-setup absent, skills/harness-initial-setup/SKILL.md named harness-initial-setup whose description points existing harnessed repos at harness-upgrade-structure, and no reference to the old name anywhere outside docs/plans, docs/specs, PROGRESS.md and FEATURES.json",
+      "notes": "Plan: docs/plans/active/2026-10-01-m21-upgrade-structure.md. Clean rename, no alias (breaking: released as 3.0.0 in M21-003)."
     }
+
   ]
 }

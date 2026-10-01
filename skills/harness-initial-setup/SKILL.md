@@ -1,6 +1,6 @@
 ---
-name: harness-setup
-description: Use when planning a new application or feature-set, or when a repo needs a durable agent-operable structure — scaffolds the long-running-agent harness (AGENTS.md, FEATURES.json, PROGRESS.md, plans, e2e gate) so any agent can plan and build one feature per session.
+name: harness-initial-setup
+description: Use when planning a new application or feature-set in a repo that has no harness yet, or when a repo needs a durable agent-operable structure — scaffolds the long-running-agent harness (AGENTS.md, FEATURES.json, PROGRESS.md, plans, e2e gate) so any agent can plan and build one feature per session. For a repo that already has a harness, use harness-upgrade-structure instead.
 ---
 
 # Harness Planning
@@ -10,7 +10,7 @@ Scaffold the long-running-agent harness into a target repository by
 Everything of substance lives in `templates/`; this file only sequences the
 work.
 
-**Announce at start:** "Using harness-setup to set up the agent harness."
+**Announce at start:** "Using harness-initial-setup to set up the agent harness."
 
 ## Workflow
 

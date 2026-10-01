@@ -42,7 +42,7 @@ runs in the main conversation because it must ask the human questions.
    remaining gaps instead of looping. No subagent support: apply the same
    checklist yourself, reading only the saved file.
 7. Show the human the saved path and hand off to planning
-   (harness-setup) — do not start building.
+   (harness-initial-setup) — do not start building.
 
 ## Red flags
 

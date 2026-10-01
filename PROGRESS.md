@@ -3,6 +3,19 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 29 (M21-001)
+
+- Branch: `m21-upgrade-structure` (off master after PR #21 merged).
+- Done: M21-001 — `skills/harness-setup/` renamed to
+  `skills/harness-initial-setup/` (templates included), no alias; all live
+  references updated (skills, scripts, tests, README, ARCHITECTURE,
+  AGENTS.md); description points existing repos at harness-upgrade-structure.
+  New gate check fails on any leftover old-name reference outside history.
+  M21 plan added (`docs/plans/active/`): M21-002 upgrade.sh, M21-003 skill,
+  wiring and release 3.0.0 (assumed major bump for the breaking rename).
+- Gate: green.
+- Next: M21-002 (`upgrade.sh`).
+
 ## 2026-10-01 — session 28 (M20 close-out)
 
 - Branch: `m20-unattended-runs`.

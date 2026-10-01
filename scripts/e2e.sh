@@ -73,7 +73,7 @@ jq -e '.plugins[0].name == "agent-harness-kit" and .plugins[0].source == "./"' \
 
 # --- templates ------------------------------------------------------------
 
-TMPL_DIR="skills/harness-setup/templates"
+TMPL_DIR="skills/harness-initial-setup/templates"
 SESSION_SKILL_MD="skills/harness-session/SKILL.md"
 
 # FEATURES.json.tmpl: contains placeholders, valid JSON once they are substituted
@@ -181,17 +181,17 @@ grep -qi 'never touch FEATURES.json or PROGRESS.md' "$SESSION_SKILL_MD" || fail 
 grep -q 'harness-run line' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: upgrade must add the harness-run line to AGENTS.md"
 
 # SKILL.md: valid frontmatter, references only templates that exist
-SKILL="skills/harness-setup/SKILL.md"
+SKILL="skills/harness-initial-setup/SKILL.md"
 [ -f "$SKILL" ] || fail "SKILL.md missing"
 [ "$(head -1 "$SKILL")" = "---" ] || fail "SKILL.md: missing frontmatter"
-grep -q '^name: harness-setup$' "$SKILL" || fail "SKILL.md: frontmatter name wrong"
+grep -q '^name: harness-initial-setup$' "$SKILL" || fail "SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$SKILL" || fail "SKILL.md: frontmatter description missing"
 grep -q 'Already harnessed' "$SKILL" || fail "SKILL.md: already-initialized guard missing"
 grep -q 'ARCHITECTURE.md' "$SKILL" || fail "SKILL.md: architecture scaffold step missing"
 grep -q 'logging/observability' "$SKILL" || fail "SKILL.md: logging/observability scaffold step missing"
 grep -q 'native plan mode' "$SKILL" || fail "SKILL.md: native plan mode step missing"
 while read -r ref; do
-  [ -f "skills/harness-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
+  [ -f "skills/harness-initial-setup/$ref" ] || fail "SKILL.md references missing file: $ref"
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
 
 # README: all three quickstarts present
@@ -201,7 +201,7 @@ grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart m
 grep -q 'PRD' README.md || fail "README: PRD-input section missing"
 grep -q 'Using the skills' README.md || fail "README: using-the-skills prompts section missing"
 grep -q 'harness-status' README.md || fail "README: harness-status skill missing"
-grep -q '/agent-harness-kit:harness-setup' README.md || fail "README: slash-command forms missing"
+grep -q '/agent-harness-kit:harness-initial-setup' README.md || fail "README: slash-command forms missing"
 grep -q '## Lifecycle' README.md || fail "README: lifecycle section missing"
 grep -q 'harness-handoff' README.md || fail "README: harness-handoff skill missing"
 grep -q 'Switching agents' README.md || fail "README: switching-agents section missing"
@@ -313,7 +313,7 @@ for w in review evaluate bar; do
 done
 grep -q 'harness-evaluator' skills/harness-audit/scripts/check.sh || fail "harness-audit: missing-agent-files WARN missing"
 grep -qi 'independent evaluator' README.md || fail "README: evaluator missing"
-grep -q 'gen-agents.sh' skills/harness-setup/SKILL.md || fail "harness-setup SKILL.md: gen-agents step missing"
+grep -q 'gen-agents.sh' skills/harness-initial-setup/SKILL.md || fail "harness-initial-setup SKILL.md: gen-agents step missing"
 
 # --- harness-brief skill (M19) ---------------------------------------------
 
@@ -354,5 +354,15 @@ for w in 'Update the plugin' 'green gate' 'UPGRADE: offer' 'harness-audit' 'gen-
   [ "$n" -gt "$last" ] || fail "README walkthrough: '$w' is out of order"
   last="$n"
 done
+
+# --- renamed entry point (M21): no live reference to the old skill name ------
+
+old_name="harness-""setup"
+[ ! -e "skills/$old_name" ] || fail "skills/$old_name still exists (renamed to harness-initial-setup)"
+if git grep -nI -e "$old_name" -- . ':!docs/plans' ':!docs/specs' ':!PROGRESS.md' ':!FEATURES.json' >/dev/null 2>&1; then
+  fail "stale reference to the old skill name '$old_name'"
+fi
+[ -f skills/harness-initial-setup/SKILL.md ] || fail "harness-initial-setup SKILL.md missing"
+grep -q '^description: .*harness-upgrade-structure' skills/harness-initial-setup/SKILL.md || fail "harness-initial-setup: description must point existing repos at harness-upgrade-structure"
 
 echo "GATE GREEN"

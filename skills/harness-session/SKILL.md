@@ -18,12 +18,12 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    the plan's tasks are executed one per session, and `context.sh`
    selects which one.
    - Exit 3 / 2 → relayed from harness-status: not initialized or broken.
-     Offer harness-setup / harness-audit, STOP.
+     Offer harness-initial-setup / harness-audit, STOP.
 2. If the report ends with `UPGRADE: offer`, the repo was scaffolded by
    an older plugin. Tell the human once, in two lines, and offer the
    upgrade as its own commit before the feature — they decide:
    - `GATE_OUTPUT: unbounded` → wrap each command in `scripts/e2e.sh`
-     with the `step` function from `templates/e2e.sh.tmpl` (harness-setup
+     with the `step` function from `templates/e2e.sh.tmpl` (harness-initial-setup
      skill) and add `echo "FULL_LOG: $LOG"` after `GATE GREEN`.
    - `PROTOCOL: outdated` → recopy the shipped
      `templates/harness-protocol.md` over `docs/agents/harness-protocol.md`

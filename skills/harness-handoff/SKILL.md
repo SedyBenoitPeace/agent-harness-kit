@@ -15,7 +15,7 @@ vendor it is. The mechanical checks and the prompt live in
 
 1. Run `bash scripts/handoff.sh` (path relative to this skill) from the
    target repo root.
-   - Exit 3 → harness not initialized: offer the harness-setup skill, STOP.
+   - Exit 3 → harness not initialized: offer the harness-initial-setup skill, STOP.
    - Exit 2 → a harness file is broken: relay the message, suggest the
      harness-audit skill, STOP.
    - Exit 1 → BLOCKED: relay each BLOCKED line and help the human finish

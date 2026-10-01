@@ -13,7 +13,7 @@
     ↓ reads
 [.claude-plugin/  plugin.json + marketplace.json (versions in lockstep)]
     ↓ exposes
-[skills/  harness-setup | harness-audit | harness-status | harness-handoff | harness-session | harness-run | harness-brief]
+[skills/  harness-initial-setup | harness-audit | harness-status | harness-handoff | harness-session | harness-run | harness-brief]
     │         │                │               │              │                 │
     │    templates/ ★      scripts/check.sh  scripts/     scripts/          scripts/
     │    (canonical          │               status.sh    handoff.sh        context.sh +
@@ -29,8 +29,8 @@
 | Path | Responsibility |
 |---|---|
 | `.claude-plugin/` | Plugin + marketplace manifests; version is the cache key |
-| `skills/harness-setup/` | Planning interview + scaffold orchestration (SKILL.md only) |
-| `skills/harness-setup/templates/` | ★ Canonical source of every scaffolded file, incl. `harness-protocol.md` |
+| `skills/harness-initial-setup/` | Planning interview + scaffold orchestration (SKILL.md only) |
+| `skills/harness-initial-setup/templates/` | ★ Canonical source of every scaffolded file, incl. `harness-protocol.md` |
 | `skills/harness-audit/` | Readiness checker (`scripts/check.sh`) + report/repair judgment layer |
 | `skills/harness-status/` | Read-only progress report (`scripts/status.sh`) |
 | `skills/harness-handoff/` | Session-end ritual check + next-agent prompt (`scripts/handoff.sh`) |
@@ -44,7 +44,7 @@
 
 ## Key entities & data flow
 
-- **Templates** flow one way: `skills/harness-setup/templates/` → target
+- **Templates** flow one way: `skills/harness-initial-setup/templates/` → target
   repos (via the setup skill) and → the mirror repo
   `agent-harness-template` (manual resync; this repo stays canonical).
 - **FEATURES.json schema** (id / milestone / title / status / verify /

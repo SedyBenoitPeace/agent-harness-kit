@@ -22,7 +22,7 @@ cd "$TARGET"
 
 if [ ! -f FEATURES.json ] || [ ! -f PROGRESS.md ]; then
   echo "HARNESS NOT INITIALIZED: FEATURES.json and/or PROGRESS.md missing."
-  echo "Scaffold it with the harness-setup skill (or harness-protocol.md section 1)."
+  echo "Scaffold it with the harness-initial-setup skill (or harness-protocol.md section 1)."
   exit 3
 fi
 
