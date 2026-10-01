@@ -293,6 +293,10 @@ grep -q 'docs/verification/<id>.md' "$RUN_SKILL/SKILL.md" || fail "harness-run S
 grep -q 'eval_attempts' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: eval_attempts rule missing"
 grep -q 'reaching 2' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: STOP-at-2-attempts rule missing"
 
+# --- harness-continuous skill (M20) ----------------------------------------
+
+bash scripts/test-run.sh
+
 # --- agents (M18) --------------------------------------------------------
 
 jq -e '.models | (.claude and .copilot and .codex)' agents/models.json >/dev/null \

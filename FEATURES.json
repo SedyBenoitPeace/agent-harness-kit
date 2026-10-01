@@ -494,7 +494,7 @@
       "id": "M20-002",
       "milestone": 20,
       "title": "harness-continuous skill: its own command for a continuous run (skip-and-continue, stop rules, stop file, opt-in milestone crossing)",
-      "status": "failing",
+      "status": "passing",
       "depends_on": ["M20-001", "M18-002"],
       "paths": ["skills/harness-continuous/", "skills/harness-run/", "scripts/test-run.sh", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with checks that skills/harness-continuous/SKILL.md exists with valid, agent-neutral frontmatter and starts a continuous run when invoked, with no trigger word; that run: never asks the human; records skips in .git/harness-run/skip; turns a blocked session, a red gate or 2 NEEDS_WORK verdicts into a skip (stash any leftover changes with 'git stash push -u', append the reason and one question to the feature's notes, commit FEATURES.json), not a stop; stops on NEXT none, the feature cap, .git/harness-run/STOP, a baseline preflight problem, or a dispatch with neither a commit nor a skip; crosses a milestone boundary only when the human names a milestone range, creating a stacked branch per milestone; harness-run keeps its interactive behaviour unchanged and points to harness-continuous",

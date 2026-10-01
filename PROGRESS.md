@@ -3,6 +3,21 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 25 (M20-002)
+
+- Branch: `m20-unattended-runs`.
+- Done: M20-002 — new `skills/harness-continuous/SKILL.md`: invoked by
+  name (no trigger word), never asks, run state in `.git/harness-run/`
+  (`start`, `skip`, `STOP`). A blocked session, red gate or two
+  NEEDS_WORK verdicts becomes a skip (stash, note with one question,
+  FEATURES.json-only commit, `status.sh --skip`); stops on NEXT none,
+  cap, STOP, baseline problem, or a dispatch with no commit and no skip.
+  Crosses milestones only for a named range, with stacked branches, no
+  push. harness-run points to it and is otherwise unchanged. Contract
+  proven by new `scripts/test-run.sh`, wired into the gate.
+- Gate: green.
+- Next: M20-003 (`run-report.sh`; the skill's End step already calls it).
+
 ## 2026-10-01 — session 24 (M20-001)
 
 - Branch: `m20-unattended-runs` (off master after PR #20 merged).

@@ -14,6 +14,10 @@ costs nothing.
 
 **Announce at start:** "Using harness-run to orchestrate feature sessions."
 
+For a run that keeps going past blocked features and ends with a report,
+the human invokes the separate `harness-continuous` command; this skill
+stays interactive and stops at the first problem.
+
 ## Workflow
 
 1. Run `bash ../harness-session/scripts/context.sh` (path relative to this

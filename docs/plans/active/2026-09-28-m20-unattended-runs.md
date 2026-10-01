@@ -123,3 +123,7 @@ interactive and unchanged, and points to harness-continuous.
   CLIs load skills, so one SKILL.md serves Claude Code, Codex CLI and
   Copilot CLI. The exact invocation syntax per CLI is field-tested in
   M20-004 rather than assumed.
+- 2026-10-01 — M20-002: each run starts with an empty `skip` file and
+  deletes a leftover `STOP`, so a rerun retries earlier skips (their
+  notes carry the question; stashes stay recoverable). The cap counts
+  every dispatched feature, skips included.
