@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 31 (M21-003)
+
+- Branch: `m21-upgrade-structure`.
+- Done: M21-003 — `skills/harness-upgrade-structure/SKILL.md` (runs
+  upgrade.sh, explains CHANGED/OK/TODO, offers harness-audit, commits as
+  its own commit, never pushes); harness-session's `UPGRADE: offer` now
+  points to it instead of listing steps; README "Upgrading existing repos"
+  with the by-hand `upgrade.sh` command and the walkthrough step using it;
+  ARCHITECTURE, AGENTS.md, layout updated. Released as 3.0.0 (plugin,
+  marketplace, package) because `harness-setup` was renamed. M21 plan moved
+  to `docs/plans/completed/` in this commit.
+- Also: M21-003 was added to FEATURES.json as `failing` earlier (089619f)
+  so the pending work was visible — a deliberate exception to adding
+  entries only when proven.
+- Gate: green.
+- Next: owner merges the M21 PR.
+
 ## 2026-10-01 — session 30 (M21-002)
 
 - Branch: `m21-upgrade-structure`.

@@ -47,6 +47,10 @@ English:
   a fresh subagent, verified from the repo before the next starts;
   script-proven independent features run as parallel lanes.
   `/agent-harness-kit:harness-run` or _"Run the rest of milestone 3."_
+- **harness-upgrade-structure** — for repos that already have a harness:
+  bring them up to the structure the installed plugin ships, in one
+  deterministic step. `/agent-harness-kit:harness-upgrade-structure`. See
+  [Upgrading existing repos](#upgrading-existing-repos).
 - **harness-continuous** — an unattended run: like harness-run, but a
   feature it cannot finish is skipped (work stashed, question recorded)
   instead of ending the run, and it finishes with a report in
@@ -176,6 +180,31 @@ copilot plugin update agent-harness-kit
    drifts or before working in an unfamiliar one, plus a periodic
    maintenance pass (protocol section 3).
 
+## Upgrading existing repos
+
+After updating the plugin, bring each repo that already has a harness up to
+date with `harness-upgrade-structure` (new repos use
+`harness-initial-setup`). It recopies the protocol, adds the missing
+harness-run line to `AGENTS.md`, generates evaluator agent files only if
+your features opt in, and lists what still needs you (an unbounded gate,
+`depends_on`/`paths`). It refuses a dirty tree, creates `harness-upgrade`
+when you are on the default branch, and commits nothing.
+
+With the plugin: `/agent-harness-kit:harness-upgrade-structure`. Or by
+hand, no agent needed, from your repo (adjust the plugin folder to your
+CLI and version):
+
+```
+bash ~/.claude/plugins/cache/agent-harness-kit/agent-harness-kit/<version>/skills/harness-upgrade-structure/scripts/upgrade.sh .
+```
+
+(Codex keeps its copy under `~/.codex/plugins/cache/agent-harness-kit/`; or
+run the script from a clone of this repository.) Review `git diff`, then
+commit it as its own commit.
+
+**Upgrading to 3.0.0:** `harness-setup` was renamed
+`harness-initial-setup`; the old slash command no longer exists.
+
 ## Unattended runs
 
 `harness-continuous` is its own command: invoke it and walk away. It
@@ -229,16 +258,17 @@ Do the steps in order. The upgrade is once per repo.
    `copilot plugin update agent-harness-kit`). In your repo, create a
    branch (`git checkout -b harness-upgrade`) and confirm a green gate:
    `bash scripts/e2e.sh`.
-2. Start any harness session (`/agent-harness-kit:harness-session`) and
-   accept the `UPGRADE: offer`. This release adds the continuous-run rules
-   to protocol section 2.8, so every existing repo's protocol copy is
-   reported outdated; the upgrade is its own small commit.
+2. Run `/agent-harness-kit:harness-upgrade-structure` (a harness session
+   points you to it with an `UPGRADE: offer`; see
+   [Upgrading existing repos](#upgrading-existing-repos)). This release
+   adds the continuous-run rules to protocol section 2.8, so every existing
+   repo's protocol copy is outdated; the upgrade is its own small commit.
 3. Run `/agent-harness-kit:harness-audit` and approve its `depends_on` and
    `paths` proposals. This step is essential: without declared `depends_on`,
    a skipped feature stops the run instead of letting it continue.
-4. Only if you use the independent evaluator: run
-   `scripts/gen-agents.sh <repo>` to generate the agent files, and restart
-   Copilot CLI afterwards if you use it.
+4. Only if you use the independent evaluator: the upgrade already
+   generated the agent files (`scripts/gen-agents.sh <repo>` regenerates
+   them); restart Copilot CLI afterwards if you use it.
 
 **Run**
 
@@ -365,8 +395,11 @@ skills/
 ├── harness-run/
 │   ├── SKILL.md        multi-feature orchestrator: one subagent per feature
 │   └── scripts/run-report.sh      end-of-run report from git + FEATURES.json
-└── harness-continuous/
-    └── SKILL.md        unattended run: skip what it cannot finish, then report
+├── harness-continuous/
+│   └── SKILL.md        unattended run: skip what it cannot finish, then report
+└── harness-upgrade-structure/
+    ├── SKILL.md        runs upgrade.sh, explains, commits as its own commit
+    └── scripts/upgrade.sh         idempotent upgrade of an existing harness
 agents/
 ├── src/                neutral harness-builder / harness-evaluator roles
 └── models.json         tier -> model per CLI, sensitive-path globs

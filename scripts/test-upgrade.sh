@@ -68,4 +68,23 @@ echo "$out" | grep -q '^OK: docs/agents/harness-protocol.md' || fail "second run
 [ "$(git -C "$R" branch --show-current)" = harness-upgrade ] || fail "second run: must stay on the current branch"
 [ -z "$(git -C "$R" status --short)" ] || fail "second run: must leave the tree clean"
 
+# 5. SKILL.md contract: for repos that already have a harness, runs upgrade.sh,
+#    own commit, offers the audit; harness-session points at it
+md="skills/harness-upgrade-structure/SKILL.md"
+[ -f "$md" ] || fail "harness-upgrade-structure SKILL.md missing"
+[ "$(head -1 "$md")" = "---" ] || fail "SKILL.md: missing frontmatter"
+grep -q '^name: harness-upgrade-structure$' "$md" || fail "SKILL.md: frontmatter name wrong"
+grep -q '^description: Use when' "$md" || fail "SKILL.md: description must start with 'Use when'"
+grep -q '^description: .*already has a harness' "$md" || fail "SKILL.md: description must say it is for repos that already have a harness"
+grep -q '^description: .*harness-initial-setup' "$md" || fail "SKILL.md: description must point harness-less repos at harness-initial-setup"
+! grep -qi 'claude' "$md" || fail "SKILL.md must be agent-neutral"
+grep -q 'scripts/upgrade.sh' "$md" || fail "SKILL.md: does not run upgrade.sh"
+grep -q 'harness-audit' "$md" || fail "SKILL.md: must offer harness-audit for depends_on/paths"
+grep -qi 'own commit' "$md" || fail "SKILL.md: upgrade must be committed as its own commit"
+grep -q 'harness-run line' "$md" || fail "SKILL.md: must mention the harness-run line in AGENTS.md"
+grep -qi 'never push' "$md" || fail "SKILL.md: never-push rule missing"
+sess="skills/harness-session/SKILL.md"
+grep -q 'harness-upgrade-structure' "$sess" || fail "harness-session SKILL.md: UPGRADE: offer must point at harness-upgrade-structure"
+! grep -q 'recopy the shipped' "$sess" || fail "harness-session SKILL.md: upgrade steps must not be duplicated inline"
+
 echo "UPGRADE TESTS GREEN"

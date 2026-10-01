@@ -64,3 +64,9 @@ an upgrade without the human choosing to run it.
   hence a major version (3.0.0). The default-branch rule (branch
   `harness-upgrade` off it) is how "go from master" is applied to the
   upgrade command.
+- 2026-10-01 — M21-003: harness-session's `UPGRADE: offer` step now only
+  offers harness-upgrade-structure (single source for the upgrade steps).
+  The M20 walkthrough's gate checks stayed as they were: step 2 names the
+  new skill and step 4 says the upgrade already generates evaluator
+  files. The old-name gate check allows exactly one README line (the
+  3.0.0 rename note).

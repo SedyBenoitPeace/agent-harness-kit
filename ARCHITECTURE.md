@@ -37,6 +37,7 @@
 | `skills/harness-session/` | Bounded session context report (`scripts/context.sh`, wraps harness-status) + concise gate wrapper (`scripts/run-gate.sh`) |
 | `skills/harness-run/` | Orchestrator (SKILL.md only): one fresh subagent per feature, verified via status.sh |
 | `skills/harness-continuous/` | Unattended-run command (SKILL.md only): reuses harness-run, skips instead of stopping; state in `.harness-run/`, report via `skills/harness-run/scripts/run-report.sh` |
+| `skills/harness-upgrade-structure/` | Upgrade of an already-harnessed repo: `scripts/upgrade.sh` (idempotent, commits nothing) + SKILL.md that explains and commits it |
 | `skills/harness-brief/` | Rough prompt → `docs/briefs/` brief; check-brief.sh plus an independent read-only reviewer agent |
 | `agents/` + `scripts/gen-agents.sh` | Neutral builder/evaluator role sources + tier→model map; generator emits Claude/Copilot/Codex agent files |
 | `scripts/` | This repo's gate (`e2e.sh`) and the per-skill fixture test suites |

@@ -22,7 +22,8 @@ work.
 - **Already harnessed**: if `FEATURES.json`, `PROGRESS.md`, and
   `docs/agents/harness-protocol.md` all exist, STOP — the harness is
   already set up. Tell the human and point them to **harness-status**
-  ("where am I?") or **harness-audit** ("is it well-formed?").
+  ("where am I?"), **harness-audit** ("is it well-formed?") or
+  **harness-upgrade-structure** ("bring it up to this plugin's structure").
   Re-scaffold only if they explicitly confirm they want that.
 
 ### 2. Run the planning protocol

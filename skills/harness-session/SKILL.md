@@ -20,22 +20,10 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    - Exit 3 / 2 → relayed from harness-status: not initialized or broken.
      Offer harness-initial-setup / harness-audit, STOP.
 2. If the report ends with `UPGRADE: offer`, the repo was scaffolded by
-   an older plugin. Tell the human once, in two lines, and offer the
-   upgrade as its own commit before the feature — they decide:
-   - `GATE_OUTPUT: unbounded` → wrap each command in `scripts/e2e.sh`
-     with the `step` function from `templates/e2e.sh.tmpl` (harness-initial-setup
-     skill) and add `echo "FULL_LOG: $LOG"` after `GATE GREEN`.
-   - `PROTOCOL: outdated` → recopy the shipped
-     `templates/harness-protocol.md` over `docs/agents/harness-protocol.md`
-     whole; re-append any local notes the old copy had below it. In the
-     same commit, add the harness-run line to AGENTS.md if it is missing
-     (see `templates/AGENTS.md.tmpl`).
-   - Features with `evaluate` set but no `harness-evaluator` agent file
-     (`.claude/agents/`, `.github/agents/` or `.codex/agents/`) → run the
-     plugin's `../../scripts/gen-agents.sh <target-repo>` and commit the
-     generated files.
-   Never apply silently, never repeat the offer in the same session, and
-   never let it replace the feature.
+   an older plugin. Tell the human once, in two lines, and offer to run
+   **harness-upgrade-structure** (its own commit, before the feature) —
+   they decide. Never apply it silently, never repeat the offer in the
+   same session, and never let it replace the feature.
 3. If the report names `PREFLIGHT: scripts/<path>`, execute it now — it is
    discovered, never auto-run. Non-zero blocks the session; report it and
    STOP.

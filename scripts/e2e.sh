@@ -178,7 +178,7 @@ grep -q 'harness-run' README.md || fail "README: harness-run skill missing"
 grep -q 'absent fields stay sequential' README.md || fail "README: upgrade note for lane fields missing"
 grep -q 'depends_on' skills/harness-audit/SKILL.md || fail "harness-audit SKILL.md: lane-field suggestion missing"
 grep -qi 'never touch FEATURES.json or PROGRESS.md' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: lane rule must forbid FEATURES.json/PROGRESS.md writes"
-grep -q 'harness-run line' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: upgrade must add the harness-run line to AGENTS.md"
+grep -q 'harness-run line' skills/harness-upgrade-structure/SKILL.md || fail "harness-upgrade-structure SKILL.md: upgrade must add the harness-run line to AGENTS.md"
 
 # SKILL.md: valid frontmatter, references only templates that exist
 SKILL="skills/harness-initial-setup/SKILL.md"
@@ -332,7 +332,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "2.0.0" ] || fail "plugin version must be 2.0.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.0.0" ] || fail "plugin version must be 3.0.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -359,7 +359,8 @@ done
 
 old_name="harness-""setup"
 [ ! -e "skills/$old_name" ] || fail "skills/$old_name still exists (renamed to harness-initial-setup)"
-if git grep -nI -e "$old_name" -- . ':!docs/plans' ':!docs/specs' ':!PROGRESS.md' ':!FEATURES.json' >/dev/null 2>&1; then
+# the README's one rename note ("was renamed") is the only allowed mention
+if git grep -nI -e "$old_name" -- . ':!docs/plans' ':!docs/specs' ':!PROGRESS.md' ':!FEATURES.json' | grep -v 'was renamed' | grep -q .; then
   fail "stale reference to the old skill name '$old_name'"
 fi
 [ -f skills/harness-initial-setup/SKILL.md ] || fail "harness-initial-setup SKILL.md missing"
@@ -369,5 +370,8 @@ grep -q '^description: .*harness-upgrade-structure' skills/harness-initial-setup
 
 shellcheck skills/harness-upgrade-structure/scripts/upgrade.sh
 bash scripts/test-upgrade.sh
+grep -q '^## Upgrading existing repos' README.md || fail "README: 'Upgrading existing repos' section missing"
+grep -q 'harness-upgrade-structure/scripts/upgrade.sh' README.md || fail "README: by-hand upgrade.sh command missing"
+grep -q 'harness-upgrade-structure' <<< "$walk" || fail "README walkthrough: upgrade step must use harness-upgrade-structure"
 
 echo "GATE GREEN"

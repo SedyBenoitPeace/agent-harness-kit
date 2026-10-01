@@ -529,7 +529,7 @@
       "depends_on": [],
       "paths": ["skills/harness-initial-setup/", "skills/", "scripts/", "README.md", "ARCHITECTURE.md", "AGENTS.md"],
       "verify": "bash scripts/e2e.sh exits 0 with skills/harness-setup absent, skills/harness-initial-setup/SKILL.md named harness-initial-setup whose description points existing harnessed repos at harness-upgrade-structure, and no reference to the old name anywhere outside docs/plans, docs/specs, PROGRESS.md and FEATURES.json",
-      "notes": "Plan: docs/plans/active/2026-10-01-m21-upgrade-structure.md. Clean rename, no alias (breaking: released as 3.0.0 in M21-003)."
+      "notes": "Plan: docs/plans/completed/2026-10-01-m21-upgrade-structure.md. Clean rename, no alias (breaking: released as 3.0.0 in M21-003)."
     },
     {
       "id": "M21-002",
@@ -539,17 +539,17 @@
       "depends_on": ["M21-001"],
       "paths": ["skills/harness-upgrade-structure/scripts/upgrade.sh", "scripts/test-upgrade.sh", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-upgrade.sh fixtures proving upgrade.sh <repo>: exits 3 pointing at harness-initial-setup when there is no harness; refuses a dirty tree (exit 2, nothing changed); on the default branch first creates harness-upgrade; recopies an outdated or missing protocol, adds the harness-run line to AGENTS.md, generates evaluator agent files only when a feature opts in; prints CHANGED/OK/TODO lines (TODO for an unbounded gate and for harness-audit depends_on/paths); stages and commits nothing; a second run after committing changes nothing",
-      "notes": "Plan: docs/plans/active/2026-10-01-m21-upgrade-structure.md"
+      "notes": "Plan: docs/plans/completed/2026-10-01-m21-upgrade-structure.md"
     },
     {
       "id": "M21-003",
       "milestone": 21,
       "title": "harness-upgrade-structure skill, harness-session wiring, README upgrade section; release 3.0.0",
-      "status": "failing",
+      "status": "passing",
       "depends_on": ["M21-002"],
       "paths": ["skills/harness-upgrade-structure/", "skills/harness-session/SKILL.md", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with checks that skills/harness-upgrade-structure/SKILL.md exists with valid, agent-neutral frontmatter, says it is for repos that already have a harness, runs upgrade.sh, offers harness-audit for depends_on/paths and commits the result as its own commit; harness-session's UPGRADE: offer step points to harness-upgrade-structure instead of listing the steps inline; README has an 'Upgrading existing repos' section with the by-hand upgrade.sh command and the M20 walkthrough's upgrade step uses it; package.json, plugin.json and marketplace.json are 3.0.0",
-      "notes": "Plan: docs/plans/active/2026-10-01-m21-upgrade-structure.md"
+      "notes": "Plan: docs/plans/completed/2026-10-01-m21-upgrade-structure.md"
     }
 
   ]
