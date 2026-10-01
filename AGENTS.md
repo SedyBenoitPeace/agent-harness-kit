@@ -4,7 +4,7 @@ Open-source Claude Code skill + portable protocol pack for planning
 applications with the long-running-agent harness approach (in-repo
 FEATURES.json / PROGRESS.md / plans / e2e gate), consumable by any AI agent.
 
-## State: 1.9.0 shipped (M0–M18); next M19 harness-brief → M20 continuous runs
+## State: 1.10.0 shipped (M0–M19); next M20 continuous runs
 
 1. Spec: `docs/specs/2026-07-03-harness-planning-skill-design.md`
 2. Active plans: `docs/plans/active/` (one per milestone; completed ones in `docs/plans/completed/`)

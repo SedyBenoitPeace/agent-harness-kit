@@ -13,7 +13,7 @@
     ↓ reads
 [.claude-plugin/  plugin.json + marketplace.json (versions in lockstep)]
     ↓ exposes
-[skills/  harness-setup | harness-audit | harness-status | harness-handoff | harness-session | harness-run]
+[skills/  harness-setup | harness-audit | harness-status | harness-handoff | harness-session | harness-run | harness-brief]
     │         │                │               │              │                 │
     │    templates/ ★      scripts/check.sh  scripts/     scripts/          scripts/
     │    (canonical          │               status.sh    handoff.sh        context.sh +
@@ -36,6 +36,7 @@
 | `skills/harness-handoff/` | Session-end ritual check + next-agent prompt (`scripts/handoff.sh`) |
 | `skills/harness-session/` | Bounded session context report (`scripts/context.sh`, wraps harness-status) + concise gate wrapper (`scripts/run-gate.sh`) |
 | `skills/harness-run/` | Orchestrator (SKILL.md only): one fresh subagent per feature, verified via status.sh |
+| `skills/harness-brief/` | Rough prompt → `docs/briefs/` brief; check-brief.sh plus an independent read-only reviewer agent |
 | `agents/` + `scripts/gen-agents.sh` | Neutral builder/evaluator role sources + tier→model map; generator emits Claude/Copilot/Codex agent files |
 | `scripts/` | This repo's gate (`e2e.sh`) and the per-skill fixture test suites |
 | `docs/plans/`, `docs/specs/` | Execution plans (active/completed) and the original design spec |

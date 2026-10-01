@@ -309,6 +309,21 @@ done
 grep -q 'harness-evaluator' skills/harness-audit/scripts/check.sh || fail "harness-audit: missing-agent-files WARN missing"
 grep -qi 'independent evaluator' README.md || fail "README: evaluator missing"
 grep -q 'gen-agents.sh' skills/harness-setup/SKILL.md || fail "harness-setup SKILL.md: gen-agents step missing"
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "1.9.0" ] || fail "plugin version must be 1.9.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "1.10.0" ] || fail "plugin version must be 1.10.0"
+
+# --- harness-brief skill (M19) ---------------------------------------------
+
+BRIEF_SKILL="skills/harness-brief"
+shellcheck "$BRIEF_SKILL/scripts/check-brief.sh"
+bash scripts/test-brief.sh
+
+# planning consumes briefs; needs-a-human boundary (M19)
+grep -q 'Already have a brief' "$PROTO" || fail "protocol: 'Already have a brief' rule missing (1.1)"
+grep -q '^## Needs a human' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: Needs a human section missing"
+for w in 'deploy or publish' 'push to' 'production data' 'adding dependencies' 'auth' 'deleting or renumbering'; do
+  grep -qi "$w" "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: Needs a human default missing: $w"
+done
+grep -q 'harness-brief' README.md || fail "README: harness-brief missing"
+grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief -> plan -> run"
 
 echo "GATE GREEN"

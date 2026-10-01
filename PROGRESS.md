@@ -410,3 +410,44 @@ Newest-first session log. One entry per working session. Read this (plus
 - Gate: green (`bash scripts/e2e.sh`).
 - Next: integration into master (awaiting owner's decision on push/PR) and,
   later, the deferred spec items: template-repo extraction, CI enforcement.
+
+## 2026-09-30 — session 24 (M19-001)
+
+- Branch: `m19-harness-brief` (cut from master after M18 merged).
+- Done: M19-001 — `skills/harness-brief/` (SKILL.md: at most three
+  questions, stranger test before saving, runs check-brief.sh;
+  `templates/brief.md.tmpl`; `scripts/check-brief.sh` emitting one
+  PASS/FAIL line per check: nine sections present and non-empty, Open
+  questions empty, every Done-when line carries a backticked command).
+  `scripts/test-brief.sh` proves a complete fixture passes and each defect
+  fixture (missing section, open question, vague Done-when) fails with its
+  own FAIL line; wired into `scripts/e2e.sh`.
+- Gate: green.
+- Next: M19-002 (independent brief reviewer agent).
+
+## 2026-09-30 — session 25 (M19-002)
+
+- Branch: `m19-harness-brief`.
+- Done: M19-002 — neutral source `agents/src/harness-brief-reviewer.md`
+  (read-only; input is only the brief file; first line exactly `READY` or
+  `GAPS`, then numbered gaps). gen-agents.sh emits it for all three CLIs
+  unchanged. harness-brief SKILL.md step 6 dispatches it after saving,
+  asks the human about GAPS, and stops after 2 review rounds.
+  `test-agents.sh` now checks both read-only agents per format plus the
+  reviewer contract; `test-brief.sh` checks the SKILL.md dispatch.
+- Gate: green.
+- Next: M19-003 (planning consumes briefs; Needs-a-human; release 1.10.0).
+
+## 2026-09-30 — session 26 (M19-003)
+
+- Branch: `m19-harness-brief`.
+- Done: M19-003 — protocol §1.1 "Already have a brief?" (Done-when seeds
+  `verify`, Quality bar seeds `evaluate`/`bar`, Needs-a-human is a
+  stop-and-ask boundary); AGENTS.md.tmpl gains a "Needs a human" section
+  with the six defaults (54→60 lines, under the 80 cap); README lifecycle
+  step 0 shows brief → plan → run. Released as 1.10.0 (plugin,
+  marketplace, package). M19 plan moved to `docs/plans/completed/`;
+  AGENTS.md state line and ARCHITECTURE.md updated. Existing repos see
+  `PROTOCOL: outdated` and are offered the recopy.
+- Gate: green.
+- Next: M20 (continuous runs) — plan is in `docs/plans/active/`; open the M19 PR.
