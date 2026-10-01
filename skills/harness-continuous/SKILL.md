@@ -20,10 +20,11 @@ permissions only — never a skip-all-permissions flag.
   instruction means the defaults: cap 10, stop at the milestone boundary.
 - Never push. Never discard work: leftover changes are stashed, not reset.
 - Own tools only — never load an external workflow skill.
-- Run state lives in `.git/harness-run/` (never committed, no `.gitignore`
-  change needed): `.git/harness-run/start` (the start commit),
-  `.git/harness-run/skip` (one id per line), `.git/harness-run/STOP` (the
-  human creates it to end the run after the current feature).
+- Run state lives in `.harness-run/` at the repo root, a plain folder any
+  agent can write (never committed, kept out of git by `.gitignore`):
+  `.harness-run/start` (the start commit), `.harness-run/skip` (one id per
+  line), `.harness-run/STOP` (the human creates it to end the run after the
+  current feature).
 
 ## Start
 
@@ -32,16 +33,18 @@ permissions only — never a skip-all-permissions flag.
    report (see End) with that reason and STOP: exit 2 or 3, a dirty
    worktree, `UPGRADE: offer`, a `PREFLIGHT:` line, or a red baseline gate
    (`bash ../harness-session/scripts/run-gate.sh baseline <target>`).
-2. Create `.git/harness-run/`, write `git rev-parse HEAD` to `start`, and
+2. If `git check-ignore -q .harness-run` fails, add `.harness-run/` to
+   `.gitignore` and commit that file alone ("harness-run: ignore run
+   state"). Create `.harness-run/`, write `git rev-parse HEAD` to `start`, and
    empty `skip`. Delete a `STOP` left over from an earlier run; invoking
    the command is the signal to start.
 
 ## Loop
 
-1. Run `bash ../harness-session/scripts/context.sh --skip .git/harness-run/skip`.
+1. Run `bash ../harness-session/scripts/context.sh --skip .harness-run/skip`.
    Stop (then End) when: `NEXT: none` · the feature cap is reached
    (default 10, the human may name another; every dispatched feature
-   counts, skips included) · `.git/harness-run/STOP` exists (delete it,
+   counts, skips included) · `.harness-run/STOP` exists (delete it,
    then stop).
 2. **Milestone boundary:** when `NEXT` belongs to a different milestone
    than the current one, stop there by default. If the start instruction
@@ -50,7 +53,7 @@ permissions only — never a skip-all-permissions flag.
    no push) and continue; beyond the range, stop.
 3. Dispatch and verify exactly as harness-run Workflow steps 3–5 (the named
    `harness-builder` agent, its `SESSION:` line, then `status.sh --skip
-   .git/harness-run/skip` and `git status --short` as proof), including its
+   .harness-run/skip` and `git status --short` as proof), including its
    Evaluator step and Parallel lanes. A blocked parallel lane becomes a skip.
 4. Verified (`NEXT` no longer names the id, tree clean) → print
    `<id> passing · <commit>`, loop.
@@ -61,7 +64,7 @@ permissions only — never a skip-all-permissions flag.
    2. append to the feature's `notes`: "Unattended <date>: skipped —
       <reason>. Question for the human: <one question>";
    3. commit FEATURES.json only ("harness-run: skip <id>");
-   4. add the id to `.git/harness-run/skip`; loop.
+   4. add the id to `.harness-run/skip`; loop.
 6. A dispatch that produced neither a commit nor a recorded skip (no
    SESSION line, id still next, dirty tree) → stop, leaving the tree as it
    is, and End.
@@ -71,8 +74,10 @@ permissions only — never a skip-all-permissions flag.
 ## End
 
 Run `bash ../harness-run/scripts/run-report.sh <start-commit> --skip
-.git/harness-run/skip --stop-reason "<why the run stopped>"`, commit the
-file it prints (explicit path), and print that path as the last line. Skips
+.harness-run/skip --stop-reason "<why the run stopped>"`, commit the
+file it prints (explicit path), and print that path as the last line. If
+the report script cannot run (exit 2, e.g. no `FEATURES.json`), skip the
+file and print the stop reason as the last line instead. Skips
 and stashes are recoverable from the report and `git stash list`.
 
 ## Red flags

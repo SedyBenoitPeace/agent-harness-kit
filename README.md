@@ -29,7 +29,7 @@ and [OpenAI — Harness engineering](https://openai.com/index/harness-engineerin
 /plugin install agent-harness-kit
 ```
 
-Six skills come with it — invoke each as a slash command or in plain
+These skills come with it — invoke each as a slash command or in plain
 English:
 
 - **harness-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
@@ -47,6 +47,11 @@ English:
   a fresh subagent, verified from the repo before the next starts;
   script-proven independent features run as parallel lanes.
   `/agent-harness-kit:harness-run` or _"Run the rest of milestone 3."_
+- **harness-continuous** — an unattended run: like harness-run, but a
+  feature it cannot finish is skipped (work stashed, question recorded)
+  instead of ending the run, and it finishes with a report in
+  `docs/runs/`. Invoked by name: `/agent-harness-kit:harness-continuous`.
+  See [Unattended runs](#unattended-runs).
 - **Independent evaluator** — features that opt in (`evaluate: "ui"` and a
   `bar` in FEATURES.json) end their session in `review`; harness-run then
   dispatches a separate, read-only `harness-evaluator` agent that returns
@@ -156,7 +161,9 @@ copilot plugin update agent-harness-kit
    `/agent-harness-kit:harness-run` repeat it for you: one fresh subagent
    per feature, stopping at a blocker, the milestone boundary, or a cap
    of 10, and running independent features (declared `depends_on` /
-   `paths`) as parallel lanes.
+   `paths`) as parallel lanes. To walk away entirely, invoke
+   `/agent-harness-kit:harness-continuous` instead (see
+   [Unattended runs](#unattended-runs)).
 3. **Check where you are** — `/agent-harness-kit:harness-status` any
    time: progress per milestone, what the last session did, and exactly
    which feature the next session will pick. If the harness isn't set up
@@ -168,6 +175,91 @@ copilot plugin update agent-harness-kit
 5. **Keep it honest** — `/agent-harness-kit:harness-audit` when a repo
    drifts or before working in an unfamiliar one, plus a periodic
    maintenance pass (protocol section 3).
+
+## Unattended runs
+
+`harness-continuous` is its own command: invoke it and walk away. It
+builds feature after feature — one fresh subagent each, like harness-run —
+but a feature it cannot finish (a blocked session, a red gate, or two
+evaluator `NEEDS_WORK` verdicts) is **skipped** instead of ending the run,
+and it never asks you anything. It ends with a report.
+
+Invoke it by name, with the options in the same message:
+
+- Claude Code: `/agent-harness-kit:harness-continuous`
+- any other agent with the plugin: ask for it by name, e.g. _"Run
+  harness-continuous."_
+- options: `cap 20` (default cap is 10 features) and/or `through M22`
+  (cross milestone boundaries up to M22; without it the run stops at the
+  first boundary).
+
+Permissions are yours: it needs nothing beyond what a normal
+harness-session already needs (run the gate, edit files, `git commit`), the
+plugin never configures your agent's permissions, and it never needs a
+skip-all-permissions flag. Anything your agent still refuses becomes a skip
+with the reason in the report.
+
+What it does, so nothing surprises you:
+
+- **Skip, don't stop.** Leftover changes are stashed (`git stash push -u`,
+  labelled `harness-run skip <id>`), never discarded; the feature's `notes`
+  get the reason and one question for you; only FEATURES.json is committed.
+  Skipping also excludes features that `depends_on` the skipped one — and,
+  for features with no declared `depends_on`, every feature after it.
+- **Stops** when nothing eligible is left, at the cap, when you create
+  `.harness-run/STOP`, on a baseline problem (dirty tree, `UPGRADE: offer`,
+  a red gate), or when a dispatch produced neither a commit nor a skip.
+- **Run state** lives in `.harness-run/` (start commit, skip list, stop
+  file). The run adds `.harness-run/` to `.gitignore` in its own commit if
+  it is not there yet.
+- **Never pushes.** With `through M<n>` it creates one stacked branch per
+  milestone and leaves them local.
+- **The report**, `docs/runs/<date>.md`, is built by `run-report.sh` from
+  git and FEATURES.json (no model calls) and committed: done, skipped (with
+  each question), not started and why, branches used.
+
+## Upgrading a repo and running continuously
+
+Do the steps in order. The upgrade is once per repo.
+
+**Upgrade**
+
+1. Update the plugin (`claude plugin update agent-harness-kit`,
+   `codex plugin marketplace upgrade agent-harness-kit`, or
+   `copilot plugin update agent-harness-kit`). In your repo, create a
+   branch (`git checkout -b harness-upgrade`) and confirm a green gate:
+   `bash scripts/e2e.sh`.
+2. Start any harness session (`/agent-harness-kit:harness-session`) and
+   accept the `UPGRADE: offer`. This release adds the continuous-run rules
+   to protocol section 2.8, so every existing repo's protocol copy is
+   reported outdated; the upgrade is its own small commit.
+3. Run `/agent-harness-kit:harness-audit` and approve its `depends_on` and
+   `paths` proposals. This step is essential: without declared `depends_on`,
+   a skipped feature stops the run instead of letting it continue.
+4. Only if you use the independent evaluator: run
+   `scripts/gen-agents.sh <repo>` to generate the agent files, and restart
+   Copilot CLI afterwards if you use it.
+
+**Run**
+
+5. Make sure the tree is clean on the branch you want built, then invoke
+   `/agent-harness-kit:harness-continuous` (or ask your agent to run
+   harness-continuous), adding `cap 20` and/or `through M22` if you want
+   them. See [Unattended runs](#unattended-runs) for what it does.
+6. To stop early: `mkdir -p .harness-run && touch .harness-run/STOP`. It
+   finishes the current feature, writes the report and stops.
+
+**Afterwards**
+
+7. Read `docs/runs/<date>.md`: what was done, skipped and not started.
+8. For each skipped feature, answer the question recorded in its `notes`
+   in FEATURES.json (fix the cause, or reword the feature). A later run
+   starts with an empty skip list and retries them.
+9. `git stash list` shows any stashed work, labelled
+   `harness-run skip <id>`; `git stash show -p stash@{n}` to inspect,
+   `git stash pop` to resume it.
+10. Review the branch — or branches, if the run crossed milestones.
+    Nothing is pushed; merging is yours.
 
 ## Switching agents (e.g. Claude Code ↔ Codex)
 
@@ -270,8 +362,11 @@ skills/
 │   └── scripts/
 │       ├── context.sh             bounded session context + PARALLEL lanes
 │       └── run-gate.sh            concise gate wrapper, full log retained
-└── harness-run/
-    └── SKILL.md        multi-feature orchestrator: one subagent per feature
+├── harness-run/
+│   ├── SKILL.md        multi-feature orchestrator: one subagent per feature
+│   └── scripts/run-report.sh      end-of-run report from git + FEATURES.json
+└── harness-continuous/
+    └── SKILL.md        unattended run: skip what it cannot finish, then report
 agents/
 ├── src/                neutral harness-builder / harness-evaluator roles
 └── models.json         tier -> model per CLI, sensitive-path globs

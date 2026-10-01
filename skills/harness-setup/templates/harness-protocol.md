@@ -443,6 +443,43 @@ the repo — not the subagent's word — before starting the next. Rules:
     stops and relays to the human.
 - No subagents available → run one normal session and stop.
 
+### 2.8 Continuous runs
+
+A continuous run is the orchestrated run of §2.7 with one difference:
+nothing stops it for a feature it cannot finish. The human invokes the
+`harness-continuous` plugin skill by name, optionally with a cap
+("cap 20") or a milestone range ("through M22"), and walks away. Rules:
+
+- It never asks the human anything. Run state lives in `.harness-run/`
+  at the repo root (never committed, listed in `.gitignore`):
+  `start` (the start commit), `skip` (one id per line), and `STOP`.
+- **Skip, don't stop** when a session is `blocked`, its gate is red, or
+  the evaluator returns `NEEDS_WORK` twice: leftover changes go to
+  `git stash push -u -m "harness-run skip <id>"` (never discarded); the
+  feature's `notes` gain "Unattended <date>: skipped — <reason>.
+  Question for the human: <one question>"; FEATURES.json alone is
+  committed; the id joins `.harness-run/skip`. The next feature is chosen with
+  `status.sh --skip .harness-run/skip`.
+- A skip excludes the listed id, every failing feature whose `depends_on`
+  names an excluded id (transitively), and every failing feature without
+  `depends_on` that follows an excluded one — so a repo with no declared
+  `depends_on` stops at its first skip, exactly like §2.7. Declaring
+  `depends_on` (§1.4) is what lets a run continue.
+- **Stop** (then write the report) on: nothing eligible left, the feature
+  cap (default 10), the human creating `.harness-run/STOP` (honoured
+  after the current feature), a baseline problem, or a dispatch that left
+  neither a commit nor a recorded skip. A milestone boundary also stops
+  the run unless the start instruction named a range; then each next
+  milestone gets a stacked branch from the current one. Nothing is pushed.
+- Every run ends with `run-report.sh`, which builds `docs/runs/<date>.md`
+  from git, FEATURES.json, the skip file and the stop reason: what was
+  done, what was skipped and the question each skip needs answered, what
+  was not started and why, and the branches used. The report is committed.
+- The human then reads the report, answers each question in that
+  feature's `notes`, recovers any stashed work with `git stash list`, and
+  reviews the branch. A later run starts with an empty skip list and
+  retries skipped features.
+
 ## 3. Maintenance protocol
 
 Agent-built codebases accumulate entropy: generated code replicates existing

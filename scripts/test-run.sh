@@ -18,11 +18,15 @@ grep -q '^description: .*invoked by name' "$md" || fail "SKILL.md: description m
 ! grep -qiE 'overnight|night|unattended mode|--yolo|--dangerously|--allow-all' "$md" \
   || fail "SKILL.md: no trigger words or skip-all-permissions flags"
 
-# never asks; run state lives in .git/harness-run/
+# never asks; run state lives in a normal, git-ignored folder (agents cannot write under .git/)
 grep -qi 'never asks the human' "$md" || fail "SKILL.md: never-asks rule missing"
+! grep -q '\.git/harness-run' "$md" || fail "SKILL.md: run state must not live under .git/"
 for f in skip STOP start; do
-  grep -q "\.git/harness-run/$f" "$md" || fail "SKILL.md: .git/harness-run/$f state file missing"
+  grep -q "\.harness-run/$f" "$md" || fail "SKILL.md: .harness-run/$f state file missing"
 done
+grep -q 'git check-ignore' "$md" || fail "SKILL.md: must check the state folder is git-ignored"
+grep -q '\.gitignore' "$md" || fail "SKILL.md: .gitignore handling missing"
+grep -qi 'cannot run' "$md" || fail "SKILL.md: run-report.sh failure fallback missing"
 
 # skip, don't stop: stash, note with a question, commit FEATURES.json only, loop with --skip
 grep -q 'git stash push -u' "$md" || fail "SKILL.md: leftover changes must be stashed, never discarded"

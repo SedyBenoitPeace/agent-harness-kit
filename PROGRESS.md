@@ -3,6 +3,31 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 27 (M20-004)
+
+- Branch: `m20-unattended-runs`. The owner's spec commit bb419ba (README
+  walkthrough requirement) lived on another branch; cherry-picked as
+  730b91d.
+- Field test changed the design: Claude Code refuses writes under `.git/`
+  even with allow rules, Codex's workspace-write sandbox makes `.git`
+  read-only, Copilot refuses shell redirection without a skip-all flag.
+  Owner decision: the plugin documents no CLI's permissions, and run
+  state moves from `.git/harness-run/` to a git-ignored `.harness-run/`
+  (the run adds the `.gitignore` line in its own commit). harness-continuous
+  skill, test-run.sh, plan and the M20-002/M20-004 verify text updated; the
+  skill also gained a fallback when `run-report.sh` cannot run.
+- Done: M20-004 — protocol §2.8 Continuous runs; README skills entry,
+  "Unattended runs" and "Upgrading a repo and running continuously"
+  (ordered, gate-enforced), layout and lifecycle updates; ARCHITECTURE
+  row; AGENTS.md state. Released as 2.0.0 (owner's call, not 1.11.0):
+  package.json, plugin.json, marketplace.json, gate assertion.
+- Gate: green.
+- Not field-tested: invoking harness-continuous in Codex CLI and Copilot
+  CLI (only Claude Code's `/agent-harness-kit:harness-continuous`, which
+  loaded the skill and stopped at the baseline check). The README tells
+  other agents to ask for it by name.
+- Next: M20 is complete — push and open the PR; the owner merges.
+
 ## 2026-10-01 — session 26 (M20-003)
 
 - Branch: `m20-unattended-runs`.
