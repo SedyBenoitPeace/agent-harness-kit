@@ -295,6 +295,7 @@ grep -q 'reaching 2' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: STOP-a
 
 # --- harness-continuous skill (M20) ----------------------------------------
 
+shellcheck skills/harness-run/scripts/run-report.sh
 bash scripts/test-run.sh
 
 # --- agents (M18) --------------------------------------------------------

@@ -504,7 +504,7 @@
       "id": "M20-003",
       "milestone": 20,
       "title": "run-report.sh: script-built run report (zero tokens) at the end of every continuous run",
-      "status": "failing",
+      "status": "passing",
       "depends_on": ["M20-001"],
       "paths": ["skills/harness-run/scripts/run-report.sh", "scripts/test-run.sh", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with fixtures proving run-report.sh <start-commit> writes docs/runs/<YYYY-MM-DD-HHMM>.md with sections Summary (start, end, stop reason, counts), Done (id, title, commit), Skipped (id, reason, question from notes), Not started (id and why: depends on a skipped id, cap, or milestone) and Branches; output is deterministic for a fixed repo state; no network and no model calls",

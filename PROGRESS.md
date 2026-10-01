@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 26 (M20-003)
+
+- Branch: `m20-unattended-runs`.
+- Done: M20-003 — `skills/harness-run/scripts/run-report.sh <start-commit>
+  [--skip FILE] [--stop-reason TEXT]` writes `docs/runs/<YYYY-MM-DD-HHMM>.md`
+  (stamp = HEAD's commit date, so a fixed repo state gives identical
+  output) and prints its path. Sections: Summary (start, end, stop reason,
+  counts), Done (id, title, commit), Skipped (reason and question parsed
+  from the notes, plus the stash ref), Not started (depends-on a skipped
+  id via `status.sh --skip`, else "not reached" with the stop reason),
+  Branches. Git, FEATURES.json, skip file only: no network, no models.
+  Fixture-proven in `scripts/test-run.sh`; shellchecked in the gate. A
+  render against this repo caught a garbled date format the fixture
+  missed; the test now asserts the Start/End lines.
+- Gate: green.
+- Next: M20-004 (docs, per-CLI permission setup, release 1.11.0).
+
 ## 2026-10-01 — session 25 (M20-002)
 
 - Branch: `m20-unattended-runs`.
