@@ -484,27 +484,27 @@
       "id": "M20-001",
       "milestone": 20,
       "title": "status.sh --skip: exclude skipped features and everything that depends on them",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [],
       "paths": ["skills/harness-status/scripts/status.sh", "skills/harness-session/scripts/context.sh", "scripts/test-session.sh", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-session.sh fixtures proving: status.sh --skip FILE never selects a listed id as NEXT; it also excludes features that declare a listed id in depends_on, transitively; a failing feature WITHOUT depends_on is treated as depending on every failing feature before it in selection order; it prints one 'SKIPPED: <id> ...' line per excluded id; NEXT: none when everything left is excluded; context.sh passes --skip through; without --skip, output is byte-identical to today",
-      "notes": "Plan: docs/plans/active/2026-09-28-m20-unattended-runs.md"
+      "notes": "Plan: docs/plans/completed/2026-09-28-m20-unattended-runs.md"
     },
     {
       "id": "M20-002",
       "milestone": 20,
       "title": "harness-continuous skill: its own command for a continuous run (skip-and-continue, stop rules, stop file, opt-in milestone crossing)",
-      "status": "failing",
+      "status": "passing",
       "depends_on": ["M20-001", "M18-002"],
       "paths": ["skills/harness-continuous/", "skills/harness-run/", "scripts/test-run.sh", "scripts/e2e.sh"],
-      "verify": "bash scripts/e2e.sh exits 0 with checks that skills/harness-continuous/SKILL.md exists with valid, agent-neutral frontmatter and starts a continuous run when invoked, with no trigger word; that run: never asks the human; records skips in .git/harness-run/skip; turns a blocked session, a red gate or 2 NEEDS_WORK verdicts into a skip (stash any leftover changes with 'git stash push -u', append the reason and one question to the feature's notes, commit FEATURES.json), not a stop; stops on NEXT none, the feature cap, .git/harness-run/STOP, a baseline preflight problem, or a dispatch with neither a commit nor a skip; crosses a milestone boundary only when the human names a milestone range, creating a stacked branch per milestone; harness-run keeps its interactive behaviour unchanged and points to harness-continuous",
+      "verify": "bash scripts/e2e.sh exits 0 with checks that skills/harness-continuous/SKILL.md exists with valid, agent-neutral frontmatter and starts a continuous run when invoked, with no trigger word; that run: never asks the human; records skips in .harness-run/skip (a git-ignored folder at the repo root; agents cannot write under .git/); turns a blocked session, a red gate or 2 NEEDS_WORK verdicts into a skip (stash any leftover changes with 'git stash push -u', append the reason and one question to the feature's notes, commit FEATURES.json), not a stop; stops on NEXT none, the feature cap, .harness-run/STOP, a baseline preflight problem, or a dispatch with neither a commit nor a skip; crosses a milestone boundary only when the human names a milestone range, creating a stacked branch per milestone; harness-run keeps its interactive behaviour unchanged and points to harness-continuous",
       "notes": ""
     },
     {
       "id": "M20-003",
       "milestone": 20,
       "title": "run-report.sh: script-built run report (zero tokens) at the end of every continuous run",
-      "status": "failing",
+      "status": "passing",
       "depends_on": ["M20-001"],
       "paths": ["skills/harness-run/scripts/run-report.sh", "scripts/test-run.sh", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with fixtures proving run-report.sh <start-commit> writes docs/runs/<YYYY-MM-DD-HHMM>.md with sections Summary (start, end, stop reason, counts), Done (id, title, commit), Skipped (id, reason, question from notes), Not started (id and why: depends on a skipped id, cap, or milestone) and Branches; output is deterministic for a fixed repo state; no network and no model calls",
@@ -513,11 +513,11 @@
     {
       "id": "M20-004",
       "milestone": 20,
-      "title": "Continuous-run docs incl. how to invoke harness-continuous and per-CLI permission setup without yolo; release 1.11.0",
-      "status": "failing",
+      "title": "Continuous-run docs incl. how to invoke harness-continuous and an upgrade-and-run walkthrough; release 2.0.0",
+      "status": "passing",
       "depends_on": ["M20-002", "M20-003"],
       "paths": ["skills/harness-setup/templates/", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
-      "verify": "bash scripts/e2e.sh exits 0 with checks that protocol section 2 documents continuous runs (skip rules, stop rules, the stop file, the report), README lists harness-continuous in its skills and has an 'Unattended runs' section showing how to invoke it in Claude Code, Codex CLI and Copilot CLI (invocation syntax field-tested in each) with a permission setup that uses no --yolo, --dangerously-skip-permissions or --allow-all flag, and package.json, plugin.json and marketplace.json are 1.11.0",
+      "verify": "bash scripts/e2e.sh exits 0 with checks that protocol section 2 documents continuous runs (skip rules, stop rules, the stop file, the report), README lists harness-continuous in its skills and has an 'Unattended runs' section saying to invoke harness-continuous by name (with the cap and milestone-range options) under the permissions already used for harness-session, with no CLI-specific setup and none of --yolo, --dangerously-skip-permissions or --allow-all, and an 'Upgrading a repo and running continuously' section that walks the whole sequence in order: update the plugin; branch and confirm a green gate; accept the UPGRADE offer; run harness-audit and approve depends_on/paths, stating that without declared depends_on a skipped feature stops the run; run scripts/gen-agents.sh only when using the evaluator (restart Copilot afterwards); invoke harness-continuous (with the cap and milestone-range options); stop early with .harness-run/STOP; afterwards read docs/runs/<date>.md, answer each skipped feature's question in its notes, recover stashed work via git stash list ('harness-run skip <id>'), and review the branch(es); and package.json, plugin.json and marketplace.json are 2.0.0",
       "notes": ""
     }
   ]

@@ -11,7 +11,7 @@ stopping at the first one, and when it ends it leaves a script-built
 run report: what got done, what was skipped and the question each skip
 needs answered, what was not started and why. Works in Claude Code,
 Codex CLI and Copilot CLI with their normal permission settings — no
---yolo / skip-all-permissions flags. Released as plugin 1.11.0.
+--yolo / skip-all-permissions flags. Released as plugin 2.0.0.
 
 **Why:** Today harness-run stops at the first blocked feature, at the
 milestone boundary, or at 10 features. Unattended, one blocked feature
@@ -46,9 +46,10 @@ reference and adds only the continuous rules below. `harness-run` stays
 interactive and unchanged, and points to harness-continuous.
 
 - Never asks the human anything during the run.
-- Run state lives in `.git/harness-run/` (never committed, no
-  .gitignore needed): `skip` (ids), `STOP` (the human creates it to end
-  the run gracefully after the current feature), `start` (start commit).
+- Run state lives in `.harness-run/` at the repo root (never committed;
+  the run adds it to `.gitignore` in its own commit if needed): `skip`
+  (ids), `STOP` (the human creates it to end the run gracefully after
+  the current feature), `start` (start commit).
 - **Skip, don't stop,** when a feature's session is `blocked`, its gate
   is red, or (after M18) the evaluator returns NEEDS_WORK twice:
   1. leftover changes → `git stash push -u -m "harness-run skip <id>"`
@@ -56,7 +57,7 @@ interactive and unchanged, and points to harness-continuous.
   2. append to the feature's `notes`: "Unattended <date>: skipped —
      <reason>. Question for the human: <one question>";
   3. commit FEATURES.json only ("harness-run: skip <id>");
-  4. add the id to `.git/harness-run/skip`; loop using
+  4. add the id to `.harness-run/skip`; loop using
      `status.sh --skip`.
 - **Stop** (then write the report) when: NEXT none after skips · the
   feature cap (default 10, the human may name another) · the STOP file
@@ -83,23 +84,29 @@ interactive and unchanged, and points to harness-continuous.
   started** (id, and why: depends on a skipped id, cap, milestone
   boundary) · **Branches** (created/used).
 
-## M20-004 — Docs and release 1.11.0
+## M20-004 — Docs and release 2.0.0
 
 - Protocol section 2 documents continuous runs: the harness-continuous
   command, skip and stop rules, the STOP file, the report.
 - README lists harness-continuous among the skills. "Unattended runs"
-  section: how to invoke it in each CLI (syntax field-tested, not
-  assumed) and how to set permissions per CLI so it does not stall on
-  prompts, without --yolo,
-  --dangerously-skip-permissions or --allow-all:
-  - Claude Code: pre-approve the gate, test, git add/commit commands;
-    deny push and destructive commands.
-  - Codex CLI: `--sandbox workspace-write --ask-for-approval never`
-    (writes limited to the repo; blocked actions fail instead of
-    prompting).
-  - Copilot CLI: `--allow-tool` for the specific commands,
-    `--deny-tool` for push; `--no-ask-user`.
-- Versions 1.11.0.
+  section: invoke it by name (cap and milestone-range options) under the
+  permissions you already use for harness-session. No CLI-specific
+  setup: the plugin asks for nothing a normal harness-session does not,
+  and never suggests --yolo, --dangerously-skip-permissions or
+  --allow-all.
+- Versions 2.0.0.
+- README "Upgrading a repo and running continuously": one ordered
+  walkthrough, so the README is the guide and nobody needs a chat:
+  1. update the plugin; 2. branch, confirm a green gate; 3. accept the
+  UPGRADE offer (the protocol copy is outdated after this release);
+  4. run harness-audit and approve `depends_on` / `paths` — state
+  plainly that without declared `depends_on` a skipped feature stops
+  the run; 5. `scripts/gen-agents.sh` only when using the evaluator
+  (restart Copilot); 6. invoke harness-continuous, with the cap and
+  milestone-range options; 7. stop early with `.harness-run/STOP`;
+  8. afterwards: read `docs/runs/<date>.md`, answer each skipped
+  feature's question in its notes, recover stashed work via
+  `git stash list` (`harness-run skip <id>`), review the branch(es).
 
 ## Decision log
 
@@ -123,3 +130,22 @@ interactive and unchanged, and points to harness-continuous.
   CLIs load skills, so one SKILL.md serves Claude Code, Codex CLI and
   Copilot CLI. The exact invocation syntax per CLI is field-tested in
   M20-004 rather than assumed.
+- 2026-09-30 — Owner: the README must be clear enough to be the whole
+  guide. M20-004's verify now requires an ordered "Upgrading a repo and
+  running continuously" section, gate-enforced.
+- 2026-10-01 — M20-002: each run starts with an empty `skip` file and
+  deletes a leftover `STOP`, so a rerun retries earlier skips (their
+  notes carry the question; stashes stay recoverable). The cap counts
+  every dispatched feature, skips included.
+- 2026-10-01 — Owner: the plugin must not configure or document any
+  CLI's permissions; it runs under whatever the human already grants
+  harness-session. Field-testing showed the run state could not live in
+  `.git/harness-run/`: Claude Code refuses writes under `.git/` even
+  with allow rules, Codex's workspace-write sandbox makes `.git`
+  read-only, and Copilot refuses shell redirection without
+  --allow-all-tools. State now lives in `.harness-run/` (git-ignored by
+  the run itself), superseding the 2026-09-28 `.git/harness-run/`
+  decision and the per-CLI permission section of M20-004. The M20-002
+  and M20-004 verify strings were updated to match.
+- 2026-10-01 — Owner: release as 2.0.0 instead of 1.11.0 (continuous
+  runs change the protocol copy every repo must re-adopt).

@@ -3,6 +3,87 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 28 (M20 close-out)
+
+- Branch: `m20-unattended-runs`.
+- Done: M20 plan moved to `docs/plans/completed/` in this PR instead of a
+  post-merge close-out PR. Protocol §2.5 and harness-session close-out now
+  say the session that finishes a plan's last feature moves the plan in
+  the same commit (owner: waiting for the merge is an unnecessary step).
+- Gate: green.
+- Next: owner merges PR #21; then plan M21.
+
+## 2026-10-01 — session 27 (M20-004)
+
+- Branch: `m20-unattended-runs`. The owner's spec commit bb419ba (README
+  walkthrough requirement) lived on another branch; cherry-picked as
+  730b91d.
+- Field test changed the design: Claude Code refuses writes under `.git/`
+  even with allow rules, Codex's workspace-write sandbox makes `.git`
+  read-only, Copilot refuses shell redirection without a skip-all flag.
+  Owner decision: the plugin documents no CLI's permissions, and run
+  state moves from `.git/harness-run/` to a git-ignored `.harness-run/`
+  (the run adds the `.gitignore` line in its own commit). harness-continuous
+  skill, test-run.sh, plan and the M20-002/M20-004 verify text updated; the
+  skill also gained a fallback when `run-report.sh` cannot run.
+- Done: M20-004 — protocol §2.8 Continuous runs; README skills entry,
+  "Unattended runs" and "Upgrading a repo and running continuously"
+  (ordered, gate-enforced), layout and lifecycle updates; ARCHITECTURE
+  row; AGENTS.md state. Released as 2.0.0 (owner's call, not 1.11.0):
+  package.json, plugin.json, marketplace.json, gate assertion.
+- Gate: green.
+- Not field-tested: invoking harness-continuous in Codex CLI and Copilot
+  CLI (only Claude Code's `/agent-harness-kit:harness-continuous`, which
+  loaded the skill and stopped at the baseline check). The README tells
+  other agents to ask for it by name.
+- Next: M20 is complete — push and open the PR; the owner merges.
+
+## 2026-10-01 — session 26 (M20-003)
+
+- Branch: `m20-unattended-runs`.
+- Done: M20-003 — `skills/harness-run/scripts/run-report.sh <start-commit>
+  [--skip FILE] [--stop-reason TEXT]` writes `docs/runs/<YYYY-MM-DD-HHMM>.md`
+  (stamp = HEAD's commit date, so a fixed repo state gives identical
+  output) and prints its path. Sections: Summary (start, end, stop reason,
+  counts), Done (id, title, commit), Skipped (reason and question parsed
+  from the notes, plus the stash ref), Not started (depends-on a skipped
+  id via `status.sh --skip`, else "not reached" with the stop reason),
+  Branches. Git, FEATURES.json, skip file only: no network, no models.
+  Fixture-proven in `scripts/test-run.sh`; shellchecked in the gate. A
+  render against this repo caught a garbled date format the fixture
+  missed; the test now asserts the Start/End lines.
+- Gate: green.
+- Next: M20-004 (docs, per-CLI permission setup, release 1.11.0).
+
+## 2026-10-01 — session 25 (M20-002)
+
+- Branch: `m20-unattended-runs`.
+- Done: M20-002 — new `skills/harness-continuous/SKILL.md`: invoked by
+  name (no trigger word), never asks, run state in `.git/harness-run/`
+  (`start`, `skip`, `STOP`). A blocked session, red gate or two
+  NEEDS_WORK verdicts becomes a skip (stash, note with one question,
+  FEATURES.json-only commit, `status.sh --skip`); stops on NEXT none,
+  cap, STOP, baseline problem, or a dispatch with no commit and no skip.
+  Crosses milestones only for a named range, with stacked branches, no
+  push. harness-run points to it and is otherwise unchanged. Contract
+  proven by new `scripts/test-run.sh`, wired into the gate.
+- Gate: green.
+- Next: M20-003 (`run-report.sh`; the skill's End step already calls it).
+
+## 2026-10-01 — session 24 (M20-001)
+
+- Branch: `m20-unattended-runs` (off master after PR #20 merged).
+- Done: M20-001 — `status.sh --skip FILE` excludes listed ids, features
+  whose `depends_on` hits an excluded id (to a fixpoint), and
+  dependency-less features that follow an excluded one; prints one
+  `SKIPPED: <id> — <why>` per exclusion and `NEXT: none` when nothing is
+  eligible. `context.sh --skip` passes it through; NEXT, PLAN and PARALLEL
+  follow the first eligible feature. Without `--skip` the output is
+  byte-identical (golden fixture in `scripts/test-session.sh`).
+- Gate: green.
+- Next: M20-002 (harness-continuous skill). Open the M20 PR only after
+  M20-004.
+
 ## 2026-09-30 — session 23 (M18-003)
 
 - Branch: `m18-evaluator`.

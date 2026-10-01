@@ -293,6 +293,11 @@ grep -q 'docs/verification/<id>.md' "$RUN_SKILL/SKILL.md" || fail "harness-run S
 grep -q 'eval_attempts' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: eval_attempts rule missing"
 grep -q 'reaching 2' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: STOP-at-2-attempts rule missing"
 
+# --- harness-continuous skill (M20) ----------------------------------------
+
+shellcheck skills/harness-run/scripts/run-report.sh
+bash scripts/test-run.sh
+
 # --- agents (M18) --------------------------------------------------------
 
 jq -e '.models | (.claude and .copilot and .codex)' agents/models.json >/dev/null \
@@ -309,7 +314,6 @@ done
 grep -q 'harness-evaluator' skills/harness-audit/scripts/check.sh || fail "harness-audit: missing-agent-files WARN missing"
 grep -qi 'independent evaluator' README.md || fail "README: evaluator missing"
 grep -q 'gen-agents.sh' skills/harness-setup/SKILL.md || fail "harness-setup SKILL.md: gen-agents step missing"
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "1.10.0" ] || fail "plugin version must be 1.10.0"
 
 # --- harness-brief skill (M19) ---------------------------------------------
 
@@ -325,5 +329,30 @@ for w in 'deploy or publish' 'push to' 'production data' 'adding dependencies' '
 done
 grep -q 'harness-brief' README.md || fail "README: harness-brief missing"
 grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief -> plan -> run"
+
+# --- continuous runs documented end to end (M20) -----------------------------
+
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "2.0.0" ] || fail "plugin version must be 2.0.0"
+grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
+for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
+  sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
+done
+grep -q 'do not wait for the PR to merge' "$PROTO" || fail "protocol 2.5: plan must move to completed/ in the last feature's commit"
+grep -q 'harness-continuous' README.md || fail "README: harness-continuous missing from the skills"
+grep -q '^## Unattended runs' README.md || fail "README: 'Unattended runs' section missing"
+grep -q '^## Upgrading a repo and running continuously' README.md || fail "README: upgrade-and-run walkthrough missing"
+if grep -qE -- '--yolo|--dangerously-skip-permissions|--allow-all' README.md; then
+  fail "README: must not suggest skip-all-permissions flags"
+fi
+walk="$(sed -n '/^## Upgrading a repo and running continuously/,/^## /p' README.md)"
+grep -qF 'a skipped feature stops the run' <<< "$walk" || fail "README walkthrough: must say that without depends_on a skipped feature stops the run"
+grep -qF 'harness-run skip <id>' <<< "$walk" || fail "README walkthrough: stash recovery hint missing"
+last=0
+for w in 'Update the plugin' 'green gate' 'UPGRADE: offer' 'harness-audit' 'gen-agents.sh' 'harness-continuous' '.harness-run/STOP' 'docs/runs/' 'git stash list'; do
+  n="$(grep -nF -m1 -- "$w" <<< "$walk" | cut -d: -f1)"
+  [ -n "$n" ] || fail "README walkthrough: step '$w' missing"
+  [ "$n" -gt "$last" ] || fail "README walkthrough: '$w' is out of order"
+  last="$n"
+done
 
 echo "GATE GREEN"
