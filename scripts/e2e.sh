@@ -337,6 +337,7 @@ grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs 
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
 done
+grep -q 'do not wait for the PR to merge' "$PROTO" || fail "protocol 2.5: plan must move to completed/ in the last feature's commit"
 grep -q 'harness-continuous' README.md || fail "README: harness-continuous missing from the skills"
 grep -q '^## Unattended runs' README.md || fail "README: 'Unattended runs' section missing"
 grep -q '^## Upgrading a repo and running continuously' README.md || fail "README: upgrade-and-run walkthrough missing"

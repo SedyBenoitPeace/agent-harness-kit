@@ -488,7 +488,7 @@
       "depends_on": [],
       "paths": ["skills/harness-status/scripts/status.sh", "skills/harness-session/scripts/context.sh", "scripts/test-session.sh", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-session.sh fixtures proving: status.sh --skip FILE never selects a listed id as NEXT; it also excludes features that declare a listed id in depends_on, transitively; a failing feature WITHOUT depends_on is treated as depending on every failing feature before it in selection order; it prints one 'SKIPPED: <id> ...' line per excluded id; NEXT: none when everything left is excluded; context.sh passes --skip through; without --skip, output is byte-identical to today",
-      "notes": "Plan: docs/plans/active/2026-09-28-m20-unattended-runs.md"
+      "notes": "Plan: docs/plans/completed/2026-09-28-m20-unattended-runs.md"
     },
     {
       "id": "M20-002",

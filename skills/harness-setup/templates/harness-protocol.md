@@ -169,7 +169,7 @@ milestone: the ordered task list, per-task verification, and a **decision
 log** section at the bottom. Every non-obvious choice made during planning
 gets a dated entry there. Plans are first-class artifacts: they are
 committed, updated as work proceeds, and moved to `docs/plans/completed/`
-when done.
+by the session that finishes the plan's last feature (§2.5).
 
 Head each task section with its feature id and keep it self-contained, so
 a session reads only the section for its selected feature, never the
@@ -380,8 +380,11 @@ requires it.
    cross-cutting invariant, or dependency direction —
    update ARCHITECTURE.md in the same commit, while the knowledge is
    fresh. New subsystems get their note under "Subsystem notes".
-4. Commit with a message naming the feature id.
-5. Append a PROGRESS.md entry at the top: branch, what was done, gate
+4. If every feature the plan covers is now `passing`, `git mv` the plan
+   from `docs/plans/active/` to `docs/plans/completed/` in the same
+   commit — do not wait for the PR to merge.
+5. Commit with a message naming the feature id.
+6. Append a PROGRESS.md entry at the top: branch, what was done, gate
    status, and the next feature.
 
 If the feature is not done when you must stop: commit what is safe, leave

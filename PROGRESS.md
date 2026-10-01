@@ -3,6 +3,16 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 28 (M20 close-out)
+
+- Branch: `m20-unattended-runs`.
+- Done: M20 plan moved to `docs/plans/completed/` in this PR instead of a
+  post-merge close-out PR. Protocol §2.5 and harness-session close-out now
+  say the session that finishes a plan's last feature moves the plan in
+  the same commit (owner: waiting for the merge is an unnecessary step).
+- Gate: green.
+- Next: owner merges PR #21; then plan M21.
+
 ## 2026-10-01 — session 27 (M20-004)
 
 - Branch: `m20-unattended-runs`. The owner's spec commit bb419ba (README
