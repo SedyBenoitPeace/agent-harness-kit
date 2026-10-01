@@ -2,16 +2,25 @@
 # harness-session: bounded, read-only "what do I need to start?" report.
 # Bundles harness-status's report with the git/plan facts a coding session
 # also needs, so an agent can start from one call instead of several.
-# Usage: context.sh [TARGET_DIR]    (default: current directory)
+# Usage: context.sh [--skip FILE] [TARGET_DIR]    (default: current directory)
+# --skip FILE is passed to harness-status (see status.sh) so NEXT, PLAN and
+# PARALLEL all follow the first feature that is not skipped.
 # Exit codes: delegated from harness-status — 0 report printed; 2 harness
 # file broken; 3 harness not initialized.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STATUS="$SCRIPT_DIR/../../harness-status/scripts/status.sh"
+SKIP=()
+if [ "${1:-}" = "--skip" ]; then SKIP=(--skip "${2:?--skip needs a file}"); shift 2; fi
 TARGET="${1:-.}"
 
-bash "$STATUS" "$TARGET"
+bash "$STATUS" ${SKIP[@]+"${SKIP[@]}"} "$TARGET"
+SKIPPED_IDS=""
+if [ ${#SKIP[@]} -gt 0 ]; then
+  skip_report="$(bash "$STATUS" "${SKIP[@]}" "$TARGET")"
+  SKIPPED_IDS="$(printf '%s\n' "$skip_report" | sed -n 's/^SKIPPED: \([^ ]*\) .*/\1/p')"
+fi
 cd "$TARGET"
 
 echo
@@ -30,8 +39,9 @@ else
   echo "$status_short"
 fi
 
-next_id="$(jq -r '
-  [.features[] | select(.status == "failing")] | sort_by(.milestone, .id)
+next_id="$(jq -r --arg ex "$SKIPPED_IDS" '
+  [.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]
+  | sort_by(.milestone, .id)
   | if length == 0 then "" else .[0].id end
 ' FEATURES.json)"
 
@@ -58,12 +68,13 @@ fi
 # Eligible = failing, in NEXT's milestone, declares depends_on (all passing)
 # and non-empty paths. Greedy from NEXT over non-overlapping glob prefixes,
 # max 3; fewer than 2 lanes, or NEXT itself ineligible → sequential.
-jq -r '
+jq -r --arg ex "$SKIPPED_IDS" '
   def prefix: sub("[*?\\[].*$"; "");
   def overlaps($a; $b): any($a[]; . as $x | any($b[]; . as $y
     | ($x | startswith($y)) or ($y | startswith($x))));
   (.features | map({key: .id, value: .status}) | from_entries) as $st
-  | ([.features[] | select(.status == "failing")] | sort_by(.milestone, .id)) as $f
+  | ([.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]
+      | sort_by(.milestone, .id)) as $f
   | if ($f | length) == 0 then "PARALLEL: none" else
       [ $f[] | select(.milestone == $f[0].milestone
           and (.depends_on | type) == "array" and all(.depends_on[]; $st[.] == "passing")

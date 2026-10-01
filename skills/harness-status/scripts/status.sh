@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 # harness-status: read-only "where am I?" report for a harnessed repo.
-# Usage: status.sh [--run-gate] [TARGET_DIR]    (default: current directory)
+# Usage: status.sh [--run-gate] [--skip FILE] [TARGET_DIR]    (default: current directory)
+# --skip FILE: one feature id per line; NEXT excludes those ids, their
+# transitive dependents, and dependency-less features that follow them.
 # Exit codes: 0 report printed; 2 harness file broken; 3 harness not initialized.
 set -euo pipefail
 
 RUN_GATE=0
+SKIP_FILE=""
 TARGET="."
-for arg in "$@"; do
-  case "$arg" in
+while [ $# -gt 0 ]; do
+  case "$1" in
     --run-gate) RUN_GATE=1 ;;
-    *) TARGET="$arg" ;;
+    --skip) SKIP_FILE="${2:?--skip needs a file}"; shift ;;
+    *) TARGET="$1" ;;
   esac
+  shift
 done
+[ -z "$SKIP_FILE" ] || SKIP_FILE="$(cd "$(dirname "$SKIP_FILE")" && pwd)/$(basename "$SKIP_FILE")"
 cd "$TARGET"
 
 if [ ! -f FEATURES.json ] || [ ! -f PROGRESS.md ]; then
@@ -46,6 +52,7 @@ jq -r '[.features[] | select(.status == "review") | .id] | if length > 0 then "\
 
 echo
 echo "== Next feature (lowest milestone, then lowest id, among failing) =="
+if [ -z "$SKIP_FILE" ]; then
 jq -r '
   [.features[] | select(.status == "failing")] | sort_by(.milestone, .id)
   | if length == 0
@@ -53,6 +60,31 @@ jq -r '
     else "NEXT: \(.[0].id) — \(.[0].title)\n  verify: \(.[0].verify)"
     end
 ' FEATURES.json
+else
+# Excluded = listed ids, features depending (depends_on) on an excluded id,
+# and features without depends_on that follow an excluded one (they are
+# assumed to depend on everything before them). Iterated to a fixpoint.
+jq -r --rawfile skip "$SKIP_FILE" '
+  ($skip | split("\n") | map(select(length > 0))) as $s
+  | ([.features[] | select(.status == "failing")] | sort_by(.milestone, .id)) as $f
+  | def step: . as $ex | reduce range(0; $f | length) as $i ($ex;
+      $f[$i] as $x | . as $cur
+      | if has($x.id) then .
+        elif ($s | index($x.id)) != null then .[$x.id] = "listed"
+        else
+          ((if ($x.depends_on | type) == "array" then $x.depends_on else [$f[:$i][].id] end)
+            | map(select(. as $d | $cur | has($d))) | first // null) as $hit
+          | if $hit then .[$x.id] = "depends on \($hit)" else . end
+        end);
+    ({} | until(. == step; step)) as $ex
+  | ($f | map(select(.id as $i | $ex | has($i)))[] | "SKIPPED: \(.id) — \($ex[.id])"),
+    ([$f[] | select(.id as $i | $ex | has($i) | not)] as $el
+     | if ($el | length) == 0
+       then "NEXT: none — nothing eligible: every failing feature is skipped or depends on a skipped one"
+       else "NEXT: \($el[0].id) — \($el[0].title)\n  verify: \($el[0].verify)"
+       end)
+' FEATURES.json
+fi
 
 echo
 echo "== Last session (PROGRESS.md) =="

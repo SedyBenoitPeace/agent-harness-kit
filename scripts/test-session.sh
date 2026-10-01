@@ -177,4 +177,75 @@ rc=0
 bash "$RUN_GATE" middle "$WORK/green" >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 2 ] || fail "invalid phase: expected exit 2, got $rc"
 
+# 9. status.sh --skip / context.sh --skip (M20-001)
+STATUS="skills/harness-status/scripts/status.sh"
+mkdir -p "$WORK/skip"
+cat > "$WORK/skip/FEATURES.json" <<'JSON'
+{
+  "milestones": { "0": "Skeleton", "2": "Widgets", "3": "Gadgets" },
+  "features": [
+    { "id": "M0-001", "milestone": 0, "title": "boot", "status": "passing", "verify": "x" },
+    { "id": "M2-001", "milestone": 2, "title": "widget core", "status": "failing", "verify": "v1" },
+    { "id": "M2-002", "milestone": 2, "title": "widget ui", "status": "failing", "depends_on": ["M2-001"], "verify": "v2" },
+    { "id": "M2-003", "milestone": 2, "title": "widget docs", "status": "failing", "verify": "v3" },
+    { "id": "M2-004", "milestone": 2, "title": "widget polish", "status": "failing", "depends_on": ["M2-002"], "verify": "v4" },
+    { "id": "M3-001", "milestone": 3, "title": "gadget", "status": "failing", "depends_on": ["M0-001"], "verify": "v5" }
+  ]
+}
+JSON
+printf '## 2026-01-02 -- session 2\n- Done: M0-001.\n\n## 2026-01-01 -- session 1\n- Setup.\n' > "$WORK/skip/PROGRESS.md"
+
+# 9a. without --skip: byte-identical to the pre-M20 output
+cat > "$WORK/skip.golden" <<'EOF'
+HARNESS STATUS
+
+== Milestones ==
+M0: 1/1 passing — Skeleton
+M2: 0/4 passing — Widgets
+M3: 0/1 passing — Gadgets
+
+== Totals ==
+passing 1, failing 5, deferred 0, superseded 0
+
+== Next feature (lowest milestone, then lowest id, among failing) ==
+NEXT: M2-001 — widget core
+  verify: v1
+
+== Last session (PROGRESS.md) ==
+## 2026-01-02 -- session 2
+- Done: M0-001.
+
+EOF
+bash "$STATUS" "$WORK/skip" > "$WORK/skip.out"
+cmp -s "$WORK/skip.out" "$WORK/skip.golden" || fail "--skip: output without --skip changed"
+: > "$WORK/skip.none"
+bash "$STATUS" --skip "$WORK/skip.none" "$WORK/skip" | cmp -s - "$WORK/skip.golden" \
+  || fail "--skip: an empty skip file must not change the output"
+
+# 9b. skipping M2-001 excludes it, its transitive dependents, and the
+#     dependency-less M2-003 after it; the explicit-deps M3-001 stays eligible
+echo M2-001 > "$WORK/skip.ids"
+out="$(bash "$STATUS" --skip "$WORK/skip.ids" "$WORK/skip")" || fail "--skip: expected exit 0"
+echo "$out" | grep -q '^SKIPPED: M2-001 — listed' || fail "--skip: listed id not reported"
+echo "$out" | grep -q '^SKIPPED: M2-002 — depends on M2-001' || fail "--skip: direct dependent not skipped"
+echo "$out" | grep -q '^SKIPPED: M2-003 — depends on M2-001' || fail "--skip: dependency-less successor not skipped"
+echo "$out" | grep -q '^SKIPPED: M2-004 — depends on M2-002' || fail "--skip: transitive dependent not skipped"
+[ "$(echo "$out" | grep -c '^SKIPPED: ')" -eq 4 ] || fail "--skip: expected exactly four SKIPPED lines"
+echo "$out" | grep -q '^NEXT: M3-001 — gadget' || fail "--skip: NEXT should be M3-001"
+
+# 9c. everything left excluded → NEXT: none
+printf 'M2-001\nM3-001\n' > "$WORK/skip.all"
+out="$(bash "$STATUS" --skip "$WORK/skip.all" "$WORK/skip")" || fail "--skip all: expected exit 0"
+echo "$out" | grep -q '^NEXT: none' || fail "--skip all: expected NEXT: none"
+if echo "$out" | grep -q '^NEXT: M'; then fail "--skip all: a feature was still selected"; fi
+
+# 9d. context.sh passes --skip through (NEXT, PLAN follow the eligible feature)
+git -C "$WORK/skip" init -q -b main
+git -C "$WORK/skip" -c user.email=t@t -c user.name=t add -A
+git -C "$WORK/skip" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$CONTEXT" --skip "$WORK/skip.ids" "$WORK/skip")" || fail "context --skip: expected exit 0"
+echo "$out" | grep -q '^NEXT: M3-001' || fail "context --skip: NEXT not passed through"
+echo "$out" | grep -q 'PLAN: none mentioning M3-001' || fail "context --skip: PLAN should follow the eligible feature"
+echo "$out" | grep -q '^PARALLEL: none' || fail "context --skip: PARALLEL should be none"
+
 echo "SESSION TESTS GREEN"

@@ -3,6 +3,20 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 24 (M20-001)
+
+- Branch: `m20-unattended-runs` (off master after PR #20 merged).
+- Done: M20-001 — `status.sh --skip FILE` excludes listed ids, features
+  whose `depends_on` hits an excluded id (to a fixpoint), and
+  dependency-less features that follow an excluded one; prints one
+  `SKIPPED: <id> — <why>` per exclusion and `NEXT: none` when nothing is
+  eligible. `context.sh --skip` passes it through; NEXT, PLAN and PARALLEL
+  follow the first eligible feature. Without `--skip` the output is
+  byte-identical (golden fixture in `scripts/test-session.sh`).
+- Gate: green.
+- Next: M20-002 (harness-continuous skill). Open the M20 PR only after
+  M20-004.
+
 ## 2026-09-30 — session 23 (M18-003)
 
 - Branch: `m18-evaluator`.
