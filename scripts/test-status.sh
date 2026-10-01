@@ -11,12 +11,12 @@ fail() { echo "STATUS-TEST FAIL: $*" >&2; exit 1; }
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
-# 1. uninitialized dir: exit 3, points at harness-setup
+# 1. uninitialized dir: exit 3, points at harness-initial-setup
 mkdir "$WORK/bare"
 rc=0; out="$(bash "$STATUS" "$WORK/bare")" || rc=$?
 [ "$rc" -eq 3 ] || fail "bare dir: expected exit 3, got $rc"
 echo "$out" | grep -q "HARNESS NOT INITIALIZED" || fail "bare dir: missing NOT INITIALIZED line"
-echo "$out" | grep -q "harness-setup" || fail "bare dir: must point at harness-setup"
+echo "$out" | grep -q "harness-initial-setup" || fail "bare dir: must point at harness-initial-setup"
 
 # 2. harnessed fixture: rollup + protocol-2 next-feature selection + last session only
 mkdir "$WORK/repo"

@@ -6,7 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 CHECK="skills/harness-audit/scripts/check.sh"
-TMPL="skills/harness-setup/templates"
+TMPL="skills/harness-initial-setup/templates"
 
 fail() { echo "AUDIT-TEST FAIL: $*" >&2; exit 1; }
 

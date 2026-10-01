@@ -15,7 +15,7 @@ parsing lives in `scripts/status.sh` — run it, never re-derive it by hand.
 1. Run `bash scripts/status.sh` (path relative to this skill) from the
    target repo root.
    - Exit 3 → harness not initialized: tell the human plainly, offer the
-     harness-setup skill, STOP.
+     harness-initial-setup skill, STOP.
    - Exit 2 → a harness file is broken: relay the message, suggest the
      harness-audit skill, STOP.
 2. Add the one thing the script can't see: `git log -5 --oneline` for
@@ -36,5 +36,5 @@ parsing lives in `scripts/status.sh` — run it, never re-derive it by hand.
 |---|---|
 | "I'll parse FEATURES.json myself" | The script is the parser. Run it. |
 | "While I'm here I'll flip that stale status" | Status is read-only. Report; a session changes state. |
-| "Not initialized — I'll just scaffold it now" | Offer harness-setup; the human decides. |
+| "Not initialized — I'll just scaffold it now" | Offer harness-initial-setup; the human decides. |
 | "Status and audit are basically the same" | Audit = is the harness well-formed. Status = how is the work going. |

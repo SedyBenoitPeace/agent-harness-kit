@@ -103,7 +103,7 @@ else
   echo 'GATE_OUTPUT: unbounded — scripts/e2e.sh has no step wrapper (protocol §1.6, ~5 min retrofit)'
   upgrade=1
 fi
-SHIPPED_PROTOCOL="$SCRIPT_DIR/../../harness-setup/templates/harness-protocol.md"
+SHIPPED_PROTOCOL="$SCRIPT_DIR/../../harness-initial-setup/templates/harness-protocol.md"
 PLUGIN_JSON="$SCRIPT_DIR/../../../.claude-plugin/plugin.json"
 plugin_version="$(jq -r '.version // "unknown"' "$PLUGIN_JSON" 2>/dev/null || echo unknown)"
 if [ ! -f docs/agents/harness-protocol.md ]; then

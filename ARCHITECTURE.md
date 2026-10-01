@@ -13,7 +13,7 @@
     ↓ reads
 [.claude-plugin/  plugin.json + marketplace.json (versions in lockstep)]
     ↓ exposes
-[skills/  harness-setup | harness-audit | harness-status | harness-handoff | harness-session | harness-run | harness-brief]
+[skills/  harness-initial-setup | harness-audit | harness-status | harness-handoff | harness-session | harness-run | harness-brief]
     │         │                │               │              │                 │
     │    templates/ ★      scripts/check.sh  scripts/     scripts/          scripts/
     │    (canonical          │               status.sh    handoff.sh        context.sh +
@@ -29,14 +29,15 @@
 | Path | Responsibility |
 |---|---|
 | `.claude-plugin/` | Plugin + marketplace manifests; version is the cache key |
-| `skills/harness-setup/` | Planning interview + scaffold orchestration (SKILL.md only) |
-| `skills/harness-setup/templates/` | ★ Canonical source of every scaffolded file, incl. `harness-protocol.md` |
+| `skills/harness-initial-setup/` | Planning interview + scaffold orchestration (SKILL.md only) |
+| `skills/harness-initial-setup/templates/` | ★ Canonical source of every scaffolded file, incl. `harness-protocol.md` |
 | `skills/harness-audit/` | Readiness checker (`scripts/check.sh`) + report/repair judgment layer |
 | `skills/harness-status/` | Read-only progress report (`scripts/status.sh`) |
 | `skills/harness-handoff/` | Session-end ritual check + next-agent prompt (`scripts/handoff.sh`) |
 | `skills/harness-session/` | Bounded session context report (`scripts/context.sh`, wraps harness-status) + concise gate wrapper (`scripts/run-gate.sh`) |
 | `skills/harness-run/` | Orchestrator (SKILL.md only): one fresh subagent per feature, verified via status.sh |
 | `skills/harness-continuous/` | Unattended-run command (SKILL.md only): reuses harness-run, skips instead of stopping; state in `.harness-run/`, report via `skills/harness-run/scripts/run-report.sh` |
+| `skills/harness-upgrade-structure/` | Upgrade of an already-harnessed repo: `scripts/upgrade.sh` (idempotent, commits nothing) + SKILL.md that explains and commits it |
 | `skills/harness-brief/` | Rough prompt → `docs/briefs/` brief; check-brief.sh plus an independent read-only reviewer agent |
 | `agents/` + `scripts/gen-agents.sh` | Neutral builder/evaluator role sources + tier→model map; generator emits Claude/Copilot/Codex agent files |
 | `scripts/` | This repo's gate (`e2e.sh`) and the per-skill fixture test suites |
@@ -44,7 +45,7 @@
 
 ## Key entities & data flow
 
-- **Templates** flow one way: `skills/harness-setup/templates/` → target
+- **Templates** flow one way: `skills/harness-initial-setup/templates/` → target
   repos (via the setup skill) and → the mirror repo
   `agent-harness-template` (manual resync; this repo stays canonical).
 - **FEATURES.json schema** (id / milestone / title / status / verify /

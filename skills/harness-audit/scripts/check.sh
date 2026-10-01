@@ -5,7 +5,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SHIPPED_PROTOCOL="$SCRIPT_DIR/../../harness-setup/templates/harness-protocol.md"
+SHIPPED_PROTOCOL="$SCRIPT_DIR/../../harness-initial-setup/templates/harness-protocol.md"
 
 RUN_GATE=0
 TARGET="."

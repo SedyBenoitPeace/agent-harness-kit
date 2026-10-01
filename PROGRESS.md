@@ -3,6 +3,50 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 31 (M21-003)
+
+- Branch: `m21-upgrade-structure`.
+- Done: M21-003 — `skills/harness-upgrade-structure/SKILL.md` (runs
+  upgrade.sh, explains CHANGED/OK/TODO, offers harness-audit, commits as
+  its own commit, never pushes); harness-session's `UPGRADE: offer` now
+  points to it instead of listing steps; README "Upgrading existing repos"
+  with the by-hand `upgrade.sh` command and the walkthrough step using it;
+  ARCHITECTURE, AGENTS.md, layout updated. Released as 3.0.0 (plugin,
+  marketplace, package) because `harness-setup` was renamed. M21 plan moved
+  to `docs/plans/completed/` in this commit.
+- Also: M21-003 was added to FEATURES.json as `failing` earlier (089619f)
+  so the pending work was visible — a deliberate exception to adding
+  entries only when proven.
+- Gate: green.
+- Next: owner merges the M21 PR.
+
+## 2026-10-01 — session 30 (M21-002)
+
+- Branch: `m21-upgrade-structure`.
+- Done: M21-002 — `skills/harness-upgrade-structure/scripts/upgrade.sh
+  [repo]`: for repos that already have a harness (exit 3 otherwise,
+  pointing at harness-initial-setup). Refuses a dirty tree; on the default
+  branch it creates `harness-upgrade` first. Idempotent: recopies the
+  protocol, adds the harness-run line to AGENTS.md, generates evaluator
+  files only for opted-in repos, and prints `CHANGED:`/`OK:`/`TODO:` lines
+  (unbounded gate, harness-audit `depends_on`/`paths`). Stages and commits
+  nothing. Fixtures in `scripts/test-upgrade.sh`, shellchecked in the gate.
+- Gate: green.
+- Next: M21-003 (the skill, harness-session wiring, README, release 3.0.0).
+
+## 2026-10-01 — session 29 (M21-001)
+
+- Branch: `m21-upgrade-structure` (off master after PR #21 merged).
+- Done: M21-001 — `skills/harness-setup/` renamed to
+  `skills/harness-initial-setup/` (templates included), no alias; all live
+  references updated (skills, scripts, tests, README, ARCHITECTURE,
+  AGENTS.md); description points existing repos at harness-upgrade-structure.
+  New gate check fails on any leftover old-name reference outside history.
+  M21 plan added (`docs/plans/active/`): M21-002 upgrade.sh, M21-003 skill,
+  wiring and release 3.0.0 (assumed major bump for the breaking rename).
+- Gate: green.
+- Next: M21-002 (`upgrade.sh`).
+
 ## 2026-10-01 — session 28 (M20 close-out)
 
 - Branch: `m20-unattended-runs`.
