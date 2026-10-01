@@ -365,4 +365,9 @@ fi
 [ -f skills/harness-initial-setup/SKILL.md ] || fail "harness-initial-setup SKILL.md missing"
 grep -q '^description: .*harness-upgrade-structure' skills/harness-initial-setup/SKILL.md || fail "harness-initial-setup: description must point existing repos at harness-upgrade-structure"
 
+# --- harness-upgrade-structure (M21) -----------------------------------------
+
+shellcheck skills/harness-upgrade-structure/scripts/upgrade.sh
+bash scripts/test-upgrade.sh
+
 echo "GATE GREEN"

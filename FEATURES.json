@@ -530,6 +530,16 @@
       "paths": ["skills/harness-initial-setup/", "skills/", "scripts/", "README.md", "ARCHITECTURE.md", "AGENTS.md"],
       "verify": "bash scripts/e2e.sh exits 0 with skills/harness-setup absent, skills/harness-initial-setup/SKILL.md named harness-initial-setup whose description points existing harnessed repos at harness-upgrade-structure, and no reference to the old name anywhere outside docs/plans, docs/specs, PROGRESS.md and FEATURES.json",
       "notes": "Plan: docs/plans/active/2026-10-01-m21-upgrade-structure.md. Clean rename, no alias (breaking: released as 3.0.0 in M21-003)."
+    },
+    {
+      "id": "M21-002",
+      "milestone": 21,
+      "title": "upgrade.sh: one idempotent command that brings an already-harnessed repo up to the shipped structure",
+      "status": "passing",
+      "depends_on": ["M21-001"],
+      "paths": ["skills/harness-upgrade-structure/scripts/upgrade.sh", "scripts/test-upgrade.sh", "scripts/e2e.sh"],
+      "verify": "bash scripts/e2e.sh exits 0 with scripts/test-upgrade.sh fixtures proving upgrade.sh <repo>: exits 3 pointing at harness-initial-setup when there is no harness; refuses a dirty tree (exit 2, nothing changed); on the default branch first creates harness-upgrade; recopies an outdated or missing protocol, adds the harness-run line to AGENTS.md, generates evaluator agent files only when a feature opts in; prints CHANGED/OK/TODO lines (TODO for an unbounded gate and for harness-audit depends_on/paths); stages and commits nothing; a second run after committing changes nothing",
+      "notes": "Plan: docs/plans/active/2026-10-01-m21-upgrade-structure.md"
     }
 
   ]
