@@ -22,7 +22,8 @@
     "18": "Independent evaluator, portable across CLIs",
     "19": "harness-brief: rough prompt to unambiguous brief",
     "20": "Unattended runs: keep going past problems, run report",
-    "21": "Clear entry points: harness-initial-setup and harness-upgrade-structure"
+    "21": "Clear entry points: harness-initial-setup and harness-upgrade-structure",
+    "22": "Strict-YAML-safe skill frontmatter (Copilot and Codex discovery)"
   },
   "features": [
     {
@@ -550,6 +551,16 @@
       "paths": ["skills/harness-upgrade-structure/", "skills/harness-session/SKILL.md", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
       "verify": "bash scripts/e2e.sh exits 0 with checks that skills/harness-upgrade-structure/SKILL.md exists with valid, agent-neutral frontmatter, says it is for repos that already have a harness, runs upgrade.sh, offers harness-audit for depends_on/paths and commits the result as its own commit; harness-session's UPGRADE: offer step points to harness-upgrade-structure instead of listing the steps inline; README has an 'Upgrading existing repos' section with the by-hand upgrade.sh command and the M20 walkthrough's upgrade step uses it; package.json, plugin.json and marketplace.json are 3.0.0",
       "notes": "Plan: docs/plans/completed/2026-10-01-m21-upgrade-structure.md"
+    },
+    {
+      "id": "M22-001",
+      "milestone": 22,
+      "title": "Skill frontmatter parses in strict YAML parsers; gate rejects an unquoted colon-space in name/description; release 3.0.1",
+      "status": "passing",
+      "depends_on": [],
+      "paths": ["skills/harness-continuous/SKILL.md", "skills/harness-upgrade-structure/SKILL.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
+      "verify": "bash scripts/e2e.sh exits 0 with every skills/*/SKILL.md and agents/src/*.md free of ': ' inside the unquoted name/description line; copilot skill list, run in a project holding copies of skills/harness-continuous and skills/harness-upgrade-structure, lists both; package.json, plugin.json and marketplace.json are 3.0.1",
+      "notes": "Field report: Copilot CLI skipped harness-continuous and harness-upgrade-structure ('failed to parse YAML frontmatter ... mapping values are not allowed') while Claude Code accepted them. Cause: ': ' in the description. Codex uses a strict parser too. Plan: docs/plans/completed/2026-10-01-m22-frontmatter-fix.md"
     }
 
   ]

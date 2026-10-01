@@ -3,6 +3,17 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-01 — session 32 (M22-001)
+
+- Branch: `fix-skill-frontmatter` (off master after PR #22 merged).
+- Done: M22-001 — Copilot CLI skipped harness-continuous and
+  harness-upgrade-structure (`failed to parse YAML frontmatter`): an unquoted
+  `: ` in their descriptions. Reworded both; the gate now fails on that
+  pattern in `skills/*/SKILL.md` and `agents/src/*.md`. Verified with
+  `copilot skill list` against project copies. Released 3.0.1.
+- Gate: green.
+- Next: owner merges the PR; then `copilot plugin update agent-harness-kit`.
+
 ## 2026-10-01 — session 31 (M21-003)
 
 - Branch: `m21-upgrade-structure`.

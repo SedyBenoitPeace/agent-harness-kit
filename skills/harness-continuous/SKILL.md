@@ -1,6 +1,6 @@
 ---
 name: harness-continuous
-description: Starts a continuous run when invoked by name (harness-continuous), never from a keyword — builds feature after feature with one fresh subagent each, skips what it cannot finish instead of stopping, and ends with a script-built run report. Never asks the human anything mid-run. Optional start instruction: a cap ("cap 20") or a milestone range ("through M21"). For an interactive run that stops at the first problem, use harness-run.
+description: Starts a continuous run when invoked by name (harness-continuous), never from a keyword — builds feature after feature with one fresh subagent each, skips what it cannot finish instead of stopping, and ends with a script-built run report. Never asks the human anything mid-run. Optional start instruction, a cap ("cap 20") or a milestone range ("through M21"). For an interactive run that stops at the first problem, use harness-run.
 ---
 
 # Harness Continuous

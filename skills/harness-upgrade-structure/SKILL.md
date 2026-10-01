@@ -1,6 +1,6 @@
 ---
 name: harness-upgrade-structure
-description: Use when a repo that already has a harness (FEATURES.json and PROGRESS.md exist) must be brought up to the structure the installed plugin ships — after a plugin update, or when a session reports UPGRADE: offer. Runs one deterministic script that recopies the protocol and adds the missing AGENTS.md line and evaluator agent files. For a repo with no harness, use harness-initial-setup instead.
+description: Use when a repo that already has a harness (FEATURES.json and PROGRESS.md exist) must be brought up to the structure the installed plugin ships — after a plugin update, or when a session reports the UPGRADE offer. Runs one deterministic script that recopies the protocol and adds the missing AGENTS.md line and evaluator agent files. For a repo with no harness, use harness-initial-setup instead.
 ---
 
 # Harness Upgrade Structure
