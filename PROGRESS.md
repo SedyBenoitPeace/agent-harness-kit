@@ -3,6 +3,63 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 35 (M23-003)
+
+- Branch: `m23-decisions-and-effort`.
+- Done: M23-003 — protocol §3.4: start lean, prefer a gate check over a
+  prose rule, and end a rule written for one model's repeated failure with
+  `(model: <name>)`; §3.2: re-test tagged rules when the model changes and
+  delete those no longer needed. AGENTS.md.tmpl gains the one-line rule
+  (62/80 lines). check.sh WARNs with the count of tagged rules (fixture in
+  test-audit.sh; the template's own `<name>` example is not counted).
+  README "Decision notes, effort and model-tagged rules". Released 3.1.0.
+- Decisions: rejected FAILing on tagged rules (they are legitimate, only
+  due for a re-test); rejected a per-model AGENTS file (one file to keep
+  in sync); assumed target repos pick up the protocol changes through
+  harness-upgrade-structure (the protocol copy differs, so UPGRADE: offer
+  fires).
+- Gate: green.
+- Next: owner reviews and merges the PR. Then M24-001 (Claude edition
+  skeleton) from a Claude Code CLI session: the M24/M25 features need the
+  real runtime (`claude plugin validate`, `claude plugin test`, evals).
+
+## 2026-10-07 — session 34 (M23-002)
+
+- Branch: `m23-decisions-and-effort`.
+- Done: M23-002 — optional per-feature `effort` (low|medium|high|max).
+  Protocol §1.4 asks "How much verification does this deserve?" with a
+  per-kind table; FEATURES.json.tmpl documents it; status.sh prints an
+  indented `effort:` line under `NEXT:` (plain and `--skip` paths, fixtures
+  in test-status.sh); check.sh WARNs on unknown values (fixture in
+  test-audit.sh); harness-run passes the level as the dispatch tool's
+  effort setting or a prompt line, and dispatches the evaluator at high or
+  above; harness-session step 7 reads it. Gate rejects bad values in this
+  repo's own FEATURES.json.
+- Decisions: rejected a global effort setting (guidance is per task kind);
+  rejected a model-router mod (the Claude Code agent tool already takes a
+  per-dispatch effort); WARN not FAIL in check.sh (an unknown hint breaks
+  nothing); assumed CLIs without an effort setting still benefit from the
+  prompt line.
+- Gate: green.
+- Next: M23-003 (model-tagged rules, README, release 3.1.0).
+
+## 2026-10-07 — session 33 (M23-001)
+
+- Branch: `m23-decisions-and-effort` (off master).
+- Done: M23 plan written (`docs/plans/active/2026-10-07-m23-decisions-and-effort.md`)
+  with failing entries for M23 (core), M24 (Claude edition, native) and M25
+  (Claude edition, mods). M23-001 — protocol §2.5 asks every session entry
+  for a `Decisions:` line (options considered and rejected, assumptions
+  made); §2.7 lets the evaluator read it as leads, not evidence;
+  PROGRESS.md.tmpl, harness-builder, harness-evaluator and harness-session
+  updated; gate checks each.
+- Decisions: rejected a separate decisions file per feature (one more file
+  to keep in sync; the session entry is already read first); rejected
+  letting the evaluator treat Decisions: as evidence (it still judges by
+  observing the repo); assumed a single line is enough per session.
+- Gate: green.
+- Next: M23-002 (per-feature effort).
+
 ## 2026-10-01 — session 32 (M22-001)
 
 - Branch: `fix-skill-frontmatter` (off master after PR #22 merged).

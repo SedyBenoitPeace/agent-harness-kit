@@ -52,19 +52,22 @@ jq -r '[.features[] | select(.status == "review") | .id] | if length > 0 then "\
 
 echo
 echo "== Next feature (lowest milestone, then lowest id, among failing) =="
+# Optional effort hint (low|medium|high|max): one indented line under NEXT.
+EFFORT_DEF='def effort_line: if (.effort | type) == "string" and .effort != "" then "\n  effort: \(.effort)" else "" end; '
+
 if [ -z "$SKIP_FILE" ]; then
-jq -r '
+jq -r "$EFFORT_DEF"'
   [.features[] | select(.status == "failing")] | sort_by(.milestone, .id)
   | if length == 0
     then "NEXT: none — nothing failing; plan new work (protocol section 1) or run a maintenance pass (section 3)"
-    else "NEXT: \(.[0].id) — \(.[0].title)\n  verify: \(.[0].verify)"
+    else "NEXT: \(.[0].id) — \(.[0].title)\n  verify: \(.[0].verify)\(.[0] | effort_line)"
     end
 ' FEATURES.json
 else
 # Excluded = listed ids, features depending (depends_on) on an excluded id,
 # and features without depends_on that follow an excluded one (they are
 # assumed to depend on everything before them). Iterated to a fixpoint.
-jq -r --rawfile skip "$SKIP_FILE" '
+jq -r --rawfile skip "$SKIP_FILE" "$EFFORT_DEF"'
   ($skip | split("\n") | map(select(length > 0))) as $s
   | ([.features[] | select(.status == "failing")] | sort_by(.milestone, .id)) as $f
   | def step: . as $ex | reduce range(0; $f | length) as $i ($ex;
@@ -81,7 +84,7 @@ jq -r --rawfile skip "$SKIP_FILE" '
     ([$f[] | select(.id as $i | $ex | has($i) | not)] as $el
      | if ($el | length) == 0
        then "NEXT: none — nothing eligible: every failing feature is skipped or depends on a skipped one"
-       else "NEXT: \($el[0].id) — \($el[0].title)\n  verify: \($el[0].verify)"
+       else "NEXT: \($el[0].id) — \($el[0].title)\n  verify: \($el[0].verify)\($el[0] | effort_line)"
        end)
 ' FEATURES.json
 fi

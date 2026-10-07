@@ -34,6 +34,10 @@ stays interactive and stops at the first problem.
    `../../scripts/gen-agents.sh`; if absent, the agent's own built-in subagent) with exactly:
    "Use harness-session for <id>, inline. End with its SESSION line."
    Own tools only — never load an external workflow skill.
+   When status.sh printed an `effort: <level>` line under `NEXT:`, the
+   feature asks for that effort (protocol §1.4): set it as the dispatch
+   tool's own effort setting if it has one, otherwise add the line
+   "Effort: <level>." to the prompt. No line, no setting.
 4. Read only the subagent's final line:
    `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
    A `review` line means the feature opted in (`evaluate` set): do the
@@ -56,7 +60,9 @@ For a `review` session (only features with `evaluate` set; absent means no
 evaluation and today's flow):
 
 1. Record `git rev-parse HEAD`. Dispatch the named agent
-   `harness-evaluator` with only: the feature entry, the commit range, its
+   `harness-evaluator` (the evaluator at high or above: its effort setting
+   if the dispatch tool has one, otherwise "Effort: high." in the prompt)
+   with only: the feature entry, the commit range, its
    `bar`, whether `evaluate` is `ui` (QA mode), and — when any `paths`
    entry matches the sensitive globs in `../../agents/models.json` — the
    security checklist. Never pass the builder's transcript. If the agent
@@ -86,14 +92,16 @@ Workflow steps 3–5, for that batch:
 2. Dispatch one subagent per lane, in parallel, with exactly:
    "Use harness-session for <id>, inline, as a parallel lane in
    ../<repo>-<id>. End with its SESSION line."
-   Lanes implement, run their own verify, commit, and never touch FEATURES.json or PROGRESS.md.
+   Lanes implement, run their own verify, commit, and never touch FEATURES.json or PROGRESS.md;
+   each puts its `Decisions:` line in its commit message body.
 3. Merge each `passing` lane into the current branch (`git merge --no-ff
    lane/<id>`), then remove its worktree and branch. A blocked lane is
    relayed to the human like step 6; its worktree stays for inspection.
 4. Merge conflict → `git merge --abort`, drop that lane, and redo that feature sequentially after the others land.
 5. Run one full gate (`bash ../harness-session/scripts/run-gate.sh final
    <target>`). Green → flip the merged ids to `passing`, write one
-   `PROGRESS.md` entry naming them, commit explicit paths. Red → STOP and
+   `PROGRESS.md` entry naming them (with each lane's `Decisions:` line from
+   its commit message), commit explicit paths. Red → STOP and
    report; flip nothing.
 6. Verify as in Workflow step 5 (status.sh + clean tree), count the
    lanes toward the cap, and loop to Workflow step 1.

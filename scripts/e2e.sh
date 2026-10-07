@@ -332,7 +332,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.0.1" ] || fail "plugin version must be 3.0.1"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.1.0" ] || fail "plugin version must be 3.1.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -381,6 +381,44 @@ for f in skills/*/SKILL.md agents/src/*.md; do
   if grep -qE '^(name|description): .*: ' "$f"; then
     fail "$f: unquoted ': ' in frontmatter name/description breaks strict YAML parsers (Copilot, Codex)"
   fi
+done
+
+# --- decision notes (M23-001) ------------------------------------------------
+# Most failures are a right answer considered and rejected; the session entry
+# records those choices so a reviewer can ask for the thing that was skipped.
+close_out="$(sed -n '/^### 2\.5 Close out/,/^### 2\.6/p' "$PROTO")"
+grep -qF 'Decisions:' <<< "$close_out" || fail "protocol 2.5: PROGRESS.md entry must ask for a Decisions: line"
+grep -qF 'options considered and rejected' <<< "$close_out" || fail "protocol 2.5: Decisions: must name options considered and rejected"
+grep -qF 'assumptions made' <<< "$close_out" || fail "protocol 2.5: Decisions: must name assumptions made"
+grep -q '^- Decisions:' "$TMPL_DIR/PROGRESS.md.tmpl" || fail "PROGRESS.md.tmpl: entry must show a Decisions: line"
+grep -qF 'Decisions:' agents/src/harness-builder.md || fail "harness-builder: must write the Decisions: line"
+grep -qF 'Decisions:' agents/src/harness-evaluator.md || fail "harness-evaluator: must read the Decisions: line"
+grep -qF 'leads, not evidence' agents/src/harness-evaluator.md || fail "harness-evaluator: Decisions: are leads, not evidence"
+grep -qF 'leads, not evidence' "$PROTO" || fail "protocol 2.7: evaluator reads Decisions: as leads, not evidence"
+
+# --- per-feature effort (M23-002) ----------------------------------------------
+jq -e '[ .features[] | select(has("effort") and (.effort | IN("low","medium","high","max") | not)) ] | length == 0' \
+  FEATURES.json >/dev/null || fail "FEATURES.json: effort must be low|medium|high|max"
+grep -q 'effort' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: effort undocumented"
+plan_14="$(sed -n '/^### 1\.4 Write FEATURES.json entries/,/^### 1\.5/p' "$PROTO")"
+grep -qF 'How much verification does this deserve?' <<< "$plan_14" || fail "protocol 1.4: effort question missing"
+grep -qF 'low, medium, high or max' <<< "$plan_14" || fail "protocol 1.4: effort levels missing"
+grep -qF 'effort:' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: must pass the effort line to the builder dispatch"
+grep -qF 'evaluator at high or above' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: evaluator must be dispatched at high or above"
+grep -qF 'effort:' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: must read the effort line"
+
+# --- model-tagged rules, start lean (M23-003) -----------------------------------
+# Rules written to fix one model's failure over-constrain the next model.
+grep -qF '(model: <name>)' <<< "$(sed -n '/^### 3\.4/,/^Copy-paste maintenance prompt/p' "$PROTO")" \
+  || fail "protocol 3.4: a rule for one model's repeated failure must be tagged (model: <name>)"
+grep -qF 're-test every rule tagged' <<< "$(sed -n '/^### 3\.2 Doc gardening/,/^### 3\.3/p' "$PROTO")" \
+  || fail "protocol 3.2: re-test tagged rules when the model changes"
+grep -qF '(model: <name>)' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: model-tag rule missing"
+grep -qF 'model-tagged' skills/harness-audit/scripts/check.sh || fail "harness-audit: model-tagged WARN missing"
+grep -q '^## Decision notes, effort and model-tagged rules' README.md || fail "README: M23 section missing"
+for w in 'Decisions:' 'effort' '(model: <name>)'; do
+  sed -n '/^## Decision notes, effort and model-tagged rules/,/^## /p' README.md | grep -qF -- "$w" \
+    || fail "README M23 section: '$w' missing"
 done
 
 echo "GATE GREEN"
