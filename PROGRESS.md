@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 49 (M27-002)
+
+- Branch: `m27-upgrades`.
+- Done: M27-002 — models.json follows the owner's rule of thumb: Claude
+  `opus` for complex work and `sonnet` for implementation; ChatGPT
+  `gpt-6-astra` for complex work and `gpt-6.1-sol` for executing (Codex);
+  Copilot's strong tier is `gpt-6-astra`, so a Copilot second opinion next to
+  a Claude builder is another vendor. A tier of `auto` (or none) lets the
+  CLI choose: gen-agents.sh writes no model line, second-opinion.sh passes
+  no flag. second-opinion.sh retries once without a model when the CLI
+  rejects the named one, printing `MODEL: <name> unavailable, <cli> chose its
+  own`. harness-run swaps in the CLI's built-in subagent when a named agent's
+  model is unavailable. Fixtures in test-agents.sh and test-second-opinion.sh.
+- Decisions: fallback by retry rather than a model-availability lookup (no
+  CLI exposes one the same way); retry only when the reply is empty and the
+  error mentions a model, so a real NEEDS_WORK is never retried; cheap tiers
+  set to auto because nothing uses them yet.
+- Gate: green.
+- Next: M27-003 (run report).
+
 ## 2026-10-07 — session 48 (M27-001)
 
 - Branch: `m27-upgrades` (off master after PR #27 merged).

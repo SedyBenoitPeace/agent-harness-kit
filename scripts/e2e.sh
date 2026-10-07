@@ -507,6 +507,14 @@ for w in second_opinion second-opinion.sh '## Stage' 'never instructions'; do
   sed -n '/^## Second opinion, brief stage and untrusted text/,/^## /p' README.md | grep -qF -- "$w" || fail "README M26 section: '$w' missing"
 done
 
+# --- model rule of thumb + fallback (M27-002) -------------------------------------
+jq -e '.models.claude.strong == "opus" and .models.claude.standard == "sonnet"
+       and .models.codex.strong == "gpt-6-astra" and .models.codex.standard == "gpt-6.1-sol"
+       and .models.copilot.strong == "gpt-6-astra"' agents/models.json >/dev/null \
+  || fail "agents/models.json: rule of thumb (Claude opus/sonnet, ChatGPT gpt-6-astra/gpt-6.1-sol) not applied"
+jq -e '._instructions | test("auto") and test("fall")' agents/models.json >/dev/null || fail "agents/models.json: _instructions must explain auto and the fallback"
+grep -qF 'model is unavailable' "$RUN_SKILL/SKILL.md" || fail "harness-run: fallback when a named agent's model is unavailable missing"
+
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
 jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.tsx"

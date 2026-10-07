@@ -919,7 +919,7 @@
       "id": "M27-002",
       "milestone": 27,
       "title": "Model rule of thumb (Claude opus/sonnet, ChatGPT gpt-6-astra/gpt-6.1-sol) and fallback when a model is unavailable",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M27-001"
       ],
@@ -932,7 +932,7 @@
       ],
       "effort": "high",
       "verify": "bash scripts/e2e.sh exits 0 with: models.json claude strong opus and standard sonnet, codex strong gpt-6-astra and standard gpt-6.1-sol, copilot strong gpt-6-astra, and _instructions stating the rule and the fallback; test-agents.sh proving a tier set to auto gets no model line; test-second-opinion.sh proving a CLI that rejects the model is retried once without a model flag, prints MODEL: <name> unavailable, and still returns the verdict, and that auto passes no model flag; harness-run SKILL.md says an agent whose model is unavailable is replaced by the CLI's built-in subagent for that dispatch",
-      "notes": "Plan: docs/plans/active/2026-10-07-m27-upgrades.md"
+      "notes": "Plan: docs/plans/active/2026-10-07-m27-upgrades.md Copilot cheap and Codex cheap set to auto (no tier uses them today). Model ids from learn.chatgpt.com/docs/models, 2026-10-07."
     },
     {
       "id": "M27-003",

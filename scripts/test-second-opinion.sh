@@ -19,6 +19,11 @@ cat > "$W/bin/stub" <<'STUB'
 name="$(basename "$0")"
 printf '%s\n' "$name" "$@" > "$STUB_LOG"
 [ "${STUB_TAMPER:-0}" = 1 ] && echo tampered > tampered.txt
+# STUB_REJECT_MODEL=1: refuse any call that names a model, like a CLI whose
+# configured model is retired or not on this account
+if [ "${STUB_REJECT_MODEL:-0}" = 1 ]; then
+  for a in "$@"; do case "$a" in -m|--model) echo "Error: model is not available for this account" >&2; exit 1 ;; esac; done
+fi
 out=""
 while [ $# -gt 0 ]; do [ "$1" = "-o" ] && out="$2"; shift; done
 if [ "$name" = codex ] && [ -n "$out" ]; then printf '%s\n' "$STUB_REPLY" > "$out"; echo "codex progress noise"; else printf '%s\n' "$STUB_REPLY"; fi
@@ -74,6 +79,20 @@ rc=0; out="$(STUB_REPLY='Looks fine to me' run claude M1-001 "$base")" || rc=$?
 rc=0; out="$(STUB_TAMPER=1 STUB_REPLY=PASS run copilot M1-001 "$base")" || rc=$?
 [ "$rc" -eq 1 ] && grep -qx 'VERDICT: REJECTED' <<< "$out" && grep -qF 'tampered.txt' <<< "$out" || fail "tamper: want exit 1 REJECTED naming the change"
 rm -f "$W/repo/tampered.txt"
+
+# 4b. model fallback (M27-002): a rejected model is retried once without a
+#     model flag, said so, and the verdict still comes back
+rc=0; out="$(STUB_REJECT_MODEL=1 STUB_REPLY=PASS run codex M1-001 "$base")" || rc=$?
+[ "$rc" -eq 0 ] || fail "model fallback: expected the retry to PASS, got $rc"
+grep -q '^MODEL: .* unavailable, codex chose its own' <<< "$out" || fail "model fallback: MODEL line missing"
+grep -qx -- '-m' "$STUB_LOG" && fail "model fallback: the retry must not pass a model"
+# "auto" passes no model flag at all
+k="$W/kit"; mkdir -p "$k/skills/harness-run/scripts" "$k/agents/src"
+cp "$SO" "$k/skills/harness-run/scripts/"; cp agents/src/harness-evaluator.md "$k/agents/src/"
+jq '.models.claude.strong = "auto"' agents/models.json > "$k/agents/models.json"
+rc=0; out="$(STUB_REPLY=PASS PATH="$W/bin:$PATH" bash "$k/skills/harness-run/scripts/second-opinion.sh" claude M1-001 "$base" "$W/repo")" || rc=$?
+[ "$rc" -eq 0 ] || fail "auto model: expected PASS"
+grep -qx -- '--model' "$STUB_LOG" && fail "auto model: must not pass --model"
 
 # 5. broken invocations → exit 2
 rc=0; PATH="$W/bin:$PATH" bash "$SO" gemini M1-001 "$base" "$W/repo" >/dev/null 2>&1 || rc=$?; [ "$rc" -eq 2 ] || fail "unknown CLI: want exit 2, got $rc"

@@ -34,6 +34,10 @@ stays interactive and stops at the first problem.
    `../../scripts/gen-agents.sh`; if absent, the agent's own built-in subagent) with exactly:
    "Use harness-session for <id>, inline. End with its SESSION line."
    Own tools only — never load an external workflow skill.
+   If the named agent fails to start because its model is unavailable
+   (retired, or not on this account), dispatch the agent's own built-in
+   subagent instead for that feature, so the CLI chooses its model, and
+   say so in the progress line; models.json `auto` does the same up front.
    When status.sh printed an `effort: <level>` line under `NEXT:`, the
    feature asks for that effort (protocol §1.4): set it as the dispatch
    tool's own effort setting if it has one, otherwise add the line
