@@ -332,7 +332,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.4.0" ] || fail "plugin version must be 3.4.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.5.0" ] || fail "plugin version must be 3.5.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -530,6 +530,11 @@ for w in 'Update the plugins' 'branch' 'harness-upgrade-structure' 'UPGRADE-NOTE
   [ "$n" -ge "$last" ] || fail "README upgrade checklist: '$w' is out of order"
   last="$n"
 done
+
+# --- template mirror sync (M27-005) -----------------------------------------------
+shellcheck scripts/sync-template.sh
+bash scripts/test-sync-template.sh
+grep -qF 'scripts/sync-template.sh' CHANGELOG.md || fail "CHANGELOG release checklist must name sync-template.sh"
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"

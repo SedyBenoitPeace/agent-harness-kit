@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 52 (M27-005, release 3.5.0)
+
+- Branch: `m27-upgrades`.
+- Done: M27-005 — `scripts/sync-template.sh <mirror> [--check]` writes every
+  template to its agent-harness-template path, keeping the mirror's banner
+  (bare `>` lines included), README and docs/PRODUCT.md; idempotent;
+  `--check` exits 1 on drift. Fixture in `scripts/test-sync-template.sh`.
+  The real mirror was last synced at M13: synced now, agent-harness-template
+  PR #3 (`--check` IN SYNC). CHANGELOG's release checklist names the script.
+  Released 3.5.0. All M27 features pass; plan moved to completed.
+- Decisions: the mirror keeps only what is truly its own (banner, README,
+  PRODUCT skeleton); everything else is generated, so drift is a script
+  run away. A first sync cut the banner at a bare `>` line: caught by
+  reading the result, fixed, and the fixture now has one.
+- Also: two commits earlier on this branch (949033a, da5fc3d) were made on a
+  red gate because its output was piped to `tail`, hiding the exit code;
+  fixed in 0a325cc, and every commit since checks the gate's own exit code.
+- Gate: green.
+- Next: owner merges both PRs; then the first real unattended run.
+
 ## 2026-10-07 — session 51 (M27-004)
 
 - Branch: `m27-upgrades`.

@@ -913,7 +913,7 @@
       ],
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with test-upgrade.sh fixtures proving: a repo with a stale generated .claude/agents/harness-builder.md (or any harness agent file) gets every role regenerated for each CLI it already has, with a CHANGED: line per changed file; a second run prints no CHANGED for agents; a repo with no agent files gets none",
-      "notes": "Plan: docs/plans/active/2026-10-07-m27-upgrades.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m27-upgrades.md"
     },
     {
       "id": "M27-002",
@@ -932,7 +932,7 @@
       ],
       "effort": "high",
       "verify": "bash scripts/e2e.sh exits 0 with: models.json claude strong opus and standard sonnet, codex strong gpt-6-astra and standard gpt-6.1-sol, copilot strong gpt-6-astra, and _instructions stating the rule and the fallback; test-agents.sh proving a tier set to auto gets no model line; test-second-opinion.sh proving a CLI that rejects the model is retried once without a model flag, prints MODEL: <name> unavailable, and still returns the verdict, and that auto passes no model flag; harness-run SKILL.md says an agent whose model is unavailable is replaced by the CLI's built-in subagent for that dispatch",
-      "notes": "Plan: docs/plans/active/2026-10-07-m27-upgrades.md Copilot cheap and Codex cheap set to auto (no tier uses them today). Model ids from learn.chatgpt.com/docs/models, 2026-10-07."
+      "notes": "Plan: docs/plans/completed/2026-10-07-m27-upgrades.md Copilot cheap and Codex cheap set to auto (no tier uses them today). Model ids from learn.chatgpt.com/docs/models, 2026-10-07."
     },
     {
       "id": "M27-003",
@@ -948,7 +948,7 @@
       ],
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with test-run.sh fixtures proving run-report.sh writes, under each done feature, its PROGRESS.md Decisions: line; a Supervisor section listing .harness-run/decisions/<id>.skipped.md items; a Budget section from .harness-run/budget.log; and no Supervisor or Budget section when those files are absent; output stays deterministic",
-      "notes": "Plan: docs/plans/active/2026-10-07-m27-upgrades.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m27-upgrades.md"
     },
     {
       "id": "M27-004",
@@ -966,13 +966,13 @@
       ],
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with: CHANGELOG.md having an entry with an Upgrade: block for the current version (gate fails otherwise); test-upgrade.sh fixtures proving upgrade.sh writes docs/agents/harness-kit-version with the kit version and prints the Upgrade: notes of every release newer than the recorded version (all when none is recorded, none when current); harness-upgrade-structure SKILL.md relays those notes; README has an 'Upgrading after every release' checklist in order: update plugins, branch, harness-upgrade-structure, read the notes, harness-audit, gate, commit, PR",
-      "notes": "Plan: docs/plans/active/2026-10-07-m27-upgrades.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m27-upgrades.md"
     },
     {
       "id": "M27-005",
       "milestone": 27,
       "title": "Template mirror sync script (keeps the mirror's banner, README, PRODUCT.md) and a synced mirror; release 3.5.0",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M27-004"
       ],
@@ -986,7 +986,7 @@
       ],
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-sync-template.sh fixtures proving sync-template.sh <mirror> writes every template to its mirror path, keeps the mirror's AGENTS.md banner, README.md and docs/PRODUCT.md, is idempotent, and with --check exits 1 on a stale mirror and 0 on a synced one; CHANGELOG release checklist names it; agent-harness-template has a PR syncing it (sync-template.sh --check exits 0 on that branch); all manifests are 3.5.0",
-      "notes": "Plan: docs/plans/active/2026-10-07-m27-upgrades.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m27-upgrades.md Mirror synced in SedyBenoitPeace/agent-harness-template PR #3 (branch sync-3.5.0, --check IN SYNC)."
     }
   ]
 }
