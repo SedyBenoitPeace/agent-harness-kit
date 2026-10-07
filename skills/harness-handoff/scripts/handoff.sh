@@ -16,7 +16,7 @@ cd "$TARGET"
 
 if [ ! -f FEATURES.json ] || [ ! -f PROGRESS.md ]; then
   echo "HARNESS NOT INITIALIZED: FEATURES.json and/or PROGRESS.md missing."
-  echo "Scaffold it with the harness-initial-setup skill (or harness-protocol.md section 1)."
+  echo "Scaffold it with the harness-initial-setup skill (or harness-protocol-planning.md)."
   exit 3
 fi
 
@@ -67,6 +67,8 @@ printf '%s' "$WARNINGS"
 if [ -f docs/agents/harness-protocol.md ]; then
   OPEN="Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and"
   PLAN_OPEN="Read AGENTS.md, then docs/agents/harness-protocol.md section 1, and"
+  [ -f docs/agents/harness-protocol-planning.md ] \
+    && PLAN_OPEN="Read AGENTS.md, then docs/agents/harness-protocol-planning.md, and"
 else
   OPEN="Read AGENTS.md and"
   PLAN_OPEN="Read AGENTS.md and"

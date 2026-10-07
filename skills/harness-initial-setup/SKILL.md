@@ -28,7 +28,7 @@ work.
 
 ### 2. Run the planning protocol
 
-Read `templates/harness-protocol.md` **section 1** and run it exactly — the
+Read `templates/harness-protocol-planning.md` (section 1) and run it exactly — the
 skill follows its own shipped manual. In particular:
 
 - Interview the human first (§1.1 has the required questions). Do not
@@ -63,7 +63,7 @@ Copy each template and substitute every `{{PLACEHOLDER}}`:
 | `templates/ARCHITECTURE.md.tmpl` | `ARCHITECTURE.md` (content from §1.8, not placeholders) |
 | `templates/dev.sh.tmpl` | `scripts/dev.sh` (chmod +x) |
 | `templates/e2e.sh.tmpl` | `scripts/e2e.sh` (chmod +x) |
-| `templates/harness-protocol.md` | `docs/agents/harness-protocol.md` — **copied whole, never generated or summarized** |
+| `templates/harness-protocol.md`, `templates/harness-protocol-planning.md`, `templates/harness-protocol-runs.md`, `templates/harness-protocol-maintenance.md` | `docs/agents/`, same names — **copied whole, never generated or summarized** |
 
 If any feature opted in to evaluation (`evaluate` set, protocol §1.4),
 run the plugin's `../../scripts/gen-agents.sh <target-repo>` (path

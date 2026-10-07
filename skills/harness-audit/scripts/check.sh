@@ -79,21 +79,23 @@ else
   failc "docs/plans/active/ and/or docs/plans/completed/ missing"
 fi
 
-# Protocol doc: present, and unmodified vs the shipped copy
-if [ -f docs/agents/harness-protocol.md ]; then
-  pass "docs/agents/harness-protocol.md exists"
-  if [ -f "$SHIPPED_PROTOCOL" ]; then
-    if cmp -s docs/agents/harness-protocol.md "$SHIPPED_PROTOCOL"; then
-      pass "protocol doc matches the shipped copy"
+# Protocol docs (session core + planning, runs, maintenance): present, and
+# unmodified vs the shipped copies
+for f in harness-protocol.md harness-protocol-planning.md harness-protocol-runs.md harness-protocol-maintenance.md; do
+  shipped="$(dirname "$SHIPPED_PROTOCOL")/$f"
+  if [ -f "docs/agents/$f" ]; then
+    pass "docs/agents/$f exists"
+    if [ ! -f "$shipped" ]; then
+      warn "shipped copy of $f not found next to this script; drift not checked"
+    elif cmp -s "docs/agents/$f" "$shipped"; then
+      pass "$f matches the shipped copy"
     else
-      warn "protocol doc differs from the shipped copy (drifted or older version)"
+      warn "$f differs from the shipped copy (drifted or older version)"
     fi
   else
-    warn "shipped protocol copy not found next to this script; drift not checked"
+    failc "docs/agents/$f missing (harness-upgrade-structure adds it)"
   fi
-else
-  failc "docs/agents/harness-protocol.md missing"
-fi
+done
 
 # Independent evaluator (WARN only): features opted in with evaluate:"ui"
 # need a harness-evaluator agent file for at least one CLI (protocol §2.7)

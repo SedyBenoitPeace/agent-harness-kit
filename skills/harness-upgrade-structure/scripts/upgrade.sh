@@ -41,18 +41,20 @@ else
   echo "BRANCH: ${current:-detached HEAD}"
 fi
 
-# protocol copy
-dest=docs/agents/harness-protocol.md
-if [ ! -f "$dest" ]; then
-  mkdir -p docs/agents
-  cp "$TEMPLATES/harness-protocol.md" "$dest"
-  echo "CHANGED: $dest (was missing; copied from the plugin)"
-elif cmp -s "$TEMPLATES/harness-protocol.md" "$dest"; then
-  echo "OK: $dest is current"
-else
-  cp "$TEMPLATES/harness-protocol.md" "$dest"
-  echo "CHANGED: $dest (recopied whole from the plugin; re-add any local notes the old copy had — see git diff)"
-fi
+# protocol copies: the session core plus the parts read only when needed (M28-002)
+mkdir -p docs/agents
+for f in harness-protocol.md harness-protocol-planning.md harness-protocol-runs.md harness-protocol-maintenance.md; do
+  dest="docs/agents/$f"
+  if [ ! -f "$dest" ]; then
+    cp "$TEMPLATES/$f" "$dest"
+    echo "CHANGED: $dest (was missing; copied from the plugin)"
+  elif cmp -s "$TEMPLATES/$f" "$dest"; then
+    echo "OK: $dest is current"
+  else
+    cp "$TEMPLATES/$f" "$dest"
+    echo "CHANGED: $dest (recopied whole from the plugin; re-add any local notes the old copy had — see git diff)"
+  fi
+done
 
 # harness-run line in AGENTS.md
 if [ ! -f AGENTS.md ]; then

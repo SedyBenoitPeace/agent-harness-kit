@@ -3,6 +3,25 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 54 (M28-002)
+
+- Branch: `m28-lean`.
+- Done: M28-002 — the protocol is four files. `harness-protocol.md` is the
+  session core (§2.1–2.6, 143 lines, was 592) with an index;
+  `harness-protocol-planning.md` (§1), `harness-protocol-runs.md` (§2.7–2.8)
+  and `harness-protocol-maintenance.md` (§3) are read only when needed.
+  Setup copies all four; upgrade.sh, harness-audit, context.sh and
+  sync-template.sh handle each (fixtures for a missing part, a drifted
+  part, a pre-split repo). Planning and maintenance prompts name their
+  files; handoff keeps the old prompt for repos not yet upgraded.
+- Decisions: kept section numbers and the core's file name, so every `§`
+  reference, plan header and "section 2" prompt still works (no 4.0.0);
+  rejected a single file with "read only up to here" markers (agents read
+  whole files). Trimmed the show-me and workflow-plugin paragraphs while
+  moving them.
+- Gate: green.
+- Next: M28-003 (size limits and rule expiry).
+
 ## 2026-10-07 — session 53 (M28-001)
 
 - Branch: `m28-lean`.

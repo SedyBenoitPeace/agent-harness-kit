@@ -149,7 +149,7 @@ copilot plugin update agent-harness-kit
 1. **Set up once** — `/agent-harness-kit:harness-initial-setup`. Expect an
    interview about the product before anything is written; it ends with
    the full scaffold (AGENTS.md, FEATURES.json, PROGRESS.md,
-   ARCHITECTURE.md, docs/plans/, docs/agents/harness-protocol.md,
+   ARCHITECTURE.md, docs/plans/, the protocol in docs/agents/,
    scripts/e2e.sh). Repos that are already harnessed are detected and
    left alone.
 2. **Build one feature per session** — say _"Read AGENTS.md, then
@@ -445,7 +445,7 @@ branch concurrently.
 | Do one unit of work (plugin installed) | _"Implement M1-004 following the harness."_ or _"Continue the current harness feature."_ |
 | Do many units of work (plugin installed) | _"Run the rest of milestone 3 with harness-run."_ |
 | End a session / switch agents | _"Prepare the handoff for the next agent."_                                                                 |
-| Periodic cleanup              | _"Read AGENTS.md, then docs/agents/harness-protocol.md section 3, and perform one maintenance pass."_       |
+| Periodic cleanup              | _"Read AGENTS.md, then docs/agents/harness-protocol-maintenance.md, and perform one maintenance pass."_       |
 
 ## Quickstart — template repository
 
@@ -457,15 +457,17 @@ AGENTS.md and follow its initialization instructions."_ The template mirrors
 
 ## Quickstart — any other agent
 
-You need exactly one file:
-[`skills/harness-initial-setup/templates/harness-protocol.md`](skills/harness-initial-setup/templates/harness-protocol.md).
+You need the four protocol files in
+[`skills/harness-initial-setup/templates/`](skills/harness-initial-setup/templates/):
+`harness-protocol.md` (the session core every session reads) and the parts
+read only when needed, `harness-protocol-planning.md`,
+`harness-protocol-runs.md` and `harness-protocol-maintenance.md`.
 
-Copy it into your repo as `docs/agents/harness-protocol.md` (bring the
-`templates/` directory too if you want the ready-made scaffolds), then tell
-your agent:
+Copy them into your repo's `docs/agents/` (bring the rest of `templates/`
+too if you want the ready-made scaffolds), then tell your agent:
 
 ```
-Read docs/agents/harness-protocol.md section 1 and run the planning
+Read docs/agents/harness-protocol-planning.md and run the planning
 protocol for this repository. Interview me before writing anything.
 ```
 
@@ -493,7 +495,8 @@ skills/
 ├── harness-initial-setup/
 │   ├── SKILL.md        planning/scaffolding orchestration (thin)
 │   └── templates/
-│       ├── harness-protocol.md   ★ the agent-neutral operating manual
+│       ├── harness-protocol.md   ★ the agent-neutral manual: session core + index
+│       ├── harness-protocol-{planning,runs,maintenance}.md  read only when needed
 │       ├── AGENTS.md.tmpl        entry point scaffold (≤100-line map)
 │       ├── FEATURES.json.tmpl    scope/status source of truth
 │       ├── PROGRESS.md.tmpl      session log

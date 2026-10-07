@@ -19,7 +19,7 @@ make_fixture() {  # $1 = destination dir
   sed 's/{{[A-Za-z0-9_]*}}/X/g'    "$TMPL/ARCHITECTURE.md.tmpl" > "$d/ARCHITECTURE.md"
   sed 's/{{[A-Za-z0-9_]*}}/true/g' "$TMPL/e2e.sh.tmpl"        > "$d/scripts/e2e.sh"
   chmod +x "$d/scripts/e2e.sh"
-  cp "$TMPL/harness-protocol.md" "$d/docs/agents/harness-protocol.md"
+  cp "$TMPL"/harness-protocol*.md "$d/docs/agents/"
   cp "$TMPL/pointer.md.tmpl" "$d/CLAUDE.md"
 }
 
@@ -46,6 +46,10 @@ make_fixture "$WORK/drift"
 echo "local note" >> "$WORK/drift/docs/agents/harness-protocol.md"
 out="$(bash "$CHECK" "$WORK/drift")" || fail "drifted protocol must not fail the audit"
 echo "$out" | grep -q "^WARN.*differs" || fail "drifted protocol: expected WARN line"
+make_fixture "$WORK/drift-runs"
+echo "local note" >> "$WORK/drift-runs/docs/agents/harness-protocol-runs.md"
+out="$(bash "$CHECK" "$WORK/drift-runs")" || fail "drifted runs part must not fail the audit"
+echo "$out" | grep -q "^WARN.*harness-protocol-runs.md differs" || fail "drifted runs part: expected WARN line"
 
 # 2b. missing ARCHITECTURE.md: WARN (repair flow lives in SKILL.md), still exit 0
 make_fixture "$WORK/no-arch"
@@ -129,5 +133,8 @@ expect_fail "$WORK/no-plans" "docs/plans" "missing plans dir"
 make_fixture "$WORK/no-proto"
 rm "$WORK/no-proto/docs/agents/harness-protocol.md"
 expect_fail "$WORK/no-proto" "harness-protocol.md missing" "missing protocol doc"
+make_fixture "$WORK/no-planning"
+rm "$WORK/no-planning/docs/agents/harness-protocol-planning.md"
+expect_fail "$WORK/no-planning" "harness-protocol-planning.md missing" "missing planning part (repo not upgraded)"
 
 echo "AUDIT TESTS GREEN"

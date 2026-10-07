@@ -18,7 +18,7 @@ checks live in `scripts/check.sh` — run it, never re-derive it by hand.
 2. Relay the PASS/FAIL/WARN report verbatim.
 3. Do the one check the script can't: read every `verify` field in
    FEATURES.json and flag unfalsifiable ones ("works correctly"-style).
-   The standard is §1.4 of `../harness-initial-setup/templates/harness-protocol.md`
+   The standard is §1.4 of `../harness-initial-setup/templates/harness-protocol-planning.md`
    (worked GOOD/BAD examples inside).
 4. Give the verdict: harness-ready, or the ordered list of gaps.
 5. **Offer — never auto-apply — fixes:**

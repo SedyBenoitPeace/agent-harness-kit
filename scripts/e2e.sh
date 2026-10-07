@@ -138,8 +138,26 @@ red_log="$(echo "$red_out" | sed -n 's/^FULL_LOG: //p')"
 rm -rf "$gate_tmp"
 
 # protocol doc: exists, has the planning section, no Claude-isms
-PROTO="$TMPL_DIR/harness-protocol.md"
-[ -f "$PROTO" ] || fail "harness-protocol.md missing"
+# The protocol is four files (M28-002): the session core every session reads,
+# and three parts read only when needed. Content checks run on all four,
+# concatenated in section order, so section ranges below still resolve.
+CORE="$TMPL_DIR/harness-protocol.md"
+PROTO_FILES="harness-protocol-planning.md harness-protocol.md harness-protocol-runs.md harness-protocol-maintenance.md"
+PROTO="$(mktemp)"
+for f in $PROTO_FILES; do
+  [ -f "$TMPL_DIR/$f" ] || fail "$f missing"
+  cat "$TMPL_DIR/$f" >> "$PROTO"
+done
+# each part holds exactly its sections
+[ "$(grep -E '^##+ [0-9]' "$CORE" | sed -E 's/^##+ ([0-9.]+).*/\1/' | tr '\n' ' ')" = "2. 2.1 2.2 2.3 2.4 2.5 2.6 " ] \
+  || fail "harness-protocol.md must hold exactly section 2.1-2.6 (the session core)"
+[ "$(grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-runs.md" | sed -E 's/^##+ ([0-9.]+).*/\1/' | tr '\n' ' ')" = "2.7 2.8 " ] \
+  || fail "harness-protocol-runs.md must hold exactly 2.7 and 2.8"
+grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-planning.md" | grep -qvE '^##+ 1[. ]' && fail "harness-protocol-planning.md holds a section other than 1.x"
+grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-maintenance.md" | grep -qvE '^##+ 3[. ]' && fail "harness-protocol-maintenance.md holds a section other than 3.x"
+for f in harness-protocol-planning.md harness-protocol-runs.md harness-protocol-maintenance.md; do
+  grep -qF "\`$f\`" "$CORE" || fail "harness-protocol.md index must name $f"
+done
 grep -q '^## 1\. Planning protocol' "$PROTO" || fail "protocol: '## 1. Planning protocol' missing"
 grep -q 'PRODUCT\.md' "$PROTO" || fail "protocol: planning section never mentions PRODUCT.md"
 grep -qi 'verify' "$PROTO" || fail "protocol: planning section never teaches the verify field"
@@ -433,7 +451,7 @@ core_v="$(jq -r .version "$ED")"
 [ "$(jq -r .version "$ED_MANIFEST")" = "$core_v" ] || fail "Claude edition: plugin.json version must match the core ($core_v)"
 [ "$(jq -r '.plugins[] | select(.name == "agent-harness-kit-claude") | .version' .claude-plugin/marketplace.json)" = "$core_v" ] \
   || fail "marketplace.json: Claude edition version must match the core ($core_v)"
-if find claude -name 'harness-protocol.md' | grep -q .; then fail "Claude edition must not copy harness-protocol.md"; fi
+if find claude -name 'harness-protocol*.md' | grep -q .; then fail "Claude edition must not copy the protocol files"; fi
 grep -qF '/plugin install agent-harness-kit-claude' README.md || fail "README: Claude edition install line missing"
 # claude plugin validate when the CLI is present (CI runners may not have it)
 # Strict: every error and every warning fails, except the one the owner chose

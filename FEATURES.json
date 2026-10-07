@@ -1010,7 +1010,7 @@
       "id": "M28-002",
       "milestone": 28,
       "title": "Split the protocol: session core plus planning, runs and maintenance files read only when needed",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M28-001"
       ],
