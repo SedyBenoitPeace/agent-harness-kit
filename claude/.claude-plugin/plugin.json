@@ -1,13 +1,20 @@
 {
   "name": "agent-harness-kit-mods",
   "description": "Claude Code edition of the agent harness: adds Claude Code-only features (agent effort, mods, eval suites) on top of agent-harness-kit.",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "author": {
     "name": "Stefano Rifici"
   },
   "homepage": "https://github.com/SedyBenoitPeace/agent-harness-kit",
   "repository": "https://github.com/SedyBenoitPeace/agent-harness-kit",
   "license": "MIT",
-  "keywords": ["harness", "agents", "claude-code", "mods"],
-  "dependencies": ["agent-harness-kit"]
+  "keywords": [
+    "harness",
+    "agents",
+    "claude-code",
+    "mods"
+  ],
+  "dependencies": [
+    "agent-harness-kit"
+  ]
 }
