@@ -65,6 +65,33 @@ echo "$out" | grep -q '^TODO: .*harness-audit' || fail "upgrade: depends_on/path
 [ "$(g rev-parse HEAD)" = "$before" ] || fail "upgrade: must not commit"
 [ -z "$(g diff --cached --name-only)" ] || fail "upgrade: must not stage anything"
 
+# 3b. Needs-a-human line (M29-002): the template's old wording is replaced
+#     in place; an edited section gets a TODO; the current one is OK
+N="$WORK/needs"; mkdir -p "$N"
+# shellcheck disable=SC2016 # the backticks are literal markdown
+printf '# A\n\n## Needs a human\n\nStop the session as `blocked` with a question in `PROGRESS.md` — never act — before:\ndeploy.\n' > "$N/AGENTS.md"
+printf '# B\n\n## Needs a human\n\nAsk Bob before: deploy.\n' > "$N/edited.md"
+for c in AGENTS.md edited.md; do
+  M="$WORK/needs-$c"; mkdir -p "$M/docs/agents"; git -C "$M" init -q -b main
+  printf '{ "milestones": {"1":"C"}, "features": [] }\n' > "$M/FEATURES.json"; printf '# P\n' > "$M/PROGRESS.md"
+  cp "$N/$c" "$M/AGENTS.md"; printf 'harness-run\n' >> "$M/AGENTS.md"
+  git -C "$M" -c user.email=t@t -c user.name=t add -A; git -C "$M" -c user.email=t@t -c user.name=t commit -qm seed
+  out="$(bash "$UPGRADE" "$M" 2>&1)" || fail "needs-a-human $c: expected exit 0"
+  if [ "$c" = AGENTS.md ]; then
+    grep -q '^CHANGED: AGENTS.md (Needs a human' <<< "$out" || fail "needs-a-human: old line not replaced"
+    # shellcheck disable=SC2016 # literal markdown
+    grep -qF 'set your feature to `deferred` with notes `Needs a human: <question>`, before:' "$M/AGENTS.md" || fail "needs-a-human: new line missing"
+    grep -qF 'Stop the session as' "$M/AGENTS.md" && fail "needs-a-human: old line still there"
+    grep -qx 'deploy.' "$M/AGENTS.md" || fail "needs-a-human: the rest of the section must stay"
+    git -C "$M" -c user.email=t@t -c user.name=t add -A; git -C "$M" -c user.email=t@t -c user.name=t commit -qm up
+    out="$(bash "$UPGRADE" "$M" 2>&1)"
+    grep -q '^OK: AGENTS.md Needs-a-human line is current' <<< "$out" || fail "needs-a-human: second run should be OK"
+  else
+    grep -q '^TODO: AGENTS.md "Needs a human" section was edited' <<< "$out" || fail "needs-a-human: edited section needs a TODO"
+    grep -qx 'Ask Bob before: deploy.' "$M/AGENTS.md" || fail "needs-a-human: an edited section must not be touched"
+  fi
+done
+
 # 4. idempotent: commit the result, run again on the (non-default) branch
 g add -A; g commit -qm "chore: upgrade"
 out="$(bash "$UPGRADE" "$R" 2>&1)" || fail "second run: expected exit 0"

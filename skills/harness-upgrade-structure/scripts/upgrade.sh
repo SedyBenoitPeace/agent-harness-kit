@@ -70,6 +70,24 @@ else
   [ "$lines" -le 100 ] || echo "TODO: AGENTS.md is now $lines lines (limit 100) — trim it"
 fi
 
+# "Needs a human" line in AGENTS.md (M29-002): a blocked session defers its
+# own feature. Replaced only when it is still the template's old wording.
+# shellcheck disable=SC2016 # the backticks are literal markdown
+if [ -f AGENTS.md ]; then
+  new_line="$(grep -m1 '^Never act; stop as `blocked`' "$TEMPLATES/AGENTS.md.tmpl")"
+  old_line='Stop the session as `blocked` with a question in `PROGRESS.md` — never act — before:'
+  if grep -qF 'Needs a human: <question>' AGENTS.md; then
+    echo "OK: AGENTS.md Needs-a-human line is current"
+  elif grep -qxF "$old_line" AGENTS.md; then
+    tmp="$(mktemp)"
+    awk -v old="$old_line" -v new="$new_line" '$0 == old { print new; next } { print }' AGENTS.md > "$tmp" && cat "$tmp" > AGENTS.md
+    rm -f "$tmp"
+    echo "CHANGED: AGENTS.md (Needs a human: a blocked session now defers its feature with a Needs a human: note)"
+  elif grep -q '^## Needs a human' AGENTS.md; then
+    echo "TODO: AGENTS.md \"Needs a human\" section was edited — make its first line say: $new_line"
+  fi
+fi
+
 # generated agent files (M27-001): a repo that has any harness agent file
 # gets every role regenerated for each CLI folder it already uses, so new
 # instructions (Decisions:, untrusted text, effort) reach builder, evaluator

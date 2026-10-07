@@ -3,6 +3,19 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 60 (M29-002 follow-up)
+
+- Branch: `m29-run-speed`.
+- Done: upgrade.sh updates the first line of AGENTS.md's "Needs a human"
+  section itself when it is still the old template wording (CHANGED), says
+  OK when current, and prints a TODO only when the owner edited that
+  section. Fixtures in test-upgrade.sh. The 3.7.0 Upgrade block no longer
+  asks for a manual edit.
+- Decisions: replace only an exact match of the old template line; an
+  edited section is the owner's text and is never rewritten.
+- Gate: green.
+- Next: owner merges.
+
 ## 2026-10-07 — session 59 (M29-003, release 3.7.0)
 
 - Branch: `m29-run-speed`.

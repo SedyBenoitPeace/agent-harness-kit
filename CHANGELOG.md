@@ -25,8 +25,7 @@ From a real run's troubleshooting:
   edition.
 
 Upgrade:
-- Standard upgrade (new protocol: reused baseline, the needs-a-human question).
-- In your AGENTS.md "Needs a human" section, replace "Stop the session as `blocked` with a question in `PROGRESS.md`" with "stop as `blocked`, set your feature to `deferred` with notes `Needs a human: <question>`".
+- Standard upgrade (new protocol: reused baseline, the needs-a-human question); it also updates the first line of your AGENTS.md "Needs a human" section, or prints a TODO if you edited that section.
 - Features you know are waiting on a person: set them to `deferred` with notes starting `Needs a human:`.
 
 ## 3.6.0 — 2026-10-07
