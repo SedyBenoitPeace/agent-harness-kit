@@ -211,9 +211,9 @@ features only Claude Code has: an eval suite for the core skills and mods
 (function hooks: a decision register, a done-check supervisor, a budget
 guard, a next-steps band). It depends on the core plugin and never copies
 the protocol, so every other CLI keeps working from the core alone.
+Installing the edition installs the core plugin with it:
 
 ```
-/plugin install agent-harness-kit
 /plugin install agent-harness-kit-mods
 ```
 
