@@ -1080,7 +1080,7 @@
       "id": "M29-002",
       "milestone": 29,
       "title": "Waiting on a human: deferred features with a Needs a human: note are listed, their dependents held, and sessions defer their own blocked feature",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M29-001"
       ],

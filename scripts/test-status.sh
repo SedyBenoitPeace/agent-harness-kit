@@ -67,4 +67,31 @@ rc=0; bash "$STATUS" "$WORK/repo" > "$WORK/broken.out" || rc=$?
 [ "$rc" -eq 2 ] || fail "broken JSON: expected exit 2, got $rc"
 grep -q "harness-audit" "$WORK/broken.out" || fail "broken JSON: must point at harness-audit"
 
+# 5. waiting on a human (M29-002): deferred + "Needs a human:" notes are
+#    listed; failing features whose depends_on reaches one are held,
+#    transitively, and never NEXT, with and without --skip
+mkdir "$WORK/human"
+cat > "$WORK/human/FEATURES.json" <<'JSON'
+{ "milestones": { "1": "Core" }, "features": [
+  { "id": "M1-001", "milestone": 1, "title": "deploy", "status": "deferred", "verify": "x", "notes": "Needs a human: who approves the production deploy?" },
+  { "id": "M1-002", "milestone": 1, "title": "smoke", "status": "failing", "verify": "x", "depends_on": ["M1-001"] },
+  { "id": "M1-003", "milestone": 1, "title": "alerts", "status": "failing", "verify": "x", "depends_on": ["M1-002"] },
+  { "id": "M1-004", "milestone": 1, "title": "docs", "status": "failing", "verify": "x", "depends_on": [] },
+  { "id": "M1-005", "milestone": 1, "title": "later", "status": "deferred", "verify": "x", "notes": "after the beta" } ] }
+JSON
+printf '# PROGRESS\n' > "$WORK/human/PROGRESS.md"
+for mode in plain skip; do
+  if [ "$mode" = skip ]; then : > "$WORK/empty-skip"; out="$(bash "$STATUS" --skip "$WORK/empty-skip" "$WORK/human")"; else out="$(bash "$STATUS" "$WORK/human")"; fi
+  grep -qx 'WAITING ON HUMAN: M1-001 — who approves the production deploy?' <<< "$out" || fail "human $mode: WAITING ON HUMAN line missing"
+  grep -qx 'HELD: M1-002 — depends on M1-001' <<< "$out" || fail "human $mode: direct dependent not held"
+  grep -qx 'HELD: M1-003 — depends on M1-002' <<< "$out" || fail "human $mode: transitive dependent not held"
+  grep -q 'M1-005' <<< "$(grep 'WAITING' <<< "$out")" && fail "human $mode: an ordinary deferred feature is not waiting on a human"
+  grep -q '^NEXT: M1-004' <<< "$out" || fail "human $mode: NEXT must skip held features"
+done
+mkdir "$WORK/nohuman"; printf '# PROGRESS\n' > "$WORK/nohuman/PROGRESS.md"
+jq '.features[0].notes = "after the launch"' "$WORK/human/FEATURES.json" > "$WORK/nohuman/FEATURES.json"
+out="$(bash "$STATUS" "$WORK/nohuman")"
+grep -q 'Waiting on a human' <<< "$out" && fail "no waiting features: no section expected"
+grep -q '^NEXT: M1-002' <<< "$out" || fail "no waiting features: nothing held, NEXT is M1-002"
+
 echo "STATUS TESTS GREEN"

@@ -76,6 +76,10 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    and never touch FEATURES.json or PROGRESS.md (the `Decisions:` line goes
    in the commit message body instead);
    the orchestrator runs the full gate and flips status.
+   **Stopping on a Needs-a-human item** (AGENTS.md list): set your own
+   feature to `deferred` with `notes` starting `Needs a human: <question>`,
+   commit FEATURES.json only, report `blocked`. Status reports then show it
+   as waiting, and no later run retries it until the human answers.
 11. End with this one-line summary as your last output (harness-run
     parses it; a blocked session stops at the blocker and still prints it):
     `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`

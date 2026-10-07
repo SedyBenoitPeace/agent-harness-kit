@@ -540,6 +540,13 @@ done
 grep -qF 'auth, payments, personal data or migrations' "$RUN_SKILL/SKILL.md" \
   || fail "harness-run: security checklist trigger must be stated in words (M28-001)"
 
+# --- waiting on a human (M29-002) ------------------------------------------------
+grep -qF 'Does this need a human before it can be built?' "$PROTO" || fail "protocol 1.4: needs-a-human question missing (M29-002)"
+for f in "$TMPL_DIR/AGENTS.md.tmpl" "$SESSION_SKILL_MD" "$TMPL_DIR/FEATURES.json.tmpl" "$TMPL_DIR/harness-protocol-runs.md"; do
+  grep -qF 'Needs a human:' "$f" || fail "$(basename "$f"): 'Needs a human:' deferral missing (M29-002)"
+done
+grep -qF 'WAITING ON HUMAN' skills/harness-status/scripts/status.sh || fail "status.sh: waiting-on-human list missing (M29-002)"
+
 # --- a clear upgrade every release (M27-004) ---------------------------------------
 [ -f CHANGELOG.md ] || fail "CHANGELOG.md missing"
 cur_v="$(jq -r .version .claude-plugin/plugin.json)"

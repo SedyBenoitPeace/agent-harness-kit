@@ -358,6 +358,16 @@ What it does, so nothing surprises you:
   get the reason and one question for you; only FEATURES.json is committed.
   Skipping also excludes features that `depends_on` the skipped one — and,
   for features with no declared `depends_on`, every feature after it.
+- **Waiting on a human.** A feature that needs you (an approval,
+  credentials, production access) is `deferred` with `notes` starting
+  `Needs a human: <question>`: planning asks for it, and a session that
+  hits such a blocker defers its own feature that way. Status and the report
+  list these questions; features whose `depends_on` reaches one are held,
+  so no run spends time rediscovering the blocker. Answer, then set the
+  feature back to `failing`.
+- **Reused baseline.** A builder whose tree is identical (PROGRESS.md and
+  plans aside) to the last green gate run in this clone skips its baseline
+  gate: `GATE: green (baseline reused …)`. `HARNESS_GATE_REUSE=0` turns it off.
 - **Stops** when nothing eligible is left, at the cap, when you create
   `.harness-run/STOP`, on a baseline problem (dirty tree, `UPGRADE: offer`,
   a red gate), or when a dispatch produced neither a commit nor a skip.

@@ -156,6 +156,12 @@ feature after the builder, read-only, as a second evaluator. A different vendor'
 `evaluate`, it ends the building session in `review`. Leave it out unless the
 named agent is installed where runs happen.
 
+Ask too: **Does this need a human before it can be built?** (an approval,
+credentials, production access, a decision only they can make). If yes,
+record it as `deferred` with `notes` starting `Needs a human: <question>`.
+Status reports list it as waiting on a human and hold every feature whose
+`depends_on` reaches it, so no session spends time finding the blocker.
+
 Last question per feature: **How much verification does this deserve?**
 Record the answer as `effort`, one of low, medium, high or max. Effort
 is spent mostly on verification and edge cases, so it pays where those

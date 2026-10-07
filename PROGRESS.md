@@ -3,6 +3,25 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 58 (M29-002)
+
+- Branch: `m29-run-speed`.
+- Done: M29-002 — waiting on a human. A `deferred` feature whose notes
+  start `Needs a human: <question>` is listed by status.sh
+  (`WAITING ON HUMAN:`), and failing features whose `depends_on` reaches it,
+  transitively, are `HELD:` and never NEXT, with or without `--skip`. The
+  run report gets a "Waiting on a human" section and explains held
+  features under Not started. Planning §1.4 asks the question; AGENTS.md.tmpl,
+  harness-session and the runs part tell a blocked session to defer its own
+  feature that way, so later runs do not retry it. README explains both
+  this and the reused baseline.
+- Decisions: reused `deferred` plus a notes prefix rather than a new
+  `needs_human` field (status.sh already skips deferred; no schema change);
+  only explicit `depends_on` holds a feature (an undeclared one may well be
+  independent, unlike a skip where the run must be conservative).
+- Gate: green.
+- Next: M29-003 (paths hint, per-feature time and tokens, release 3.7.0).
+
 ## 2026-10-07 — session 57 (M29-001)
 
 - Branch: `m29-run-speed`.

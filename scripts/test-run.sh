@@ -140,6 +140,18 @@ sed -n '/^## Supervisor/,/^## /p' "$rep" | grep -q '^- M1-001 — boot: no test 
 sed -n '/^## Budget/,/^## /p' "$rep" | grep -q 'agent-3: 1600000 tokens over the 1500000 budget' || fail "run-report: Budget must carry budget.log"
 rm -rf "$R/.harness-run"
 
+# M29-002: features waiting on a human get their own section with the
+# question, and the features they hold are explained under Not started
+grep -q '^## Waiting on a human' "$rep" && fail "run-report: no Waiting section when nothing waits"
+jq '.features += [
+  {"id": "M2-002", "milestone": 2, "title": "deploy", "status": "deferred", "verify": "x", "notes": "Needs a human: who approves the deploy?"},
+  {"id": "M2-003", "milestone": 2, "title": "smoke", "status": "failing", "verify": "x", "depends_on": ["M2-002"]}]' \
+  "$R/FEATURES.json" > "$R/f.tmp" && mv "$R/f.tmp" "$R/FEATURES.json"
+g add FEATURES.json; g commit -qm "plan: deploy waits on a human"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")" || fail "run-report with a waiting feature: expected exit 0"
+sed -n '/^## Waiting on a human/,/^## /p' "$rep" | grep -q '^- M2-002 — who approves the deploy?$' || fail "run-report: Waiting on a human must list M2-002 with its question"
+sed -n '/^## Not started/,/^## /p' "$rep" | grep -q 'M2-003.*held — depends on M2-002, which waits on a human' || fail "run-report: a held feature must say why"
+
 # bad start commit: usage error, exit 2
 rc=0; (cd "$R" && bash "$REPORT" nope >/dev/null 2>&1) || rc=$?
 [ "$rc" -eq 2 ] || fail "run-report: unknown start commit should exit 2, got $rc"

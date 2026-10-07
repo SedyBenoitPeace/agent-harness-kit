@@ -60,6 +60,9 @@ nothing stops it for a feature it cannot finish. The human invokes the
 - It never asks the human anything. Run state lives in `.harness-run/`
   at the repo root (never committed, listed in `.gitignore`):
   `start` (the start commit), `skip` (one id per line), and `STOP`.
+- A session blocked on a Needs-a-human item has already set its feature to
+  `deferred` (`Needs a human: …`): the run only records the skip, and later
+  runs leave it alone until the human answers and sets it back to `failing`.
 - **Skip, don't stop** when a session is `blocked`, its gate is red, or
   the evaluator returns `NEEDS_WORK` twice: leftover changes go to
   `git stash push -u -m "harness-run skip <id>"` (never discarded); the

@@ -112,7 +112,13 @@ while IFS= read -r id; do
 done < "$SKIP_FILE"
 
 # not started: failing features that were neither done nor skipped
-deps="$(bash "$STATUS" --skip "$SKIP_FILE" . | sed -n 's/^SKIPPED: \([^ ]*\) — depends on \(.*\)$/\1 \2/p')"
+stat="$(bash "$STATUS" --skip "$SKIP_FILE" .)"
+deps="$(sed -n 's/^SKIPPED: \([^ ]*\) — depends on \(.*\)$/\1 \2/p' <<< "$stat")"
+# waiting on a human (M29-002): the questions, and what they hold back
+held="$(sed -n 's/^HELD: \([^ ]*\) — depends on \(.*\)$/\1 \2/p' <<< "$stat")"
+waiting_out="$(sed -n 's/^WAITING ON HUMAN: \(.*\)$/- \1/p' <<< "$stat")"
+[ -z "$waiting_out" ] || waiting_out="$waiting_out
+"
 notstarted_out=""; n_not=0
 while IFS= read -r id; do
   [ -n "$id" ] || continue
@@ -120,6 +126,8 @@ while IFS= read -r id; do
   on="$(printf '%s\n' "$deps" | sed -n "s/^$id \\(.*\\)\$/\\1/p")"
   why="not reached — $REASON"
   [ -z "$on" ] || why="depends on $on"
+  hon="$(printf '%s\n' "$held" | sed -n "s/^$id \\(.*\\)\$/\\1/p")"
+  [ -z "$hon" ] || why="held — depends on $hon, which waits on a human"
   notstarted_out="$notstarted_out- $id — $(title "$id") — $why
 "
   n_not=$((n_not + 1))
@@ -160,6 +168,14 @@ list() { if [ -n "$1" ]; then printf '%s' "$1"; else echo "- none"; fi; }
   echo "## Not started"
   echo
   list "$notstarted_out"
+  if [ -n "$waiting_out" ]; then
+    echo
+    echo "## Waiting on a human"
+    echo
+    echo "Deferred until you answer; their dependents wait too:"
+    echo
+    printf '%s' "$waiting_out"
+  fi
   if [ -n "$supervisor_out" ]; then
     echo
     echo "## Supervisor"
