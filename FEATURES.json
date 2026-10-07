@@ -23,7 +23,10 @@
     "19": "harness-brief: rough prompt to unambiguous brief",
     "20": "Unattended runs: keep going past problems, run report",
     "21": "Clear entry points: harness-initial-setup and harness-upgrade-structure",
-    "22": "Strict-YAML-safe skill frontmatter (Copilot and Codex discovery)"
+    "22": "Strict-YAML-safe skill frontmatter (Copilot and Codex discovery)",
+    "23": "Decision notes, per-feature effort, model-tagged rules",
+    "24": "Claude edition: native Claude Code features",
+    "25": "Claude edition: mods (function hooks)"
   },
   "features": [
     {
@@ -428,7 +431,12 @@
       "title": "Neutral builder/evaluator agent sources + generator for Claude, Copilot and Codex formats",
       "status": "passing",
       "depends_on": [],
-      "paths": ["agents/", "scripts/gen-agents.sh", "scripts/test-agents.sh", "scripts/e2e.sh"],
+      "paths": [
+        "agents/",
+        "scripts/gen-agents.sh",
+        "scripts/test-agents.sh",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-agents.sh proving gen-agents.sh emits .claude/agents/*.md, .github/agents/*.agent.md and .codex/agents/*.toml for harness-builder and harness-evaluator; evaluator excludes edit/write tools in every format and is sandbox_mode read-only for Codex; file names equal name fields; Copilot model is a string; a second run is idempotent",
       "notes": "Plan: docs/plans/active/2026-09-27-m18-evaluator.md"
     },
@@ -437,8 +445,15 @@
       "milestone": 18,
       "title": "review status, orchestrator evaluator step, integrity check and evidence file",
       "status": "passing",
-      "depends_on": ["M18-001"],
-      "paths": ["skills/harness-run/", "skills/harness-session/", "skills/harness-status/", "scripts/"],
+      "depends_on": [
+        "M18-001"
+      ],
+      "paths": [
+        "skills/harness-run/",
+        "skills/harness-session/",
+        "skills/harness-status/",
+        "scripts/"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-session.sh fixtures proving status.sh never selects a review feature as NEXT and accepts evaluate/bar/eval_attempts; features without those fields behave exactly as before; harness-run SKILL.md names harness-builder/harness-evaluator, the post-evaluator clean-tree/HEAD check, docs/verification/<id>.md on PASS, notes + eval_attempts on NEEDS_WORK, and STOP at 2 attempts",
       "notes": ""
     },
@@ -447,8 +462,17 @@
       "milestone": 18,
       "title": "Evaluator in protocol, planning interview, audit and README; release 1.9.0",
       "status": "passing",
-      "depends_on": ["M18-002"],
-      "paths": ["skills/harness-setup/templates/", "skills/harness-audit/", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
+      "depends_on": [
+        "M18-002"
+      ],
+      "paths": [
+        "skills/harness-setup/templates/",
+        "skills/harness-audit/",
+        "README.md",
+        ".claude-plugin/",
+        "package.json",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that protocol 1.4 asks 'Can the gate prove this?', 2.7 documents the review step and evidence file, FEATURES.json.tmpl documents review/evaluate/bar, harness-audit WARNs on opted-in features without agent files, README names the evaluator; package.json, plugin.json and marketplace.json are 1.9.0",
       "notes": ""
     },
@@ -458,7 +482,11 @@
       "title": "harness-brief skill + brief template + deterministic check-brief.sh",
       "status": "passing",
       "depends_on": [],
-      "paths": ["skills/harness-brief/", "scripts/test-brief.sh", "scripts/e2e.sh"],
+      "paths": [
+        "skills/harness-brief/",
+        "scripts/test-brief.sh",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-brief.sh proving check-brief.sh passes a complete fixture and fails, each with its own FAIL line, on a missing section, a non-empty Open questions, and a Done-when line without a backticked command; SKILL.md frontmatter valid, agent-neutral, at most three questions, stranger test before saving",
       "notes": "Plan: docs/plans/completed/2026-09-28-m19-harness-brief.md"
     },
@@ -467,8 +495,16 @@
       "milestone": 19,
       "title": "Independent read-only brief reviewer agent (harness-brief-reviewer) with a READY/GAPS verdict",
       "status": "passing",
-      "depends_on": ["M19-001", "M18-001"],
-      "paths": ["agents/src/", "skills/harness-brief/", "scripts/test-agents.sh", "scripts/test-brief.sh"],
+      "depends_on": [
+        "M19-001",
+        "M18-001"
+      ],
+      "paths": [
+        "agents/src/",
+        "skills/harness-brief/",
+        "scripts/test-agents.sh",
+        "scripts/test-brief.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that gen-agents.sh emits harness-brief-reviewer for all three CLIs, read-only in every format; its prompt receives only the brief file (never the conversation) and its first line is exactly READY or GAPS followed by numbered gaps; harness-brief SKILL.md dispatches it after writing the brief, asks the human about GAPS, and stops after 2 review rounds showing the remaining gaps",
       "notes": "Owner decision 2026-09-28: the skill talks with the human; a separate agent checks the result independently."
     },
@@ -477,8 +513,17 @@
       "milestone": 19,
       "title": "Planning consumes briefs; Needs-a-human section in AGENTS.md.tmpl; release 1.10.0",
       "status": "passing",
-      "depends_on": ["M19-002", "M18-003"],
-      "paths": ["skills/harness-setup/templates/", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
+      "depends_on": [
+        "M19-002",
+        "M18-003"
+      ],
+      "paths": [
+        "skills/harness-setup/templates/",
+        "README.md",
+        ".claude-plugin/",
+        "package.json",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that protocol 1.1 contains 'Already have a brief', AGENTS.md.tmpl contains a 'Needs a human' section with the six defaults and stays <= 80 lines, README lifecycle shows brief -> plan -> run; versions 1.10.0",
       "notes": ""
     },
@@ -488,7 +533,12 @@
       "title": "status.sh --skip: exclude skipped features and everything that depends on them",
       "status": "passing",
       "depends_on": [],
-      "paths": ["skills/harness-status/scripts/status.sh", "skills/harness-session/scripts/context.sh", "scripts/test-session.sh", "scripts/e2e.sh"],
+      "paths": [
+        "skills/harness-status/scripts/status.sh",
+        "skills/harness-session/scripts/context.sh",
+        "scripts/test-session.sh",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-session.sh fixtures proving: status.sh --skip FILE never selects a listed id as NEXT; it also excludes features that declare a listed id in depends_on, transitively; a failing feature WITHOUT depends_on is treated as depending on every failing feature before it in selection order; it prints one 'SKIPPED: <id> ...' line per excluded id; NEXT: none when everything left is excluded; context.sh passes --skip through; without --skip, output is byte-identical to today",
       "notes": "Plan: docs/plans/completed/2026-09-28-m20-unattended-runs.md"
     },
@@ -497,8 +547,16 @@
       "milestone": 20,
       "title": "harness-continuous skill: its own command for a continuous run (skip-and-continue, stop rules, stop file, opt-in milestone crossing)",
       "status": "passing",
-      "depends_on": ["M20-001", "M18-002"],
-      "paths": ["skills/harness-continuous/", "skills/harness-run/", "scripts/test-run.sh", "scripts/e2e.sh"],
+      "depends_on": [
+        "M20-001",
+        "M18-002"
+      ],
+      "paths": [
+        "skills/harness-continuous/",
+        "skills/harness-run/",
+        "scripts/test-run.sh",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that skills/harness-continuous/SKILL.md exists with valid, agent-neutral frontmatter and starts a continuous run when invoked, with no trigger word; that run: never asks the human; records skips in .harness-run/skip (a git-ignored folder at the repo root; agents cannot write under .git/); turns a blocked session, a red gate or 2 NEEDS_WORK verdicts into a skip (stash any leftover changes with 'git stash push -u', append the reason and one question to the feature's notes, commit FEATURES.json), not a stop; stops on NEXT none, the feature cap, .harness-run/STOP, a baseline preflight problem, or a dispatch with neither a commit nor a skip; crosses a milestone boundary only when the human names a milestone range, creating a stacked branch per milestone; harness-run keeps its interactive behaviour unchanged and points to harness-continuous",
       "notes": ""
     },
@@ -507,8 +565,14 @@
       "milestone": 20,
       "title": "run-report.sh: script-built run report (zero tokens) at the end of every continuous run",
       "status": "passing",
-      "depends_on": ["M20-001"],
-      "paths": ["skills/harness-run/scripts/run-report.sh", "scripts/test-run.sh", "scripts/e2e.sh"],
+      "depends_on": [
+        "M20-001"
+      ],
+      "paths": [
+        "skills/harness-run/scripts/run-report.sh",
+        "scripts/test-run.sh",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with fixtures proving run-report.sh <start-commit> writes docs/runs/<YYYY-MM-DD-HHMM>.md with sections Summary (start, end, stop reason, counts), Done (id, title, commit), Skipped (id, reason, question from notes), Not started (id and why: depends on a skipped id, cap, or milestone) and Branches; output is deterministic for a fixed repo state; no network and no model calls",
       "notes": ""
     },
@@ -517,8 +581,17 @@
       "milestone": 20,
       "title": "Continuous-run docs incl. how to invoke harness-continuous and an upgrade-and-run walkthrough; release 2.0.0",
       "status": "passing",
-      "depends_on": ["M20-002", "M20-003"],
-      "paths": ["skills/harness-setup/templates/", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
+      "depends_on": [
+        "M20-002",
+        "M20-003"
+      ],
+      "paths": [
+        "skills/harness-setup/templates/",
+        "README.md",
+        ".claude-plugin/",
+        "package.json",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that protocol section 2 documents continuous runs (skip rules, stop rules, the stop file, the report), README lists harness-continuous in its skills and has an 'Unattended runs' section saying to invoke harness-continuous by name (with the cap and milestone-range options) under the permissions already used for harness-session, with no CLI-specific setup and none of --yolo, --dangerously-skip-permissions or --allow-all, and an 'Upgrading a repo and running continuously' section that walks the whole sequence in order: update the plugin; branch and confirm a green gate; accept the UPGRADE offer; run harness-audit and approve depends_on/paths, stating that without declared depends_on a skipped feature stops the run; run scripts/gen-agents.sh only when using the evaluator (restart Copilot afterwards); invoke harness-continuous (with the cap and milestone-range options); stop early with .harness-run/STOP; afterwards read docs/runs/<date>.md, answer each skipped feature's question in its notes, recover stashed work via git stash list ('harness-run skip <id>'), and review the branch(es); and package.json, plugin.json and marketplace.json are 2.0.0",
       "notes": ""
     },
@@ -528,7 +601,14 @@
       "title": "Rename harness-setup to harness-initial-setup, no alias, all live references updated",
       "status": "passing",
       "depends_on": [],
-      "paths": ["skills/harness-initial-setup/", "skills/", "scripts/", "README.md", "ARCHITECTURE.md", "AGENTS.md"],
+      "paths": [
+        "skills/harness-initial-setup/",
+        "skills/",
+        "scripts/",
+        "README.md",
+        "ARCHITECTURE.md",
+        "AGENTS.md"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with skills/harness-setup absent, skills/harness-initial-setup/SKILL.md named harness-initial-setup whose description points existing harnessed repos at harness-upgrade-structure, and no reference to the old name anywhere outside docs/plans, docs/specs, PROGRESS.md and FEATURES.json",
       "notes": "Plan: docs/plans/completed/2026-10-01-m21-upgrade-structure.md. Clean rename, no alias (breaking: released as 3.0.0 in M21-003)."
     },
@@ -537,8 +617,14 @@
       "milestone": 21,
       "title": "upgrade.sh: one idempotent command that brings an already-harnessed repo up to the shipped structure",
       "status": "passing",
-      "depends_on": ["M21-001"],
-      "paths": ["skills/harness-upgrade-structure/scripts/upgrade.sh", "scripts/test-upgrade.sh", "scripts/e2e.sh"],
+      "depends_on": [
+        "M21-001"
+      ],
+      "paths": [
+        "skills/harness-upgrade-structure/scripts/upgrade.sh",
+        "scripts/test-upgrade.sh",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-upgrade.sh fixtures proving upgrade.sh <repo>: exits 3 pointing at harness-initial-setup when there is no harness; refuses a dirty tree (exit 2, nothing changed); on the default branch first creates harness-upgrade; recopies an outdated or missing protocol, adds the harness-run line to AGENTS.md, generates evaluator agent files only when a feature opts in; prints CHANGED/OK/TODO lines (TODO for an unbounded gate and for harness-audit depends_on/paths); stages and commits nothing; a second run after committing changes nothing",
       "notes": "Plan: docs/plans/completed/2026-10-01-m21-upgrade-structure.md"
     },
@@ -547,8 +633,17 @@
       "milestone": 21,
       "title": "harness-upgrade-structure skill, harness-session wiring, README upgrade section; release 3.0.0",
       "status": "passing",
-      "depends_on": ["M21-002"],
-      "paths": ["skills/harness-upgrade-structure/", "skills/harness-session/SKILL.md", "README.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
+      "depends_on": [
+        "M21-002"
+      ],
+      "paths": [
+        "skills/harness-upgrade-structure/",
+        "skills/harness-session/SKILL.md",
+        "README.md",
+        ".claude-plugin/",
+        "package.json",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that skills/harness-upgrade-structure/SKILL.md exists with valid, agent-neutral frontmatter, says it is for repos that already have a harness, runs upgrade.sh, offers harness-audit for depends_on/paths and commits the result as its own commit; harness-session's UPGRADE: offer step points to harness-upgrade-structure instead of listing the steps inline; README has an 'Upgrading existing repos' section with the by-hand upgrade.sh command and the M20 walkthrough's upgrade step uses it; package.json, plugin.json and marketplace.json are 3.0.0",
       "notes": "Plan: docs/plans/completed/2026-10-01-m21-upgrade-structure.md"
     },
@@ -558,10 +653,178 @@
       "title": "Skill frontmatter parses in strict YAML parsers; gate rejects an unquoted colon-space in name/description; release 3.0.1",
       "status": "passing",
       "depends_on": [],
-      "paths": ["skills/harness-continuous/SKILL.md", "skills/harness-upgrade-structure/SKILL.md", ".claude-plugin/", "package.json", "scripts/e2e.sh"],
+      "paths": [
+        "skills/harness-continuous/SKILL.md",
+        "skills/harness-upgrade-structure/SKILL.md",
+        ".claude-plugin/",
+        "package.json",
+        "scripts/e2e.sh"
+      ],
       "verify": "bash scripts/e2e.sh exits 0 with every skills/*/SKILL.md and agents/src/*.md free of ': ' inside the unquoted name/description line; copilot skill list, run in a project holding copies of skills/harness-continuous and skills/harness-upgrade-structure, lists both; package.json, plugin.json and marketplace.json are 3.0.1",
       "notes": "Field report: Copilot CLI skipped harness-continuous and harness-upgrade-structure ('failed to parse YAML frontmatter ... mapping values are not allowed') while Claude Code accepted them. Cause: ': ' in the description. Codex uses a strict parser too. Plan: docs/plans/completed/2026-10-01-m22-frontmatter-fix.md"
+    },
+    {
+      "id": "M23-001",
+      "milestone": 23,
+      "title": "Decision notes: every session entry records rejected options and assumptions; the evaluator reads them as leads",
+      "status": "failing",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-initial-setup/templates/",
+        "agents/src/",
+        "scripts/e2e.sh"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with checks that protocol §2.5 asks the PROGRESS.md entry for a Decisions: line (options considered and rejected, assumptions made, or none); PROGRESS.md.tmpl shows that line; agents/src/harness-builder.md tells the builder to write it; agents/src/harness-evaluator.md reads the feature's latest Decisions: line as leads and returns NEEDS_WORK when a rejected option is what the verify criterion or bar required; the protocol stays agent-neutral",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M23-002",
+      "milestone": 23,
+      "title": "Per-feature effort hint (low|medium|high|max): schema, planning question, status.sh line, run dispatch",
+      "status": "failing",
+      "depends_on": [
+        "M23-001"
+      ],
+      "paths": [
+        "skills/harness-initial-setup/templates/",
+        "skills/harness-status/",
+        "skills/harness-audit/",
+        "skills/harness-run/SKILL.md",
+        "skills/harness-session/SKILL.md",
+        "scripts/"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with: the gate rejecting an effort value outside low|medium|high|max in FEATURES.json; test-status.sh fixtures proving status.sh prints an indented effort: <level> line under NEXT when the feature sets effort (with and without --skip) and no effort line when it does not; a test-audit.sh fixture proving check.sh WARNs on an unknown effort value; FEATURES.json.tmpl _instructions documents effort; protocol §1.4 asks the effort question with per-kind guidance; harness-run SKILL.md passes the level to the builder dispatch and dispatches the evaluator at high or above; harness-session SKILL.md reads the effort line",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M23-003",
+      "milestone": 23,
+      "title": "Model-tagged rules (start lean, re-test on model change), README, release 3.1.0",
+      "status": "failing",
+      "depends_on": [
+        "M23-002"
+      ],
+      "paths": [
+        "skills/harness-initial-setup/templates/",
+        "skills/harness-audit/",
+        "scripts/",
+        "README.md",
+        ".claude-plugin/",
+        "package.json"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with checks that protocol §3.4 says a rule added to fix one model's repeated failure is tagged (model: <name>) and §3.2 says to re-test tagged rules when the model changes and delete those no longer needed; AGENTS.md.tmpl mentions the tag within its 80-line budget; a test-audit.sh fixture proves check.sh WARNs with the count when AGENTS.md has tagged rules; README documents decision notes, effort and model-tagged rules; package.json, plugin.json and marketplace.json are 3.1.0",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M24-001",
+      "milestone": 24,
+      "title": "Claude edition plugin skeleton: agent-harness-kit-claude in the same marketplace, versions in lockstep, depends on the core plugin",
+      "status": "failing",
+      "depends_on": [
+        "M23-003"
+      ],
+      "paths": [
+        "claude/",
+        ".claude-plugin/",
+        "README.md",
+        "scripts/e2e.sh"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with checks that claude/.claude-plugin/plugin.json is named agent-harness-kit-claude and lists agent-harness-kit as a dependency; marketplace.json has a second plugin entry with source ./claude; all versions match; claude/ holds no copy of harness-protocol.md; claude plugin validate claude/ exits 0; README has an install line for the edition",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M24-002",
+      "milestone": 24,
+      "title": "Agent effort in the generator: effort field in agents/src, emitted for Claude Code and Codex; evaluator at high",
+      "status": "failing",
+      "depends_on": [
+        "M24-001"
+      ],
+      "paths": [
+        "agents/",
+        "scripts/gen-agents.sh",
+        "scripts/test-agents.sh"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with test-agents.sh fixtures proving gen-agents.sh emits effort: <level> in the Claude agent file and model_reasoning_effort = \"<level>\" in the Codex TOML when the source sets effort, nothing for Copilot, and no effort line when the source omits it; agents/src/harness-evaluator.md sets effort: high",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M24-003",
+      "milestone": 24,
+      "title": "Claude edition: unattended runs on auto mode (README) and an eval suite for harness-brief and harness-session",
+      "status": "failing",
+      "depends_on": [
+        "M24-002"
+      ],
+      "paths": [
+        "claude/",
+        "README.md",
+        "scripts/e2e.sh"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with checks that README's Claude edition section says to run harness-continuous in auto permission mode and never with bypass flags; claude/evals/ holds a suite covering harness-brief and harness-session that claude plugin eval runs to completion with every case passing (result recorded in PROGRESS.md)",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M25-001",
+      "milestone": 25,
+      "title": "Mod: decision register tool that appends to .harness-run/decisions/<id>.md, folded into the Decisions: line at close-out",
+      "status": "failing",
+      "depends_on": [
+        "M24-003"
+      ],
+      "paths": [
+        "claude/hooks/",
+        "claude/types/",
+        "skills/harness-session/SKILL.md"
+      ],
+      "verify": "claude plugin validate claude/ exits 0 and claude plugin test claude/ passes tests proving the registered tool appends one decision per call to .harness-run/decisions/<id>.md and refuses paths outside .harness-run/; harness-session SKILL.md folds that file into the PROGRESS.md Decisions: line when it exists; bash scripts/e2e.sh exits 0",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M25-002",
+      "milestone": 25,
+      "title": "Mod: done-check supervisor ($.model.fork on a builder turn.complete) reporting done/blocked/skipped_work against verify",
+      "status": "failing",
+      "depends_on": [
+        "M25-001"
+      ],
+      "paths": [
+        "claude/hooks/",
+        "claude/types/"
+      ],
+      "verify": "claude plugin test claude/ passes tests proving that on a builder subagent turn.complete the mod forks once, parses {done, blocked, skipped_work}, writes skipped_work beside the decisions file, sets a status line, never writes outside .harness-run/, and does nothing for non-builder turns; bash scripts/e2e.sh exits 0",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M25-003",
+      "milestone": 25,
+      "title": "Mod: budget guard that writes .harness-run/STOP when a feature exceeds the configured token budget",
+      "status": "failing",
+      "depends_on": [
+        "M25-002"
+      ],
+      "paths": [
+        "claude/hooks/",
+        "claude/types/",
+        "claude/.claude-plugin/"
+      ],
+      "verify": "claude plugin test claude/ passes tests proving per-feature usage from turn.complete is summed, crossing the userConfig threshold writes .harness-run/STOP and a reason line to .harness-run/budget.log, and staying under it writes nothing; bash scripts/e2e.sh exits 0",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M25-004",
+      "milestone": 25,
+      "title": "Mod: next-steps band after a passing supervised session (next feature, explain, quiz me); off during unattended runs",
+      "status": "failing",
+      "depends_on": [
+        "M25-003"
+      ],
+      "paths": [
+        "claude/hooks/",
+        "claude/types/"
+      ],
+      "verify": "claude plugin test claude/ passes tests proving the AbovePrompt band appears after a session line reporting passing, offers next feature / explain / quiz, and renders nothing when .harness-run/start exists; bash scripts/e2e.sh exits 0",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
     }
-
   ]
 }
