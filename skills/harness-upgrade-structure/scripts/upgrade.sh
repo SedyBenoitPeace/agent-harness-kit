@@ -68,17 +68,41 @@ else
   [ "$lines" -le 100 ] || echo "TODO: AGENTS.md is now $lines lines (limit 100) — trim it"
 fi
 
-# evaluator agent files, only for repos whose features opt in
+# generated agent files (M27-001): a repo that has any harness agent file
+# gets every role regenerated for each CLI folder it already uses, so new
+# instructions (Decisions:, untrusted text, effort) reach builder, evaluator
+# and brief reviewer alike. A repo with none gets them only when a feature
+# opts in to evaluation (as before).
+gen="$(mktemp -d)"
+bash "$GEN_AGENTS" "$gen" >/dev/null
+agents_changed=0; copilot_changed=0
+for pair in ".claude/agents:.md" ".github/agents:.agent.md" ".codex/agents:.toml"; do
+  dir="${pair%%:*}"; ext="${pair#*:}"
+  ls "$dir"/harness-*"$ext" >/dev/null 2>&1 || continue
+  for src in "$gen/$dir"/harness-*"$ext"; do
+    dst="$dir/$(basename "$src")"
+    if ! cmp -s "$src" "$dst"; then
+      cp "$src" "$dst"
+      echo "CHANGED: $dst (regenerated from the plugin's agent roles)"
+      agents_changed=1
+      [ "$dir" = .github/agents ] && copilot_changed=1
+    fi
+  done
+done
 have=0
-for f in .claude/agents/harness-evaluator.md .github/agents/harness-evaluator.agent.md .codex/agents/harness-evaluator.toml; do
+for f in .claude/agents/harness-*.md .github/agents/harness-*.agent.md .codex/agents/harness-*.toml; do
   if [ -f "$f" ]; then have=1; fi
 done
-if jq -e '[.features[] | select(.evaluate == "ui")] | length > 0' FEATURES.json >/dev/null && [ "$have" -eq 0 ]; then
+if [ "$have" -eq 0 ] && jq -e '[.features[] | select(.evaluate == "ui" or has("second_opinion"))] | length > 0' FEATURES.json >/dev/null; then
   bash "$GEN_AGENTS" "$PWD" >/dev/null
-  echo "CHANGED: .claude/agents/ .github/agents/ .codex/agents/ (evaluator agent files generated; restart Copilot CLI to see them)"
-else
-  echo "OK: evaluator agent files (not needed, or already present)"
+  echo "CHANGED: .claude/agents/ .github/agents/ .codex/agents/ (agent files generated for evaluation; restart Copilot CLI to see them)"
+elif [ "$agents_changed" -eq 0 ]; then
+  echo "OK: generated agent files are current (or not needed)"
 fi
+if [ "$copilot_changed" -eq 1 ]; then
+  echo "TODO: restart Copilot CLI if it is running, so it reads the regenerated agents"
+fi
+rm -rf "$gen"
 
 # things only a human or an agent can do
 if [ ! -f scripts/e2e.sh ]; then

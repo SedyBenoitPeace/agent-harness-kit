@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 48 (M27-001)
+
+- Branch: `m27-upgrades` (off master after PR #27 merged).
+- Done: M27-001 — upgrade.sh regenerates every harness agent role (builder,
+  evaluator, brief reviewer) into each CLI folder the repo already uses
+  (`.claude/agents`, `.github/agents`, `.codex/agents`), one `CHANGED:` per
+  changed file, never adding a CLI the repo does not use; repos with no
+  agent files still get them only on an evaluation opt-in (now also
+  `second_opinion`). Copilot restart TODO only when its files changed.
+  Fixture in test-upgrade.sh.
+- Decisions: generate into a temp dir and copy per file instead of running
+  gen-agents.sh in place (it would create all three CLI folders); compare
+  with cmp so a second run reports nothing.
+- Gate: green.
+- Next: M27-002 (model rule of thumb and fallback).
+
 ## 2026-10-07 — session 47 (M26-003, release 3.4.0)
 
 - Branch: `m26-second-opinion`.

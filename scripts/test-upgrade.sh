@@ -68,6 +68,28 @@ echo "$out" | grep -q '^OK: docs/agents/harness-protocol.md' || fail "second run
 [ "$(git -C "$R" branch --show-current)" = harness-upgrade ] || fail "second run: must stay on the current branch"
 [ -z "$(git -C "$R" status --short)" ] || fail "second run: must leave the tree clean"
 
+# 4b. stale generated agents (M27-001): any harness agent file present →
+#     every role is regenerated for each CLI the repo already has, nothing
+#     for the others; a second run changes no agent file
+S="$WORK/stale"
+mkdir -p "$S/docs/agents" "$S/.claude/agents"
+git -C "$S" init -q -b main
+printf '{ "milestones": {"1":"C"}, "features": [ { "id": "M1-001", "milestone": 1, "title": "t", "status": "passing", "verify": "x", "depends_on": [] } ] }\n' > "$S/FEATURES.json"
+printf '# PROGRESS\n' > "$S/PROGRESS.md"
+printf '# AGENTS.md\nharness-run\n' > "$S/AGENTS.md"
+cp "$SHIPPED" "$S/docs/agents/harness-protocol.md"
+printf -- '---\nname: harness-builder\n---\nold builder\n' > "$S/.claude/agents/harness-builder.md"
+git -C "$S" -c user.email=t@t -c user.name=t add -A; git -C "$S" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stale agents: expected exit 0"
+for r in harness-builder harness-evaluator harness-brief-reviewer; do
+  grep -q 'Decisions:\|READY\|PASS' "$S/.claude/agents/$r.md" || fail "stale agents: $r not regenerated"
+done
+echo "$out" | grep -q '^CHANGED: .claude/agents/harness-builder.md' || fail "stale agents: builder change not reported"
+[ ! -d "$S/.codex" ] && [ ! -d "$S/.github" ] || fail "stale agents: must not add CLIs the repo does not use"
+git -C "$S" -c user.email=t@t -c user.name=t add -A; git -C "$S" -c user.email=t@t -c user.name=t commit -qm up
+out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stale agents second run: expected exit 0"
+if echo "$out" | grep -q '^CHANGED: .claude/agents'; then fail "stale agents second run: nothing should change"; fi
+
 # 5. SKILL.md contract: for repos that already have a harness, runs upgrade.sh,
 #    own commit, offers the audit; harness-session points at it
 md="skills/harness-upgrade-structure/SKILL.md"

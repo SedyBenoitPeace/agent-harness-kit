@@ -905,7 +905,7 @@
       "id": "M27-001",
       "milestone": 27,
       "title": "upgrade.sh refreshes every generated agent file (all roles, all CLIs present)",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [],
       "paths": [
         "skills/harness-upgrade-structure/",
