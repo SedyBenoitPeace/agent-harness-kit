@@ -69,7 +69,8 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    **As a parallel lane** (harness-run said so): work only in the named
    worktree, skip the baseline gate (the orchestrator started green),
    run the feature's own verify, commit explicit paths —
-   and never touch FEATURES.json or PROGRESS.md;
+   and never touch FEATURES.json or PROGRESS.md (the `Decisions:` line goes
+   in the commit message body instead);
    the orchestrator runs the full gate and flips status.
 11. End with this one-line summary as your last output (harness-run
     parses it; a blocked session stops at the blocker and still prints it):

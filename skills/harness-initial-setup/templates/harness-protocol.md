@@ -400,8 +400,9 @@ requires it.
    commit — do not wait for the PR to merge.
 5. Commit with a message naming the feature id.
 6. Append a PROGRESS.md entry at the top: branch, what was done, gate
-   status, and the next feature. Add one `Decisions:` line: the options considered and rejected, and the assumptions made, each in a few words (or `none`).
-   Most wrong results are a right answer the session thought of and
+   status, and the next feature. Add one `Decisions:` line: the
+   options considered and rejected, and the assumptions made, each in a
+   few words (or `none`). Most wrong results are a right answer the session thought of and
    turned down; written down, a reviewer can ask for the skipped option
    instead of rediscovering it.
 
@@ -442,8 +443,9 @@ the repo — not the subagent's word — before starting the next. Rules:
 - Parallel lanes run only for features whose `depends_on` / `paths`
   (§1.4) prove them independent, computed by script, never guessed. Each
   lane works in its own worktree and never touches FEATURES.json or
-  PROGRESS.md; the orchestrator merges, runs one full gate, flips the
-  statuses, and writes one PROGRESS.md entry. A merge conflict means that
+  PROGRESS.md; it puts its `Decisions:` line in its commit message body.
+  The orchestrator merges, runs one full gate, flips the statuses, and
+  writes one PROGRESS.md entry carrying each lane's `Decisions:` line. A merge conflict means that
   feature is redone sequentially.
 - Independent evaluation (opt-in per feature via `evaluate`, §1.4): the
   session that builds such a feature ends it in `review`, never
@@ -454,8 +456,8 @@ the repo — not the subagent's word — before starting the next. Rules:
   first line of exactly `PASS` or `NEEDS_WORK`, then numbered findings with
   file:line or repro steps. It may read the feature's latest PROGRESS.md
   `Decisions:` line as leads, not evidence: a rejected option that the
-  `verify` or `bar` required is `NEEDS_WORK`. When any of the feature's `paths` touches
-  auth, payments, personal data or migrations, it also runs a security
+  `verify` or `bar` required is `NEEDS_WORK`. When any of the feature's
+  `paths` touches auth, payments, personal data or migrations, it also runs a security
   checklist. After it returns, the orchestrator checks the tree is clean
   and HEAD unchanged; anything else rejects the verdict.
   - `PASS` → write `docs/verification/<id>.md` (verdict, findings, date,
@@ -526,8 +528,9 @@ context and is unreviewable.
   contradicts gets corrected — or the code does: a violated invariant is a
   defect to fix, not a doc line to soften.
 - Stale docs are updated or deleted; a doc that lies is worse than no doc.
-- When the agent's model changes, re-test every rule tagged `(model: <name>)` (§3.4): drop it, run a
-  session or two, and delete it for good if nothing breaks. A rule
+- When the agent's model changes, re-test every rule tagged
+  `(model: <name>)` (§3.4): drop it, run a session or two, and delete it
+  for good if nothing breaks. A rule
   written for one model often over-constrains the next.
 - Plans whose work is done move from `docs/plans/active/` to
   `docs/plans/completed/`.
@@ -548,8 +551,9 @@ protocol, or the missing pointer to AGENTS.md. Feed every failure back into
 the repo.
 
 Prefer a check in the gate over a rule in prose, and start lean: add an
-AGENTS.md rule only for a failure you have seen more than once. A rule that fixes one model's repeated failure ends with `(model: <name>)`,
-so maintenance knows to re-test it when the model changes (§3.2).
+AGENTS.md rule only for a failure you have seen more than once. A rule
+that fixes one model's repeated failure ends with `(model: <name>)`, so
+maintenance knows to re-test it when the model changes (§3.2).
 
 Copy-paste maintenance prompt:
 
