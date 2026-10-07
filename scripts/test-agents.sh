@@ -41,6 +41,26 @@ grep -qF 'exactly `PASS` or `NEEDS_WORK`' "$t/.claude/agents/harness-evaluator.m
 grep -qF 'exactly `READY` or `GAPS`' "$t/.claude/agents/harness-brief-reviewer.md" || fail "reviewer verdict contract missing"
 grep -qi 'never the conversation' "$t/.claude/agents/harness-brief-reviewer.md" || fail "reviewer must ignore the conversation"
 
+# effort (M24-002): a source effort: becomes effort: for Claude Code and
+# model_reasoning_effort for Codex (max maps to high there); Copilot gets
+# none; a source without effort gets no effort line anywhere
+grep -qx 'effort: high' agents/src/harness-evaluator.md || fail "evaluator source must set effort: high"
+grep -qx 'effort: high' "$t/.claude/agents/harness-evaluator.md" || fail "claude evaluator: effort: high missing"
+grep -qx 'model_reasoning_effort = "high"' "$t/.codex/agents/harness-evaluator.toml" || fail "codex evaluator: model_reasoning_effort missing"
+awk 'NR==1 && /^---$/ {f=1; next} f && /^---$/ {exit} f' "$t/.github/agents/harness-evaluator.agent.md" \
+  | grep -q '^effort' && fail "copilot agent must not get an effort field"
+grep -q '^effort:' "$t/.claude/agents/harness-builder.md" && fail "builder without source effort must get no effort line"
+grep -q 'model_reasoning_effort' "$t/.codex/agents/harness-builder.toml" && fail "codex builder without source effort must get none"
+# max -> high mapping for Codex, proved on a copy of the sources
+m="$(mktemp -d)"; cp -R agents scripts "$m/"
+sed -i.bak 's/^effort: high$/effort: max/' "$m/agents/src/harness-evaluator.md" && rm -f "$m/agents/src/harness-evaluator.md.bak"
+mkdir "$m/out"; bash "$m/scripts/gen-agents.sh" "$m/out" >/dev/null
+grep -qx 'effort: max' "$m/out/.claude/agents/harness-evaluator.md" || fail "claude: effort: max must pass through"
+grep -qx 'model_reasoning_effort = "high"' "$m/out/.codex/agents/harness-evaluator.toml" || fail "codex: max must map to high"
+sed -i.bak 's/^effort: max$/effort: turbo/' "$m/agents/src/harness-evaluator.md" && rm -f "$m/agents/src/harness-evaluator.md.bak"
+bash "$m/scripts/gen-agents.sh" "$m/out" >/dev/null 2>&1 && fail "unknown effort level must be rejected"
+rm -rf "$m"
+
 # idempotent
 before="$(cd "$t" && find . -type f -exec cksum {} + | sort)"
 bash scripts/gen-agents.sh "$t" >/dev/null

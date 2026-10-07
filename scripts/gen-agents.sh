@@ -15,6 +15,16 @@ model() { jq -r --arg c "$1" --arg t "$2" '.models[$c][$t]' "$here/agents/models
 for src in "$here"/agents/src/*.md; do
   name="$(field "$src" name)"; desc="$(field "$src" description)"
   tier="$(field "$src" tier)"; access="$(field "$src" access)"
+  # optional effort (low|medium|high|max): Claude Code takes it as-is; Codex
+  # calls it model_reasoning_effort and has no max (mapped to high); Copilot
+  # has no per-agent setting, so it gets none
+  effort="$(field "$src" effort)"
+  case "$effort" in
+    "") c_effort=""; x_effort="" ;;
+    low|medium|high) c_effort="effort: $effort"; x_effort="model_reasoning_effort = \"$effort\"" ;;
+    max) c_effort="effort: max"; x_effort='model_reasoning_effort = "high"' ;;
+    *) echo "gen-agents: $src effort must be low|medium|high|max, got: $effort" >&2; exit 1 ;;
+  esac
   [ "$name" = "$(basename "$src" .md)" ] || { echo "gen-agents: $src name != file name" >&2; exit 1; }
   # Codex body is a TOML literal string: it cannot contain '''
   body "$src" | grep -q "'''" && { echo "gen-agents: $src contains '''" >&2; exit 1; }
@@ -30,7 +40,9 @@ for src in "$here"/agents/src/*.md; do
   {
     printf -- '---\nname: %s\ndescription: %s\n' "$name" "$desc"
     [ -n "$c_tools" ] && printf '%s\n' "$c_tools"
-    printf 'model: %s\n---\n' "$(model claude "$tier")"
+    printf 'model: %s\n' "$(model claude "$tier")"
+    [ -n "$c_effort" ] && printf '%s\n' "$c_effort"
+    printf -- '---\n'
     body "$src"
   } > "$target/.claude/agents/$name.md"
 
@@ -44,6 +56,7 @@ for src in "$here"/agents/src/*.md; do
   {
     printf 'name = "%s"\ndescription = "%s"\nmodel = "%s"\n%s' \
       "$name" "$desc" "$(model codex "$tier")" "$x_sandbox"
+    [ -n "$x_effort" ] && printf '%s\n' "$x_effort"
     printf "developer_instructions = '''\n"
     body "$src"
     printf "'''\n"

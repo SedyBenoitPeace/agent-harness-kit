@@ -3,6 +3,24 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 37 (M24-002)
+
+- Branch: `m24-claude-edition`.
+- Done: M24-002 — `agents/src/*.md` take an optional `effort:`;
+  `gen-agents.sh` emits `effort:` for Claude Code and
+  `model_reasoning_effort` for Codex (no max there, so max → high), nothing
+  for Copilot, and rejects unknown levels. The evaluator source sets
+  `effort: high`. Fixtures in test-agents.sh (pass-through, max mapping on a
+  copy of the sources, rejection, no line when absent). Generated Claude
+  agents pass `claude plugin validate --strict`; Codex TOML parses.
+- Decisions: built into the core generator, not the edition plugin (Codex
+  has the same setting, so it is portable); rejected passing `xhigh` to
+  Codex for max (not sure every Codex version accepts it); left the builder
+  without a fixed effort because the feature's own `effort` (M23-002) is
+  passed per dispatch.
+- Gate: green.
+- Next: M24-003 (auto-mode docs, skill eval suite).
+
 ## 2026-10-07 — session 36 (M24-001)
 
 - Branch: `m24-claude-edition` (off master after PR #24 merged).

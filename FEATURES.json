@@ -736,7 +736,7 @@
       "id": "M24-002",
       "milestone": 24,
       "title": "Agent effort in the generator: effort field in agents/src, emitted for Claude Code and Codex; evaluator at high",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M24-001"
       ],
