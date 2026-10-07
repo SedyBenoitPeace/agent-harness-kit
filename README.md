@@ -217,6 +217,29 @@ Installing the edition installs the core plugin with it:
 /plugin install agent-harness-kit-claude
 ```
 
+**Mods** (Claude Code function hooks, active only in a repo with
+`FEATURES.json`; they write only under `.harness-run/`, which they keep out
+of git):
+
+- **Decision register** — a `register_decision` tool the agent calls each
+  time it picks one option over another or assumes something; the lines
+  land in `.harness-run/decisions/<id>.md` and the session folds them into
+  the PROGRESS.md `Decisions:` line.
+- **Done-check supervisor** — when a session ends with its `SESSION:` line,
+  one cheap check against the feature's `verify` reports done, blocked or
+  skipped work (in a status line, and `.harness-run/decisions/<id>.skipped.md`).
+- **Budget guard** — counts each feature's tokens (input, output, cache
+  writes). Over `feature_token_budget` (set it in `/config`, default
+  1,500,000) during an unattended run it writes `.harness-run/STOP`, so the
+  run ends after the current feature, and logs why in `.harness-run/budget.log`.
+- **Next-steps band** — after a supervised session passes, a band above the
+  prompt offers Next feature, Explain (big picture, few words) and Quiz me.
+  Off during unattended runs.
+
+Upgrading from 3.2.0: the edition was briefly named `agent-harness-kit-mods`;
+run `/plugin uninstall agent-harness-kit-mods`, then install
+`agent-harness-kit-claude`.
+
 **Unattended runs on auto mode.** Start Claude Code with
 `claude --permission-mode auto` and invoke `harness-continuous`. Auto mode
 checks each action against what you actually allowed (writing to a

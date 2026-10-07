@@ -24,5 +24,6 @@
       "description": "Tokens one feature may use in an unattended run before the run is asked to stop after it (input + output + cache writes).",
       "default": 1500000
     }
-  }
+  },
+  "types": "./types/index.d.ts"
 }

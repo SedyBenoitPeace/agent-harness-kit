@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 43 (M25-004)
+
+- Branch: `m25-mods`.
+- Done: M25-004 — next-steps band. After a main-loop SESSION line reporting
+  `passing` outside an unattended run, an AbovePrompt band offers Next
+  feature, Explain (big picture, few words) and Quiz me (each fills the
+  prompt for the person to send) and Hide; state in `$.state`
+  (`claude/types/index.d.ts`). Nothing for blocked sessions, builder
+  subagents or during a run. 5 engine tests over terminal and desktop (22
+  total), tsc clean. README documents all four mods and the upgrade from
+  the 3.2.0 name; the gate checks it and fails on any other reference to
+  the old name (proven). All M23–M25 features pass, so the plan moved to
+  `docs/plans/completed/`.
+- Decisions: buttons fill the prompt instead of sending it (the person
+  stays in control of what runs and what it costs); the band clears on the
+  next SESSION line rather than on a timer; the quiz button is the
+  podcast's "quiz me after a task" habit made one click.
+- Gate: green.
+- Next: release 3.3.0, then the PR.
+
 ## 2026-10-07 — session 42 (M25-003)
 
 - Branch: `m25-mods`.

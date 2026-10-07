@@ -477,9 +477,17 @@ git check-ignore -q claude/evals/results/x || fail ".gitignore: claude/evals/res
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
-jq -e '.modules == ["./register.ts"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.ts"
+jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.tsx"
 grep -qF '.harness-run/decisions/<id>.md' "$SESSION_SKILL_MD" || fail "harness-session: must fold .harness-run/decisions/<id>.md into Decisions:"
 git check-ignore -q claude/.claude-plugin/types/x || fail ".gitignore: claude/.claude-plugin/types/ (engine-written) must be ignored"
+# M25-005: the 3.2.0 name lives on only in history and the README's upgrade note
+if git grep -nI -e 'agent-harness-kit-mods' -- . ':!docs/plans' ':!PROGRESS.md' ':!FEATURES.json' ':!scripts/e2e.sh' \
+   | grep -v 'was briefly named\|plugin uninstall agent-harness-kit-mods' | grep -q .; then
+  fail "stale reference to the old edition name agent-harness-kit-mods"
+fi
+for w in register_decision 'decisions/<id>.md' 'SESSION:' feature_token_budget '.harness-run/STOP' 'Quiz me' 'agent-harness-kit-mods'; do
+  grep -qF -- "$w" <<< "$edition" || fail "README Claude edition: mods section must mention $w"
+done
 if command -v claude >/dev/null; then
   mods_out="$(cd claude && claude plugin test . 2>&1)" || { echo "$mods_out" | tail -30 >&2; fail "claude plugin test claude/ failed"; }
   echo "MODS TESTS GREEN ($(grep -Eo '[0-9]+ pass' <<< "$mods_out"))"

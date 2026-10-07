@@ -815,7 +815,7 @@
       "id": "M25-004",
       "milestone": 25,
       "title": "Mod: next-steps band after a passing supervised session (next feature, explain, quiz me); off during unattended runs",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M25-003"
       ],

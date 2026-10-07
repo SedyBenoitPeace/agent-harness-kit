@@ -40,7 +40,7 @@
 | `skills/harness-upgrade-structure/` | Upgrade of an already-harnessed repo: `scripts/upgrade.sh` (idempotent, commits nothing) + SKILL.md that explains and commits it |
 | `skills/harness-brief/` | Rough prompt → `docs/briefs/` brief; check-brief.sh plus an independent read-only reviewer agent |
 | `claude/` | Second plugin `agent-harness-kit-claude` (Claude Code only): depends on the core plugin; holds evals and mods, never protocol or templates |
-| `claude/hooks/` | Mods (function hooks): `register.ts` holds every hook (the engine follows `$` only within one file); `lib.ts` holds pure logic; tests in `claude/tests/` run with `claude plugin test` |
+| `claude/hooks/` | Mods (function hooks): `register.tsx` holds every hook (plus the band's JSX) (the engine follows `$` only within one file); `lib.ts` holds pure logic; tests in `claude/tests/` run with `claude plugin test`; `$.state` contract in `claude/types/index.d.ts` |
 | `claude/evals/` | `claude plugin eval` suite for the core skills: each case seeds a repo (scaffold.sh), loads the core plugin (`plugins: ["../../.."]`), grades files left behind; run with `--eval-dir claude/evals` from the repo root |
 | `agents/` + `scripts/gen-agents.sh` | Neutral builder/evaluator role sources (tier, access, optional effort) + tier→model map; generator emits Claude/Copilot/Codex agent files (effort → Claude `effort`, Codex `model_reasoning_effort`, max→high; Copilot none) |
 | `scripts/` | This repo's gate (`e2e.sh`) and the per-skill fixture test suites |

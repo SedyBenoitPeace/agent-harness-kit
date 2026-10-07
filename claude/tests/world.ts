@@ -1,4 +1,4 @@
-import type { On } from 'claude-code'
+import type { On, RenderElement } from 'claude-code'
 
 export const PLUGIN = 'agent-harness-kit-claude'
 export const START = { cwd: '/repo', surface: null, isInteractive: false } as const
@@ -32,7 +32,17 @@ export function world(on: On, files: Record<string, string> = {}) {
     return { value: undefined }
   })
   on('turn.complete', async (_$, e) => ({ text: e.answer }))
-  return { files, registered, statuses }
+  const fills: string[] = []
+  on('prompt.fill', async (_$, e) => {
+    fills.push(e.text)
+    return { isFilled: true }
+  })
+  // Stands for the engine's own drawing: an empty box.
+  on('ui.render', async ($, e) => {
+    const { Box } = $.ui.resolve(e)
+    return h(Box, { key: 'engine' }) as RenderElement
+  })
+  return { files, registered, statuses, fills }
 }
 
 export const USAGE = { input_tokens: 10, output_tokens: 5, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 }
@@ -78,3 +88,8 @@ export const turn = (answer: string, agentId?: string, tokens?: number) => ({
   ...(agentId ? { agentId } : {}),
   ...(tokens === undefined ? {} : { usage: spent(tokens) }),
 })
+
+export const BAND = {
+  component: 'AbovePrompt' as const,
+  props: { hasSurvey: false, isWorking: false, maxRows: 10, bodyColumns: 80, scroll: { offset: 0, bodyRows: 10 }, view: {} },
+}

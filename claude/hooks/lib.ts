@@ -130,3 +130,11 @@ export function countedTokens(usage: { input_tokens: number; output_tokens: numb
 export function budgetLine(when: string, who: string, used: number, budget: number) {
   return `${when} ${who}: ${used} tokens over the ${budget} budget; run asked to stop after this feature\n`
 }
+
+// --- M25-004 next-steps band ------------------------------------------------
+
+export const nextStepPrompts = (feature: string) => ({
+  next: 'Implement the next feature in this repo, following the harness.',
+  explain: `Explain what ${feature} changed: big picture, few words. A diagram if it helps.`,
+  quiz: `Quiz me with three multiple-choice questions on what ${feature} shipped, one at a time, so I know I understand it.`,
+})

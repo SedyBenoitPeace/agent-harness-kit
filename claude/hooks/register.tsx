@@ -1,3 +1,4 @@
+import { atom, read, update } from 'claude-code'
 import type { Register } from 'claude-code'
 
 import {
@@ -5,6 +6,7 @@ import {
   budgetLine,
   countedTokens,
   DEFAULT_BUDGET,
+  nextStepPrompts,
   DECISION_TOOL,
   decisionSpec,
   decisionsPath,
@@ -24,6 +26,10 @@ import {
 // agent-harness-kit-claude: Claude Code-only additions to the harness.
 // Every feature stays inert outside a harnessed repo (no FEATURES.json).
 // All hooks live in this file: the engine follows `$` only within it.
+// M25-004 — what the next-steps band draws from (the session's state).
+const lastPassing = atom({ plugin: 'agent-harness-kit-claude', key: 'lastPassing' } as const, null)
+const isHidden = atom({ plugin: 'agent-harness-kit-claude', key: 'isHidden' } as const, false)
+
 export const register: Register = (on, options) => {
   let isHarnessed = false
   const checked = new Set<string>()
@@ -82,6 +88,14 @@ export const register: Register = (on, options) => {
     }
 
     if (!line) return result
+    // M25-004 — a supervised (not unattended) main-loop session that passed
+    // gets the next-steps band; anything else clears it.
+    if (who === 'main') {
+      const isRun = await $.fs.exists(`${RUN_DIR}/start`)
+      const step = line.outcome === 'passing' && !isRun ? { feature: line.feature } : null
+      await update($, lastPassing, () => step)
+      await update($, isHidden, () => false)
+    }
     // One check per feature outcome: an orchestrator echoing a builder's
     // SESSION line must not pay for a second check.
     const key = `${line.feature} ${line.outcome}`
@@ -109,5 +123,21 @@ export const register: Register = (on, options) => {
     }
     $.ui.status(verdictStatus(line.feature, verdict))
     return result
+  })
+
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    const step = await read($, lastPassing)
+    if (step === null || e.props.hasSurvey || (await read($, isHidden))) return next(e)
+    const prompts = nextStepPrompts(step.feature)
+    const { Box, Button, Text } = $.ui.resolve(e)
+    return (
+      <Box>
+        <Text dimColor>{step.feature} passed. Next: </Text>
+        <Button key="next" label="Next feature" variant="primary" onPress={() => $.prompt.fill({ text: prompts.next, mode: 'replace' })} />
+        <Button key="explain" label="Explain" onPress={() => $.prompt.fill({ text: prompts.explain, mode: 'replace' })} />
+        <Button key="quiz" label="Quiz me" onPress={() => $.prompt.fill({ text: prompts.quiz, mode: 'replace' })} />
+        <Button key="hide" label="Hide" role="dismiss" onPress={() => update($, isHidden, () => true)} />
+      </Box>
+    )
   })
 }
