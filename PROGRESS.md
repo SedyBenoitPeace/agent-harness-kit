@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 34 (M23-002)
+
+- Branch: `m23-decisions-and-effort`.
+- Done: M23-002 — optional per-feature `effort` (low|medium|high|max).
+  Protocol §1.4 asks "How much verification does this deserve?" with a
+  per-kind table; FEATURES.json.tmpl documents it; status.sh prints an
+  indented `effort:` line under `NEXT:` (plain and `--skip` paths, fixtures
+  in test-status.sh); check.sh WARNs on unknown values (fixture in
+  test-audit.sh); harness-run passes the level as the dispatch tool's
+  effort setting or a prompt line, and dispatches the evaluator at high or
+  above; harness-session step 7 reads it. Gate rejects bad values in this
+  repo's own FEATURES.json.
+- Decisions: rejected a global effort setting (guidance is per task kind);
+  rejected a model-router mod (the Claude Code agent tool already takes a
+  per-dispatch effort); WARN not FAIL in check.sh (an unknown hint breaks
+  nothing); assumed CLIs without an effort setting still benefit from the
+  prompt line.
+- Gate: green.
+- Next: M23-003 (model-tagged rules, README, release 3.1.0).
+
 ## 2026-10-07 — session 33 (M23-001)
 
 - Branch: `m23-decisions-and-effort` (off master).

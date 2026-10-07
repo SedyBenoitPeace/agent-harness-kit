@@ -34,6 +34,10 @@ stays interactive and stops at the first problem.
    `../../scripts/gen-agents.sh`; if absent, the agent's own built-in subagent) with exactly:
    "Use harness-session for <id>, inline. End with its SESSION line."
    Own tools only — never load an external workflow skill.
+   When status.sh printed an `effort: <level>` line under `NEXT:`, the
+   feature asks for that effort (protocol §1.4): set it as the dispatch
+   tool's own effort setting if it has one, otherwise add the line
+   "Effort: <level>." to the prompt. No line, no setting.
 4. Read only the subagent's final line:
    `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
    A `review` line means the feature opted in (`evaluate` set): do the
@@ -56,7 +60,9 @@ For a `review` session (only features with `evaluate` set; absent means no
 evaluation and today's flow):
 
 1. Record `git rev-parse HEAD`. Dispatch the named agent
-   `harness-evaluator` with only: the feature entry, the commit range, its
+   `harness-evaluator` (the evaluator at high or above: its effort setting
+   if the dispatch tool has one, otherwise "Effort: high." in the prompt)
+   with only: the feature entry, the commit range, its
    `bar`, whether `evaluate` is `ui` (QA mode), and — when any `paths`
    entry matches the sensitive globs in `../../agents/models.json` — the
    security checklist. Never pass the builder's transcript. If the agent

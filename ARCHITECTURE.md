@@ -50,7 +50,10 @@
   `agent-harness-template` (manual resync; this repo stays canonical).
 - **FEATURES.json schema** (id / milestone / title / status / verify /
   notes) is defined by `FEATURES.json.tmpl` and consumed by status.sh,
-  handoff.sh, and check.sh — all three parse it with jq only.
+  handoff.sh, and check.sh — all three parse it with jq only. Optional
+  per-feature hints (depends_on, paths, evaluate, bar, effort) never
+  change selection; status.sh only prints `effort:` under `NEXT:` for
+  the session and the orchestrator to act on.
 - **Skill scripts share an exit-code contract:** 0 = report/ready,
   1 = blocked/not-ready, 2 = harness file broken (→ audit),
   3 = not initialized (→ setup). SKILL.md layers branch on these codes.

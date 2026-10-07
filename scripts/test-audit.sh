@@ -81,6 +81,16 @@ bash scripts/gen-agents.sh "$WORK/opt-in" >/dev/null
 out="$(bash "$CHECK" "$WORK/opt-in")" || fail "opt-in with agent files: exit non-zero"
 echo "$out" | grep -q "^WARN.*harness-evaluator" && fail "opt-in with agent files: WARN should clear"
 
+# 2f. effort hint (M23-002): a known level passes silently; an unknown
+# value is a WARN (advice, never a FAIL)
+make_fixture "$WORK/effort"
+jq '.features[0].effort = "high"' "$WORK/effort/FEATURES.json" > "$WORK/effort/F.tmp" && mv "$WORK/effort/F.tmp" "$WORK/effort/FEATURES.json"
+out="$(bash "$CHECK" "$WORK/effort")" || fail "valid effort must not fail the audit"
+echo "$out" | grep -q "^WARN.*effort" && fail "valid effort: no WARN expected"
+jq '.features[0].effort = "turbo"' "$WORK/effort/FEATURES.json" > "$WORK/effort/F.tmp" && mv "$WORK/effort/F.tmp" "$WORK/effort/FEATURES.json"
+out="$(bash "$CHECK" "$WORK/effort")" || fail "unknown effort must not fail the audit"
+echo "$out" | grep -q "^WARN.*effort.*M0-001" || fail "unknown effort: expected WARN naming the feature"
+
 # 3. defect fixtures: each must FAIL with its specific line
 make_fixture "$WORK/big-agents"
 for _ in $(seq 1 101); do echo "filler line" >> "$WORK/big-agents/AGENTS.md"; done

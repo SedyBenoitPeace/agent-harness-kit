@@ -396,4 +396,15 @@ grep -qF 'Decisions:' agents/src/harness-evaluator.md || fail "harness-evaluator
 grep -qF 'leads, not evidence' agents/src/harness-evaluator.md || fail "harness-evaluator: Decisions: are leads, not evidence"
 grep -qF 'leads, not evidence' "$PROTO" || fail "protocol 2.7: evaluator reads Decisions: as leads, not evidence"
 
+# --- per-feature effort (M23-002) ----------------------------------------------
+jq -e '[ .features[] | select(has("effort") and (.effort | IN("low","medium","high","max") | not)) ] | length == 0' \
+  FEATURES.json >/dev/null || fail "FEATURES.json: effort must be low|medium|high|max"
+grep -q 'effort' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: effort undocumented"
+plan_14="$(sed -n '/^### 1\.4 Write FEATURES.json entries/,/^### 1\.5/p' "$PROTO")"
+grep -qF 'How much verification does this deserve?' <<< "$plan_14" || fail "protocol 1.4: effort question missing"
+grep -qF 'low, medium, high or max' <<< "$plan_14" || fail "protocol 1.4: effort levels missing"
+grep -qF 'effort:' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: must pass the effort line to the builder dispatch"
+grep -qF 'evaluator at high or above' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: evaluator must be dispatched at high or above"
+grep -qF 'effort:' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: must read the effort line"
+
 echo "GATE GREEN"

@@ -44,16 +44,20 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 6. **Dirty worktree that is unrelated or ambiguous** (no plan match, or
    the diff touches something other than the selected feature): stop and
    ask the human before doing anything else.
-7. Propose the execution mode in one line — **inline** (default) or
+7. If `NEXT:` carries an `effort:` line (protocol §1.4), it sets how much
+   verification and edge-case testing to do beyond the `verify` check:
+   `low` = the verify check and the gate; `high` or `max` = also the edge
+   cases and failure paths the feature touches. No line, usual judgment.
+8. Propose the execution mode in one line — **inline** (default) or
    **delegated** to the agent's own built-in subagents when the feature
    has independent parts (protocol §2.4) — then follow red-green-refactor
    for the one selected feature only. Own tools only: never load an
    external execution-workflow skill.
    Running inside a subagent (dispatched by harness-run)? Always inline.
-8. Do not investigate or expand a passing gate's warning that is already
+9. Do not investigate or expand a passing gate's warning that is already
    tracked by another failing or deferred feature, unless the selected
    feature's verify criterion requires it.
-9. Run the final full gate through `bash scripts/run-gate.sh final
+10. Run the final full gate through `bash scripts/run-gate.sh final
    <target>`, flip only the selected feature's status to `passing`,
    append one `PROGRESS.md` entry (with its `Decisions:` line, protocol
    §2.5), move the plan to `docs/plans/completed/`
@@ -67,7 +71,7 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    run the feature's own verify, commit explicit paths —
    and never touch FEATURES.json or PROGRESS.md;
    the orchestrator runs the full gate and flips status.
-10. End with this one-line summary as your last output (harness-run
+11. End with this one-line summary as your last output (harness-run
     parses it; a blocked session stops at the blocker and still prints it):
     `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
 

@@ -106,6 +106,13 @@ if jq -e '[.features[]? | select(.evaluate? == "ui")] | length > 0' FEATURES.jso
   fi
 fi
 
+# Effort hint (WARN only, M23-002): optional; an unknown value is ignored by
+# sessions, so it is advice to fix, never a broken harness
+bad_effort="$(jq -r '[.features[]? | select(has("effort") and (.effort | IN("low","medium","high","max") | not)) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
+if [ -n "$bad_effort" ]; then
+  warn "effort must be low, medium, high or max — unknown value on: $bad_effort"
+fi
+
 # Architecture doc (WARN only: repos harnessed before 1.4.0 may lack it;
 # the skill layer offers the repair flow — derive from code / interview / skip)
 if [ -f ARCHITECTURE.md ]; then

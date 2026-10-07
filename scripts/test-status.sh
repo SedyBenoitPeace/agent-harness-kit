@@ -38,6 +38,23 @@ echo "$out" | grep -q "NEXT: M1-001" || fail "next-feature selection wrong (want
 echo "$out" | grep -q "session 2" || fail "last-session extract missing"
 if echo "$out" | grep -q "session 1"; then fail "last-session extract leaked older entries"; fi
 
+# 2b. effort hint (M23-002): no line when absent; an indented effort line
+# under NEXT when set, on both the plain and the --skip path
+if echo "$out" | grep -q "effort:"; then fail "effort line printed for a feature without effort"; fi
+jq '(.features[] | select(.id == "M1-001") | .effort) = "low" | (.features[] | select(.id == "M1-002") | .effort) = "high"' \
+  "$WORK/repo/FEATURES.json" > "$WORK/repo/F.tmp" && mv "$WORK/repo/F.tmp" "$WORK/repo/FEATURES.json"
+out="$(bash "$STATUS" "$WORK/repo")" || fail "effort fixture: expected exit 0"
+echo "$out" | grep -q "^  effort: low$" || fail "effort: missing '  effort: low' under NEXT"
+echo "M1-001" > "$WORK/skip"
+out="$(bash "$STATUS" --skip "$WORK/skip" "$WORK/repo")" || fail "effort --skip fixture: expected exit 0"
+# M1-002 has no depends_on, so skipping M1-001 also excludes it: NEXT none, no effort line
+if echo "$out" | grep -q "effort:"; then fail "effort --skip: effort line printed with nothing eligible"; fi
+jq '(.features[] | select(.id == "M1-002") | .depends_on) = []' \
+  "$WORK/repo/FEATURES.json" > "$WORK/repo/F.tmp" && mv "$WORK/repo/F.tmp" "$WORK/repo/FEATURES.json"
+out="$(bash "$STATUS" --skip "$WORK/skip" "$WORK/repo")" || fail "effort --skip fixture: expected exit 0"
+echo "$out" | grep -q "NEXT: M1-002" || fail "effort --skip: want NEXT M1-002"
+echo "$out" | grep -q "^  effort: high$" || fail "effort --skip: missing '  effort: high' under NEXT"
+
 # 3. nothing failing: explicit NEXT: none message
 jq '.features[].status = "passing"' "$WORK/repo/FEATURES.json" > "$WORK/repo/F.tmp"
 mv "$WORK/repo/F.tmp" "$WORK/repo/FEATURES.json"

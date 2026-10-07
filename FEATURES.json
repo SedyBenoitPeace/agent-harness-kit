@@ -681,7 +681,7 @@
       "id": "M23-002",
       "milestone": 23,
       "title": "Per-feature effort hint (low|medium|high|max): schema, planning question, status.sh line, run dispatch",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M23-001"
       ],

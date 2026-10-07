@@ -154,6 +154,21 @@ human would check by using it), record:
 
 Leaving both out is always safe: the feature flips on its `verify` alone.
 
+Last question per feature: **How much verification does this deserve?**
+Record the answer as `effort`, one of low, medium, high or max. Effort
+is spent mostly on verification and edge cases, so it pays where those
+matter:
+
+| Kind of feature | Effort |
+|---|---|
+| UI, copy, layout, simple wiring | `low` or `medium` |
+| APIs, data handling, migrations, anything with many edge cases | `high` |
+| Security, auth, payments, reviews of other work | `high` or `max` |
+
+The session reads it as how much checking to do beyond the `verify`
+check, and an orchestrator passes it to the agent it dispatches. Leaving
+it out is always safe: the agent uses its usual effort.
+
 ### 1.5 Write the first execution plan
 
 Write the plan with the agent's own **native plan mode** — whatever the
