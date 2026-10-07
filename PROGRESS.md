@@ -3,6 +3,43 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 51 (M27-004)
+
+- Branch: `m27-upgrades`.
+- Done: M27-004 — a clear upgrade every release. `CHANGELOG.md` (3.0.0 to
+  3.5.0, newest first) gives each release an `Upgrade:` block; the gate fails
+  when the current version has none. upgrade.sh stamps
+  `docs/agents/harness-kit-version` and prints `UPGRADE-NOTE: <version>:
+  <step>` for every release after the stamp up to the installed kit, oldest
+  first (all when unstamped). harness-upgrade-structure relays the notes;
+  README "Upgrading after every release" is the eight-step checklist (plugin
+  update commands checked against copilot 1.0.92 and codex 0.160.1 help).
+  Fixtures in test-upgrade.sh.
+- Decisions: notes live in the CHANGELOG (one source a human and the script
+  both read) instead of per-release scripts; portable version compare in
+  bash (macOS has no tac, and sort -V is not guaranteed); notes capped at the
+  installed kit version so a CHANGELOG ahead of the manifests prints nothing
+  extra.
+- Gate: green.
+- Next: M27-005 (template mirror sync, release 3.5.0).
+
+## 2026-10-07 — session 50 (M27-003)
+
+- Branch: `m27-upgrades`.
+- Done: M27-003 — run-report.sh puts each done feature's newest PROGRESS.md
+  `Decisions:` line under it (wrapped lines joined), adds a Supervisor
+  section from `.harness-run/decisions/<id>.skipped.md` and a Budget section
+  from `.harness-run/budget.log`, each only when the files exist. Protocol
+  §2.8 says so. Fixtures in test-run.sh; output stays deterministic.
+- Decisions: read the signals from `.harness-run/` at report time rather
+  than copying them into commits (they are run state, git-ignored); one line
+  per feature for skipped work so the report stays a one-page read.
+- Gate: green.
+- Next: M27-004 (upgrade process).
+- Note: the M27-003 code landed in 3c84130, but its status flip, this entry
+  and the protocol line were left out by a failed edit step; they landed
+  with the M27-004 follow-up commit.
+
 ## 2026-10-07 — session 49 (M27-002)
 
 - Branch: `m27-upgrades`.

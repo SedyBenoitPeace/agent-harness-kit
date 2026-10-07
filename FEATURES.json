@@ -938,7 +938,7 @@
       "id": "M27-003",
       "milestone": 27,
       "title": "Run report shows each done feature's Decisions line, the supervisor's skipped work and budget stops",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M27-002"
       ],
