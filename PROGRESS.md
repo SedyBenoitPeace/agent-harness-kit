@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 40 (M25-001)
+
+- Branch: `m25-mods`.
+- Done: M25-001 — the edition's hooks module (`claude/hooks/register.ts`,
+  pure logic in `lib.ts`) registers `register_decision` at session start in
+  a harnessed repo only. Each call appends `- chose X over Y: why` to
+  `.harness-run/decisions/<id>.md`; ids that are not `M<n>-<nnn>` are denied,
+  so nothing is written outside `.harness-run/`, which gets a `*`
+  .gitignore. harness-session folds the file into the `Decisions:` line.
+  4 engine tests (`claude plugin test`), run by the gate when the CLI is
+  present; type-checked with tsc against the 2.1.292 declarations.
+- Decisions: all hooks in one file (the engine refuses `$` passed across an
+  import); one `session.start` hook owns every feature's start step (one
+  hook per event); validated the id instead of normalising paths (an
+  allow-list is the robust guard); self-ignoring `.harness-run/` instead of
+  editing the root .gitignore (harness-run needs a clean tree and must not
+  commit run state).
+- Gate: green.
+- Next: M25-002 (done-check supervisor).
+
 ## 2026-10-07 — session 39 (M25-005)
 
 - Branch: `m25-mods` (off master after PR #25 merged).

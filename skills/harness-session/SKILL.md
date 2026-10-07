@@ -60,7 +60,9 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 10. Run the final full gate through `bash scripts/run-gate.sh final
    <target>`, flip only the selected feature's status to `passing`,
    append one `PROGRESS.md` entry (with its `Decisions:` line, protocol
-   §2.5), move the plan to `docs/plans/completed/`
+   §2.5; when `.harness-run/decisions/<id>.md` exists, written by the
+   Claude Code edition's `register_decision` tool, fold its lines into
+   that line), move the plan to `docs/plans/completed/`
    in the same commit if that was its last failing feature, commit explicit
    paths, then STOP —
    do not start a second feature. A feature with `evaluate` set (`ui`) is

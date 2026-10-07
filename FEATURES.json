@@ -768,7 +768,7 @@
       "id": "M25-001",
       "milestone": 25,
       "title": "Mod: decision register tool that appends to .harness-run/decisions/<id>.md, folded into the Decisions: line at close-out",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M24-003"
       ],
