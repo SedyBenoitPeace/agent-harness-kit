@@ -1060,6 +1060,61 @@
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with: no ui.render band hook in claude/hooks/register.tsx and no band in README or tests; claude plugin test green where the CLI exists; all manifests 3.6.0; CHANGELOG 3.6.0 entry with an Upgrade: block; agent-harness-template has a PR syncing it (sync-template.sh --check exits 0 on that branch)",
       "notes": "Plan: docs/plans/completed/2026-10-07-m28-lean.md"
+    },
+    {
+      "id": "M29-001",
+      "milestone": 29,
+      "title": "Reuse a proven-green baseline: run-gate.sh skips the baseline gate when the tree is identical to the last green run",
+      "status": "failing",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/",
+        "scripts/test-session.sh",
+        "skills/harness-initial-setup/templates/harness-protocol.md"
+      ],
+      "effort": "high",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh fixtures proving: after a green final gate, a commit touching only PROGRESS.md and docs/plans/ gives a baseline that prints GATE: green (baseline reused and does not run e2e.sh; a changed code file, a changed FEATURES.json, a new untracked file, a dirty tree, a red last run, or HARNESS_GATE_REUSE=0 each run the gate; nothing is written inside the worktree; protocol 2.3 says a reused baseline counts as green",
+      "notes": "Plan: docs/plans/active/2026-10-07-m29-run-speed.md"
+    },
+    {
+      "id": "M29-002",
+      "milestone": 29,
+      "title": "Waiting on a human: deferred features with a Needs a human: note are listed, their dependents held, and sessions defer their own blocked feature",
+      "status": "failing",
+      "depends_on": [
+        "M29-001"
+      ],
+      "paths": [
+        "skills/harness-status/",
+        "skills/harness-run/",
+        "skills/harness-session/",
+        "skills/harness-initial-setup/templates/",
+        "scripts/"
+      ],
+      "effort": "high",
+      "verify": "bash scripts/e2e.sh exits 0 with test-status.sh fixtures proving status.sh prints WAITING ON HUMAN: <id> — <question> for deferred features whose notes start with Needs a human:, prints HELD: <id> — depends on <id> for failing features whose depends_on reaches one (transitively), never selects a held feature as NEXT, with and without --skip; test-run.sh proving run-report.sh writes a Waiting on a human section; protocol 1.4 asks the needs-a-human question; AGENTS.md.tmpl and harness-session SKILL.md tell a session stopping on a Needs-a-human item to defer its own feature with that note",
+      "notes": "Plan: docs/plans/active/2026-10-07-m29-run-speed.md"
+    },
+    {
+      "id": "M29-003",
+      "milestone": 29,
+      "title": "Builders start from the feature's paths; run report shows minutes and tokens per feature; release 3.7.0",
+      "status": "failing",
+      "depends_on": [
+        "M29-002"
+      ],
+      "paths": [
+        "skills/harness-status/",
+        "skills/harness-run/",
+        "claude/",
+        "scripts/",
+        "CHANGELOG.md",
+        "package.json",
+        ".claude-plugin/"
+      ],
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with: test-status.sh proving a paths: line under NEXT when the feature has paths; harness-run SKILL.md passing those paths in the builder dispatch; test-run.sh proving run-report.sh writes minutes per done feature from commit times and tokens from .harness-run/tokens.log; a mods test proving the budget guard appends <id> <tokens> to .harness-run/tokens.log at each SESSION line during a run; all manifests 3.7.0 with a CHANGELOG Upgrade block; template mirror PR synced; CI green on the PR",
+      "notes": "Plan: docs/plans/active/2026-10-07-m29-run-speed.md"
     }
   ]
 }
