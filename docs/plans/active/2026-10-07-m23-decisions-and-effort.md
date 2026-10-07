@@ -152,3 +152,7 @@ mods) without forking the protocol.
   to skip the skill. Descriptions now say when to use the skill and to
   always load it; the how stays inside. Result over 3 runs: brief 1.00 with
   vs 0.50 without, session 1.00 vs 0.75.
+- 2026-10-07 — Owner renamed the edition back to `agent-harness-kit-claude`
+  (M25-005): it will hold more Claude-specific features than mods. The
+  validator's "reads as Anthropic's own" warning is accepted; the gate's
+  strict validate allows that one warning and fails on any other.

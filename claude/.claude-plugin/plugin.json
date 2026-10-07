@@ -1,5 +1,5 @@
 {
-  "name": "agent-harness-kit-mods",
+  "name": "agent-harness-kit-claude",
   "description": "Claude Code edition of the agent harness: adds Claude Code-only features (agent effort, mods, eval suites) on top of agent-harness-kit.",
   "version": "3.2.0",
   "author": {

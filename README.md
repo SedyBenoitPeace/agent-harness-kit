@@ -206,7 +206,7 @@ protocol so every agent follows them:
 
 ## Claude Code edition
 
-A second plugin in the same marketplace, `agent-harness-kit-mods`, adds
+A second plugin in the same marketplace, `agent-harness-kit-claude`, adds
 features only Claude Code has: an eval suite for the core skills and mods
 (function hooks: a decision register, a done-check supervisor, a budget
 guard, a next-steps band). It depends on the core plugin and never copies
@@ -214,7 +214,7 @@ the protocol, so every other CLI keeps working from the core alone.
 Installing the edition installs the core plugin with it:
 
 ```
-/plugin install agent-harness-kit-mods
+/plugin install agent-harness-kit-claude
 ```
 
 **Unattended runs on auto mode.** Start Claude Code with

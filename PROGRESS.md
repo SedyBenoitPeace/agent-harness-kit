@@ -3,6 +3,20 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 39 (M25-005)
+
+- Branch: `m25-mods` (off master after PR #25 merged).
+- Done: M25-005 — the Claude Code edition plugin is `agent-harness-kit-claude`
+  again (manifest, marketplace entry, READMEs, ARCHITECTURE). The gate's
+  `claude plugin validate --strict` now reads the JSON report and fails on
+  every error and warning except the name warning; proven by removing the
+  author field (gate red).
+- Decisions: kept strict validation instead of dropping to plain validate
+  (it would hide real warnings); added the rename as its own feature for
+  traceability, done before M25-001 at the owner's request.
+- Gate: green.
+- Next: M25-001 (decision register mod).
+
 ## 2026-10-07 — session 38 (M24-003)
 
 - Branch: `m24-claude-edition`.

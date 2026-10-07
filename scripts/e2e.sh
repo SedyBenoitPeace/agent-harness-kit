@@ -427,20 +427,33 @@ done
 ED=".claude-plugin/plugin.json"
 ED_MANIFEST="claude/.claude-plugin/plugin.json"
 [ -f "$ED_MANIFEST" ] || fail "Claude edition: $ED_MANIFEST missing"
-jq -e '.name == "agent-harness-kit-mods" and ((.dependencies // []) | index("agent-harness-kit") != null)' "$ED_MANIFEST" >/dev/null \
-  || fail "Claude edition: plugin.json must be agent-harness-kit-mods and depend on agent-harness-kit"
-jq -e '[.plugins[] | select(.name == "agent-harness-kit-mods" and .source == "./claude")] | length == 1' .claude-plugin/marketplace.json >/dev/null \
+jq -e '.name == "agent-harness-kit-claude" and ((.dependencies // []) | index("agent-harness-kit") != null)' "$ED_MANIFEST" >/dev/null \
+  || fail "Claude edition: plugin.json must be agent-harness-kit-claude and depend on agent-harness-kit"
+jq -e '[.plugins[] | select(.name == "agent-harness-kit-claude" and .source == "./claude")] | length == 1' .claude-plugin/marketplace.json >/dev/null \
   || fail "marketplace.json: Claude edition entry (source ./claude) missing"
 core_v="$(jq -r .version "$ED")"
 [ "$(jq -r .version "$ED_MANIFEST")" = "$core_v" ] || fail "Claude edition: plugin.json version must match the core ($core_v)"
-[ "$(jq -r '.plugins[] | select(.name == "agent-harness-kit-mods") | .version' .claude-plugin/marketplace.json)" = "$core_v" ] \
+[ "$(jq -r '.plugins[] | select(.name == "agent-harness-kit-claude") | .version' .claude-plugin/marketplace.json)" = "$core_v" ] \
   || fail "marketplace.json: Claude edition version must match the core ($core_v)"
 if find claude -name 'harness-protocol.md' | grep -q .; then fail "Claude edition must not copy harness-protocol.md"; fi
-grep -qF '/plugin install agent-harness-kit-mods' README.md || fail "README: Claude edition install line missing"
+grep -qF '/plugin install agent-harness-kit-claude' README.md || fail "README: Claude edition install line missing"
 # claude plugin validate when the CLI is present (CI runners may not have it)
+# Strict: every error and every warning fails, except the one the owner chose
+# to accept: a plugin name containing "claude" "reads as one of Anthropic's own".
+validate_strict() {
+  local report
+  report="$(claude plugin validate --strict --json "$1" 2>/dev/null || true)"
+  jq -e '
+    [.. | objects | select(has("errors")) | .errors[]] as $e
+    | [.. | objects | select(has("warnings")) | .warnings[]
+        | select((.message | test("reads as one of Anthropic.s own")) | not)] as $w
+    | ($e | length) == 0 and ($w | length) == 0' <<< "$report" >/dev/null \
+    || { echo "$report" | jq -r '.. | objects | (.errors? // [])[], (.warnings? // [])[] | "  \(.path): \(.message)"' >&2
+         fail "claude plugin validate --strict $1 failed"; }
+}
 if command -v claude >/dev/null; then
-  claude plugin validate --strict claude >/dev/null 2>&1 || fail "claude plugin validate --strict claude/ failed"
-  claude plugin validate . >/dev/null 2>&1 || fail "claude plugin validate . (marketplace) failed"
+  validate_strict claude
+  validate_strict .
 fi
 
 # --- Claude edition: auto mode + eval suite (M24-003) ---------------------------

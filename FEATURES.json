@@ -825,6 +825,23 @@
       ],
       "verify": "claude plugin test claude/ passes tests proving the AbovePrompt band appears after a session line reporting passing, offers next feature / explain / quiz, and renders nothing when .harness-run/start exists; bash scripts/e2e.sh exits 0",
       "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M25-005",
+      "milestone": 25,
+      "title": "Rename the Claude Code edition plugin to agent-harness-kit-claude (owner's choice: room for more Claude-specific features)",
+      "status": "passing",
+      "depends_on": [],
+      "paths": [
+        "claude/.claude-plugin/",
+        ".claude-plugin/marketplace.json",
+        "README.md",
+        "claude/README.md",
+        "ARCHITECTURE.md",
+        "scripts/e2e.sh"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with claude/.claude-plugin/plugin.json and the marketplace entry named agent-harness-kit-claude, no live reference to agent-harness-kit-mods outside history, and claude plugin validate --strict on claude/ and the marketplace failing on every error and warning except the one about a 'claude' name reading as Anthropic's own",
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md Done first in the M25 PR at the owner's request, ahead of M25-001..004 (id order deviates on purpose)."
     }
   ]
 }
