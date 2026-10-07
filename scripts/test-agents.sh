@@ -16,8 +16,8 @@ for n in harness-builder harness-evaluator harness-brief-reviewer; do
   grep -q '^description: .' "$g" || fail "$n: copilot description missing"
   grep -q '^description = ".' "$x" || fail "$n: codex description missing"
   grep -q "^developer_instructions = '''" "$x" || fail "$n: codex developer_instructions missing"
-  grep -Eq '^model: [^ [{"]+$' "$g" || fail "$n: copilot model must be a plain string"
-  grep -Eq '^model: [^ ]+$' "$c" || fail "$n: claude model missing"
+  # no model names (M28-001): every CLI uses its own default
+  grep -Eq '^model *[:=]' "$c" "$g" "$x" && fail "$n: generated agent must not name a model"
 done
 
 # read-only agents (evaluator, brief reviewer): no edit/write tool in any format, read-only sandbox for Codex
@@ -60,16 +60,6 @@ grep -qx 'model_reasoning_effort = "high"' "$m/out/.codex/agents/harness-evaluat
 sed -i.bak 's/^effort: max$/effort: turbo/' "$m/agents/src/harness-evaluator.md" && rm -f "$m/agents/src/harness-evaluator.md.bak"
 bash "$m/scripts/gen-agents.sh" "$m/out" >/dev/null 2>&1 && fail "unknown effort level must be rejected"
 rm -rf "$m"
-
-# model fallback (M27-002): a tier set to "auto" (or missing) lets the CLI
-# choose: no model line in that CLI's agent file
-a="$(mktemp -d)"; cp -R agents scripts "$a/"
-jq '.models.claude.standard = "auto" | del(.models.codex.standard)' "$a/agents/models.json" > "$a/m.json" && mv "$a/m.json" "$a/agents/models.json"
-mkdir "$a/out"; bash "$a/scripts/gen-agents.sh" "$a/out" >/dev/null
-grep -q '^model:' "$a/out/.claude/agents/harness-builder.md" && fail "auto claude tier must not write a model line"
-grep -q '^model = ' "$a/out/.codex/agents/harness-builder.toml" && fail "missing codex tier must not write a model line"
-grep -q '^model:' "$a/out/.github/agents/harness-builder.agent.md" || fail "copilot tier still set: model line expected"
-rm -rf "$a"
 
 # idempotent
 before="$(cd "$t" && find . -type f -exec cksum {} + | sort)"

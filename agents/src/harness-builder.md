@@ -1,7 +1,6 @@
 ---
 name: harness-builder
 description: Builds exactly one harness feature test-first, runs the gate, and commits. Dispatched by harness-run, one per feature.
-tier: standard
 access: full
 ---
 

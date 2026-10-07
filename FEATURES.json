@@ -992,7 +992,7 @@
       "id": "M28-001",
       "milestone": 28,
       "title": "Drop the model names: no agents/models.json, no model lines, no model fallback",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [],
       "paths": [
         "agents/",

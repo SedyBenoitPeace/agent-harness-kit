@@ -197,7 +197,9 @@ protocol so every agent follows them:
   `harness-status` prints it under `NEXT:`, sessions scale their checking
   to it, and `harness-run` passes it to the agent it dispatches (as the
   CLI's own effort setting where there is one). The evaluator always runs
-  at high or above. Leave it out and nothing changes.
+  at high or above. Leave it out and nothing changes. The kit names no
+  models: every agent runs on its CLI's default. Pick your strongest model
+  for hard features and reviews, a cheaper one for implementation.
 - **Model-tagged rules.** Start lean: add an AGENTS.md rule only for a
   failure you have seen more than once, and end a rule written for one
   model's failure with `(model: <name>)`. When you change models,
@@ -522,8 +524,7 @@ skills/
     ├── SKILL.md        runs upgrade.sh, explains, commits as its own commit
     └── scripts/upgrade.sh         idempotent upgrade of an existing harness
 agents/
-├── src/                neutral harness-builder / harness-evaluator roles
-└── models.json         tier -> model per CLI, sensitive-path globs
+└── src/                neutral harness-builder / harness-evaluator roles
 scripts/gen-agents.sh   emits the roles as Claude / Copilot / Codex agent files
 ```
 

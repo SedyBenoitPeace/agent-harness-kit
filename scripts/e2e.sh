@@ -300,8 +300,6 @@ bash scripts/test-run.sh
 
 # --- agents (M18) --------------------------------------------------------
 
-jq -e '.models | (.claude and .copilot and .codex)' agents/models.json >/dev/null \
-  || fail "agents/models.json: missing a CLI model map"
 bash scripts/test-agents.sh
 
 # evaluator documented end to end (M18)
@@ -507,13 +505,13 @@ for w in second_opinion second-opinion.sh '## Stage' 'never instructions'; do
   sed -n '/^## Second opinion, brief stage and untrusted text/,/^## /p' README.md | grep -qF -- "$w" || fail "README M26 section: '$w' missing"
 done
 
-# --- model rule of thumb + fallback (M27-002) -------------------------------------
-jq -e '.models.claude.strong == "opus" and .models.claude.standard == "sonnet"
-       and .models.codex.strong == "gpt-6-astra" and .models.codex.standard == "gpt-6.1-sol"
-       and .models.copilot.strong == "gpt-6-astra"' agents/models.json >/dev/null \
-  || fail "agents/models.json: rule of thumb (Claude opus/sonnet, ChatGPT gpt-6-astra/gpt-6.1-sol) not applied"
-jq -e '._instructions | test("auto") and test("fall")' agents/models.json >/dev/null || fail "agents/models.json: _instructions must explain auto and the fallback"
-grep -qF 'model is unavailable' "$RUN_SKILL/SKILL.md" || fail "harness-run: fallback when a named agent's model is unavailable missing"
+# --- no model names (M28-001) ----------------------------------------------------
+# Named models go stale with every release: every agent runs on its CLI's default.
+[ ! -e agents/models.json ] || fail "agents/models.json must not exist (M28-001)"
+! grep -q '^tier:' agents/src/*.md || fail "agents/src: tier is gone with the model map (M28-001)"
+! grep -rqF 'models.json' skills agents README.md || fail "models.json still referenced (M28-001)"
+grep -qF 'auth, payments, personal data or migrations' "$RUN_SKILL/SKILL.md" \
+  || fail "harness-run: security checklist trigger must be stated in words (M28-001)"
 
 # --- a clear upgrade every release (M27-004) ---------------------------------------
 [ -f CHANGELOG.md ] || fail "CHANGELOG.md missing"

@@ -1,7 +1,6 @@
 ---
 name: harness-brief-reviewer
 description: Read-only, independent reader of one brief file. Returns READY or GAPS with numbered gaps. Never edits files.
-tier: standard
 access: read-only
 ---
 

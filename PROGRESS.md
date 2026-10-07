@@ -3,6 +3,21 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 53 (M28-001)
+
+- Branch: `m28-lean`.
+- Done: M28-001 — no model names anywhere. `agents/models.json` deleted;
+  agent sources lose `tier`; generated agents carry no model line, so every
+  CLI uses its own default; second-opinion.sh passes no model flag and the
+  fallback is gone; harness-run states the security-checklist trigger in
+  words (auth, payments, personal data, migrations) instead of globs. README
+  has one line of advice with no model names.
+- Decisions: dropped the table outright rather than defaulting every tier to
+  `auto` (a table nobody fills is still a table to maintain); kept `effort`,
+  which is vendor-neutral and does not go stale.
+- Gate: green.
+- Next: M28-002 (split the protocol).
+
 ## 2026-10-07 — session 52 (M27-005, release 3.5.0)
 
 - Branch: `m27-upgrades`.

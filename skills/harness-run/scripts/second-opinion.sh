@@ -2,8 +2,8 @@
 # harness-run: a second opinion from another vendor's agent (M26-001).
 # Usage: second-opinion.sh <claude|codex|copilot> <feature-id> <base-commit> [TARGET_DIR]
 # Runs that CLI non-interactively and read-only, as the harness evaluator, on
-# the commits base..HEAD, with the strong model from agents/models.json.
-# Prints VERDICT: PASS | NEEDS_WORK | REJECTED, the CLI and model, then the
+# the commits base..HEAD, with the CLI's own default model.
+# Prints VERDICT: PASS | NEEDS_WORK | REJECTED, the CLI, then the
 # agent's reply. Writes nothing to the target repo.
 # Exit codes: 0 PASS; 1 NEEDS_WORK, or REJECTED (the agent changed the tree
 # or HEAD; the change is left for the human); 2 broken (unknown or missing
@@ -29,9 +29,6 @@ entry="$(jq -c --arg id "$id" '.features[]? | select(.id == $id)' FEATURES.json 
 [ -z "$(git status --porcelain)" ] || broken "the tree is dirty; commit or stash before a second opinion"
 head_before="$(git rev-parse HEAD)"
 
-# "auto" or no entry: let the CLI choose (M27-002)
-model="$(jq -r --arg c "$cli" '.models[$c].strong // "auto"' "$kit/agents/models.json")"
-
 # The evaluator role, as gen-agents.sh writes it for every CLI.
 role="$(awk 'c>=2{print} /^---$/{c++}' "$kit/agents/src/harness-evaluator.md")"
 prompt="$role
@@ -49,38 +46,25 @@ Commit range: ${base}..HEAD"
 work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
 reply="$work/reply"
 
-# ask MODEL: run the CLI once, read-only, with that model ("auto" = none)
-ask() {
-  local m="$1"
-  : > "$reply"
-  case "$cli" in
-    codex)
-      codex exec --sandbox read-only --ephemeral ${m:+-m "$m"} -o "$reply" "$prompt" > "$work/log" 2>&1 ;;
-    claude)
-      claude -p "$prompt" ${m:+--model "$m"} --permission-mode dontAsk \
-        --allowedTools Read Grep Glob Bash --disallowedTools Edit Write NotebookEdit > "$reply" 2> "$work/log" ;;
-    copilot)
-      copilot -p "$prompt" -s --no-ask-user ${m:+--model "$m"} --allow-all-tools --deny-tool=write \
-        --deny-tool='shell(git commit)' --deny-tool='shell(git push)' --deny-tool='shell(git reset)' \
-        --deny-tool='shell(git checkout)' --deny-tool='shell(rm)' > "$reply" 2> "$work/log" ;;
-  esac
-}
-named=""; [ "$model" = auto ] || named="$model"
-rc=0; ask "$named" || rc=$?
-# Fallback: a named model the CLI rejects (retired, not on this account) →
-# one retry with no model flag, so the CLI chooses its own.
-if [ -n "$named" ] && [ "$rc" -ne 0 ] && [ ! -s "$reply" ] && grep -qi 'model' "$work/log"; then
-  model_note="MODEL: $named unavailable, $cli chose its own"
-  model="auto"
-  ask "" || true
-fi
+# Run the CLI once, read-only, with its own default model.
+case "$cli" in
+  codex)
+    codex exec --sandbox read-only --ephemeral -o "$reply" "$prompt" > "$work/log" 2>&1 || true ;;
+  claude)
+    claude -p "$prompt" --permission-mode dontAsk \
+      --allowedTools Read Grep Glob Bash --disallowedTools Edit Write NotebookEdit > "$reply" 2> "$work/log" || true ;;
+  copilot)
+    copilot -p "$prompt" -s --no-ask-user --allow-all-tools --deny-tool=write \
+      --deny-tool='shell(git commit)' --deny-tool='shell(git push)' --deny-tool='shell(git reset)' \
+      --deny-tool='shell(git checkout)' --deny-tool='shell(rm)' > "$reply" 2> "$work/log" || true ;;
+esac
 touch "$reply"
 
 # Read-only flags differ per CLI; this check is the guarantee.
 changes="$(git status --porcelain)"
 if [ "$(git rev-parse HEAD)" != "$head_before" ] || [ -n "$changes" ]; then
   echo "VERDICT: REJECTED"
-  echo "CLI: $cli ($model)"
+  echo "CLI: $cli"
   echo "The second-opinion agent changed the repo; its verdict is void. Left as found:"
   [ "$(git rev-parse HEAD)" != "$head_before" ] && echo "HEAD moved: $head_before -> $(git rev-parse HEAD)"
   printf '%s\n' "$changes"
@@ -90,7 +74,6 @@ fi
 first="$(grep -m1 -v '^[[:space:]]*$' "$reply" | tr -d '[:space:]' || true)"
 if [ "$first" = PASS ]; then verdict=PASS; else verdict=NEEDS_WORK; fi
 echo "VERDICT: $verdict"
-echo "CLI: $cli ($model)"
-[ -z "${model_note:-}" ] || echo "$model_note"
+echo "CLI: $cli"
 cat "$reply"
 [ "$verdict" = PASS ]

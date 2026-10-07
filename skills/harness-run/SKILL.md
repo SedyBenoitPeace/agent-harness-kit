@@ -34,10 +34,6 @@ stays interactive and stops at the first problem.
    `../../scripts/gen-agents.sh`; if absent, the agent's own built-in subagent) with exactly:
    "Use harness-session for <id>, inline. End with its SESSION line."
    Own tools only — never load an external workflow skill.
-   If the named agent fails to start because its model is unavailable
-   (retired, or not on this account), dispatch the agent's own built-in
-   subagent instead for that feature, so the CLI chooses its model, and
-   say so in the progress line; models.json `auto` does the same up front.
    When status.sh printed an `effort: <level>` line under `NEXT:`, the
    feature asks for that effort (protocol §1.4): set it as the dispatch
    tool's own effort setting if it has one, otherwise add the line
@@ -68,7 +64,7 @@ set; absent means no evaluation and today's flow):
    if the dispatch tool has one, otherwise "Effort: high." in the prompt)
    with only: the feature entry, the commit range, its
    `bar`, whether `evaluate` is `ui` (QA mode), and — when any `paths`
-   entry matches the sensitive globs in `../../agents/models.json` — the
+   entry touches auth, payments, personal data or migrations — the
    security checklist. Never pass the builder's transcript. If the agent
    is missing, run `../../scripts/gen-agents.sh <target>` first, or STOP and tell the human.
 2. Integrity check: `git status --short` must be empty and HEAD unchanged.

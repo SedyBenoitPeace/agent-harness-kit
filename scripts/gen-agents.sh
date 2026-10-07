@@ -10,12 +10,11 @@ mkdir -p "$target/.claude/agents" "$target/.github/agents" "$target/.codex/agent
 
 field() { sed -n "2,/^---\$/{s/^$2: *//p;}" "$1"; }
 body()  { awk 'c>=2{print} /^---$/{c++}' "$1"; }
-# A tier set to "auto" (or missing) lets the CLI choose its own model.
-model() { jq -r --arg c "$1" --arg t "$2" '.models[$c][$t] // "auto"' "$here/agents/models.json"; }
+# No model line: every CLI uses its own default model (M28-001).
 
 for src in "$here"/agents/src/*.md; do
   name="$(field "$src" name)"; desc="$(field "$src" description)"
-  tier="$(field "$src" tier)"; access="$(field "$src" access)"
+  access="$(field "$src" access)"
   # optional effort (low|medium|high|max): Claude Code takes it as-is; Codex
   # calls it model_reasoning_effort and has no max (mapped to high); Copilot
   # has no per-agent setting, so it gets none
@@ -41,7 +40,6 @@ for src in "$here"/agents/src/*.md; do
   {
     printf -- '---\nname: %s\ndescription: %s\n' "$name" "$desc"
     [ -n "$c_tools" ] && printf '%s\n' "$c_tools"
-    m="$(model claude "$tier")"; [ "$m" = auto ] || printf 'model: %s\n' "$m"
     [ -n "$c_effort" ] && printf '%s\n' "$c_effort"
     printf -- '---\n'
     body "$src"
@@ -50,14 +48,12 @@ for src in "$here"/agents/src/*.md; do
   {
     printf -- '---\nname: %s\ndescription: %s\n' "$name" "$desc"
     [ -n "$g_tools" ] && printf '%s\n' "$g_tools"
-    m="$(model copilot "$tier")"; [ "$m" = auto ] || printf 'model: %s\n' "$m"
     printf -- '---\n'
     body "$src"
   } > "$target/.github/agents/$name.agent.md"
 
   {
     printf 'name = "%s"\ndescription = "%s"\n' "$name" "$desc"
-    m="$(model codex "$tier")"; [ "$m" = auto ] || printf 'model = "%s"\n' "$m"
     printf '%s' "$x_sandbox"
     [ -n "$x_effort" ] && printf '%s\n' "$x_effort"
     printf "developer_instructions = '''\n"
