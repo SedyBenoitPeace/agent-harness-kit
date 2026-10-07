@@ -91,7 +91,8 @@ START="$(git -C "$R" rev-parse HEAD)"
 
 # the run: M1-001 passes, M1-002 is skipped with a recorded question
 jq '(.features[] | select(.id=="M1-001") | .status) = "passing"' "$R/FEATURES.json" > "$R/f.tmp" && mv "$R/f.tmp" "$R/FEATURES.json"
-g add FEATURES.json; g commit -qm "feat(M1-001): boot"
+printf '# PROGRESS\n\n## 2026-03-04 -- session 2 (M1-001)\n- Done: M1-001 boot.\n- Decisions: rejected a config file (env vars suffice);\n  assumed UTF-8 input.\n- Gate: green.\n\n## 2026-03-01 -- session 1\n- Setup.\n' > "$R/PROGRESS.md"
+g add FEATURES.json PROGRESS.md; g commit -qm "feat(M1-001): boot"
 echo wip > "$R/wip.txt"; g add wip.txt; g stash push -q -u -m "harness-run skip M1-002"
 jq '(.features[] | select(.id=="M1-002") | .notes) = "Unattended 2026-03-04: skipped — gate red on parser tests. Question for the human: which date formats must the parser accept?"' "$R/FEATURES.json" > "$R/f.tmp" && mv "$R/f.tmp" "$R/FEATURES.json"
 g add FEATURES.json; g commit -qm "harness-run: skip M1-002"
@@ -122,6 +123,22 @@ cp "$rep" "$WORK/first.md"
 out2="$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap reached (3)")"
 [ "$out2" = "$out" ] || fail "run-report: path not deterministic"
 cmp -s "$rep" "$WORK/first.md" || fail "run-report: output not deterministic"
+
+# M27-003: each done feature carries its Decisions: line (continuation lines
+# joined); no Supervisor or Budget section without their files
+sed -n '/^## Done/,/^## Skipped/p' "$rep" | grep -q '^  - Decisions: rejected a config file (env vars suffice); assumed UTF-8 input.$' \
+  || fail "run-report: Done must carry M1-001's Decisions: line"
+grep -q '^## Supervisor' "$rep" && fail "run-report: no Supervisor section without skipped-work files"
+grep -q '^## Budget' "$rep" && fail "run-report: no Budget section without budget.log"
+mkdir -p "$R/.harness-run/decisions"
+printf '*\n' > "$R/.harness-run/.gitignore"
+printf '# Supervisor: work M1-001 may have skipped\n\n- no test for an empty config\n- unicode names unchecked\n' > "$R/.harness-run/decisions/M1-001.skipped.md"
+printf '2026-03-04T10:30:00Z agent-3: 1600000 tokens over the 1500000 budget; run asked to stop after this feature\n' > "$R/.harness-run/budget.log"
+(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "budget") >/dev/null || fail "run-report with signals: expected exit 0"
+sed -n '/^## Supervisor/,/^## /p' "$rep" | grep -q '^- M1-001 — boot: no test for an empty config; unicode names unchecked$' \
+  || fail "run-report: Supervisor must list M1-001's skipped work"
+sed -n '/^## Budget/,/^## /p' "$rep" | grep -q 'agent-3: 1600000 tokens over the 1500000 budget' || fail "run-report: Budget must carry budget.log"
+rm -rf "$R/.harness-run"
 
 # bad start commit: usage error, exit 2
 rc=0; (cd "$R" && bash "$REPORT" nope >/dev/null 2>&1) || rc=$?

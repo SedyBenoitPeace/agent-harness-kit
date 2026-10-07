@@ -54,6 +54,20 @@ while IFS=$'\t' read -r hash subject; do
 done < <(git log --reverse --format='%h%x09%s' "$START..HEAD")
 done_lines="$(printf '%s' "$done_lines" | awk -F'\t' 'NF { h[$1] = $2; if (!($1 in s)) { s[$1] = 1; ord[++n] = $1 } } END { for (i = 1; i <= n; i++) print ord[i] "\t" h[ord[i]] }')"
 
+# The newest PROGRESS.md entry naming <id> that has a Decisions: line, as one
+# line (wrapped continuation lines joined) — M27-003
+decisions_of() {
+  [ -f PROGRESS.md ] || return 0
+  awk -v id="$1" '
+    /^## / { if (hit && dec != "") { print dec; exit } hit = index($0, id) > 0; indec = 0; dec = ""; next }
+    index($0, id) > 0 { hit = 1 }
+    /^- Decisions:/ { indec = 1; dec = $0; next }
+    indec && /^  [^ -]/ { sub(/^ +/, ""); dec = dec " " $0; next }
+    { indec = 0 }
+    END { if (hit && dec != "") print dec }
+  ' PROGRESS.md | head -1 | sed 's/^- //'
+}
+
 done_out=""; n_done=0
 while IFS=$'\t' read -r id hash; do
   [ -n "$id" ] || continue
@@ -65,8 +79,24 @@ while IFS=$'\t' read -r id hash; do
 " ;;
     *) continue ;;
   esac
+  dec="$(decisions_of "$id")"
+  [ -z "$dec" ] || done_out="$done_out  - $dec
+"
   n_done=$((n_done + 1))
 done <<< "$done_lines"
+
+# Supervisor (M25-002) and budget guard (M25-003) signals, when a run left them
+supervisor_out=""
+for f in .harness-run/decisions/*.skipped.md; do
+  [ -f "$f" ] || continue
+  id="$(basename "$f" .skipped.md)"
+  items="$(sed -n 's/^- //p' "$f" | paste -sd ';' - | sed 's/;/; /g')"
+  [ -n "$items" ] && supervisor_out="$supervisor_out- $id — $(title "$id"): $items
+"
+done
+budget_out=""
+[ -s .harness-run/budget.log ] && budget_out="$(sed 's/^/- /' .harness-run/budget.log)
+"
 
 # skipped: the skip file, with reason and question parsed from the notes
 skipped_out=""; n_skipped=0
@@ -130,6 +160,20 @@ list() { if [ -n "$1" ]; then printf '%s' "$1"; else echo "- none"; fi; }
   echo "## Not started"
   echo
   list "$notstarted_out"
+  if [ -n "$supervisor_out" ]; then
+    echo
+    echo "## Supervisor"
+    echo
+    echo "Work the done-check supervisor thinks a session skipped:"
+    echo
+    printf '%s' "$supervisor_out"
+  fi
+  if [ -n "$budget_out" ]; then
+    echo
+    echo "## Budget"
+    echo
+    printf '%s' "$budget_out"
+  fi
   echo
   echo "## Branches"
   echo
