@@ -68,14 +68,28 @@ decisions_of() {
   ' PROGRESS.md | head -1 | sed 's/^- //'
 }
 
+# minutes per done feature (M29-003): from the previous feature's (or skip's,
+# or the start's) commit to the feature's own last commit; tokens from the
+# Claude Code edition's .harness-run/tokens.log when it exists
+times="$(prev="$(git log -1 --format=%ct "$START")"
+  git log --reverse --format='%h %ct %s' "$START..HEAD" | while read -r h ct subj; do
+    id="$(printf '%s\n' "$done_lines" | awk -F'\t' -v h="$h" '$2 == h { print $1; exit }')"
+    if [ -n "$id" ]; then echo "$id $(( (ct - prev + 30) / 60 ))"; prev="$ct"
+    else case "$subj" in "harness-run: skip"*) prev="$ct" ;; esac; fi
+  done)"
+tokens_of() { [ -s .harness-run/tokens.log ] && awk -v id="$1" '$1 == id { t = $2 } END { if (t != "") print t }' .harness-run/tokens.log; }
+
 done_out=""; n_done=0
 while IFS=$'\t' read -r id hash; do
   [ -n "$id" ] || continue
   st="$(status_of "$id")"
+  cost="$(printf '%s\n' "$times" | awk -v id="$id" '$1 == id { print " — " $2 " min" }')"
+  tok="$(tokens_of "$id" || true)"
+  [ -z "$tok" ] || cost="$cost, $tok tokens"
   case "$st" in
-    passing) done_out="$done_out- $id — $(title "$id") — $hash
+    passing) done_out="$done_out- $id — $(title "$id") — $hash$cost
 " ;;
-    review) done_out="$done_out- $id — $(title "$id") — $hash (review: awaiting the evaluator)
+    review) done_out="$done_out- $id — $(title "$id") — $hash$cost (review: awaiting the evaluator)
 " ;;
     *) continue ;;
   esac

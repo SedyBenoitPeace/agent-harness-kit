@@ -85,8 +85,9 @@ nothing stops it for a feature it cannot finish. The human invokes the
   from git, FEATURES.json, the skip file and the stop reason: what was
   done, what was skipped and the question each skip needs answered, what
   was not started and why, and the branches used; under each done feature
-  its `Decisions:` line, and any skipped work or budget stop the run
-  recorded. The report is committed.
+  its `Decisions:` line and its minutes (and tokens, where the agent
+  logs them), the features waiting on a human, and any skipped work or
+  budget stop the run recorded. The report is committed.
 - The human then reads the report, answers each question in that
   feature's `notes`, recovers any stashed work with `git stash list`, and
   reviews the branch. A later run starts with an empty skip list and

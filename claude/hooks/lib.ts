@@ -130,3 +130,8 @@ export function countedTokens(usage: { input_tokens: number; output_tokens: numb
 export function budgetLine(when: string, who: string, used: number, budget: number) {
   return `${when} ${who}: ${used} tokens over the ${budget} budget; run asked to stop after this feature\n`
 }
+
+// M29-003 — one line per feature in .harness-run/tokens.log, read by run-report.sh
+export function tokensLine(feature: string, used: number) {
+  return `${feature} ${used}\n`
+}

@@ -94,4 +94,11 @@ out="$(bash "$STATUS" "$WORK/nohuman")"
 grep -q 'Waiting on a human' <<< "$out" && fail "no waiting features: no section expected"
 grep -q '^NEXT: M1-002' <<< "$out" || fail "no waiting features: nothing held, NEXT is M1-002"
 
+# 6. paths (M29-003): a paths: line under NEXT when the feature has them
+jq '.features[3].paths = ["src/docs/", "tests/docs/**"]' "$WORK/human/FEATURES.json" > "$WORK/human/f.tmp" && mv "$WORK/human/f.tmp" "$WORK/human/FEATURES.json"
+out="$(bash "$STATUS" "$WORK/human")"
+grep -qx '  paths: src/docs/, tests/docs/\*\*' <<< "$out" || fail "paths: line missing under NEXT"
+out="$(bash "$STATUS" "$WORK/nohuman")"
+grep -q '^  paths:' <<< "$out" && fail "paths: no line for a feature without paths"
+
 echo "STATUS TESTS GREEN"

@@ -10,6 +10,25 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.7.0 — 2026-10-07
+
+From a real run's troubleshooting:
+
+- A builder's baseline gate is reused when its tree is identical
+  (PROGRESS.md and plans aside) to the last green gate run in the clone:
+  about one full gate saved per feature. `HARNESS_GATE_REUSE=0` turns it off.
+- Features waiting on a human: `deferred` with notes `Needs a human: …`.
+  Status and the run report list the questions; dependents are held; a
+  session blocked on such an item defers its own feature, so no run retries it.
+- Builders get the feature's `paths` as where to start reading.
+- The run report shows minutes per feature, and tokens with the Claude Code
+  edition.
+
+Upgrade:
+- Standard upgrade (new protocol: reused baseline, the needs-a-human question).
+- In your AGENTS.md "Needs a human" section, replace "Stop the session as `blocked` with a question in `PROGRESS.md`" with "stop as `blocked`, set your feature to `deferred` with notes `Needs a human: <question>`".
+- Features you know are waiting on a person: set them to `deferred` with notes starting `Needs a human:`.
+
 ## 3.6.0 — 2026-10-07
 
 - The lean pass. The protocol is four files: `harness-protocol.md`, the

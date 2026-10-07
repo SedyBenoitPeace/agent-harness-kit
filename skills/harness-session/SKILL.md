@@ -50,6 +50,7 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    verification and edge-case testing to do beyond the `verify` check:
    `low` = the verify check and the gate; `high` or `max` = also the edge
    cases and failure paths the feature touches. No line, usual judgment.
+   A `paths:` line names where the feature works: start reading there.
 8. Propose the execution mode in one line — **inline** (default) or
    **delegated** to the agent's own built-in subagents when the feature
    has independent parts (protocol §2.4) — then follow red-green-refactor

@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 59 (M29-003, release 3.7.0)
+
+- Branch: `m29-run-speed`.
+- Done: M29-003 — status.sh prints `paths:` under `NEXT:` and harness-run
+  passes them to the builder ("Start reading from: …"). The run report
+  shows minutes per done feature (commit times since the previous feature
+  or skip) and tokens from `.harness-run/tokens.log`, which the Claude Code
+  edition's budget guard writes once per feature at its builder's SESSION
+  line (an orchestrator's echo is ignored). Band test stubs left the test
+  world. Released 3.7.0; mirror synced onto the open template PR #3. All
+  M29 features pass; plan moved to completed.
+- Decisions: builder effort left unchanged until real per-feature numbers
+  exist; minutes come from git so every agent gets them, tokens only where
+  an agent can count them.
+- Gate: green. Checked with Ubuntu's shellcheck 0.9 too (what CI runs).
+- Next: owner merges; CI checked after push.
+
 ## 2026-10-07 — session 58 (M29-002)
 
 - Branch: `m29-run-speed`.

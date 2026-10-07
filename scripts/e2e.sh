@@ -349,7 +349,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.6.0" ] || fail "plugin version must be 3.6.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.7.0" ] || fail "plugin version must be 3.7.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -546,6 +546,11 @@ for f in "$TMPL_DIR/AGENTS.md.tmpl" "$SESSION_SKILL_MD" "$TMPL_DIR/FEATURES.json
   grep -qF 'Needs a human:' "$f" || fail "$(basename "$f"): 'Needs a human:' deferral missing (M29-002)"
 done
 grep -qF 'WAITING ON HUMAN' skills/harness-status/scripts/status.sh || fail "status.sh: waiting-on-human list missing (M29-002)"
+
+# --- paths hint and per-feature cost (M29-003) ------------------------------------
+grep -qF 'Start reading from: <paths>' "$RUN_SKILL/SKILL.md" || fail "harness-run: builder dispatch must pass the feature's paths (M29-003)"
+grep -qF 'tokens.log' skills/harness-run/scripts/run-report.sh || fail "run-report.sh: tokens per feature missing (M29-003)"
+grep -qF 'tokensLine' claude/hooks/register.tsx || fail "Claude edition: budget guard must log tokens per feature (M29-003)"
 
 # --- a clear upgrade every release (M27-004) ---------------------------------------
 [ -f CHANGELOG.md ] || fail "CHANGELOG.md missing"

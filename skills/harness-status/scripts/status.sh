@@ -78,7 +78,9 @@ jq -r "$HELD_DEF"'
 echo
 echo "== Next feature (lowest milestone, then lowest id, among failing) =="
 # Optional effort hint (low|medium|high|max): one indented line under NEXT.
-EFFORT_DEF='def effort_line: if (.effort | type) == "string" and .effort != "" then "\n  effort: \(.effort)" else "" end; '
+# paths (M29-003): where the feature works, so a builder starts reading there.
+EFFORT_DEF='def effort_line: (if (.effort | type) == "string" and .effort != "" then "\n  effort: \(.effort)" else "" end)
+  + (if (.paths | type) == "array" and (.paths | length) > 0 then "\n  paths: \(.paths | join(", "))" else "" end); '
 
 if [ -z "$SKIP_FILE" ]; then
 jq -r "$EFFORT_DEF$HELD_DEF"'

@@ -152,6 +152,18 @@ rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "
 sed -n '/^## Waiting on a human/,/^## /p' "$rep" | grep -q '^- M2-002 — who approves the deploy?$' || fail "run-report: Waiting on a human must list M2-002 with its question"
 sed -n '/^## Not started/,/^## /p' "$rep" | grep -q 'M2-003.*held — depends on M2-002, which waits on a human' || fail "run-report: a held feature must say why"
 
+# M29-003: minutes per done feature from commit times (since the previous
+# feature or skip, not since unrelated commits); tokens from tokens.log
+jq '(.features[] | select(.id=="M2-001") | .status) = "passing"' "$R/FEATURES.json" > "$R/f.tmp" && mv "$R/f.tmp" "$R/FEATURES.json"
+g add FEATURES.json
+GIT_COMMITTER_DATE="2026-03-04T10:25:00+0000" GIT_AUTHOR_DATE="2026-03-04T10:25:00+0000" g commit -qm "feat(M2-001): extras"
+mkdir -p "$R/.harness-run"; printf '*\n' > "$R/.harness-run/.gitignore"
+printf 'M2-001 410000\n' > "$R/.harness-run/tokens.log"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")" || fail "run-report with timings: expected exit 0"
+sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M2-001 — extras — [0-9a-f]{7,} — 25 min, 410000 tokens$' || fail "run-report: M2-001 must show 25 min and its tokens"
+sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M1-001 — boot — [0-9a-f]{7,} — 0 min$' || fail "run-report: M1-001 must show its minutes and no tokens"
+rm -rf "$R/.harness-run"
+
 # bad start commit: usage error, exit 2
 rc=0; (cd "$R" && bash "$REPORT" nope >/dev/null 2>&1) || rc=$?
 [ "$rc" -eq 2 ] || fail "run-report: unknown start commit should exit 2, got $rc"

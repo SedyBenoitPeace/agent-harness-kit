@@ -377,8 +377,11 @@ What it does, so nothing surprises you:
 - **Never pushes.** With `through M<n>` it creates one stacked branch per
   milestone and leaves them local.
 - **The report**, `docs/runs/<date>.md`, is built by `run-report.sh` from
-  git and FEATURES.json (no model calls) and committed: done, skipped (with
-  each question), not started and why, branches used.
+  git and FEATURES.json (no model calls) and committed: done (with minutes
+  per feature, and tokens with the Claude Code edition), skipped (with each
+  question), waiting on a human, not started and why, branches used.
+- **Builders start from the feature's `paths`**, when FEATURES.json has
+  them, instead of searching the repo for their files.
 
 ## Upgrading a repo and running continuously
 

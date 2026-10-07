@@ -16,6 +16,7 @@ import {
   skippedFile,
   skippedPath,
   supervisorPrompt,
+  tokensLine,
   transcriptText,
   verdictStatus,
   verifyOf,
@@ -31,6 +32,7 @@ export const register: Register = (on, options) => {
   const budget = typeof options.feature_token_budget === 'number' ? options.feature_token_budget : DEFAULT_BUDGET
   const used = new Map<string, number>() // per builder subagent, or 'main' between SESSION lines
   const flagged = new Set<string>()
+  const measured = new Set<string>() // features whose tokens are logged (M29-003)
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)
@@ -76,6 +78,14 @@ export const register: Register = (on, options) => {
         await $.fs.write(log, before + budgetLine(new Date().toISOString(), who, total, budget))
         await $.fs.write(`${RUN_DIR}/STOP`, `budget: ${who} used ${total} tokens\n`)
       }
+    }
+    // M29-003 — tokens per feature for the run report: the first SESSION
+    // line for a feature is its builder's; an orchestrator's echo is not.
+    if (line && !measured.has(line.feature) && (await $.fs.exists(`${RUN_DIR}/start`))) {
+      measured.add(line.feature)
+      const log = `${RUN_DIR}/tokens.log`
+      const before = (await $.fs.exists(log)) ? await $.fs.read(log) : ''
+      await $.fs.write(log, before + tokensLine(line.feature, total))
     }
     if (line && who === 'main') {
       used.delete('main')
