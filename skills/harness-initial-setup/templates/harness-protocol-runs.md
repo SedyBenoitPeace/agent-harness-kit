@@ -60,6 +60,9 @@ nothing stops it for a feature it cannot finish. The human invokes the
 - It never asks the human anything. Run state lives in `.harness-run/`
   at the repo root (never committed, listed in `.gitignore`):
   `start` (the start commit), `skip` (one id per line), and `STOP`.
+- A session blocked on a Needs-a-human item has already set its feature to
+  `deferred` (`Needs a human: …`): the run only records the skip, and later
+  runs leave it alone until the human answers and sets it back to `failing`.
 - **Skip, don't stop** when a session is `blocked`, its gate is red, or
   the evaluator returns `NEEDS_WORK` twice: leftover changes go to
   `git stash push -u -m "harness-run skip <id>"` (never discarded); the
@@ -82,8 +85,9 @@ nothing stops it for a feature it cannot finish. The human invokes the
   from git, FEATURES.json, the skip file and the stop reason: what was
   done, what was skipped and the question each skip needs answered, what
   was not started and why, and the branches used; under each done feature
-  its `Decisions:` line, and any skipped work or budget stop the run
-  recorded. The report is committed.
+  its `Decisions:` line and its minutes (and tokens, where the agent
+  logs them), the features waiting on a human, and any skipped work or
+  budget stop the run recorded. The report is committed.
 - The human then reads the report, answers each question in that
   feature's `notes`, recovers any stashed work with `git stash list`, and
   reviews the branch. A later run starts with an empty skip list and

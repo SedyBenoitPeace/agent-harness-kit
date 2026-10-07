@@ -68,14 +68,28 @@ decisions_of() {
   ' PROGRESS.md | head -1 | sed 's/^- //'
 }
 
+# minutes per done feature (M29-003): from the previous feature's (or skip's,
+# or the start's) commit to the feature's own last commit; tokens from the
+# Claude Code edition's .harness-run/tokens.log when it exists
+times="$(prev="$(git log -1 --format=%ct "$START")"
+  git log --reverse --format='%h %ct %s' "$START..HEAD" | while read -r h ct subj; do
+    id="$(printf '%s\n' "$done_lines" | awk -F'\t' -v h="$h" '$2 == h { print $1; exit }')"
+    if [ -n "$id" ]; then echo "$id $(( (ct - prev + 30) / 60 ))"; prev="$ct"
+    else case "$subj" in "harness-run: skip"*) prev="$ct" ;; esac; fi
+  done)"
+tokens_of() { [ -s .harness-run/tokens.log ] && awk -v id="$1" '$1 == id { t = $2 } END { if (t != "") print t }' .harness-run/tokens.log; }
+
 done_out=""; n_done=0
 while IFS=$'\t' read -r id hash; do
   [ -n "$id" ] || continue
   st="$(status_of "$id")"
+  cost="$(printf '%s\n' "$times" | awk -v id="$id" '$1 == id { print " — " $2 " min" }')"
+  tok="$(tokens_of "$id" || true)"
+  [ -z "$tok" ] || cost="$cost, $tok tokens"
   case "$st" in
-    passing) done_out="$done_out- $id — $(title "$id") — $hash
+    passing) done_out="$done_out- $id — $(title "$id") — $hash$cost
 " ;;
-    review) done_out="$done_out- $id — $(title "$id") — $hash (review: awaiting the evaluator)
+    review) done_out="$done_out- $id — $(title "$id") — $hash$cost (review: awaiting the evaluator)
 " ;;
     *) continue ;;
   esac
@@ -112,7 +126,13 @@ while IFS= read -r id; do
 done < "$SKIP_FILE"
 
 # not started: failing features that were neither done nor skipped
-deps="$(bash "$STATUS" --skip "$SKIP_FILE" . | sed -n 's/^SKIPPED: \([^ ]*\) — depends on \(.*\)$/\1 \2/p')"
+stat="$(bash "$STATUS" --skip "$SKIP_FILE" .)"
+deps="$(sed -n 's/^SKIPPED: \([^ ]*\) — depends on \(.*\)$/\1 \2/p' <<< "$stat")"
+# waiting on a human (M29-002): the questions, and what they hold back
+held="$(sed -n 's/^HELD: \([^ ]*\) — depends on \(.*\)$/\1 \2/p' <<< "$stat")"
+waiting_out="$(sed -n 's/^WAITING ON HUMAN: \(.*\)$/- \1/p' <<< "$stat")"
+[ -z "$waiting_out" ] || waiting_out="$waiting_out
+"
 notstarted_out=""; n_not=0
 while IFS= read -r id; do
   [ -n "$id" ] || continue
@@ -120,6 +140,8 @@ while IFS= read -r id; do
   on="$(printf '%s\n' "$deps" | sed -n "s/^$id \\(.*\\)\$/\\1/p")"
   why="not reached — $REASON"
   [ -z "$on" ] || why="depends on $on"
+  hon="$(printf '%s\n' "$held" | sed -n "s/^$id \\(.*\\)\$/\\1/p")"
+  [ -z "$hon" ] || why="held — depends on $hon, which waits on a human"
   notstarted_out="$notstarted_out- $id — $(title "$id") — $why
 "
   n_not=$((n_not + 1))
@@ -160,6 +182,14 @@ list() { if [ -n "$1" ]; then printf '%s' "$1"; else echo "- none"; fi; }
   echo "## Not started"
   echo
   list "$notstarted_out"
+  if [ -n "$waiting_out" ]; then
+    echo
+    echo "## Waiting on a human"
+    echo
+    echo "Deferred until you answer; their dependents wait too:"
+    echo
+    printf '%s' "$waiting_out"
+  fi
   if [ -n "$supervisor_out" ]; then
     echo
     echo "## Supervisor"

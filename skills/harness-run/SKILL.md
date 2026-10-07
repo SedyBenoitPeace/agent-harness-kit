@@ -38,6 +38,8 @@ stays interactive and stops at the first problem.
    feature asks for that effort (protocol §1.4): set it as the dispatch
    tool's own effort setting if it has one, otherwise add the line
    "Effort: <level>." to the prompt. No line, no setting.
+   When it printed a `paths:` line, add "Start reading from: <paths>." to
+   the prompt, so the builder spends no round-trips finding its files.
 4. Read only the subagent's final line:
    `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
    A `review` line means the feature opted in (`evaluate` set): do the

@@ -56,6 +56,24 @@ describe('budget guard (M25-003)', () => {
     expect(w.files['.harness-run/STOP']).toBeUndefined()
   })
 
+  test('logs each feature\'s tokens once, from its builder, during a run (M29-003)', BUDGET, async ($, on) => {
+    const w = world(on, { ...RUN })
+    models(on, '{"done": true, "blocked": false, "skipped_work": []}')
+    await $.session.start(START)
+    await $.turn.complete(turn('building', 'agent-1', 300))
+    await $.turn.complete(turn('SESSION: M1-001 · passing · gate green · c1', 'agent-1', 200))
+    await $.turn.complete(turn('SESSION: M1-001 · passing · gate green · c1', undefined, 50))
+    expect(w.files['.harness-run/tokens.log']).toBe('M1-001 500\n')
+  })
+
+  test('no tokens log outside a run', BUDGET, async ($, on) => {
+    const w = world(on, { 'FEATURES.json': FEATURES })
+    models(on, '{"done": true, "blocked": false, "skipped_work": []}')
+    await $.session.start(START)
+    await $.turn.complete(turn('SESSION: M1-001 · passing · gate green · c1', 'agent-1', 200))
+    expect(w.files['.harness-run/tokens.log']).toBeUndefined()
+  })
+
   test('does nothing outside a harnessed repo', BUDGET, async ($, on) => {
     const w = world(on, {})
     models(on, '{}')

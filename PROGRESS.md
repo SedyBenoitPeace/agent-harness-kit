@@ -3,6 +3,75 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 60 (M29-002 follow-up)
+
+- Branch: `m29-run-speed`.
+- Done: upgrade.sh updates the first line of AGENTS.md's "Needs a human"
+  section itself when it is still the old template wording (CHANGED), says
+  OK when current, and prints a TODO only when the owner edited that
+  section. Fixtures in test-upgrade.sh. The 3.7.0 Upgrade block no longer
+  asks for a manual edit.
+- Decisions: replace only an exact match of the old template line; an
+  edited section is the owner's text and is never rewritten.
+- Gate: green.
+- Next: owner merges.
+
+## 2026-10-07 — session 59 (M29-003, release 3.7.0)
+
+- Branch: `m29-run-speed`.
+- Done: M29-003 — status.sh prints `paths:` under `NEXT:` and harness-run
+  passes them to the builder ("Start reading from: …"). The run report
+  shows minutes per done feature (commit times since the previous feature
+  or skip) and tokens from `.harness-run/tokens.log`, which the Claude Code
+  edition's budget guard writes once per feature at its builder's SESSION
+  line (an orchestrator's echo is ignored). Band test stubs left the test
+  world. Released 3.7.0; mirror synced onto the open template PR #3. All
+  M29 features pass; plan moved to completed.
+- Decisions: builder effort left unchanged until real per-feature numbers
+  exist; minutes come from git so every agent gets them, tokens only where
+  an agent can count them.
+- Gate: green. Checked with Ubuntu's shellcheck 0.9 too (what CI runs).
+- Next: owner merges; CI checked after push.
+
+## 2026-10-07 — session 58 (M29-002)
+
+- Branch: `m29-run-speed`.
+- Done: M29-002 — waiting on a human. A `deferred` feature whose notes
+  start `Needs a human: <question>` is listed by status.sh
+  (`WAITING ON HUMAN:`), and failing features whose `depends_on` reaches it,
+  transitively, are `HELD:` and never NEXT, with or without `--skip`. The
+  run report gets a "Waiting on a human" section and explains held
+  features under Not started. Planning §1.4 asks the question; AGENTS.md.tmpl,
+  harness-session and the runs part tell a blocked session to defer its own
+  feature that way, so later runs do not retry it. README explains both
+  this and the reused baseline.
+- Decisions: reused `deferred` plus a notes prefix rather than a new
+  `needs_human` field (status.sh already skips deferred; no schema change);
+  only explicit `depends_on` holds a feature (an undeclared one may well be
+  independent, unlike a skip where the run must be conservative).
+- Gate: green.
+- Next: M29-003 (paths hint, per-feature time and tokens, release 3.7.0).
+
+## 2026-10-07 — session 57 (M29-001)
+
+- Branch: `m29-run-speed`.
+- Done: M29-001 — run-gate.sh reuses a proven-green baseline. Every green
+  run stores a fingerprint (git tree of the working tree through a
+  throwaway index; ignored files, PROGRESS.md and docs/plans/ left out) in
+  the clone's git dir; a red run deletes it. A baseline on a clean tree
+  with the same fingerprint prints `GATE: green (baseline reused …)` without
+  running the gate. Fixtures: bookkeeping-only commit reuses; a code
+  change, FEATURES.json change, new file, dirty tree, red last run and
+  `HARNESS_GATE_REUSE=0` each run it; the worktree is never written.
+  Protocol 2.3 and harness-session say a reused baseline is green.
+- Decisions: fingerprint the tree rather than compare HEAD with the last
+  green commit (the final gate runs before the status-flip commit, so HEAD
+  never matches); FEATURES.json stays in the fingerprint because gates may
+  validate it; stored under the git dir so nothing needs ignoring and each
+  worktree has its own.
+- Gate: green.
+- Next: M29-002 (waiting on a human).
+
 ## 2026-10-07 — session 56 (M28-004, release 3.6.0)
 
 - Branch: `m28-lean`.
