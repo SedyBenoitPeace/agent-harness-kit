@@ -332,7 +332,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.2.0" ] || fail "plugin version must be 3.2.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.3.0" ] || fail "plugin version must be 3.3.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -427,20 +427,33 @@ done
 ED=".claude-plugin/plugin.json"
 ED_MANIFEST="claude/.claude-plugin/plugin.json"
 [ -f "$ED_MANIFEST" ] || fail "Claude edition: $ED_MANIFEST missing"
-jq -e '.name == "agent-harness-kit-mods" and ((.dependencies // []) | index("agent-harness-kit") != null)' "$ED_MANIFEST" >/dev/null \
-  || fail "Claude edition: plugin.json must be agent-harness-kit-mods and depend on agent-harness-kit"
-jq -e '[.plugins[] | select(.name == "agent-harness-kit-mods" and .source == "./claude")] | length == 1' .claude-plugin/marketplace.json >/dev/null \
+jq -e '.name == "agent-harness-kit-claude" and ((.dependencies // []) | index("agent-harness-kit") != null)' "$ED_MANIFEST" >/dev/null \
+  || fail "Claude edition: plugin.json must be agent-harness-kit-claude and depend on agent-harness-kit"
+jq -e '[.plugins[] | select(.name == "agent-harness-kit-claude" and .source == "./claude")] | length == 1' .claude-plugin/marketplace.json >/dev/null \
   || fail "marketplace.json: Claude edition entry (source ./claude) missing"
 core_v="$(jq -r .version "$ED")"
 [ "$(jq -r .version "$ED_MANIFEST")" = "$core_v" ] || fail "Claude edition: plugin.json version must match the core ($core_v)"
-[ "$(jq -r '.plugins[] | select(.name == "agent-harness-kit-mods") | .version' .claude-plugin/marketplace.json)" = "$core_v" ] \
+[ "$(jq -r '.plugins[] | select(.name == "agent-harness-kit-claude") | .version' .claude-plugin/marketplace.json)" = "$core_v" ] \
   || fail "marketplace.json: Claude edition version must match the core ($core_v)"
 if find claude -name 'harness-protocol.md' | grep -q .; then fail "Claude edition must not copy harness-protocol.md"; fi
-grep -qF '/plugin install agent-harness-kit-mods' README.md || fail "README: Claude edition install line missing"
+grep -qF '/plugin install agent-harness-kit-claude' README.md || fail "README: Claude edition install line missing"
 # claude plugin validate when the CLI is present (CI runners may not have it)
+# Strict: every error and every warning fails, except the one the owner chose
+# to accept: a plugin name containing "claude" "reads as one of Anthropic's own".
+validate_strict() {
+  local report
+  report="$(claude plugin validate --strict --json "$1" 2>/dev/null || true)"
+  jq -e '
+    [.. | objects | select(has("errors")) | .errors[]] as $e
+    | [.. | objects | select(has("warnings")) | .warnings[]
+        | select((.message | test("reads as one of Anthropic.s own")) | not)] as $w
+    | ($e | length) == 0 and ($w | length) == 0' <<< "$report" >/dev/null \
+    || { echo "$report" | jq -r '.. | objects | (.errors? // [])[], (.warnings? // [])[] | "  \(.path): \(.message)"' >&2
+         fail "claude plugin validate --strict $1 failed"; }
+}
 if command -v claude >/dev/null; then
-  claude plugin validate --strict claude >/dev/null 2>&1 || fail "claude plugin validate --strict claude/ failed"
-  claude plugin validate . >/dev/null 2>&1 || fail "claude plugin validate . (marketplace) failed"
+  validate_strict claude
+  validate_strict .
 fi
 
 # --- Claude edition: auto mode + eval suite (M24-003) ---------------------------
@@ -461,5 +474,23 @@ for c in brief-from-rough-prompt:harness-brief session-builds-next-feature:harne
   ls "$case_dir"/graders/*.md >/dev/null 2>&1 || fail "eval case $case_dir: no graders"
 done
 git check-ignore -q claude/evals/results/x || fail ".gitignore: claude/evals/results/ must be ignored"
+
+# --- mods (M25): the edition's hooks module, tested by the engine itself --------
+[ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
+jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.tsx"
+grep -qF '.harness-run/decisions/<id>.md' "$SESSION_SKILL_MD" || fail "harness-session: must fold .harness-run/decisions/<id>.md into Decisions:"
+git check-ignore -q claude/.claude-plugin/types/x || fail ".gitignore: claude/.claude-plugin/types/ (engine-written) must be ignored"
+# M25-005: the 3.2.0 name lives on only in history and the README's upgrade note
+if git grep -nI -e 'agent-harness-kit-mods' -- . ':!docs/plans' ':!PROGRESS.md' ':!FEATURES.json' ':!scripts/e2e.sh' \
+   | grep -v 'was briefly named\|plugin uninstall agent-harness-kit-mods' | grep -q .; then
+  fail "stale reference to the old edition name agent-harness-kit-mods"
+fi
+for w in register_decision 'decisions/<id>.md' 'SESSION:' feature_token_budget '.harness-run/STOP' 'Quiz me' 'agent-harness-kit-mods'; do
+  grep -qF -- "$w" <<< "$edition" || fail "README Claude edition: mods section must mention $w"
+done
+if command -v claude >/dev/null; then
+  mods_out="$(cd claude && claude plugin test . 2>&1)" || { echo "$mods_out" | tail -30 >&2; fail "claude plugin test claude/ failed"; }
+  echo "MODS TESTS GREEN ($(grep -Eo '[0-9]+ pass' <<< "$mods_out"))"
+fi
 
 echo "GATE GREEN"

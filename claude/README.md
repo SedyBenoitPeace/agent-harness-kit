@@ -1,4 +1,4 @@
-# agent-harness-kit-mods
+# agent-harness-kit-claude
 
 The Claude Code edition of the agent harness. It adds features only Claude
 Code has, on top of the core `agent-harness-kit` plugin, which it depends on.
@@ -17,5 +17,5 @@ Install both:
 ```
 /plugin marketplace add SedyBenoitPeace/agent-harness-kit
 /plugin install agent-harness-kit
-/plugin install agent-harness-kit-mods
+/plugin install agent-harness-kit-claude
 ```

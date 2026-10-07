@@ -11,3 +11,4 @@ docs/plans/private/
 
 # plugin eval results
 claude/evals/results/
+claude/.claude-plugin/types/

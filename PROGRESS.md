@@ -3,6 +3,115 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 44 (release 3.3.0)
+
+- Branch: `m25-mods`.
+- Done: released 3.3.0 (package, both plugin manifests, marketplace).
+  Live check in headless Claude Code 2.1.292 with the core and the edition
+  on `--plugin-dir`: the hooks module loads (events session.start,
+  tool.call, turn.complete, ui.render), `register_decision` is listed in a
+  harnessed repo and absent in a plain one, and a real call wrote
+  `.harness-run/decisions/M1-001.md` with `git status` still clean. With
+  the edition alone the engine disables it (dependency-unsatisfied), as it
+  should: installing the edition installs the core.
+- Decisions: 3.3.0 rather than 4.0.0 for the rename, since the 3.2.0 name
+  was public for under an hour; README carries the uninstall/install note.
+- Gate: green.
+- Next: owner merges the PR.
+
+## 2026-10-07 — session 43 (M25-004)
+
+- Branch: `m25-mods`.
+- Done: M25-004 — next-steps band. After a main-loop SESSION line reporting
+  `passing` outside an unattended run, an AbovePrompt band offers Next
+  feature, Explain (big picture, few words) and Quiz me (each fills the
+  prompt for the person to send) and Hide; state in `$.state`
+  (`claude/types/index.d.ts`). Nothing for blocked sessions, builder
+  subagents or during a run. 5 engine tests over terminal and desktop (22
+  total), tsc clean. README documents all four mods and the upgrade from
+  the 3.2.0 name; the gate checks it and fails on any other reference to
+  the old name (proven). All M23–M25 features pass, so the plan moved to
+  `docs/plans/completed/`.
+- Decisions: buttons fill the prompt instead of sending it (the person
+  stays in control of what runs and what it costs); the band clears on the
+  next SESSION line rather than on a timer; the quiz button is the
+  podcast's "quiz me after a task" habit made one click.
+- Gate: green.
+- Next: release 3.3.0, then the PR.
+
+## 2026-10-07 — session 42 (M25-003)
+
+- Branch: `m25-mods`.
+- Done: M25-003 — budget guard, in the same `turn.complete` hook as the
+  supervisor (one hook per event). Sums each turn's usage per builder
+  subagent (one feature) and on the main loop between SESSION lines. Over
+  `feature_token_budget` (userConfig, default 1,500,000): a status line;
+  during a run (`.harness-run/start` exists) also a reason line in
+  `.harness-run/budget.log` and `.harness-run/STOP`, which
+  harness-continuous honours after the current feature. 6 engine tests
+  (17 total), tsc clean.
+- Decisions: excluded cache reads from the count (a tenth of the price,
+  and they dominate long sessions, so they would trip the budget on cost
+  that barely exists); no STOP outside a run (an interactive session has
+  nobody's run to stop, and a stale STOP would end the next run early —
+  harness-continuous deletes leftovers, but better not to create them);
+  flag each feature once.
+- Gate: green.
+- Next: M25-004 (next-steps band).
+
+## 2026-10-07 — session 41 (M25-002)
+
+- Branch: `m25-mods`.
+- Done: M25-002 — done-check supervisor. On a `turn.complete` whose answer
+  has the protocol's `SESSION: <id> · …` line (harnessed repo only), one
+  cheap check against the feature's `verify` returns
+  `{done, blocked, skipped_work}`: the main loop forks its own cached
+  transcript; a builder subagent's messages are read and sent to haiku.
+  Skipped work goes to `.harness-run/decisions/<id>.skipped.md` (beside the
+  decisions file); a status line says done / blocked / skipped N. Once per
+  feature outcome. 7 engine tests (11 total), tsc clean.
+- Decisions: rejected forking for subagents (a fork only sees the main
+  thread, so it would judge the orchestrator); rejected matching on agent
+  type (the SESSION line is the protocol's own contract and works inline
+  too); kept the turn's answer unchanged (the supervisor reports, never
+  rewrites); capped the subagent transcript at 12k chars to keep it cheap.
+- Gate: green.
+- Next: M25-003 (budget guard).
+
+## 2026-10-07 — session 40 (M25-001)
+
+- Branch: `m25-mods`.
+- Done: M25-001 — the edition's hooks module (`claude/hooks/register.ts`,
+  pure logic in `lib.ts`) registers `register_decision` at session start in
+  a harnessed repo only. Each call appends `- chose X over Y: why` to
+  `.harness-run/decisions/<id>.md`; ids that are not `M<n>-<nnn>` are denied,
+  so nothing is written outside `.harness-run/`, which gets a `*`
+  .gitignore. harness-session folds the file into the `Decisions:` line.
+  4 engine tests (`claude plugin test`), run by the gate when the CLI is
+  present; type-checked with tsc against the 2.1.292 declarations.
+- Decisions: all hooks in one file (the engine refuses `$` passed across an
+  import); one `session.start` hook owns every feature's start step (one
+  hook per event); validated the id instead of normalising paths (an
+  allow-list is the robust guard); self-ignoring `.harness-run/` instead of
+  editing the root .gitignore (harness-run needs a clean tree and must not
+  commit run state).
+- Gate: green.
+- Next: M25-002 (done-check supervisor).
+
+## 2026-10-07 — session 39 (M25-005)
+
+- Branch: `m25-mods` (off master after PR #25 merged).
+- Done: M25-005 — the Claude Code edition plugin is `agent-harness-kit-claude`
+  again (manifest, marketplace entry, READMEs, ARCHITECTURE). The gate's
+  `claude plugin validate --strict` now reads the JSON report and fails on
+  every error and warning except the name warning; proven by removing the
+  author field (gate red).
+- Decisions: kept strict validation instead of dropping to plain validate
+  (it would hide real warnings); added the rename as its own feature for
+  traceability, done before M25-001 at the owner's request.
+- Gate: green.
+- Next: M25-001 (decision register mod).
+
 ## 2026-10-07 — session 38 (M24-003)
 
 - Branch: `m24-claude-edition`.

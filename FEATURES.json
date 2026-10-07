@@ -675,7 +675,7 @@
         "scripts/e2e.sh"
       ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that protocol §2.5 asks the PROGRESS.md entry for a Decisions: line (options considered and rejected, assumptions made, or none); PROGRESS.md.tmpl shows that line; agents/src/harness-builder.md tells the builder to write it; agents/src/harness-evaluator.md reads the feature's latest Decisions: line as leads and returns NEEDS_WORK when a rejected option is what the verify criterion or bar required; the protocol stays agent-neutral",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md"
     },
     {
       "id": "M23-002",
@@ -694,7 +694,7 @@
         "scripts/"
       ],
       "verify": "bash scripts/e2e.sh exits 0 with: the gate rejecting an effort value outside low|medium|high|max in FEATURES.json; test-status.sh fixtures proving status.sh prints an indented effort: <level> line under NEXT when the feature sets effort (with and without --skip) and no effort line when it does not; a test-audit.sh fixture proving check.sh WARNs on an unknown effort value; FEATURES.json.tmpl _instructions documents effort; protocol §1.4 asks the effort question with per-kind guidance; harness-run SKILL.md passes the level to the builder dispatch and dispatches the evaluator at high or above; harness-session SKILL.md reads the effort line",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md"
     },
     {
       "id": "M23-003",
@@ -713,7 +713,7 @@
         "package.json"
       ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that protocol §3.4 says a rule added to fix one model's repeated failure is tagged (model: <name>) and §3.2 says to re-test tagged rules when the model changes and delete those no longer needed; AGENTS.md.tmpl mentions the tag within its 80-line budget; a test-audit.sh fixture proves check.sh WARNs with the count when AGENTS.md has tagged rules; README documents decision notes, effort and model-tagged rules; package.json, plugin.json and marketplace.json are 3.1.0",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md"
     },
     {
       "id": "M24-001",
@@ -730,7 +730,7 @@
         "scripts/e2e.sh"
       ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that claude/.claude-plugin/plugin.json is named agent-harness-kit-claude and lists agent-harness-kit as a dependency; marketplace.json has a second plugin entry with source ./claude; all versions match; claude/ holds no copy of harness-protocol.md; claude plugin validate claude/ exits 0; README has an install line for the edition",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md Renamed to agent-harness-kit-mods (claude plugin validate: a \"claude\" name reads as Anthropic's own); verify satisfied with that name and folder claude/. claude plugin validate --strict passes."
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md Renamed to agent-harness-kit-mods (claude plugin validate: a \"claude\" name reads as Anthropic's own); verify satisfied with that name and folder claude/. claude plugin validate --strict passes."
     },
     {
       "id": "M24-002",
@@ -746,7 +746,7 @@
         "scripts/test-agents.sh"
       ],
       "verify": "bash scripts/e2e.sh exits 0 with test-agents.sh fixtures proving gen-agents.sh emits effort: <level> in the Claude agent file and model_reasoning_effort = \"<level>\" in the Codex TOML when the source sets effort, nothing for Copilot, and no effort line when the source omits it; agents/src/harness-evaluator.md sets effort: high",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md"
     },
     {
       "id": "M24-003",
@@ -762,13 +762,13 @@
         "scripts/e2e.sh"
       ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that README's Claude edition section says to run harness-continuous in auto permission mode and never with bypass flags; claude/evals/ holds a suite covering harness-brief and harness-session that claude plugin eval runs to completion with every case passing (result recorded in PROGRESS.md)",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md Eval result 2026-10-07 (3 runs per arm): brief-from-rough-prompt with 1.00 / without 0.50; session-builds-next-feature with 1.00 / without 0.75."
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md Eval result 2026-10-07 (3 runs per arm): brief-from-rough-prompt with 1.00 / without 0.50; session-builds-next-feature with 1.00 / without 0.75."
     },
     {
       "id": "M25-001",
       "milestone": 25,
       "title": "Mod: decision register tool that appends to .harness-run/decisions/<id>.md, folded into the Decisions: line at close-out",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M24-003"
       ],
@@ -778,13 +778,13 @@
         "skills/harness-session/SKILL.md"
       ],
       "verify": "claude plugin validate claude/ exits 0 and claude plugin test claude/ passes tests proving the registered tool appends one decision per call to .harness-run/decisions/<id>.md and refuses paths outside .harness-run/; harness-session SKILL.md folds that file into the PROGRESS.md Decisions: line when it exists; bash scripts/e2e.sh exits 0",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md"
     },
     {
       "id": "M25-002",
       "milestone": 25,
       "title": "Mod: done-check supervisor ($.model.fork on a builder turn.complete) reporting done/blocked/skipped_work against verify",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M25-001"
       ],
@@ -793,13 +793,13 @@
         "claude/types/"
       ],
       "verify": "claude plugin test claude/ passes tests proving that on a builder subagent turn.complete the mod forks once, parses {done, blocked, skipped_work}, writes skipped_work beside the decisions file, sets a status line, never writes outside .harness-run/, and does nothing for non-builder turns; bash scripts/e2e.sh exits 0",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md Built: the main loop forks (cached transcript); a builder subagent is checked with $.model.complete (haiku) over its own messages, because $.model.fork only ever sees the main thread (2.1.292 types). Triggers on the SESSION line, once per feature outcome."
     },
     {
       "id": "M25-003",
       "milestone": 25,
       "title": "Mod: budget guard that writes .harness-run/STOP when a feature exceeds the configured token budget",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M25-002"
       ],
@@ -809,13 +809,13 @@
         "claude/.claude-plugin/"
       ],
       "verify": "claude plugin test claude/ passes tests proving per-feature usage from turn.complete is summed, crossing the userConfig threshold writes .harness-run/STOP and a reason line to .harness-run/budget.log, and staying under it writes nothing; bash scripts/e2e.sh exits 0",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md Counts input + output + cache-write tokens (cache reads excluded: cheap, and they dominate long sessions). STOP is written only while a run is active (.harness-run/start exists); outside a run it is a status line only. userConfig feature_token_budget, default 1500000."
     },
     {
       "id": "M25-004",
       "milestone": 25,
       "title": "Mod: next-steps band after a passing supervised session (next feature, explain, quiz me); off during unattended runs",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M25-003"
       ],
@@ -824,7 +824,24 @@
         "claude/types/"
       ],
       "verify": "claude plugin test claude/ passes tests proving the AbovePrompt band appears after a session line reporting passing, offers next feature / explain / quiz, and renders nothing when .harness-run/start exists; bash scripts/e2e.sh exits 0",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md"
+    },
+    {
+      "id": "M25-005",
+      "milestone": 25,
+      "title": "Rename the Claude Code edition plugin to agent-harness-kit-claude (owner's choice: room for more Claude-specific features)",
+      "status": "passing",
+      "depends_on": [],
+      "paths": [
+        "claude/.claude-plugin/",
+        ".claude-plugin/marketplace.json",
+        "README.md",
+        "claude/README.md",
+        "ARCHITECTURE.md",
+        "scripts/e2e.sh"
+      ],
+      "verify": "bash scripts/e2e.sh exits 0 with claude/.claude-plugin/plugin.json and the marketplace entry named agent-harness-kit-claude, no live reference to agent-harness-kit-mods outside history, and claude plugin validate --strict on claude/ and the marketplace failing on every error and warning except the one about a 'claude' name reading as Anthropic's own",
+      "notes": "Plan: docs/plans/completed/2026-10-07-m23-decisions-and-effort.md Done first in the M25 PR at the owner's request, ahead of M25-001..004 (id order deviates on purpose)."
     }
   ]
 }
