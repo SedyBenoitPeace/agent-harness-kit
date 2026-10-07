@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 57 (M29-001)
+
+- Branch: `m29-run-speed`.
+- Done: M29-001 — run-gate.sh reuses a proven-green baseline. Every green
+  run stores a fingerprint (git tree of the working tree through a
+  throwaway index; ignored files, PROGRESS.md and docs/plans/ left out) in
+  the clone's git dir; a red run deletes it. A baseline on a clean tree
+  with the same fingerprint prints `GATE: green (baseline reused …)` without
+  running the gate. Fixtures: bookkeeping-only commit reuses; a code
+  change, FEATURES.json change, new file, dirty tree, red last run and
+  `HARNESS_GATE_REUSE=0` each run it; the worktree is never written.
+  Protocol 2.3 and harness-session say a reused baseline is green.
+- Decisions: fingerprint the tree rather than compare HEAD with the last
+  green commit (the final gate runs before the status-flip commit, so HEAD
+  never matches); FEATURES.json stays in the fingerprint because gates may
+  validate it; stored under the git dir so nothing needs ignoring and each
+  worktree has its own.
+- Gate: green.
+- Next: M29-002 (waiting on a human).
+
 ## 2026-10-07 — session 56 (M28-004, release 3.6.0)
 
 - Branch: `m28-lean`.

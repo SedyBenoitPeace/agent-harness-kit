@@ -1065,7 +1065,7 @@
       "id": "M29-001",
       "milestone": 29,
       "title": "Reuse a proven-green baseline: run-gate.sh skips the baseline gate when the tree is identical to the last green run",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [],
       "paths": [
         "skills/harness-session/",

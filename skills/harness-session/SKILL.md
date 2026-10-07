@@ -34,7 +34,9 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    bounded terminal report. A bounded report does not mean the gate can
    be ignored — treat a non-zero `run-gate.sh` exit exactly as a red
    gate, and read more of `FULL_LOG` if the printed tail isn't enough to
-   diagnose it. Confirm green before touching code.
+   diagnose it. Confirm green before touching code. `GATE: green
+   (baseline reused …)` is green: the previous session's green gate
+   already proved this exact tree (the wrapper checks it, not you).
 5. **Dirty worktree clearly matching the selected feature and plan**
    (the diff and the `PLAN:` match both point at the same `NEXT:` id):
    announce "CONTINUING INTERRUPTED FEATURE", inspect the existing diff,

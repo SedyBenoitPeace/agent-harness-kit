@@ -45,7 +45,9 @@ Check `git status` before claiming anything about the baseline — never
 assume the tree is clean.
 
 - **Clean tree:** run `bash scripts/e2e.sh` (or the harness-session gate
-  wrapper: same gate, concise report, full log on disk). If it is red, **fixing the gate is the session** — do that instead, and log it
+  wrapper: same gate, concise report, full log on disk; it reports a
+  baseline as reused when the tree is identical, bookkeeping aside, to its
+  last green run, and that counts as green). If it is red, **fixing the gate is the session** — do that instead, and log it
   as such. Never build on a red baseline: you can't tell your breakage
   from inherited breakage.
 - **Dirty tree that clearly matches the selected feature** (the diff and

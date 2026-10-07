@@ -175,6 +175,37 @@ bash "$RUN_GATE" final "$WORK/red" >"$WORK/red.out" 2>&1 || rc=$?
 grep -q 'GATE: red (final)' "$WORK/red.out" || fail "red gate: missing status line"
 grep -q 'intentional failure sentinel' "$WORK/red.out" || fail "red gate: failure tail not exposed"
 
+# 7b. baseline reuse (M29-001): a green run fingerprints the tree; a later
+#     baseline on an identical clean tree (bookkeeping aside) skips the gate
+R="$WORK/reuse"; mkdir -p "$R/scripts" "$R/docs/plans/active" "$R/src"
+# shellcheck disable=SC2016 # the e2e.sh being written expands $(...) itself
+printf 'echo ran >> "%s/runs"\nexit "$(cat "%s/code" 2>/dev/null || echo 0)"\n' "$WORK" "$WORK" > "$R/scripts/e2e.sh"
+printf '{"features":[]}\n' > "$R/FEATURES.json"; printf '# P\n' > "$R/PROGRESS.md"; printf 'a\n' > "$R/src/a.txt"
+printf '# plan\n' > "$R/docs/plans/active/p.md"
+rg() { git -C "$R" -c user.email=t@t -c user.name=t "$@"; }
+rg init -q -b main; rg add -A; rg commit -qm seed
+runs() { wc -l < "$WORK/runs" 2>/dev/null | tr -d ' ' || echo 0; }
+base() { bash "$RUN_GATE" baseline "$R"; }
+bash "$RUN_GATE" final "$R" >/dev/null || fail "reuse: first final gate should be green"
+[ "$(runs)" = 1 ] || fail "reuse: final gate did not run"
+[ -z "$(git -C "$R" status --porcelain)" ] || fail "reuse: run-gate wrote inside the worktree"
+printf -- '- session\n' >> "$R/PROGRESS.md"; printf 'done\n' >> "$R/docs/plans/active/p.md"; rg add -A; rg commit -qm bookkeeping
+out="$(base)" || fail "reuse: baseline should be green"
+grep -q '^GATE: green (baseline reused' <<< "$out" || fail "reuse: bookkeeping-only commit must reuse the green run"
+[ "$(runs)" = 1 ] || fail "reuse: the gate ran although the tree was proven"
+expect_run() { # $1 label: the next baseline must run the gate
+  local before; before="$(runs)"
+  base >/dev/null 2>&1 || true
+  [ "$(runs)" -gt "$before" ] || fail "reuse: $1 must run the gate"
+}
+printf 'b\n' >> "$R/src/a.txt"; rg commit -qam code; expect_run "a changed code file"
+base >/dev/null; printf '{"features":[1]}\n' > "$R/FEATURES.json"; rg commit -qam feat; expect_run "a changed FEATURES.json"
+base >/dev/null; printf 'new\n' > "$R/src/new.txt"; rg add -A; rg commit -qm new; expect_run "a new file"
+base >/dev/null; printf 'dirty\n' >> "$R/src/a.txt"; expect_run "a dirty tree"; rg checkout -q -- src/a.txt
+base >/dev/null; HARNESS_GATE_REUSE=0 expect_run "HARNESS_GATE_REUSE=0"
+echo 3 > "$WORK/code"; bash "$RUN_GATE" final "$R" >/dev/null 2>&1 || true; rm -f "$WORK/code"
+expect_run "a red last run"
+
 # 8. invalid phase: usage error, exit 2
 rc=0
 bash "$RUN_GATE" middle "$WORK/green" >/dev/null 2>&1 || rc=$?
