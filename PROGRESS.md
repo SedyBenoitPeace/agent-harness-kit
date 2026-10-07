@@ -3,6 +3,30 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 45 (M26-001)
+
+- Branch: `m26-second-opinion` (off master after PR #26 merged).
+- Done: M26-001 — optional `second_opinion` (claude|codex|copilot).
+  `skills/harness-run/scripts/second-opinion.sh <cli> <id> <base> [repo]`
+  runs that vendor's CLI non-interactively and read-only (codex `exec
+  --sandbox read-only`; claude `-p --permission-mode dontAsk` without
+  Edit/Write; copilot `-p --deny-tool=write` plus git/rm denies) with the
+  strong model and the evaluator role, then re-checks tree and HEAD itself:
+  PASS exit 0, NEEDS_WORK or REJECTED exit 1, broken exit 2. harness-run
+  requires both verdicts to PASS; harness-continuous skips on exit 2 or
+  REJECTED; harness-session ends such a feature in review; check.sh WARNs
+  when the CLI is missing. Protocol §1.4/§2.7 (vendor-neutral). Fixtures with
+  stub CLIs (`scripts/test-second-opinion.sh`); live run with the real claude
+  CLI returned PASS with the tree untouched.
+- Decisions: shell out per CLI instead of a generated agent file (another
+  vendor's agent is another process); the script's own integrity check is
+  the guarantee, read-only flags are defence in depth (copilot's shell can
+  still write); a feature with only `second_opinion` uses it as its
+  evaluation rather than also dispatching the in-CLI evaluator; codex and
+  copilot not run live (no credentials in this workspace).
+- Gate: green.
+- Next: M26-002 (brief Stage).
+
 ## 2026-10-07 — session 44 (release 3.3.0)
 
 - Branch: `m25-mods`.

@@ -35,7 +35,7 @@
 | `skills/harness-status/` | Read-only progress report (`scripts/status.sh`) |
 | `skills/harness-handoff/` | Session-end ritual check + next-agent prompt (`scripts/handoff.sh`) |
 | `skills/harness-session/` | Bounded session context report (`scripts/context.sh`, wraps harness-status) + concise gate wrapper (`scripts/run-gate.sh`) |
-| `skills/harness-run/` | Orchestrator (SKILL.md only): one fresh subagent per feature, verified via status.sh |
+| `skills/harness-run/` | Orchestrator (SKILL.md): one fresh subagent per feature, verified via status.sh; `scripts/second-opinion.sh` re-judges a feature with another vendor's CLI, read-only, and voids a verdict that changed the repo |
 | `skills/harness-continuous/` | Unattended-run command (SKILL.md only): reuses harness-run, skips instead of stopping; state in `.harness-run/`, report via `skills/harness-run/scripts/run-report.sh` |
 | `skills/harness-upgrade-structure/` | Upgrade of an already-harnessed repo: `scripts/upgrade.sh` (idempotent, commits nothing) + SKILL.md that explains and commits it |
 | `skills/harness-brief/` | Rough prompt → `docs/briefs/` brief; check-brief.sh plus an independent read-only reviewer agent |

@@ -154,6 +154,14 @@ human would check by using it), record:
 
 Leaving both out is always safe: the feature flips on its `verify` alone.
 
+For work where a miss is expensive (security, payments, data, anything the
+gate proves only in part), ask: **Should another vendor's agent check it?**
+Record `second_opinion`: the name of a command-line agent from another
+vendor (the values FEATURES.json `_instructions` lists) that re-judges the
+feature after the builder, read-only, as a second evaluator. A different vendor's model has different blind spots. Like
+`evaluate`, it ends the building session in `review`. Leave it out unless the
+named agent is installed where runs happen.
+
 Last question per feature: **How much verification does this deserve?**
 Record the answer as `effort`, one of low, medium, high or max. Effort
 is spent mostly on verification and edge cases, so it pays where those
@@ -462,6 +470,13 @@ the repo — not the subagent's word — before starting the next. Rules:
   and HEAD unchanged; anything else rejects the verdict.
   - `PASS` → write `docs/verification/<id>.md` (verdict, findings, date,
     agent CLI) and flip the feature to `passing`.
+  - **Second opinion** (`second_opinion` set, §1.4): after the evaluator, or
+    in its place when `evaluate` is absent, the orchestrator runs the named
+    command-line agent non-interactively and read-only on the same commit
+    range, with the same instructions. Both verdicts must be `PASS`. If that
+    agent changed the tree or HEAD, its verdict is void and the run stops
+    for the human; if it is not installed, the feature cannot leave
+    `review` (§2.8: a skip).
   - `NEEDS_WORK` → findings go into the feature's `notes`, the status
     returns to `failing`, `eval_attempts` increases by one, and the next
     session starts from those notes. At two attempts the orchestrator

@@ -100,6 +100,14 @@ printf -- '- Always run the linter before the gate (model: example-1)\n- Never m
 out="$(bash "$CHECK" "$WORK/tagged")" || fail "tagged rules must not fail the audit"
 echo "$out" | grep -q "^WARN.*2 model-tagged rule" || fail "tagged rules: expected WARN with count 2"
 
+# 2h. second opinion (M26-001): a CLI not on PATH is a WARN naming it
+make_fixture "$WORK/second"
+jq '.features[0].second_opinion = "codex"' "$WORK/second/FEATURES.json" > "$WORK/second/F.tmp" && mv "$WORK/second/F.tmp" "$WORK/second/FEATURES.json"
+out="$(PATH="/usr/bin:/bin" bash "$CHECK" "$WORK/second")" || fail "second opinion without its CLI must not fail the audit"
+if command -v codex >/dev/null 2>&1; then :; else
+  echo "$out" | grep -q "^WARN.*second_opinion.*codex" || fail "second opinion: expected WARN naming codex"
+fi
+
 # 3. defect fixtures: each must FAIL with its specific line
 make_fixture "$WORK/big-agents"
 for _ in $(seq 1 101); do echo "filler line" >> "$WORK/big-agents/AGENTS.md"; done

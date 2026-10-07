@@ -475,6 +475,20 @@ for c in brief-from-rough-prompt:harness-brief session-builds-next-feature:harne
 done
 git check-ignore -q claude/evals/results/x || fail ".gitignore: claude/evals/results/ must be ignored"
 
+# --- cross-vendor second opinion (M26-001) ---------------------------------------
+jq -e '[ .features[] | select(has("second_opinion") and (.second_opinion | IN("claude","codex","copilot") | not)) ] | length == 0' \
+  FEATURES.json >/dev/null || fail "FEATURES.json: second_opinion must be claude|codex|copilot"
+shellcheck skills/harness-run/scripts/second-opinion.sh
+bash scripts/test-second-opinion.sh
+grep -q 'second_opinion' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: second_opinion undocumented"
+grep -qF 'second_opinion' <<< "$plan_14" || fail "protocol 1.4: second_opinion question missing"
+grep -qF 'second_opinion' <<< "$(sed -n '/^### 2\.7 Orchestrated runs/,/^### 2\.8/p' "$PROTO")" || fail "protocol 2.7: second opinion step missing"
+grep -qF 'second-opinion.sh' "$RUN_SKILL/SKILL.md" || fail "harness-run: evaluator step must run second-opinion.sh"
+grep -qF 'both verdicts' "$RUN_SKILL/SKILL.md" || fail "harness-run: both verdicts must PASS"
+grep -qF 'second_opinion' "$SESSION_SKILL_MD" || fail "harness-session: a second_opinion feature ends in review"
+grep -qF 'second-opinion.sh' skills/harness-continuous/SKILL.md || fail "harness-continuous: second opinion exit 2 must be a skip"
+grep -qF 'second_opinion' skills/harness-audit/scripts/check.sh || fail "harness-audit: missing-CLI WARN missing"
+
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
 jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.tsx"

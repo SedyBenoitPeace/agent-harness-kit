@@ -848,7 +848,7 @@
       "id": "M26-001",
       "milestone": 26,
       "title": "Cross-vendor second opinion: second_opinion field and second-opinion.sh (claude, codex, copilot; read-only)",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [],
       "effort": "high",
       "paths": [
@@ -860,7 +860,7 @@
         "scripts/"
       ],
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-second-opinion.sh fixtures (stub claude/codex/copilot on PATH) proving second-opinion.sh <cli> <id> <base> [repo]: passes each CLI its read-only flags and the strong model from agents/models.json; puts the evaluator contract, the feature's verify and the commit range in the prompt; prints VERDICT: PASS and exits 0 on a PASS reply; exits 1 with VERDICT: NEEDS_WORK on a NEEDS_WORK or unrecognised first line; exits 1 with VERDICT: REJECTED when the stub changed the tree or HEAD; exits 2 for a missing CLI, an unknown CLI or an unknown feature; and writes nothing on success. The gate rejects second_opinion values other than claude|codex|copilot; protocol §1.4 and §2.7 document second_opinion; harness-run's evaluator step runs second-opinion.sh and requires both verdicts to PASS; harness-session ends such a feature in review; a test-audit.sh fixture proves check.sh WARNs when the named CLI is not on PATH",
-      "notes": "Plan: docs/plans/active/2026-10-07-m26-second-opinion.md"
+      "notes": "Plan: docs/plans/active/2026-10-07-m26-second-opinion.md Live check 2026-10-07: second-opinion.sh claude on a scratch repo returned PASS in 18s with the tree untouched; the agent ran the checks itself and read the Decisions: line. codex and copilot flags taken from codex 0.160.1 and copilot 1.0.92 --help (not run live: no credentials here)."
     },
     {
       "id": "M26-002",
