@@ -91,7 +91,7 @@ for r in harness-builder harness-evaluator harness-brief-reviewer; do
   grep -q 'Decisions:\|READY\|PASS' "$S/.claude/agents/$r.md" || fail "stale agents: $r not regenerated"
 done
 echo "$out" | grep -q '^CHANGED: .claude/agents/harness-builder.md' || fail "stale agents: builder change not reported"
-[ ! -d "$S/.codex" ] && [ ! -d "$S/.github" ] || fail "stale agents: must not add CLIs the repo does not use"
+if [ -d "$S/.codex" ] || [ -d "$S/.github" ]; then fail "stale agents: must not add CLIs the repo does not use"; fi
 git -C "$S" -c user.email=t@t -c user.name=t add -A; git -C "$S" -c user.email=t@t -c user.name=t commit -qm up
 out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stale agents second run: expected exit 0"
 if echo "$out" | grep -q '^CHANGED: .claude/agents'; then fail "stale agents second run: nothing should change"; fi
