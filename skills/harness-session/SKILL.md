@@ -55,7 +55,8 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    feature's verify criterion requires it.
 9. Run the final full gate through `bash scripts/run-gate.sh final
    <target>`, flip only the selected feature's status to `passing`,
-   append one `PROGRESS.md` entry, move the plan to `docs/plans/completed/`
+   append one `PROGRESS.md` entry (with its `Decisions:` line, protocol
+   §2.5), move the plan to `docs/plans/completed/`
    in the same commit if that was its last failing feature, commit explicit
    paths, then STOP —
    do not start a second feature. A feature with `evaluate` set (`ui`) is

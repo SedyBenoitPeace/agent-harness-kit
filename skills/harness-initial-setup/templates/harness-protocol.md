@@ -385,7 +385,10 @@ requires it.
    commit — do not wait for the PR to merge.
 5. Commit with a message naming the feature id.
 6. Append a PROGRESS.md entry at the top: branch, what was done, gate
-   status, and the next feature.
+   status, and the next feature. Add one `Decisions:` line: the options considered and rejected, and the assumptions made, each in a few words (or `none`).
+   Most wrong results are a right answer the session thought of and
+   turned down; written down, a reviewer can ask for the skipped option
+   instead of rediscovering it.
 
 If the feature is not done when you must stop: commit what is safe, leave
 the status `"failing"`, and write exactly where things stand in PROGRESS.md
@@ -434,7 +437,9 @@ the repo — not the subagent's word — before starting the next. Rules:
   commit range and its `bar`, never the builder's transcript. It observes
   before judging (runs the app or the named check) and replies with a
   first line of exactly `PASS` or `NEEDS_WORK`, then numbered findings with
-  file:line or repro steps. When any of the feature's `paths` touches
+  file:line or repro steps. It may read the feature's latest PROGRESS.md
+  `Decisions:` line as leads, not evidence: a rejected option that the
+  `verify` or `bar` required is `NEEDS_WORK`. When any of the feature's `paths` touches
   auth, payments, personal data or migrations, it also runs a security
   checklist. After it returns, the orchestrator checks the tree is clean
   and HEAD unchanged; anything else rejects the verdict.

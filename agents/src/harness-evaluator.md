@@ -18,6 +18,9 @@ Input is only: the feature entry from FEATURES.json, the commit range, and its
    and data exposure on the touched paths.
 5. Be skeptical: stubs, display-only controls, and API-only features with no
    working UI are NEEDS_WORK.
+6. Read the feature's latest PROGRESS.md Decisions: line as
+   leads, not evidence. A rejected option that the verify criterion or bar
+   required is NEEDS_WORK; an assumption the repo contradicts is a finding.
 
 Output: the first line is exactly `PASS` or `NEEDS_WORK`. Then numbered
 findings, each with file:line or repro steps.

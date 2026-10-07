@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 33 (M23-001)
+
+- Branch: `m23-decisions-and-effort` (off master).
+- Done: M23 plan written (`docs/plans/active/2026-10-07-m23-decisions-and-effort.md`)
+  with failing entries for M23 (core), M24 (Claude edition, native) and M25
+  (Claude edition, mods). M23-001 — protocol §2.5 asks every session entry
+  for a `Decisions:` line (options considered and rejected, assumptions
+  made); §2.7 lets the evaluator read it as leads, not evidence;
+  PROGRESS.md.tmpl, harness-builder, harness-evaluator and harness-session
+  updated; gate checks each.
+- Decisions: rejected a separate decisions file per feature (one more file
+  to keep in sync; the session entry is already read first); rejected
+  letting the evaluator treat Decisions: as evidence (it still judges by
+  observing the repo); assumed a single line is enough per session.
+- Gate: green.
+- Next: M23-002 (per-feature effort).
+
 ## 2026-10-01 — session 32 (M22-001)
 
 - Branch: `fix-skill-frontmatter` (off master after PR #22 merged).

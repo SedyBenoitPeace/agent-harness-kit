@@ -667,7 +667,7 @@
       "id": "M23-001",
       "milestone": 23,
       "title": "Decision notes: every session entry records rejected options and assumptions; the evaluator reads them as leads",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [],
       "paths": [
         "skills/harness-initial-setup/templates/",

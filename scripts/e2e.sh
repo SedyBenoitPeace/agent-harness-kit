@@ -383,4 +383,17 @@ for f in skills/*/SKILL.md agents/src/*.md; do
   fi
 done
 
+# --- decision notes (M23-001) ------------------------------------------------
+# Most failures are a right answer considered and rejected; the session entry
+# records those choices so a reviewer can ask for the thing that was skipped.
+close_out="$(sed -n '/^### 2\.5 Close out/,/^### 2\.6/p' "$PROTO")"
+grep -qF 'Decisions:' <<< "$close_out" || fail "protocol 2.5: PROGRESS.md entry must ask for a Decisions: line"
+grep -qF 'options considered and rejected' <<< "$close_out" || fail "protocol 2.5: Decisions: must name options considered and rejected"
+grep -qF 'assumptions made' <<< "$close_out" || fail "protocol 2.5: Decisions: must name assumptions made"
+grep -q '^- Decisions:' "$TMPL_DIR/PROGRESS.md.tmpl" || fail "PROGRESS.md.tmpl: entry must show a Decisions: line"
+grep -qF 'Decisions:' agents/src/harness-builder.md || fail "harness-builder: must write the Decisions: line"
+grep -qF 'Decisions:' agents/src/harness-evaluator.md || fail "harness-evaluator: must read the Decisions: line"
+grep -qF 'leads, not evidence' agents/src/harness-evaluator.md || fail "harness-evaluator: Decisions: are leads, not evidence"
+grep -qF 'leads, not evidence' "$PROTO" || fail "protocol 2.7: evaluator reads Decisions: as leads, not evidence"
+
 echo "GATE GREEN"
