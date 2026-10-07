@@ -799,7 +799,7 @@
       "id": "M25-003",
       "milestone": 25,
       "title": "Mod: budget guard that writes .harness-run/STOP when a feature exceeds the configured token budget",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M25-002"
       ],
@@ -809,7 +809,7 @@
         "claude/.claude-plugin/"
       ],
       "verify": "claude plugin test claude/ passes tests proving per-feature usage from turn.complete is summed, crossing the userConfig threshold writes .harness-run/STOP and a reason line to .harness-run/budget.log, and staying under it writes nothing; bash scripts/e2e.sh exits 0",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md Counts input + output + cache-write tokens (cache reads excluded: cheap, and they dominate long sessions). STOP is written only while a run is active (.harness-run/start exists); outside a run it is a status line only. userConfig feature_token_budget, default 1500000."
     },
     {
       "id": "M25-004",

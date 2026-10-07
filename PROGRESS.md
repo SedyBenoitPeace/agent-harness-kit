@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 42 (M25-003)
+
+- Branch: `m25-mods`.
+- Done: M25-003 — budget guard, in the same `turn.complete` hook as the
+  supervisor (one hook per event). Sums each turn's usage per builder
+  subagent (one feature) and on the main loop between SESSION lines. Over
+  `feature_token_budget` (userConfig, default 1,500,000): a status line;
+  during a run (`.harness-run/start` exists) also a reason line in
+  `.harness-run/budget.log` and `.harness-run/STOP`, which
+  harness-continuous honours after the current feature. 6 engine tests
+  (17 total), tsc clean.
+- Decisions: excluded cache reads from the count (a tenth of the price,
+  and they dominate long sessions, so they would trip the budget on cost
+  that barely exists); no STOP outside a run (an interactive session has
+  nobody's run to stop, and a stale STOP would end the next run early —
+  harness-continuous deletes leftovers, but better not to create them);
+  flag each feature once.
+- Gate: green.
+- Next: M25-004 (next-steps band).
+
 ## 2026-10-07 — session 41 (M25-002)
 
 - Branch: `m25-mods`.

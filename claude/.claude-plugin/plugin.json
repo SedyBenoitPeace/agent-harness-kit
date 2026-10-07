@@ -16,5 +16,13 @@
   ],
   "dependencies": [
     "agent-harness-kit"
-  ]
+  ],
+  "userConfig": {
+    "feature_token_budget": {
+      "type": "number",
+      "title": "Token budget per feature",
+      "description": "Tokens one feature may use in an unattended run before the run is asked to stop after it (input + output + cache writes).",
+      "default": 1500000
+    }
+  }
 }

@@ -61,11 +61,20 @@ export function models(on: On, reply: string) {
   return calls
 }
 
-export const turn = (answer: string, agentId?: string) => ({
+export const spent = (tokens: number) => ({
+  input_tokens: tokens - 100,
+  output_tokens: 100,
+  cache_creation_input_tokens: 0,
+  cache_read_input_tokens: 50_000,
+  model: 'claude-sonnet-5-5',
+})
+
+export const turn = (answer: string, agentId?: string, tokens?: number) => ({
   answer,
   durationMs: 1000,
   isAborted: false,
   turnId: 't1',
   reason: 'answer' as const,
   ...(agentId ? { agentId } : {}),
+  ...(tokens === undefined ? {} : { usage: spent(tokens) }),
 })

@@ -116,3 +116,17 @@ export function transcriptText(messages: { role: string; text: string; toolUses?
     .join('\n')
   return text.length > max ? text.slice(text.length - max) : text
 }
+
+// --- M25-003 budget guard -------------------------------------------------
+
+export const DEFAULT_BUDGET = 1_500_000
+
+// Tokens that cost real money: input, output and cache writes. Cache reads are
+// a tenth of the price and dominate long sessions, so they are left out.
+export function countedTokens(usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens: number } | undefined) {
+  return usage ? usage.input_tokens + usage.output_tokens + usage.cache_creation_input_tokens : 0
+}
+
+export function budgetLine(when: string, who: string, used: number, budget: number) {
+  return `${when} ${who}: ${used} tokens over the ${budget} budget; run asked to stop after this feature\n`
+}

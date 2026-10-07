@@ -2,6 +2,9 @@ import type { Register } from 'claude-code'
 
 import {
   appendLine,
+  budgetLine,
+  countedTokens,
+  DEFAULT_BUDGET,
   DECISION_TOOL,
   decisionSpec,
   decisionsPath,
@@ -21,9 +24,12 @@ import {
 // agent-harness-kit-claude: Claude Code-only additions to the harness.
 // Every feature stays inert outside a harnessed repo (no FEATURES.json).
 // All hooks live in this file: the engine follows `$` only within it.
-export const register: Register = on => {
+export const register: Register = (on, options) => {
   let isHarnessed = false
   const checked = new Set<string>()
+  const budget = typeof options.feature_token_budget === 'number' ? options.feature_token_budget : DEFAULT_BUDGET
+  const used = new Map<string, number>() // per builder subagent, or 'main' between SESSION lines
+  const flagged = new Set<string>()
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)
@@ -52,7 +58,29 @@ export const register: Register = on => {
   // to a small model, since a fork only ever sees the main thread.
   on('turn.complete', async ($, e, next) => {
     const result = await next(e)
-    const line = isHarnessed ? parseSessionLine(e.answer) : undefined
+    if (!isHarnessed) return result
+    const line = parseSessionLine(e.answer)
+
+    // M25-003 — budget guard: count what each feature spends. A builder
+    // subagent is one feature; the main loop counts between SESSION lines.
+    const who = e.agentId ?? 'main'
+    const total = (used.get(who) ?? 0) + countedTokens(e.usage)
+    used.set(who, total)
+    if (total > budget && !flagged.has(who)) {
+      flagged.add(who)
+      $.ui.status(`budget: ${who} used ${total} tokens (budget ${budget})`)
+      if (await $.fs.exists(`${RUN_DIR}/start`)) {
+        const log = `${RUN_DIR}/budget.log`
+        const before = (await $.fs.exists(log)) ? await $.fs.read(log) : ''
+        await $.fs.write(log, before + budgetLine(new Date().toISOString(), who, total, budget))
+        await $.fs.write(`${RUN_DIR}/STOP`, `budget: ${who} used ${total} tokens\n`)
+      }
+    }
+    if (line && who === 'main') {
+      used.delete('main')
+      flagged.delete('main')
+    }
+
     if (!line) return result
     // One check per feature outcome: an orchestrator echoing a builder's
     // SESSION line must not pay for a second check.
