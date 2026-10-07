@@ -347,7 +347,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.5.0" ] || fail "plugin version must be 3.5.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.6.0" ] || fail "plugin version must be 3.6.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -561,6 +561,9 @@ grep -qF 'scripts/sync-template.sh' CHANGELOG.md || fail "CHANGELOG release chec
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
+! grep -q "ui.render" claude/hooks/register.tsx || fail "Claude edition: the next-steps band was removed (M28-004)"
+[ ! -e claude/tests/band.test.tsx ] || fail "Claude edition: band test must go with the band (M28-004)"
+! grep -qi 'next-steps band' README.md || fail "README: next-steps band was removed (M28-004)"
 jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.tsx"
 grep -qF '.harness-run/decisions/<id>.md' "$SESSION_SKILL_MD" || fail "harness-session: must fold .harness-run/decisions/<id>.md into Decisions:"
 git check-ignore -q claude/.claude-plugin/types/x || fail ".gitignore: claude/.claude-plugin/types/ (engine-written) must be ignored"
@@ -569,7 +572,7 @@ if git grep -nI -e 'agent-harness-kit-mods' -- . ':!docs/plans' ':!PROGRESS.md' 
    | grep -v 'was briefly named\|plugin uninstall agent-harness-kit-mods' | grep -q .; then
   fail "stale reference to the old edition name agent-harness-kit-mods"
 fi
-for w in register_decision 'decisions/<id>.md' 'SESSION:' feature_token_budget '.harness-run/STOP' 'Quiz me' 'agent-harness-kit-mods'; do
+for w in register_decision 'decisions/<id>.md' 'SESSION:' feature_token_budget '.harness-run/STOP' 'agent-harness-kit-mods'; do
   grep -qF -- "$w" <<< "$edition" || fail "README Claude edition: mods section must mention $w"
 done
 if command -v claude >/dev/null; then

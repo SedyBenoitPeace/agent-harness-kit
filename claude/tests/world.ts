@@ -88,8 +88,3 @@ export const turn = (answer: string, agentId?: string, tokens?: number) => ({
   ...(agentId ? { agentId } : {}),
   ...(tokens === undefined ? {} : { usage: spent(tokens) }),
 })
-
-export const BAND = {
-  component: 'AbovePrompt' as const,
-  props: { hasSurvey: false, isWorking: false, maxRows: 10, bodyColumns: 80, scroll: { offset: 0, bodyRows: 10 }, view: {} },
-}

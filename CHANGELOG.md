@@ -10,6 +10,24 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.6.0 — 2026-10-07
+
+- The lean pass. The protocol is four files: `harness-protocol.md`, the
+  session core every session reads (143 lines, was 592), and
+  `harness-protocol-planning.md`, `-runs.md` and `-maintenance.md`, read
+  only when needed. Section numbers are unchanged.
+- No model names: `agents/models.json` is gone; every agent runs on its
+  CLI's default model.
+- AGENTS.md rules you add end with `(added <YYYY-MM-DD>)`; harness-audit
+  flags rules older than 90 days for a re-test.
+- Claude Code edition: the next-steps band is gone; the decision register,
+  supervisor and budget guard stay.
+
+Upgrade:
+- Standard upgrade; it adds the three new protocol files and regenerates your agent files without model lines. Commit all of them.
+- Tag the rules you added to AGENTS.md with `(added <YYYY-MM-DD>)` (today's date is fine) so they expire.
+- If you kept a copy of `agents/models.json`, delete it.
+
 ## 3.5.0 — 2026-10-07
 
 - Every release now has an Upgrade block here; upgrades stamp the kit version

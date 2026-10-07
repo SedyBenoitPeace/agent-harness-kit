@@ -1004,7 +1004,7 @@
       ],
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with: agents/models.json absent and no agents/src file carrying tier; test-agents.sh proving no generated agent file for any CLI has a model line; test-second-opinion.sh proving second-opinion.sh passes no -m/--model flag and prints no MODEL: line; harness-run SKILL.md naming no models.json and describing the security checklist trigger in words (auth, payments, personal data, migrations); no file in skills/, agents/ or README.md naming models.json",
-      "notes": "Plan: docs/plans/active/2026-10-07-m28-lean.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m28-lean.md"
     },
     {
       "id": "M28-002",
@@ -1022,7 +1022,7 @@
       ],
       "effort": "high",
       "verify": "bash scripts/e2e.sh exits 0 with: templates harness-protocol.md holding sections 2.1-2.6 and an index naming harness-protocol-planning.md (section 1), harness-protocol-runs.md (2.7, 2.8) and harness-protocol-maintenance.md (section 3), each file holding exactly those sections; every protocol file agent-neutral; fixtures proving upgrade.sh copies all four (CHANGED/OK per file), harness-audit FAILs on a missing one and WARNs on a drifted one, context.sh reports PROTOCOL outdated when any differs, and sync-template.sh writes all four; harness-initial-setup copies all four; handoff/status/README prompts for sections 1 and 3 name the planning and maintenance files",
-      "notes": "Plan: docs/plans/active/2026-10-07-m28-lean.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m28-lean.md"
     },
     {
       "id": "M28-003",
@@ -1040,13 +1040,13 @@
       ],
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 and fails when templates/harness-protocol.md exceeds 150 lines or AGENTS.md.tmpl exceeds 70 lines; protocol 3.4 and AGENTS.md.tmpl tell sessions to end an added rule with (added <YYYY-MM-DD>), plus ; model: <name> when it fixes one model's failure; test-audit.sh fixtures proving harness-audit WARNs on a rule added more than 90 days ago, not on a recent one, and still WARNs on model-tagged rules",
-      "notes": "Plan: docs/plans/active/2026-10-07-m28-lean.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m28-lean.md"
     },
     {
       "id": "M28-004",
       "milestone": 28,
       "title": "Drop the next-steps band mod; release 3.6.0 with its Upgrade block; mirror synced",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M28-003"
       ],
@@ -1059,7 +1059,7 @@
       ],
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with: no ui.render band hook in claude/hooks/register.tsx and no band in README or tests; claude plugin test green where the CLI exists; all manifests 3.6.0; CHANGELOG 3.6.0 entry with an Upgrade: block; agent-harness-template has a PR syncing it (sync-template.sh --check exits 0 on that branch)",
-      "notes": "Plan: docs/plans/active/2026-10-07-m28-lean.md"
+      "notes": "Plan: docs/plans/completed/2026-10-07-m28-lean.md"
     }
   ]
 }

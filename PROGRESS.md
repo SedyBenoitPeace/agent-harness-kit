@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 56 (M28-004, release 3.6.0)
+
+- Branch: `m28-lean`.
+- Done: M28-004 — the next-steps band mod is gone (hook, state atoms,
+  state types, test, README bullet); the decision register, supervisor and
+  budget guard stay (17 mod tests green). Released 3.6.0: CHANGELOG entry
+  with its Upgrade block, all manifests bumped. Mirror synced onto the
+  still-open agent-harness-template PR #3 (retitled 3.6.0; its banner and
+  README now point planning at `harness-protocol-planning.md`). All M28
+  features pass; plan moved to completed.
+- Decisions: stacked the mirror sync on open PR #3 rather than a second PR
+  (one merge for the owner, and #3 was not yet merged); kept
+  `register.tsx` as its file name (renaming to .ts churns hooks.json and the
+  gate for nothing).
+- Gate: green.
+- Next: owner merges both PRs; then the first real unattended run.
+
 ## 2026-10-07 — session 55 (M28-003)
 
 - Branch: `m28-lean`.

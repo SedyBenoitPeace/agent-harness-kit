@@ -230,8 +230,8 @@ protocol so every agent follows them:
 
 A second plugin in the same marketplace, `agent-harness-kit-claude`, adds
 features only Claude Code has: an eval suite for the core skills and mods
-(function hooks: a decision register, a done-check supervisor, a budget
-guard, a next-steps band). It depends on the core plugin and never copies
+(function hooks: a decision register, a done-check supervisor and a budget
+guard). It depends on the core plugin and never copies
 the protocol, so every other CLI keeps working from the core alone.
 Installing the edition installs the core plugin with it:
 
@@ -254,9 +254,6 @@ of git):
   writes). Over `feature_token_budget` (set it in `/config`, default
   1,500,000) during an unattended run it writes `.harness-run/STOP`, so the
   run ends after the current feature, and logs why in `.harness-run/budget.log`.
-- **Next-steps band** — after a supervised session passes, a band above the
-  prompt offers Next feature, Explain (big picture, few words) and Quiz me.
-  Off during unattended runs.
 
 Upgrading from 3.2.0: the edition was briefly named `agent-harness-kit-mods`;
 run `/plugin uninstall agent-harness-kit-mods`, then install

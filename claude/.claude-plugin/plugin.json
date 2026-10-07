@@ -1,7 +1,7 @@
 {
   "name": "agent-harness-kit-claude",
   "description": "Claude Code edition of the agent harness: adds Claude Code-only features (agent effort, mods, eval suites) on top of agent-harness-kit.",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "author": {
     "name": "Stefano Rifici"
   },
@@ -24,6 +24,5 @@
       "description": "Tokens one feature may use in an unattended run before the run is asked to stop after it (input + output + cache writes).",
       "default": 1500000
     }
-  },
-  "types": "./types/index.d.ts"
+  }
 }
