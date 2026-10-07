@@ -866,7 +866,7 @@
       "id": "M26-002",
       "milestone": 26,
       "title": "Brief Stage (prototype or production) seeds effort and the quality bar",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M26-001"
       ],
@@ -877,7 +877,7 @@
         "scripts/"
       ],
       "verify": "bash scripts/e2e.sh exits 0 with test-brief.sh fixtures proving check-brief.sh FAILs a brief without a ## Stage section or with a stage other than prototype or production, and passes one with either; brief.md.tmpl has ## Stage; protocol §1.1 says the stage seeds effort (prototype: low or medium) and the quality bar; harness-brief SKILL.md asks for the stage when the prompt does not say; the claude/evals brief case still passes",
-      "notes": "Plan: docs/plans/active/2026-10-07-m26-second-opinion.md"
+      "notes": "Plan: docs/plans/active/2026-10-07-m26-second-opinion.md Eval 2026-10-07: brief-from-rough-prompt 1.00 over 2 runs, with a new stage grader proving the brief carries ## Stage prototype|production."
     },
     {
       "id": "M26-003",

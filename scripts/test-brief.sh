@@ -16,6 +16,9 @@ cat > "$t/good.md" <<'B'
 ## Objective
 Ship a CLI that prints the weather.
 
+## Stage
+production — people will install it from npm.
+
 ## Context
 Empty repo, Node 22.
 
@@ -54,6 +57,14 @@ expect_fail missing-section '/^## Non-goals$/,/^$/d' 'Non-goals'
 expect_fail open-question 's/^## Open questions$/&\nWho pays for hosting?/' 'Open questions'
 # shellcheck disable=SC2016 # backticks are literal in the sed expression
 expect_fail vague-done 's/^- `npm test` exits 0$/- it works well/' 'Done when'
+
+# Stage (M26-002): missing, or not prototype|production, fails; both pass
+expect_fail no-stage '/^## Stage$/,/^$/d' 'Stage'
+expect_fail bad-stage 's/^production — people/beta — people/' 'Stage'
+sed 's/^production — people will install it from npm.$/prototype — a demo for one meeting./' "$t/good.md" > "$t/proto.md"
+"$CHECK" "$t/proto.md" >/dev/null || fail "prototype stage must pass"
+grep -qx '## Stage' "$SKILL/templates/brief.md.tmpl" || fail "brief.md.tmpl: ## Stage missing"
+grep -qi 'prototype or production' "$SKILL/SKILL.md" || fail "harness-brief SKILL.md must ask prototype or production"
 
 # the defect fixtures fail only on their own defect
 [ "$("$CHECK" "$t/vague-done.md" | grep -c '^FAIL')" -eq 1 ] || fail "vague-done: expected exactly one FAIL line"

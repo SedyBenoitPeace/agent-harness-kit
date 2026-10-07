@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 46 (M26-002)
+
+- Branch: `m26-second-opinion`.
+- Done: M26-002 — briefs carry `## Stage` (prototype or production, and
+  why). check-brief.sh FAILs a missing stage or one that is neither;
+  harness-brief asks for it when the prompt does not say; protocol §1.1
+  says the stage seeds `effort` (prototype: low or medium) and the quality
+  bar ("gate is sufficient" for a prototype unless stated). Fixtures in
+  test-brief.sh. The brief eval case still scores 1.00 (2 runs) and gained a
+  `stage` grader that proves the brief now states its stage.
+- Decisions: stage as a brief section, not a FEATURES field (it is a
+  property of the whole piece of work; effort stays the per-feature knob);
+  only two values, so the checker can enforce it and the guidance stays
+  one line; production never below medium for APIs and data.
+- Gate: green.
+- Next: M26-003 (untrusted text rule, README, release 3.4.0).
+
 ## 2026-10-07 — session 45 (M26-001)
 
 - Branch: `m26-second-opinion` (off master after PR #26 merged).

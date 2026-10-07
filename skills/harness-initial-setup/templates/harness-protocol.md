@@ -71,7 +71,10 @@ requirement.
 harness-brief skill (or the human names one), read it first: its
 Objective, Context and Non-goals answer the questions above, its Done-when
 lines seed each feature's `verify`, and its Quality bar seeds
-`evaluate`/`bar` (§1.4). Interview only the gaps. Its Needs-a-human list
+`evaluate`/`bar` (§1.4). Its Stage seeds `effort` and the bar: a prototype
+gets `low` or `medium` effort and "gate is sufficient" unless the brief says
+otherwise; production follows the §1.4 table, never below `medium` for APIs
+and data. Interview only the gaps. Its Needs-a-human list
 is a stop-and-ask boundary for sessions (a `blocked` outcome with a question), never an action taken.
 
 If an answer is vague, push back once with a concrete alternative ("do you

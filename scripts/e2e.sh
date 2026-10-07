@@ -489,6 +489,11 @@ grep -qF 'second_opinion' "$SESSION_SKILL_MD" || fail "harness-session: a second
 grep -qF 'second-opinion.sh' skills/harness-continuous/SKILL.md || fail "harness-continuous: second opinion exit 2 must be a skip"
 grep -qF 'second_opinion' skills/harness-audit/scripts/check.sh || fail "harness-audit: missing-CLI WARN missing"
 
+# --- brief stage (M26-002) ---------------------------------------------------------
+stage_11="$(sed -n '/^### 1\.1 Interview the human/,/^### 1\.2/p' "$PROTO")"
+grep -qF 'Stage' <<< "$stage_11" || fail "protocol 1.1: the brief's Stage must seed effort and the quality bar"
+grep -qF 'prototype' <<< "$stage_11" || fail "protocol 1.1: prototype stage guidance missing"
+
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
 jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.tsx"
