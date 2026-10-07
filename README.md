@@ -204,6 +204,19 @@ protocol so every agent follows them:
   re-test those rules and delete the ones the new model no longer needs —
   `harness-audit` reminds you how many there are.
 
+## Claude Code edition
+
+A second plugin in the same marketplace, `agent-harness-kit-mods`, adds
+features only Claude Code has: an eval suite for the core skills and mods
+(function hooks: a decision register, a done-check supervisor, a budget
+guard, a next-steps band). It depends on the core plugin and never copies
+the protocol, so every other CLI keeps working from the core alone.
+
+```
+/plugin install agent-harness-kit
+/plugin install agent-harness-kit-mods
+```
+
 ## Upgrading existing repos
 
 After updating the plugin, bring each repo that already has a harness up to

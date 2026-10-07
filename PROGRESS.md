@@ -3,6 +3,24 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 36 (M24-001)
+
+- Branch: `m24-claude-edition` (off master after PR #24 merged).
+- Done: M24-001 — second plugin in the marketplace at `claude/`
+  (`source: ./claude`), named `agent-harness-kit-mods`, depending on
+  `agent-harness-kit`, version in lockstep (3.1.0). Gate checks the
+  manifest, the marketplace entry, versions, no protocol copy, the README
+  install line, and runs `claude plugin validate --strict claude` and
+  `claude plugin validate .` when the CLI is present. README "Claude Code
+  edition"; ARCHITECTURE module + invariant.
+- Decisions: renamed from `agent-harness-kit-claude` (validator warning:
+  reads as Anthropic's own); kept the folder `claude/` so the planned
+  paths hold; made the CLI validate conditional because CI has no
+  `claude` binary; assumed the core plugin (source `./`) does not load
+  `claude/` (it loads only its root skills/agents/hooks).
+- Gate: green.
+- Next: M24-002 (agent effort in the generator).
+
 ## 2026-10-07 — session 35 (M23-003)
 
 - Branch: `m23-decisions-and-effort`.

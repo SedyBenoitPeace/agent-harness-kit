@@ -140,3 +140,6 @@ mods) without forking the protocol.
 - 2026-10-07 — Deferred: a cross-vendor second opinion (Codex evaluates
   Claude's commit, or the reverse). Revisit after M25; the generator
   already emits the evaluator for every CLI.
+- 2026-10-07 — Edition plugin named `agent-harness-kit-mods`, not
+  `agent-harness-kit-claude`: `claude plugin validate` warns that a name with
+  "claude" reads as one of Anthropic's own. The folder stays `claude/`.

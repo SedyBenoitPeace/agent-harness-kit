@@ -421,4 +421,26 @@ for w in 'Decisions:' 'effort' '(model: <name>)'; do
     || fail "README M23 section: '$w' missing"
 done
 
+# --- Claude edition plugin (M24-001) -------------------------------------------
+# A second plugin in this marketplace that adds Claude Code-only features on
+# top of the core plugin. It never copies the protocol: the core owns it.
+ED=".claude-plugin/plugin.json"
+ED_MANIFEST="claude/.claude-plugin/plugin.json"
+[ -f "$ED_MANIFEST" ] || fail "Claude edition: $ED_MANIFEST missing"
+jq -e '.name == "agent-harness-kit-mods" and ((.dependencies // []) | index("agent-harness-kit") != null)' "$ED_MANIFEST" >/dev/null \
+  || fail "Claude edition: plugin.json must be agent-harness-kit-mods and depend on agent-harness-kit"
+jq -e '[.plugins[] | select(.name == "agent-harness-kit-mods" and .source == "./claude")] | length == 1' .claude-plugin/marketplace.json >/dev/null \
+  || fail "marketplace.json: Claude edition entry (source ./claude) missing"
+core_v="$(jq -r .version "$ED")"
+[ "$(jq -r .version "$ED_MANIFEST")" = "$core_v" ] || fail "Claude edition: plugin.json version must match the core ($core_v)"
+[ "$(jq -r '.plugins[] | select(.name == "agent-harness-kit-mods") | .version' .claude-plugin/marketplace.json)" = "$core_v" ] \
+  || fail "marketplace.json: Claude edition version must match the core ($core_v)"
+if find claude -name 'harness-protocol.md' | grep -q .; then fail "Claude edition must not copy harness-protocol.md"; fi
+grep -qF '/plugin install agent-harness-kit-mods' README.md || fail "README: Claude edition install line missing"
+# claude plugin validate when the CLI is present (CI runners may not have it)
+if command -v claude >/dev/null; then
+  claude plugin validate --strict claude >/dev/null 2>&1 || fail "claude plugin validate --strict claude/ failed"
+  claude plugin validate . >/dev/null 2>&1 || fail "claude plugin validate . (marketplace) failed"
+fi
+
 echo "GATE GREEN"
