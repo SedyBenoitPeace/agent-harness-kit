@@ -65,7 +65,7 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    that line), move the plan to `docs/plans/completed/`
    in the same commit if that was its last failing feature, commit explicit
    paths, then STOP —
-   do not start a second feature. A feature with `evaluate` set (`ui`) is
+   do not start a second feature. A feature with `evaluate` set (`ui`) or a `second_opinion` is
    not yours to pass: set it to `review`, never `passing`, and report
    `review` — the orchestrator dispatches the evaluator and flips it.
    **As a parallel lane** (harness-run said so): work only in the named

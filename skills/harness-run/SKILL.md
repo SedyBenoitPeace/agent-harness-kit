@@ -56,8 +56,8 @@ stays interactive and stops at the first problem.
 
 ## Evaluator step
 
-For a `review` session (only features with `evaluate` set; absent means no
-evaluation and today's flow):
+For a `review` session (only features with `evaluate` or `second_opinion`
+set; absent means no evaluation and today's flow):
 
 1. Record `git rev-parse HEAD`. Dispatch the named agent
    `harness-evaluator` (the evaluator at high or above: its effort setting
@@ -71,13 +71,23 @@ evaluation and today's flow):
    Anything else rejects the verdict (the evaluator is read-only, but a
    parent's elevated permissions can reach child agents): discard its
    changes, relay to the human, STOP.
-3. First line `PASS` → write `docs/verification/<id>.md` (verdict,
-   findings, date, CLI), set the feature `passing`, one `PROGRESS.md`
+3. **Second opinion** (only when the feature has `second_opinion`): run
+   `bash scripts/second-opinion.sh <cli> <id> <base-commit> <target>` (path
+   relative to this skill; base = the commit before the feature's first).
+   It runs that vendor's agent read-only with the same evaluator
+   instructions and prints `VERDICT: PASS|NEEDS_WORK|REJECTED`. The feature
+   passes only when both verdicts are `PASS` (a feature with only
+   `second_opinion` and no `evaluate` skips step 1's dispatch: the second
+   opinion is the evaluation). `REJECTED` (it changed the repo) or exit 2
+   (CLI missing) → relay to the human and STOP. `NEEDS_WORK` → step 5 with
+   its findings, prefixed with the CLI's name.
+4. Both `PASS` → write `docs/verification/<id>.md` (verdict,
+   findings and date, and each CLI that judged it), set the feature `passing`, one `PROGRESS.md`
    line, commit explicit paths.
-4. First line `NEEDS_WORK` → put the findings in the feature's `notes`,
+5. Either verdict `NEEDS_WORK` → put the findings in the feature's `notes`,
    set it back to `failing`, add 1 to `eval_attempts`, commit explicit
    paths; the next session starts from those notes.
-5. `eval_attempts` reaching 2 → relay the findings to the human and STOP.
+6. `eval_attempts` reaching 2 → relay the findings to the human and STOP.
    Any other first line counts as `NEEDS_WORK`.
 
 ## Parallel lanes

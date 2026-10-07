@@ -35,6 +35,16 @@ else
   pass "Open questions empty"
 fi
 
+# Stage (M26-002): prototype or production decides effort and the quality bar
+stage="$(section 'Stage' | head -1)"
+if ! grep -qx '## Stage' "$brief"; then
+  failc "section missing: Stage (prototype or production)"
+elif ! printf '%s\n' "$stage" | grep -Eqi '^(prototype|production)\b'; then
+  failc "Stage must start with prototype or production, got: $stage"
+else
+  pass "Stage: $(printf '%s' "$stage" | awk '{print tolower($1)}')"
+fi
+
 # every Done-when line needs a backticked command
 # shellcheck disable=SC2016 # backticks are literal in the grep pattern
 bad="$(section 'Done when' | grep -v '`[^`][^`]*`' || true)"

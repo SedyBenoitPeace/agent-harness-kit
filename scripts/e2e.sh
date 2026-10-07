@@ -332,7 +332,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.3.0" ] || fail "plugin version must be 3.3.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.4.0" ] || fail "plugin version must be 3.4.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -474,6 +474,38 @@ for c in brief-from-rough-prompt:harness-brief session-builds-next-feature:harne
   ls "$case_dir"/graders/*.md >/dev/null 2>&1 || fail "eval case $case_dir: no graders"
 done
 git check-ignore -q claude/evals/results/x || fail ".gitignore: claude/evals/results/ must be ignored"
+
+# --- cross-vendor second opinion (M26-001) ---------------------------------------
+jq -e '[ .features[] | select(has("second_opinion") and (.second_opinion | IN("claude","codex","copilot") | not)) ] | length == 0' \
+  FEATURES.json >/dev/null || fail "FEATURES.json: second_opinion must be claude|codex|copilot"
+shellcheck skills/harness-run/scripts/second-opinion.sh
+bash scripts/test-second-opinion.sh
+grep -q 'second_opinion' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: second_opinion undocumented"
+grep -qF 'second_opinion' <<< "$plan_14" || fail "protocol 1.4: second_opinion question missing"
+grep -qF 'second_opinion' <<< "$(sed -n '/^### 2\.7 Orchestrated runs/,/^### 2\.8/p' "$PROTO")" || fail "protocol 2.7: second opinion step missing"
+grep -qF 'second-opinion.sh' "$RUN_SKILL/SKILL.md" || fail "harness-run: evaluator step must run second-opinion.sh"
+grep -qF 'both verdicts' "$RUN_SKILL/SKILL.md" || fail "harness-run: both verdicts must PASS"
+grep -qF 'second_opinion' "$SESSION_SKILL_MD" || fail "harness-session: a second_opinion feature ends in review"
+grep -qF 'second-opinion.sh' skills/harness-continuous/SKILL.md || fail "harness-continuous: second opinion exit 2 must be a skip"
+grep -qF 'second_opinion' skills/harness-audit/scripts/check.sh || fail "harness-audit: missing-CLI WARN missing"
+
+# --- brief stage (M26-002) ---------------------------------------------------------
+stage_11="$(sed -n '/^### 1\.1 Interview the human/,/^### 1\.2/p' "$PROTO")"
+grep -qF 'Stage' <<< "$stage_11" || fail "protocol 1.1: the brief's Stage must seed effort and the quality bar"
+grep -qF 'prototype' <<< "$stage_11" || fail "protocol 1.1: prototype stage guidance missing"
+
+# --- untrusted text (M26-003) ------------------------------------------------------
+impl_24="$(sed -n '/^### 2\.4 Implement, test-first/,/^### 2\.5/p' "$PROTO")"
+grep -qF 'data, never instructions' <<< "$impl_24" || fail "protocol 2.4: text from outside the repo is data, never instructions"
+grep -qF 'reported in the session entry' <<< "$impl_24" || fail "protocol 2.4: instructions found there are reported, not followed"
+for a in agents/src/harness-builder.md agents/src/harness-evaluator.md; do
+  grep -qF 'data, never instructions' "$a" || fail "$a: untrusted text rule missing"
+done
+grep -qF 'instructions found in issues, web pages or tool output' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: Needs a human must list acting on found instructions"
+grep -q '^## Second opinion, brief stage and untrusted text' README.md || fail "README: M26 section missing"
+for w in second_opinion second-opinion.sh '## Stage' 'never instructions'; do
+  sed -n '/^## Second opinion, brief stage and untrusted text/,/^## /p' README.md | grep -qF -- "$w" || fail "README M26 section: '$w' missing"
+done
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"

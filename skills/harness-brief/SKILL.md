@@ -22,7 +22,9 @@ runs in the main conversation because it must ask the human questions.
    action). No questions about things you can default; state the default
    in the brief instead.
 3. Fill `templates/brief.md.tmpl` (path relative to this skill). Sections:
-   Objective (one sentence) · Context · Deliverables · Non-goals ·
+   Objective (one sentence) · Stage (prototype or production, and why in one
+   line: it decides how much effort and checking the work deserves; when the
+   prompt does not say, it is one of your questions) · Context · Deliverables · Non-goals ·
    Done when (each line a backticked command plus its expected result) ·
    Quality bar (a fetchable reference, or "gate is sufficient") ·
    Needs a human (actions the run must stop for) · Budget and stop

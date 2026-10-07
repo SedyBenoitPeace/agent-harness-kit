@@ -113,6 +113,14 @@ if [ -n "$bad_effort" ]; then
   warn "effort must be low, medium, high or max — unknown value on: $bad_effort"
 fi
 
+# Second opinion (WARN only, M26-001): a feature names another vendor's CLI
+# to re-judge it; that CLI must be installed where the run happens
+for so_cli in $(jq -r '[.features[]? | .second_opinion? // empty] | unique | .[]' FEATURES.json 2>/dev/null || true); do
+  if ! command -v "$so_cli" >/dev/null 2>&1; then
+    warn "second_opinion names $so_cli, which is not installed here — install it or the run will stop (or skip) at that feature"
+  fi
+done
+
 # Model-tagged rules (WARN only, M23-003): rules written for one model's
 # failure; a reminder to re-test them when the model changes (protocol §3.2)
 if [ -f AGENTS.md ]; then
