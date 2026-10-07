@@ -987,6 +987,79 @@
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-sync-template.sh fixtures proving sync-template.sh <mirror> writes every template to its mirror path, keeps the mirror's AGENTS.md banner, README.md and docs/PRODUCT.md, is idempotent, and with --check exits 1 on a stale mirror and 0 on a synced one; CHANGELOG release checklist names it; agent-harness-template has a PR syncing it (sync-template.sh --check exits 0 on that branch); all manifests are 3.5.0",
       "notes": "Plan: docs/plans/completed/2026-10-07-m27-upgrades.md Mirror synced in SedyBenoitPeace/agent-harness-template PR #3 (branch sync-3.5.0, --check IN SYNC)."
+    },
+    {
+      "id": "M28-001",
+      "milestone": 28,
+      "title": "Drop the model names: no agents/models.json, no model lines, no model fallback",
+      "status": "failing",
+      "depends_on": [],
+      "paths": [
+        "agents/",
+        "scripts/gen-agents.sh",
+        "scripts/test-agents.sh",
+        "skills/harness-run/",
+        "scripts/test-second-opinion.sh",
+        "README.md"
+      ],
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with: agents/models.json absent and no agents/src file carrying tier; test-agents.sh proving no generated agent file for any CLI has a model line; test-second-opinion.sh proving second-opinion.sh passes no -m/--model flag and prints no MODEL: line; harness-run SKILL.md naming no models.json and describing the security checklist trigger in words (auth, payments, personal data, migrations); no file in skills/, agents/ or README.md naming models.json",
+      "notes": "Plan: docs/plans/active/2026-10-07-m28-lean.md"
+    },
+    {
+      "id": "M28-002",
+      "milestone": 28,
+      "title": "Split the protocol: session core plus planning, runs and maintenance files read only when needed",
+      "status": "failing",
+      "depends_on": [
+        "M28-001"
+      ],
+      "paths": [
+        "skills/",
+        "scripts/",
+        "README.md",
+        "agents/src/"
+      ],
+      "effort": "high",
+      "verify": "bash scripts/e2e.sh exits 0 with: templates harness-protocol.md holding sections 2.1-2.6 and an index naming harness-protocol-planning.md (section 1), harness-protocol-runs.md (2.7, 2.8) and harness-protocol-maintenance.md (section 3), each file holding exactly those sections; every protocol file agent-neutral; fixtures proving upgrade.sh copies all four (CHANGED/OK per file), harness-audit FAILs on a missing one and WARNs on a drifted one, context.sh reports PROTOCOL outdated when any differs, and sync-template.sh writes all four; harness-initial-setup copies all four; handoff/status/README prompts for sections 1 and 3 name the planning and maintenance files",
+      "notes": "Plan: docs/plans/active/2026-10-07-m28-lean.md"
+    },
+    {
+      "id": "M28-003",
+      "milestone": 28,
+      "title": "Size limits and rule expiry: gate caps the session core and AGENTS.md template; audit flags rules older than 90 days",
+      "status": "failing",
+      "depends_on": [
+        "M28-002"
+      ],
+      "paths": [
+        "scripts/e2e.sh",
+        "skills/harness-audit/",
+        "scripts/test-audit.sh",
+        "skills/harness-initial-setup/templates/"
+      ],
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 and fails when templates/harness-protocol.md exceeds 150 lines or AGENTS.md.tmpl exceeds 70 lines; protocol 3.4 and AGENTS.md.tmpl tell sessions to end an added rule with (added <YYYY-MM-DD>), plus ; model: <name> when it fixes one model's failure; test-audit.sh fixtures proving harness-audit WARNs on a rule added more than 90 days ago, not on a recent one, and still WARNs on model-tagged rules",
+      "notes": "Plan: docs/plans/active/2026-10-07-m28-lean.md"
+    },
+    {
+      "id": "M28-004",
+      "milestone": 28,
+      "title": "Drop the next-steps band mod; release 3.6.0 with its Upgrade block; mirror synced",
+      "status": "failing",
+      "depends_on": [
+        "M28-003"
+      ],
+      "paths": [
+        "claude/",
+        "CHANGELOG.md",
+        "package.json",
+        ".claude-plugin/",
+        "README.md"
+      ],
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with: no ui.render band hook in claude/hooks/register.tsx and no band in README or tests; claude plugin test green where the CLI exists; all manifests 3.6.0; CHANGELOG 3.6.0 entry with an Upgrade: block; agent-harness-template has a PR syncing it (sync-template.sh --check exits 0 on that branch)",
+      "notes": "Plan: docs/plans/active/2026-10-07-m28-lean.md"
     }
   ]
 }
