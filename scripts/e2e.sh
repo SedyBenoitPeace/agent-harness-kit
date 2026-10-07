@@ -87,7 +87,6 @@ grep -q '{{' "$TMPL_DIR/PROGRESS.md.tmpl" || fail "PROGRESS.md.tmpl has no {{pla
 
 # AGENTS.md.tmpl: map-not-encyclopedia, with adaptation headroom
 [ -f "$TMPL_DIR/AGENTS.md.tmpl" ] || fail "AGENTS.md.tmpl missing"
-[ "$(wc -l < "$TMPL_DIR/AGENTS.md.tmpl")" -le 80 ] || fail "AGENTS.md.tmpl exceeds 80 lines"
 grep -q 'docs/agents/harness-protocol.md' "$TMPL_DIR/AGENTS.md.tmpl" \
   || fail "AGENTS.md.tmpl does not point at the protocol doc"
 grep -q 'harness-session' "$TMPL_DIR/AGENTS.md.tmpl" \
@@ -179,8 +178,8 @@ grep -q 'CONTINUING INTERRUPTED FEATURE' "$PROTO" || fail "protocol: interrupted
 grep -q 'scripts/preflight.sh' "$PROTO" || fail "protocol: optional target preflight rule missing"
 grep -q 'tracked by another failing or deferred feature' "$PROTO" || fail "protocol: out-of-scope-warning rule missing"
 grep -q 'Execution mode' "$PROTO" || fail "protocol: execution-mode choice (2.4) missing"
-grep -q 'show-me' "$PROTO" || fail "protocol: show-me rule for explanations and summaries missing"
-grep -q 'show-me' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: show-me rule missing"
+grep -q 'show-me' "$CORE" || fail "protocol: show-me rule for explanations and summaries missing from the session core"
+! grep -q 'show-me' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: show-me lives in the session core only, not repeated here (M28-003)"
 grep -q 'own built-in' "$PROTO" || fail "protocol: own-tools-only execution rule missing"
 
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
@@ -425,14 +424,22 @@ grep -qF 'effort:' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: must r
 
 # --- model-tagged rules, start lean (M23-003) -----------------------------------
 # Rules written to fix one model's failure over-constrain the next model.
-grep -qF '(model: <name>)' <<< "$(sed -n '/^### 3\.4/,/^Copy-paste maintenance prompt/p' "$PROTO")" \
-  || fail "protocol 3.4: a rule for one model's repeated failure must be tagged (model: <name>)"
-grep -qF 're-test every rule tagged' <<< "$(sed -n '/^### 3\.2 Doc gardening/,/^### 3\.3/p' "$PROTO")" \
-  || fail "protocol 3.2: re-test tagged rules when the model changes"
-grep -qF '(model: <name>)' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: model-tag rule missing"
+for w in '(added <YYYY-MM-DD>)' '; model: <name>'; do
+  grep -qF -- "$w" <<< "$(sed -n '/^### 3\.4/,/^Copy-paste maintenance prompt/p' "$PROTO")" \
+    || fail "protocol 3.4: an added rule must be tagged '$w' (M28-003)"
+  grep -qF -- "$w" "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: rule tag '$w' missing (M28-003)"
+done
+grep -qF 'more than 90 days ago' <<< "$(sed -n '/^### 3\.2 Doc gardening/,/^### 3\.3/p' "$PROTO")" \
+  || fail "protocol 3.2: re-test rules older than 90 days and model-tagged ones on a model change"
+grep -qF 'added more than 90 days ago' skills/harness-audit/scripts/check.sh || fail "harness-audit: rule expiry WARN missing (M28-003)"
+
+# --- size limits (M28-003): what every session reads stays lean ----------------
+# Raising a limit is a decision for the owner, not a session: cut first.
+[ "$(wc -l < "$CORE")" -le 150 ] || fail "harness-protocol.md (session core) exceeds 150 lines — move text to a part read only when needed, or cut"
+[ "$(wc -l < "$TMPL_DIR/AGENTS.md.tmpl")" -le 70 ] || fail "AGENTS.md.tmpl exceeds 70 lines"
 grep -qF 'model-tagged' skills/harness-audit/scripts/check.sh || fail "harness-audit: model-tagged WARN missing"
 grep -q '^## Decision notes, effort and model-tagged rules' README.md || fail "README: M23 section missing"
-for w in 'Decisions:' 'effort' '(model: <name>)'; do
+for w in 'Decisions:' 'effort' '(added <YYYY-MM-DD>)' '; model: <name>'; do
   sed -n '/^## Decision notes, effort and model-tagged rules/,/^## /p' README.md | grep -qF -- "$w" \
     || fail "README M23 section: '$w' missing"
 done

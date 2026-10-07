@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 55 (M28-003)
+
+- Branch: `m28-lean`.
+- Done: M28-003 — size limits and rule expiry. The gate fails when the
+  session core passes 150 lines (proved by padding it) or AGENTS.md.tmpl
+  passes 70. A rule a session adds to AGENTS.md ends with
+  `(added <YYYY-MM-DD>)`, plus `; model: <name>` for one model's failure;
+  harness-audit warns on rules older than 90 days and still counts
+  model-tagged ones (both tag forms). The show-me rule left AGENTS.md.tmpl:
+  it lives once, in the session core.
+- Decisions: expiry by date rather than a free-text "remove when"
+  condition (a date is checkable by script); 90 days, about two model
+  releases; a WARN, never a FAIL (deleting rules is a human call).
+- Gate: green.
+- Next: M28-004 (drop the next-steps band; release 3.6.0).
+
 ## 2026-10-07 — session 54 (M28-002)
 
 - Branch: `m28-lean`.

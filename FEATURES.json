@@ -1028,7 +1028,7 @@
       "id": "M28-003",
       "milestone": 28,
       "title": "Size limits and rule expiry: gate caps the session core and AGENTS.md template; audit flags rules older than 90 days",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M28-002"
       ],

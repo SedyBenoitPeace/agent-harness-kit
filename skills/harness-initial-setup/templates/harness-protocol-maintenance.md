@@ -26,10 +26,10 @@ context and is unreviewable.
   contradicts gets corrected — or the code does: a violated invariant is a
   defect to fix, not a doc line to soften.
 - Stale docs are updated or deleted; a doc that lies is worse than no doc.
-- When the agent's model changes, re-test every rule tagged
-  `(model: <name>)` (§3.4): drop it, run a session or two, and delete it
-  for good if nothing breaks. A rule
-  written for one model often over-constrains the next.
+- Re-test every AGENTS.md rule added more than 90 days ago, and every rule
+  tagged `model: <name>` when the agent's model changes (§3.4): drop it,
+  run a session or two, and delete it for good if nothing breaks. Models
+  improve; a rule written for one often over-constrains the next.
 - Plans whose work is done move from `docs/plans/active/` to
   `docs/plans/completed/`.
 
@@ -49,9 +49,10 @@ protocol, or the missing pointer to AGENTS.md. Feed every failure back into
 the repo.
 
 Prefer a check in the gate over a rule in prose, and start lean: add an
-AGENTS.md rule only for a failure you have seen more than once. A rule
-that fixes one model's repeated failure ends with `(model: <name>)`, so
-maintenance knows to re-test it when the model changes (§3.2).
+AGENTS.md rule only for a failure you have seen more than once. Every rule
+you add ends with `(added <YYYY-MM-DD>)`, plus `; model: <name>` when it
+fixes one model's repeated failure, so maintenance knows when to re-test
+it (§3.2).
 
 Copy-paste maintenance prompt:
 

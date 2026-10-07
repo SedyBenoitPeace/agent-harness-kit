@@ -200,11 +200,14 @@ protocol so every agent follows them:
   at high or above. Leave it out and nothing changes. The kit names no
   models: every agent runs on its CLI's default. Pick your strongest model
   for hard features and reviews, a cheaper one for implementation.
-- **Model-tagged rules.** Start lean: add an AGENTS.md rule only for a
-  failure you have seen more than once, and end a rule written for one
-  model's failure with `(model: <name>)`. When you change models,
-  re-test those rules and delete the ones the new model no longer needs —
-  `harness-audit` reminds you how many there are.
+- **Rules that expire.** Start lean: add an AGENTS.md rule only for a
+  failure you have seen more than once, and end it with
+  `(added <YYYY-MM-DD>)`, plus `; model: <name>` when it fixes one model's
+  failure. `harness-audit` flags rules older than 90 days, and model-tagged
+  ones to re-test when you change models: drop each, run a session or two,
+  delete it if nothing breaks. The kit holds itself to the same standard:
+  the gate caps the protocol's session core at 150 lines and the AGENTS.md
+  template at 70.
 
 ## Second opinion, brief stage and untrusted text
 

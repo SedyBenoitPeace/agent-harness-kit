@@ -126,9 +126,18 @@ done
 # Model-tagged rules (WARN only, M23-003): rules written for one model's
 # failure; a reminder to re-test them when the model changes (protocol §3.2)
 if [ -f AGENTS.md ]; then
-  tagged="$(grep -c '(model: [^)<]*)' AGENTS.md || true)"
+  tagged="$(grep -cE '[(;] *model: [^)<]+\)' AGENTS.md || true)"
   if [ "${tagged:-0}" -gt 0 ]; then
     warn "AGENTS.md has $tagged model-tagged rule(s) — re-test them when the model changes and delete the ones it no longer needs (protocol §3.2)"
+  fi
+  # Rule expiry (WARN only, M28-003): rules tagged (added <date>) more than
+  # 90 days old get re-tested; models improve and old rules over-constrain
+  cutoff="$(date -u -d '90 days ago' +%F 2>/dev/null || date -u -v-90d +%F 2>/dev/null || true)"
+  if [ -n "$cutoff" ]; then
+    old="$( { grep -oE '\(added [0-9]{4}-[0-9]{2}-[0-9]{2}' AGENTS.md || true; } | awk -v c="$cutoff" '$2 < c' | wc -l | tr -d ' ')"
+    if [ "${old:-0}" -gt 0 ]; then
+      warn "AGENTS.md has $old rule(s) added more than 90 days ago — re-test them: drop each, run a session or two, delete it if nothing breaks (protocol §3.2)"
+    fi
   fi
 fi
 
