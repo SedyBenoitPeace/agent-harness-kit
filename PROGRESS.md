@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 44 (release 3.3.0)
+
+- Branch: `m25-mods`.
+- Done: released 3.3.0 (package, both plugin manifests, marketplace).
+  Live check in headless Claude Code 2.1.292 with the core and the edition
+  on `--plugin-dir`: the hooks module loads (events session.start,
+  tool.call, turn.complete, ui.render), `register_decision` is listed in a
+  harnessed repo and absent in a plain one, and a real call wrote
+  `.harness-run/decisions/M1-001.md` with `git status` still clean. With
+  the edition alone the engine disables it (dependency-unsatisfied), as it
+  should: installing the edition installs the core.
+- Decisions: 3.3.0 rather than 4.0.0 for the rename, since the 3.2.0 name
+  was public for under an hour; README carries the uninstall/install note.
+- Gate: green.
+- Next: owner merges the PR.
+
 ## 2026-10-07 — session 43 (M25-004)
 
 - Branch: `m25-mods`.

@@ -10,14 +10,14 @@
       "name": "agent-harness-kit",
       "source": "./",
       "description": "Scaffold and audit the long-running-agent harness",
-      "version": "3.2.0",
+      "version": "3.3.0",
       "category": "productivity"
     },
     {
       "name": "agent-harness-kit-claude",
       "source": "./claude",
       "description": "Claude Code edition: agent effort, mods and eval suites on top of agent-harness-kit",
-      "version": "3.2.0",
+      "version": "3.3.0",
       "category": "productivity"
     }
   ]
