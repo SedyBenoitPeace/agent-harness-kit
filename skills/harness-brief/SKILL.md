@@ -1,6 +1,6 @@
 ---
 name: harness-brief
-description: Use when the human gives a rough prompt or idea for something to build and wants it turned into an unambiguous brief before planning — asks at most three questions about real ambiguities, then writes docs/briefs/<date>-<slug>.md that a stranger could build from without asking anything.
+description: Use when the human gives a rough prompt or idea for something to build and wants it turned into a brief, spec or clear task description before planning or building — always load this skill for that, it holds the required brief format, the check script and the independent reviewer step.
 ---
 
 # Harness Brief

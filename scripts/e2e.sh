@@ -443,4 +443,23 @@ if command -v claude >/dev/null; then
   claude plugin validate . >/dev/null 2>&1 || fail "claude plugin validate . (marketplace) failed"
 fi
 
+# --- Claude edition: auto mode + eval suite (M24-003) ---------------------------
+edition="$(sed -n '/^## Claude Code edition/,/^## [^C]/p' README.md)"
+grep -qF 'claude --permission-mode auto' <<< "$edition" || fail "README Claude edition: auto mode start command missing"
+grep -qF 'harness-continuous' <<< "$edition" || fail "README Claude edition: harness-continuous on auto mode missing"
+grep -qF 'Never use the bypass mode' <<< "$edition" || fail "README Claude edition: must rule out bypass mode"
+if grep -qE 'bypassPermissions|--dangerously-skip-permissions' <<< "$edition"; then
+  fail "README Claude edition: must not name a bypass flag"
+fi
+grep -qF 'claude plugin eval . --eval-dir claude/evals' <<< "$edition" || fail "README Claude edition: eval command missing"
+for c in brief-from-rough-prompt:harness-brief session-builds-next-feature:harness-session; do
+  case_dir="claude/evals/${c%%:*}"; skill="${c##*:}"
+  [ -f "$case_dir/prompt.md" ] || fail "eval case $case_dir: prompt.md missing"
+  grep -qF 'plugins: ["../../.."]' "$case_dir/prompt.md" || fail "eval case $case_dir: must load the core plugin (plugins: [\"../../..\"])"
+  grep -rqF "$skill" "$case_dir/graders" || fail "eval case $case_dir: no grader names $skill"
+  [ -f "$case_dir/scaffold.sh" ] && shellcheck "$case_dir/scaffold.sh"
+  ls "$case_dir"/graders/*.md >/dev/null 2>&1 || fail "eval case $case_dir: no graders"
+done
+git check-ignore -q claude/evals/results/x || fail ".gitignore: claude/evals/results/ must be ignored"
+
 echo "GATE GREEN"

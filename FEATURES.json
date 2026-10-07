@@ -752,7 +752,7 @@
       "id": "M24-003",
       "milestone": 24,
       "title": "Claude edition: unattended runs on auto mode (README) and an eval suite for harness-brief and harness-session",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M24-002"
       ],
@@ -762,7 +762,7 @@
         "scripts/e2e.sh"
       ],
       "verify": "bash scripts/e2e.sh exits 0 with checks that README's Claude edition section says to run harness-continuous in auto permission mode and never with bypass flags; claude/evals/ holds a suite covering harness-brief and harness-session that claude plugin eval runs to completion with every case passing (result recorded in PROGRESS.md)",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md Eval result 2026-10-07 (3 runs per arm): brief-from-rough-prompt with 1.00 / without 0.50; session-builds-next-feature with 1.00 / without 0.75."
     },
     {
       "id": "M25-001",

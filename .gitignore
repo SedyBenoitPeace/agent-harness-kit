@@ -8,3 +8,6 @@ Thumbs.db
 
 # Private drafts, not for the open-source repo (deferred sandbox/night-run work)
 docs/plans/private/
+
+# plugin eval results
+claude/evals/results/

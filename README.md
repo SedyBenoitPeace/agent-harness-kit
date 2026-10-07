@@ -217,6 +217,27 @@ the protocol, so every other CLI keeps working from the core alone.
 /plugin install agent-harness-kit-mods
 ```
 
+**Unattended runs on auto mode.** Start Claude Code with
+`claude --permission-mode auto` and invoke `harness-continuous`. Auto mode
+checks each action against what you actually allowed (writing to a
+database, issuing keys, using the computer) instead of asking you, so the
+run keeps going without unchecked access. Never use the bypass mode or a
+skip-all-permissions flag.
+
+**Evals for the core skills.** `claude/evals/` holds an eval suite for
+`harness-brief` and `harness-session`: each case seeds a small repo, runs
+the prompt with and without the plugin, and grades the files it leaves
+behind. Run it from the repo root (it costs model usage, about $2 for the
+suite at 3 runs per case):
+
+```
+claude plugin eval . --eval-dir claude/evals --scaffold --allow-tools Write Bash Edit
+```
+
+Run it after changing a skill or its description, and after a model
+change. A `skill-fired` indicator that fails means the description did not
+trigger the skill.
+
 ## Upgrading existing repos
 
 After updating the plugin, bring each repo that already has a harness up to
