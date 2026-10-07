@@ -91,6 +91,15 @@ jq '.features[0].effort = "turbo"' "$WORK/effort/FEATURES.json" > "$WORK/effort/
 out="$(bash "$CHECK" "$WORK/effort")" || fail "unknown effort must not fail the audit"
 echo "$out" | grep -q "^WARN.*effort.*M0-001" || fail "unknown effort: expected WARN naming the feature"
 
+# 2g. model-tagged rules (M23-003): none = no WARN; tagged lines = a WARN
+# with their count, telling the human to re-test them on model change
+out="$(bash "$CHECK" "$WORK/good")" || fail "good fixture re-run exited non-zero"
+echo "$out" | grep -q "^WARN.*model-tagged" && fail "untagged AGENTS.md: no WARN expected"
+make_fixture "$WORK/tagged"
+printf -- '- Always run the linter before the gate (model: example-1)\n- Never mock the clock (model: example-1)\n' >> "$WORK/tagged/AGENTS.md"
+out="$(bash "$CHECK" "$WORK/tagged")" || fail "tagged rules must not fail the audit"
+echo "$out" | grep -q "^WARN.*2 model-tagged rule" || fail "tagged rules: expected WARN with count 2"
+
 # 3. defect fixtures: each must FAIL with its specific line
 make_fixture "$WORK/big-agents"
 for _ in $(seq 1 101); do echo "filler line" >> "$WORK/big-agents/AGENTS.md"; done

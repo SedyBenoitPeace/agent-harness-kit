@@ -700,7 +700,7 @@
       "id": "M23-003",
       "milestone": 23,
       "title": "Model-tagged rules (start lean, re-test on model change), README, release 3.1.0",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M23-002"
       ],

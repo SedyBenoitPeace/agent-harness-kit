@@ -180,6 +180,30 @@ copilot plugin update agent-harness-kit
    drifts or before working in an unfamiliar one, plus a periodic
    maintenance pass (protocol section 3).
 
+## Decision notes, effort and model-tagged rules
+
+Three small habits from Anthropic's Claude Code team, built into the
+protocol so every agent follows them:
+
+- **Decision notes.** Every PROGRESS.md entry has a `Decisions:` line:
+  the options the session considered and rejected, and the assumptions it
+  made. Most wrong results are a right answer the agent thought of and
+  turned down; written down, you (or the evaluator) can ask for the skipped
+  option instead of rediscovering it. The evaluator reads the line as
+  leads, never as evidence.
+- **Per-feature effort.** A feature can carry `"effort": "low" | "medium" |
+  "high" | "max"`: how much verification and edge-case testing it deserves.
+  UI work rarely gains from high effort; APIs, data and security do.
+  `harness-status` prints it under `NEXT:`, sessions scale their checking
+  to it, and `harness-run` passes it to the agent it dispatches (as the
+  CLI's own effort setting where there is one). The evaluator always runs
+  at high or above. Leave it out and nothing changes.
+- **Model-tagged rules.** Start lean: add an AGENTS.md rule only for a
+  failure you have seen more than once, and end a rule written for one
+  model's failure with `(model: <name>)`. When you change models,
+  re-test those rules and delete the ones the new model no longer needs —
+  `harness-audit` reminds you how many there are.
+
 ## Upgrading existing repos
 
 After updating the plugin, bring each repo that already has a harness up to

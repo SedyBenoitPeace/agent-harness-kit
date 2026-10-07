@@ -113,6 +113,15 @@ if [ -n "$bad_effort" ]; then
   warn "effort must be low, medium, high or max — unknown value on: $bad_effort"
 fi
 
+# Model-tagged rules (WARN only, M23-003): rules written for one model's
+# failure; a reminder to re-test them when the model changes (protocol §3.2)
+if [ -f AGENTS.md ]; then
+  tagged="$(grep -c '(model: [^)<]*)' AGENTS.md || true)"
+  if [ "${tagged:-0}" -gt 0 ]; then
+    warn "AGENTS.md has $tagged model-tagged rule(s) — re-test them when the model changes and delete the ones it no longer needs (protocol §3.2)"
+  fi
+fi
+
 # Architecture doc (WARN only: repos harnessed before 1.4.0 may lack it;
 # the skill layer offers the repair flow — derive from code / interview / skip)
 if [ -f ARCHITECTURE.md ]; then
