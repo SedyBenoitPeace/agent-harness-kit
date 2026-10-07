@@ -21,6 +21,9 @@ rc=0; bash "$SYNC" "$M" --check >/dev/null 2>&1 || rc=$?
 
 bash "$SYNC" "$M" >/dev/null || fail "sync: expected exit 0"
 cmp -s "$T/harness-protocol.md" "$M/docs/agents/harness-protocol.md" || fail "protocol not synced"
+for p in planning runs maintenance; do
+  cmp -s "$T/harness-protocol-$p.md" "$M/docs/agents/harness-protocol-$p.md" || fail "protocol part $p not synced (M28-002)"
+done
 for p in FEATURES.json PROGRESS.md ARCHITECTURE.md; do cmp -s "$T/$p.tmpl" "$M/$p" || fail "$p not synced"; done
 cmp -s "$T/dev.sh.tmpl" "$M/scripts/dev.sh" && cmp -s "$T/e2e.sh.tmpl" "$M/scripts/e2e.sh" || fail "scripts not synced"
 [ -x "$M/scripts/e2e.sh" ] || fail "scripts/e2e.sh must be executable"

@@ -30,7 +30,7 @@
 |---|---|
 | `.claude-plugin/` | Plugin + marketplace manifests; version is the cache key |
 | `skills/harness-initial-setup/` | Planning interview + scaffold orchestration (SKILL.md only) |
-| `skills/harness-initial-setup/templates/` | ★ Canonical source of every scaffolded file, incl. `harness-protocol.md` |
+| `skills/harness-initial-setup/templates/` | ★ Canonical source of every scaffolded file, incl. the protocol: `harness-protocol.md` (session core + index, read every session) and `harness-protocol-{planning,runs,maintenance}.md` (read only when needed) |
 | `skills/harness-audit/` | Readiness checker (`scripts/check.sh`) + report/repair judgment layer |
 | `skills/harness-status/` | Read-only progress report (`scripts/status.sh`) |
 | `skills/harness-handoff/` | Session-end ritual check + next-agent prompt (`scripts/handoff.sh`) |
@@ -43,7 +43,7 @@
 | `claude/hooks/` | Mods (function hooks): `register.tsx` holds every hook (plus the band's JSX) (the engine follows `$` only within one file); `lib.ts` holds pure logic; tests in `claude/tests/` run with `claude plugin test`; `$.state` contract in `claude/types/index.d.ts` |
 | `claude/evals/` | `claude plugin eval` suite for the core skills: each case seeds a repo (scaffold.sh), loads the core plugin (`plugins: ["../../.."]`), grades files left behind; run with `--eval-dir claude/evals` from the repo root |
 | `scripts/sync-template.sh` | Syncs the agent-harness-template mirror from `templates/` (keeps the mirror's banner, README, PRODUCT.md); `--check` reports drift; run at every release |
-| `agents/` + `scripts/gen-agents.sh` | Neutral builder/evaluator role sources (tier, access, optional effort) + tier→model map; generator emits Claude/Copilot/Codex agent files (effort → Claude `effort`, Codex `model_reasoning_effort`, max→high; Copilot none) |
+| `agents/` + `scripts/gen-agents.sh` | Neutral builder/evaluator role sources (access, optional effort; no model names, every CLI uses its default); generator emits Claude/Copilot/Codex agent files (effort → Claude `effort`, Codex `model_reasoning_effort`, max→high; Copilot none) |
 | `scripts/` | This repo's gate (`e2e.sh`) and the per-skill fixture test suites |
 | `docs/plans/`, `docs/specs/` | Execution plans (active/completed) and the original design spec |
 

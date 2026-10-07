@@ -106,12 +106,16 @@ fi
 SHIPPED_PROTOCOL="$SCRIPT_DIR/../../harness-initial-setup/templates/harness-protocol.md"
 PLUGIN_JSON="$SCRIPT_DIR/../../../.claude-plugin/plugin.json"
 plugin_version="$(jq -r '.version // "unknown"' "$PLUGIN_JSON" 2>/dev/null || echo unknown)"
+stale=""
+for f in harness-protocol.md harness-protocol-planning.md harness-protocol-runs.md harness-protocol-maintenance.md; do
+  cmp -s "$(dirname "$SHIPPED_PROTOCOL")/$f" "docs/agents/$f" 2>/dev/null || stale="$stale docs/agents/$f"
+done
 if [ ! -f docs/agents/harness-protocol.md ]; then
   echo 'PROTOCOL: missing'
-elif cmp -s "$SHIPPED_PROTOCOL" docs/agents/harness-protocol.md; then
+elif [ -z "$stale" ]; then
   echo "PROTOCOL: current (plugin $plugin_version)"
 else
-  echo "PROTOCOL: outdated — docs/agents/harness-protocol.md differs from the copy shipped with plugin $plugin_version"
+  echo "PROTOCOL: outdated —$stale missing or different from the copies shipped with plugin $plugin_version"
   upgrade=1
 fi
 if [ "$upgrade" -eq 1 ]; then

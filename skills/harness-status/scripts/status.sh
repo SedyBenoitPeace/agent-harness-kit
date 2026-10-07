@@ -22,7 +22,7 @@ cd "$TARGET"
 
 if [ ! -f FEATURES.json ] || [ ! -f PROGRESS.md ]; then
   echo "HARNESS NOT INITIALIZED: FEATURES.json and/or PROGRESS.md missing."
-  echo "Scaffold it with the harness-initial-setup skill (or harness-protocol.md section 1)."
+  echo "Scaffold it with the harness-initial-setup skill (or harness-protocol-planning.md)."
   exit 3
 fi
 
@@ -59,7 +59,7 @@ if [ -z "$SKIP_FILE" ]; then
 jq -r "$EFFORT_DEF"'
   [.features[] | select(.status == "failing")] | sort_by(.milestone, .id)
   | if length == 0
-    then "NEXT: none — nothing failing; plan new work (protocol section 1) or run a maintenance pass (section 3)"
+    then "NEXT: none — nothing failing; plan new work (harness-protocol-planning.md) or run a maintenance pass (harness-protocol-maintenance.md)"
     else "NEXT: \(.[0].id) — \(.[0].title)\n  verify: \(.[0].verify)\(.[0] | effort_line)"
     end
 ' FEATURES.json

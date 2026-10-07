@@ -149,7 +149,7 @@ copilot plugin update agent-harness-kit
 1. **Set up once** — `/agent-harness-kit:harness-initial-setup`. Expect an
    interview about the product before anything is written; it ends with
    the full scaffold (AGENTS.md, FEATURES.json, PROGRESS.md,
-   ARCHITECTURE.md, docs/plans/, docs/agents/harness-protocol.md,
+   ARCHITECTURE.md, docs/plans/, the protocol in docs/agents/,
    scripts/e2e.sh). Repos that are already harnessed are detected and
    left alone.
 2. **Build one feature per session** — say _"Read AGENTS.md, then
@@ -197,12 +197,17 @@ protocol so every agent follows them:
   `harness-status` prints it under `NEXT:`, sessions scale their checking
   to it, and `harness-run` passes it to the agent it dispatches (as the
   CLI's own effort setting where there is one). The evaluator always runs
-  at high or above. Leave it out and nothing changes.
-- **Model-tagged rules.** Start lean: add an AGENTS.md rule only for a
-  failure you have seen more than once, and end a rule written for one
-  model's failure with `(model: <name>)`. When you change models,
-  re-test those rules and delete the ones the new model no longer needs —
-  `harness-audit` reminds you how many there are.
+  at high or above. Leave it out and nothing changes. The kit names no
+  models: every agent runs on its CLI's default. Pick your strongest model
+  for hard features and reviews, a cheaper one for implementation.
+- **Rules that expire.** Start lean: add an AGENTS.md rule only for a
+  failure you have seen more than once, and end it with
+  `(added <YYYY-MM-DD>)`, plus `; model: <name>` when it fixes one model's
+  failure. `harness-audit` flags rules older than 90 days, and model-tagged
+  ones to re-test when you change models: drop each, run a session or two,
+  delete it if nothing breaks. The kit holds itself to the same standard:
+  the gate caps the protocol's session core at 150 lines and the AGENTS.md
+  template at 70.
 
 ## Second opinion, brief stage and untrusted text
 
@@ -225,8 +230,8 @@ protocol so every agent follows them:
 
 A second plugin in the same marketplace, `agent-harness-kit-claude`, adds
 features only Claude Code has: an eval suite for the core skills and mods
-(function hooks: a decision register, a done-check supervisor, a budget
-guard, a next-steps band). It depends on the core plugin and never copies
+(function hooks: a decision register, a done-check supervisor and a budget
+guard). It depends on the core plugin and never copies
 the protocol, so every other CLI keeps working from the core alone.
 Installing the edition installs the core plugin with it:
 
@@ -249,9 +254,6 @@ of git):
   writes). Over `feature_token_budget` (set it in `/config`, default
   1,500,000) during an unattended run it writes `.harness-run/STOP`, so the
   run ends after the current feature, and logs why in `.harness-run/budget.log`.
-- **Next-steps band** — after a supervised session passes, a band above the
-  prompt offers Next feature, Explain (big picture, few words) and Quiz me.
-  Off during unattended runs.
 
 Upgrading from 3.2.0: the edition was briefly named `agent-harness-kit-mods`;
 run `/plugin uninstall agent-harness-kit-mods`, then install
@@ -443,7 +445,7 @@ branch concurrently.
 | Do one unit of work (plugin installed) | _"Implement M1-004 following the harness."_ or _"Continue the current harness feature."_ |
 | Do many units of work (plugin installed) | _"Run the rest of milestone 3 with harness-run."_ |
 | End a session / switch agents | _"Prepare the handoff for the next agent."_                                                                 |
-| Periodic cleanup              | _"Read AGENTS.md, then docs/agents/harness-protocol.md section 3, and perform one maintenance pass."_       |
+| Periodic cleanup              | _"Read AGENTS.md, then docs/agents/harness-protocol-maintenance.md, and perform one maintenance pass."_       |
 
 ## Quickstart — template repository
 
@@ -455,15 +457,17 @@ AGENTS.md and follow its initialization instructions."_ The template mirrors
 
 ## Quickstart — any other agent
 
-You need exactly one file:
-[`skills/harness-initial-setup/templates/harness-protocol.md`](skills/harness-initial-setup/templates/harness-protocol.md).
+You need the four protocol files in
+[`skills/harness-initial-setup/templates/`](skills/harness-initial-setup/templates/):
+`harness-protocol.md` (the session core every session reads) and the parts
+read only when needed, `harness-protocol-planning.md`,
+`harness-protocol-runs.md` and `harness-protocol-maintenance.md`.
 
-Copy it into your repo as `docs/agents/harness-protocol.md` (bring the
-`templates/` directory too if you want the ready-made scaffolds), then tell
-your agent:
+Copy them into your repo's `docs/agents/` (bring the rest of `templates/`
+too if you want the ready-made scaffolds), then tell your agent:
 
 ```
-Read docs/agents/harness-protocol.md section 1 and run the planning
+Read docs/agents/harness-protocol-planning.md and run the planning
 protocol for this repository. Interview me before writing anything.
 ```
 
@@ -491,7 +495,8 @@ skills/
 ├── harness-initial-setup/
 │   ├── SKILL.md        planning/scaffolding orchestration (thin)
 │   └── templates/
-│       ├── harness-protocol.md   ★ the agent-neutral operating manual
+│       ├── harness-protocol.md   ★ the agent-neutral manual: session core + index
+│       ├── harness-protocol-{planning,runs,maintenance}.md  read only when needed
 │       ├── AGENTS.md.tmpl        entry point scaffold (≤100-line map)
 │       ├── FEATURES.json.tmpl    scope/status source of truth
 │       ├── PROGRESS.md.tmpl      session log
@@ -522,8 +527,7 @@ skills/
     ├── SKILL.md        runs upgrade.sh, explains, commits as its own commit
     └── scripts/upgrade.sh         idempotent upgrade of an existing harness
 agents/
-├── src/                neutral harness-builder / harness-evaluator roles
-└── models.json         tier -> model per CLI, sensitive-path globs
+└── src/                neutral harness-builder / harness-evaluator roles
 scripts/gen-agents.sh   emits the roles as Claude / Copilot / Codex agent files
 ```
 

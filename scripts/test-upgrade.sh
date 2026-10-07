@@ -55,6 +55,10 @@ cmp -s "$SHIPPED" "$R/docs/agents/harness-protocol.md" || fail "upgrade: protoco
 grep -q 'harness-run' "$R/AGENTS.md" || fail "upgrade: AGENTS.md missing the harness-run line"
 [ -f "$R/.claude/agents/harness-evaluator.md" ] || fail "upgrade: evaluator agent files not generated"
 echo "$out" | grep -q '^CHANGED: docs/agents/harness-protocol.md' || fail "upgrade: protocol change not reported"
+for p in planning runs maintenance; do
+  cmp -s "$(dirname "$SHIPPED")/harness-protocol-$p.md" "$R/docs/agents/harness-protocol-$p.md" || fail "upgrade: harness-protocol-$p.md not copied (M28-002)"
+  echo "$out" | grep -q "^CHANGED: docs/agents/harness-protocol-$p.md (was missing" || fail "upgrade: new protocol part $p not reported"
+done
 echo "$out" | grep -q '^TODO: .*scripts/e2e.sh' || fail "upgrade: unbounded gate must be a TODO"
 echo "$out" | grep -q "^UPGRADE-NOTE: $(jq -r .version .claude-plugin/plugin.json): " || fail "upgrade: no stamp yet, so every release's notes must print"
 echo "$out" | grep -q '^TODO: .*harness-audit' || fail "upgrade: depends_on/paths via harness-audit must be a TODO"
@@ -66,6 +70,7 @@ g add -A; g commit -qm "chore: upgrade"
 out="$(bash "$UPGRADE" "$R" 2>&1)" || fail "second run: expected exit 0"
 if echo "$out" | grep -q '^CHANGED:'; then fail "second run: nothing should change"; fi
 echo "$out" | grep -q '^OK: docs/agents/harness-protocol.md' || fail "second run: protocol should be reported current"
+echo "$out" | grep -q '^OK: docs/agents/harness-protocol-runs.md' || fail "second run: protocol parts should be reported current"
 [ "$(git -C "$R" branch --show-current)" = harness-upgrade ] || fail "second run: must stay on the current branch"
 [ -z "$(git -C "$R" status --short)" ] || fail "second run: must leave the tree clean"
 
@@ -86,7 +91,7 @@ for r in harness-builder harness-evaluator harness-brief-reviewer; do
   grep -q 'Decisions:\|READY\|PASS' "$S/.claude/agents/$r.md" || fail "stale agents: $r not regenerated"
 done
 echo "$out" | grep -q '^CHANGED: .claude/agents/harness-builder.md' || fail "stale agents: builder change not reported"
-[ ! -d "$S/.codex" ] && [ ! -d "$S/.github" ] || fail "stale agents: must not add CLIs the repo does not use"
+if [ -d "$S/.codex" ] || [ -d "$S/.github" ]; then fail "stale agents: must not add CLIs the repo does not use"; fi
 git -C "$S" -c user.email=t@t -c user.name=t add -A; git -C "$S" -c user.email=t@t -c user.name=t commit -qm up
 out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stale agents second run: expected exit 0"
 if echo "$out" | grep -q '^CHANGED: .claude/agents'; then fail "stale agents second run: nothing should change"; fi

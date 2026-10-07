@@ -3,6 +3,73 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 56 (M28-004, release 3.6.0)
+
+- Branch: `m28-lean`.
+- Done: M28-004 — the next-steps band mod is gone (hook, state atoms,
+  state types, test, README bullet); the decision register, supervisor and
+  budget guard stay (17 mod tests green). Released 3.6.0: CHANGELOG entry
+  with its Upgrade block, all manifests bumped. Mirror synced onto the
+  still-open agent-harness-template PR #3 (retitled 3.6.0; its banner and
+  README now point planning at `harness-protocol-planning.md`). All M28
+  features pass; plan moved to completed.
+- Decisions: stacked the mirror sync on open PR #3 rather than a second PR
+  (one merge for the owner, and #3 was not yet merged); kept
+  `register.tsx` as its file name (renaming to .ts churns hooks.json and the
+  gate for nothing).
+- Gate: green.
+- Next: owner merges both PRs; then the first real unattended run.
+
+## 2026-10-07 — session 55 (M28-003)
+
+- Branch: `m28-lean`.
+- Done: M28-003 — size limits and rule expiry. The gate fails when the
+  session core passes 150 lines (proved by padding it) or AGENTS.md.tmpl
+  passes 70. A rule a session adds to AGENTS.md ends with
+  `(added <YYYY-MM-DD>)`, plus `; model: <name>` for one model's failure;
+  harness-audit warns on rules older than 90 days and still counts
+  model-tagged ones (both tag forms). The show-me rule left AGENTS.md.tmpl:
+  it lives once, in the session core.
+- Decisions: expiry by date rather than a free-text "remove when"
+  condition (a date is checkable by script); 90 days, about two model
+  releases; a WARN, never a FAIL (deleting rules is a human call).
+- Gate: green.
+- Next: M28-004 (drop the next-steps band; release 3.6.0).
+
+## 2026-10-07 — session 54 (M28-002)
+
+- Branch: `m28-lean`.
+- Done: M28-002 — the protocol is four files. `harness-protocol.md` is the
+  session core (§2.1–2.6, 143 lines, was 592) with an index;
+  `harness-protocol-planning.md` (§1), `harness-protocol-runs.md` (§2.7–2.8)
+  and `harness-protocol-maintenance.md` (§3) are read only when needed.
+  Setup copies all four; upgrade.sh, harness-audit, context.sh and
+  sync-template.sh handle each (fixtures for a missing part, a drifted
+  part, a pre-split repo). Planning and maintenance prompts name their
+  files; handoff keeps the old prompt for repos not yet upgraded.
+- Decisions: kept section numbers and the core's file name, so every `§`
+  reference, plan header and "section 2" prompt still works (no 4.0.0);
+  rejected a single file with "read only up to here" markers (agents read
+  whole files). Trimmed the show-me and workflow-plugin paragraphs while
+  moving them.
+- Gate: green.
+- Next: M28-003 (size limits and rule expiry).
+
+## 2026-10-07 — session 53 (M28-001)
+
+- Branch: `m28-lean`.
+- Done: M28-001 — no model names anywhere. `agents/models.json` deleted;
+  agent sources lose `tier`; generated agents carry no model line, so every
+  CLI uses its own default; second-opinion.sh passes no model flag and the
+  fallback is gone; harness-run states the security-checklist trigger in
+  words (auth, payments, personal data, migrations) instead of globs. README
+  has one line of advice with no model names.
+- Decisions: dropped the table outright rather than defaulting every tier to
+  `auto` (a table nobody fills is still a table to maintain); kept `effort`,
+  which is vendor-neutral and does not go stale.
+- Gate: green.
+- Next: M28-002 (split the protocol).
+
 ## 2026-10-07 — session 52 (M27-005, release 3.5.0)
 
 - Branch: `m27-upgrades`.

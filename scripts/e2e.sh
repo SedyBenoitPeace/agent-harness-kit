@@ -87,7 +87,6 @@ grep -q '{{' "$TMPL_DIR/PROGRESS.md.tmpl" || fail "PROGRESS.md.tmpl has no {{pla
 
 # AGENTS.md.tmpl: map-not-encyclopedia, with adaptation headroom
 [ -f "$TMPL_DIR/AGENTS.md.tmpl" ] || fail "AGENTS.md.tmpl missing"
-[ "$(wc -l < "$TMPL_DIR/AGENTS.md.tmpl")" -le 80 ] || fail "AGENTS.md.tmpl exceeds 80 lines"
 grep -q 'docs/agents/harness-protocol.md' "$TMPL_DIR/AGENTS.md.tmpl" \
   || fail "AGENTS.md.tmpl does not point at the protocol doc"
 grep -q 'harness-session' "$TMPL_DIR/AGENTS.md.tmpl" \
@@ -138,8 +137,26 @@ red_log="$(echo "$red_out" | sed -n 's/^FULL_LOG: //p')"
 rm -rf "$gate_tmp"
 
 # protocol doc: exists, has the planning section, no Claude-isms
-PROTO="$TMPL_DIR/harness-protocol.md"
-[ -f "$PROTO" ] || fail "harness-protocol.md missing"
+# The protocol is four files (M28-002): the session core every session reads,
+# and three parts read only when needed. Content checks run on all four,
+# concatenated in section order, so section ranges below still resolve.
+CORE="$TMPL_DIR/harness-protocol.md"
+PROTO_FILES="harness-protocol-planning.md harness-protocol.md harness-protocol-runs.md harness-protocol-maintenance.md"
+PROTO="$(mktemp)"
+for f in $PROTO_FILES; do
+  [ -f "$TMPL_DIR/$f" ] || fail "$f missing"
+  cat "$TMPL_DIR/$f" >> "$PROTO"
+done
+# each part holds exactly its sections
+[ "$(grep -E '^##+ [0-9]' "$CORE" | sed -E 's/^##+ ([0-9.]+).*/\1/' | tr '\n' ' ')" = "2. 2.1 2.2 2.3 2.4 2.5 2.6 " ] \
+  || fail "harness-protocol.md must hold exactly section 2.1-2.6 (the session core)"
+[ "$(grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-runs.md" | sed -E 's/^##+ ([0-9.]+).*/\1/' | tr '\n' ' ')" = "2.7 2.8 " ] \
+  || fail "harness-protocol-runs.md must hold exactly 2.7 and 2.8"
+grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-planning.md" | grep -qvE '^##+ 1[. ]' && fail "harness-protocol-planning.md holds a section other than 1.x"
+grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-maintenance.md" | grep -qvE '^##+ 3[. ]' && fail "harness-protocol-maintenance.md holds a section other than 3.x"
+for f in harness-protocol-planning.md harness-protocol-runs.md harness-protocol-maintenance.md; do
+  grep -qF "\`$f\`" "$CORE" || fail "harness-protocol.md index must name $f"
+done
 grep -q '^## 1\. Planning protocol' "$PROTO" || fail "protocol: '## 1. Planning protocol' missing"
 grep -q 'PRODUCT\.md' "$PROTO" || fail "protocol: planning section never mentions PRODUCT.md"
 grep -qi 'verify' "$PROTO" || fail "protocol: planning section never teaches the verify field"
@@ -161,8 +178,8 @@ grep -q 'CONTINUING INTERRUPTED FEATURE' "$PROTO" || fail "protocol: interrupted
 grep -q 'scripts/preflight.sh' "$PROTO" || fail "protocol: optional target preflight rule missing"
 grep -q 'tracked by another failing or deferred feature' "$PROTO" || fail "protocol: out-of-scope-warning rule missing"
 grep -q 'Execution mode' "$PROTO" || fail "protocol: execution-mode choice (2.4) missing"
-grep -q 'show-me' "$PROTO" || fail "protocol: show-me rule for explanations and summaries missing"
-grep -q 'show-me' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: show-me rule missing"
+grep -q 'show-me' "$CORE" || fail "protocol: show-me rule for explanations and summaries missing from the session core"
+! grep -q 'show-me' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: show-me lives in the session core only, not repeated here (M28-003)"
 grep -q 'own built-in' "$PROTO" || fail "protocol: own-tools-only execution rule missing"
 
 grep -q '^## 3\. Maintenance protocol' "$PROTO" || fail "protocol: maintenance section missing"
@@ -300,8 +317,6 @@ bash scripts/test-run.sh
 
 # --- agents (M18) --------------------------------------------------------
 
-jq -e '.models | (.claude and .copilot and .codex)' agents/models.json >/dev/null \
-  || fail "agents/models.json: missing a CLI model map"
 bash scripts/test-agents.sh
 
 # evaluator documented end to end (M18)
@@ -332,7 +347,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.5.0" ] || fail "plugin version must be 3.5.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.6.0" ] || fail "plugin version must be 3.6.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -409,14 +424,22 @@ grep -qF 'effort:' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: must r
 
 # --- model-tagged rules, start lean (M23-003) -----------------------------------
 # Rules written to fix one model's failure over-constrain the next model.
-grep -qF '(model: <name>)' <<< "$(sed -n '/^### 3\.4/,/^Copy-paste maintenance prompt/p' "$PROTO")" \
-  || fail "protocol 3.4: a rule for one model's repeated failure must be tagged (model: <name>)"
-grep -qF 're-test every rule tagged' <<< "$(sed -n '/^### 3\.2 Doc gardening/,/^### 3\.3/p' "$PROTO")" \
-  || fail "protocol 3.2: re-test tagged rules when the model changes"
-grep -qF '(model: <name>)' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: model-tag rule missing"
+for w in '(added <YYYY-MM-DD>)' '; model: <name>'; do
+  grep -qF -- "$w" <<< "$(sed -n '/^### 3\.4/,/^Copy-paste maintenance prompt/p' "$PROTO")" \
+    || fail "protocol 3.4: an added rule must be tagged '$w' (M28-003)"
+  grep -qF -- "$w" "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: rule tag '$w' missing (M28-003)"
+done
+grep -qF 'more than 90 days ago' <<< "$(sed -n '/^### 3\.2 Doc gardening/,/^### 3\.3/p' "$PROTO")" \
+  || fail "protocol 3.2: re-test rules older than 90 days and model-tagged ones on a model change"
+grep -qF 'added more than 90 days ago' skills/harness-audit/scripts/check.sh || fail "harness-audit: rule expiry WARN missing (M28-003)"
+
+# --- size limits (M28-003): what every session reads stays lean ----------------
+# Raising a limit is a decision for the owner, not a session: cut first.
+[ "$(wc -l < "$CORE")" -le 150 ] || fail "harness-protocol.md (session core) exceeds 150 lines — move text to a part read only when needed, or cut"
+[ "$(wc -l < "$TMPL_DIR/AGENTS.md.tmpl")" -le 70 ] || fail "AGENTS.md.tmpl exceeds 70 lines"
 grep -qF 'model-tagged' skills/harness-audit/scripts/check.sh || fail "harness-audit: model-tagged WARN missing"
 grep -q '^## Decision notes, effort and model-tagged rules' README.md || fail "README: M23 section missing"
-for w in 'Decisions:' 'effort' '(model: <name>)'; do
+for w in 'Decisions:' 'effort' '(added <YYYY-MM-DD>)' '; model: <name>'; do
   sed -n '/^## Decision notes, effort and model-tagged rules/,/^## /p' README.md | grep -qF -- "$w" \
     || fail "README M23 section: '$w' missing"
 done
@@ -435,7 +458,7 @@ core_v="$(jq -r .version "$ED")"
 [ "$(jq -r .version "$ED_MANIFEST")" = "$core_v" ] || fail "Claude edition: plugin.json version must match the core ($core_v)"
 [ "$(jq -r '.plugins[] | select(.name == "agent-harness-kit-claude") | .version' .claude-plugin/marketplace.json)" = "$core_v" ] \
   || fail "marketplace.json: Claude edition version must match the core ($core_v)"
-if find claude -name 'harness-protocol.md' | grep -q .; then fail "Claude edition must not copy harness-protocol.md"; fi
+if find claude -name 'harness-protocol*.md' | grep -q .; then fail "Claude edition must not copy the protocol files"; fi
 grep -qF '/plugin install agent-harness-kit-claude' README.md || fail "README: Claude edition install line missing"
 # claude plugin validate when the CLI is present (CI runners may not have it)
 # Strict: every error and every warning fails, except the one the owner chose
@@ -507,13 +530,13 @@ for w in second_opinion second-opinion.sh '## Stage' 'never instructions'; do
   sed -n '/^## Second opinion, brief stage and untrusted text/,/^## /p' README.md | grep -qF -- "$w" || fail "README M26 section: '$w' missing"
 done
 
-# --- model rule of thumb + fallback (M27-002) -------------------------------------
-jq -e '.models.claude.strong == "opus" and .models.claude.standard == "sonnet"
-       and .models.codex.strong == "gpt-6-astra" and .models.codex.standard == "gpt-6.1-sol"
-       and .models.copilot.strong == "gpt-6-astra"' agents/models.json >/dev/null \
-  || fail "agents/models.json: rule of thumb (Claude opus/sonnet, ChatGPT gpt-6-astra/gpt-6.1-sol) not applied"
-jq -e '._instructions | test("auto") and test("fall")' agents/models.json >/dev/null || fail "agents/models.json: _instructions must explain auto and the fallback"
-grep -qF 'model is unavailable' "$RUN_SKILL/SKILL.md" || fail "harness-run: fallback when a named agent's model is unavailable missing"
+# --- no model names (M28-001) ----------------------------------------------------
+# Named models go stale with every release: every agent runs on its CLI's default.
+[ ! -e agents/models.json ] || fail "agents/models.json must not exist (M28-001)"
+! grep -q '^tier:' agents/src/*.md || fail "agents/src: tier is gone with the model map (M28-001)"
+! grep -rqF 'models.json' skills agents README.md || fail "models.json still referenced (M28-001)"
+grep -qF 'auth, payments, personal data or migrations' "$RUN_SKILL/SKILL.md" \
+  || fail "harness-run: security checklist trigger must be stated in words (M28-001)"
 
 # --- a clear upgrade every release (M27-004) ---------------------------------------
 [ -f CHANGELOG.md ] || fail "CHANGELOG.md missing"
@@ -538,6 +561,9 @@ grep -qF 'scripts/sync-template.sh' CHANGELOG.md || fail "CHANGELOG release chec
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
+! grep -q "ui.render" claude/hooks/register.tsx || fail "Claude edition: the next-steps band was removed (M28-004)"
+[ ! -e claude/tests/band.test.tsx ] || fail "Claude edition: band test must go with the band (M28-004)"
+! grep -qi 'next-steps band' README.md || fail "README: next-steps band was removed (M28-004)"
 jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.tsx"
 grep -qF '.harness-run/decisions/<id>.md' "$SESSION_SKILL_MD" || fail "harness-session: must fold .harness-run/decisions/<id>.md into Decisions:"
 git check-ignore -q claude/.claude-plugin/types/x || fail ".gitignore: claude/.claude-plugin/types/ (engine-written) must be ignored"
@@ -546,7 +572,7 @@ if git grep -nI -e 'agent-harness-kit-mods' -- . ':!docs/plans' ':!PROGRESS.md' 
    | grep -v 'was briefly named\|plugin uninstall agent-harness-kit-mods' | grep -q .; then
   fail "stale reference to the old edition name agent-harness-kit-mods"
 fi
-for w in register_decision 'decisions/<id>.md' 'SESSION:' feature_token_budget '.harness-run/STOP' 'Quiz me' 'agent-harness-kit-mods'; do
+for w in register_decision 'decisions/<id>.md' 'SESSION:' feature_token_budget '.harness-run/STOP' 'agent-harness-kit-mods'; do
   grep -qF -- "$w" <<< "$edition" || fail "README Claude edition: mods section must mention $w"
 done
 if command -v claude >/dev/null; then

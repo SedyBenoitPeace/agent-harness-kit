@@ -16,6 +16,9 @@ check=0; [ "${2:-}" = "--check" ] && check=1
 
 # template -> mirror path
 map="harness-protocol.md:docs/agents/harness-protocol.md
+harness-protocol-planning.md:docs/agents/harness-protocol-planning.md
+harness-protocol-runs.md:docs/agents/harness-protocol-runs.md
+harness-protocol-maintenance.md:docs/agents/harness-protocol-maintenance.md
 FEATURES.json.tmpl:FEATURES.json
 PROGRESS.md.tmpl:PROGRESS.md
 ARCHITECTURE.md.tmpl:ARCHITECTURE.md

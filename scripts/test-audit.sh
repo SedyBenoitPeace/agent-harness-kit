@@ -19,7 +19,7 @@ make_fixture() {  # $1 = destination dir
   sed 's/{{[A-Za-z0-9_]*}}/X/g'    "$TMPL/ARCHITECTURE.md.tmpl" > "$d/ARCHITECTURE.md"
   sed 's/{{[A-Za-z0-9_]*}}/true/g' "$TMPL/e2e.sh.tmpl"        > "$d/scripts/e2e.sh"
   chmod +x "$d/scripts/e2e.sh"
-  cp "$TMPL/harness-protocol.md" "$d/docs/agents/harness-protocol.md"
+  cp "$TMPL"/harness-protocol*.md "$d/docs/agents/"
   cp "$TMPL/pointer.md.tmpl" "$d/CLAUDE.md"
 }
 
@@ -46,6 +46,10 @@ make_fixture "$WORK/drift"
 echo "local note" >> "$WORK/drift/docs/agents/harness-protocol.md"
 out="$(bash "$CHECK" "$WORK/drift")" || fail "drifted protocol must not fail the audit"
 echo "$out" | grep -q "^WARN.*differs" || fail "drifted protocol: expected WARN line"
+make_fixture "$WORK/drift-runs"
+echo "local note" >> "$WORK/drift-runs/docs/agents/harness-protocol-runs.md"
+out="$(bash "$CHECK" "$WORK/drift-runs")" || fail "drifted runs part must not fail the audit"
+echo "$out" | grep -q "^WARN.*harness-protocol-runs.md differs" || fail "drifted runs part: expected WARN line"
 
 # 2b. missing ARCHITECTURE.md: WARN (repair flow lives in SKILL.md), still exit 0
 make_fixture "$WORK/no-arch"
@@ -99,6 +103,16 @@ make_fixture "$WORK/tagged"
 printf -- '- Always run the linter before the gate (model: example-1)\n- Never mock the clock (model: example-1)\n' >> "$WORK/tagged/AGENTS.md"
 out="$(bash "$CHECK" "$WORK/tagged")" || fail "tagged rules must not fail the audit"
 echo "$out" | grep -q "^WARN.*2 model-tagged rule" || fail "tagged rules: expected WARN with count 2"
+# 2g2. rule expiry (M28-003): dated rules older than 90 days → WARN with
+#      their count; recent ones and the combined tag are understood
+make_fixture "$WORK/dated"
+today="$(date -u +%F)"
+printf -- '- Run the linter first (added 2020-01-01)\n- Never mock the clock (added 2021-06-30; model: example-2)\n- Seed the db (added %s)\n' "$today" >> "$WORK/dated/AGENTS.md"
+out="$(bash "$CHECK" "$WORK/dated")" || fail "dated rules must not fail the audit"
+echo "$out" | grep -q "^WARN.*2 rule(s) added more than 90 days ago" || fail "dated rules: expected WARN for the 2 old rules only"
+echo "$out" | grep -q "^WARN.*1 model-tagged rule" || fail "dated rules: (added ...; model: x) must count as model-tagged"
+out="$(bash "$CHECK" "$WORK/good")"
+echo "$out" | grep -q "added more than 90 days" && fail "no dated rules: no expiry WARN expected"
 
 # 2h. second opinion (M26-001): a CLI not on PATH is a WARN naming it
 make_fixture "$WORK/second"
@@ -129,5 +143,8 @@ expect_fail "$WORK/no-plans" "docs/plans" "missing plans dir"
 make_fixture "$WORK/no-proto"
 rm "$WORK/no-proto/docs/agents/harness-protocol.md"
 expect_fail "$WORK/no-proto" "harness-protocol.md missing" "missing protocol doc"
+make_fixture "$WORK/no-planning"
+rm "$WORK/no-planning/docs/agents/harness-protocol-planning.md"
+expect_fail "$WORK/no-planning" "harness-protocol-planning.md missing" "missing planning part (repo not upgraded)"
 
 echo "AUDIT TESTS GREEN"
