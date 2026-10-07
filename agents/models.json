@@ -1,5 +1,5 @@
 {
-  "_instructions": "Model tier -> model name per CLI. Edit to match the models you have access to; the generator copies these verbatim. sensitive_globs: a feature whose paths match one gets the evaluator's security checklist; override per repo.",
+  "_instructions": "Model tier -> model name per CLI; the generator copies these verbatim. Rule of thumb: strong = complex work (evaluator, second opinion, hard features), standard = implementation. Claude: opus for complex work, sonnet for implementation. ChatGPT: gpt-6-astra for complex work, gpt-6.1-sol for executing. Copilot's strong tier is a ChatGPT model on purpose, so a Copilot second opinion next to a Claude builder comes from another vendor. Set a tier to \"auto\" (or leave it out) to let the CLI choose; when a named model is unavailable the harness falls back and the CLI chooses its own. sensitive_globs: a feature whose paths match one gets the evaluator's security checklist; override per repo.",
   "models": {
     "claude": {
       "cheap": "haiku",
@@ -7,14 +7,14 @@
       "strong": "opus"
     },
     "copilot": {
-      "cheap": "claude-haiku-4.5",
-      "standard": "claude-sonnet-4.5",
-      "strong": "claude-opus-4.5"
+      "cheap": "auto",
+      "standard": "claude-sonnet-5.5",
+      "strong": "gpt-6-astra"
     },
     "codex": {
-      "cheap": "gpt-5.4-mini",
-      "standard": "gpt-5.4",
-      "strong": "gpt-5.4"
+      "cheap": "auto",
+      "standard": "gpt-6.1-sol",
+      "strong": "gpt-6-astra"
     }
   },
   "sensitive_globs": [

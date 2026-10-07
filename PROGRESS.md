@@ -3,6 +3,99 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 52 (M27-005, release 3.5.0)
+
+- Branch: `m27-upgrades`.
+- Done: M27-005 — `scripts/sync-template.sh <mirror> [--check]` writes every
+  template to its agent-harness-template path, keeping the mirror's banner
+  (bare `>` lines included), README and docs/PRODUCT.md; idempotent;
+  `--check` exits 1 on drift. Fixture in `scripts/test-sync-template.sh`.
+  The real mirror was last synced at M13: synced now, agent-harness-template
+  PR #3 (`--check` IN SYNC). CHANGELOG's release checklist names the script.
+  Released 3.5.0. All M27 features pass; plan moved to completed.
+- Decisions: the mirror keeps only what is truly its own (banner, README,
+  PRODUCT skeleton); everything else is generated, so drift is a script
+  run away. A first sync cut the banner at a bare `>` line: caught by
+  reading the result, fixed, and the fixture now has one.
+- Also: two commits earlier on this branch (949033a, da5fc3d) were made on a
+  red gate because its output was piped to `tail`, hiding the exit code;
+  fixed in 0a325cc, and every commit since checks the gate's own exit code.
+- Gate: green.
+- Next: owner merges both PRs; then the first real unattended run.
+
+## 2026-10-07 — session 51 (M27-004)
+
+- Branch: `m27-upgrades`.
+- Done: M27-004 — a clear upgrade every release. `CHANGELOG.md` (3.0.0 to
+  3.5.0, newest first) gives each release an `Upgrade:` block; the gate fails
+  when the current version has none. upgrade.sh stamps
+  `docs/agents/harness-kit-version` and prints `UPGRADE-NOTE: <version>:
+  <step>` for every release after the stamp up to the installed kit, oldest
+  first (all when unstamped). harness-upgrade-structure relays the notes;
+  README "Upgrading after every release" is the eight-step checklist (plugin
+  update commands checked against copilot 1.0.92 and codex 0.160.1 help).
+  Fixtures in test-upgrade.sh.
+- Decisions: notes live in the CHANGELOG (one source a human and the script
+  both read) instead of per-release scripts; portable version compare in
+  bash (macOS has no tac, and sort -V is not guaranteed); notes capped at the
+  installed kit version so a CHANGELOG ahead of the manifests prints nothing
+  extra.
+- Gate: green.
+- Next: M27-005 (template mirror sync, release 3.5.0).
+
+## 2026-10-07 — session 50 (M27-003)
+
+- Branch: `m27-upgrades`.
+- Done: M27-003 — run-report.sh puts each done feature's newest PROGRESS.md
+  `Decisions:` line under it (wrapped lines joined), adds a Supervisor
+  section from `.harness-run/decisions/<id>.skipped.md` and a Budget section
+  from `.harness-run/budget.log`, each only when the files exist. Protocol
+  §2.8 says so. Fixtures in test-run.sh; output stays deterministic.
+- Decisions: read the signals from `.harness-run/` at report time rather
+  than copying them into commits (they are run state, git-ignored); one line
+  per feature for skipped work so the report stays a one-page read.
+- Gate: green.
+- Next: M27-004 (upgrade process).
+- Note: the M27-003 code landed in 3c84130, but its status flip, this entry
+  and the protocol line were left out by a failed edit step; they landed
+  with the M27-004 follow-up commit.
+
+## 2026-10-07 — session 49 (M27-002)
+
+- Branch: `m27-upgrades`.
+- Done: M27-002 — models.json follows the owner's rule of thumb: Claude
+  `opus` for complex work and `sonnet` for implementation; ChatGPT
+  `gpt-6-astra` for complex work and `gpt-6.1-sol` for executing (Codex);
+  Copilot's strong tier is `gpt-6-astra`, so a Copilot second opinion next to
+  a Claude builder is another vendor. A tier of `auto` (or none) lets the
+  CLI choose: gen-agents.sh writes no model line, second-opinion.sh passes
+  no flag. second-opinion.sh retries once without a model when the CLI
+  rejects the named one, printing `MODEL: <name> unavailable, <cli> chose its
+  own`. harness-run swaps in the CLI's built-in subagent when a named agent's
+  model is unavailable. Fixtures in test-agents.sh and test-second-opinion.sh.
+- Decisions: fallback by retry rather than a model-availability lookup (no
+  CLI exposes one the same way); retry only when the reply is empty and the
+  error mentions a model, so a real NEEDS_WORK is never retried; cheap tiers
+  set to auto because nothing uses them yet.
+- Gate: green.
+- Next: M27-003 (run report).
+
+## 2026-10-07 — session 48 (M27-001)
+
+- Branch: `m27-upgrades` (off master after PR #27 merged).
+- Done: M27-001 — upgrade.sh regenerates every harness agent role (builder,
+  evaluator, brief reviewer) into each CLI folder the repo already uses
+  (`.claude/agents`, `.github/agents`, `.codex/agents`), one `CHANGED:` per
+  changed file, never adding a CLI the repo does not use; repos with no
+  agent files still get them only on an evaluation opt-in (now also
+  `second_opinion`). Copilot restart TODO only when its files changed.
+  Fixture in test-upgrade.sh.
+- Decisions: generate into a temp dir and copy per file instead of running
+  gen-agents.sh in place (it would create all three CLI folders); compare
+  with cmp so a second run reports nothing.
+- Gate: green.
+- Next: M27-002 (model rule of thumb and fallback).
+
 ## 2026-10-07 — session 47 (M26-003, release 3.4.0)
 
 - Branch: `m26-second-opinion`.

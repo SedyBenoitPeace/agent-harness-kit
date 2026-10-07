@@ -23,17 +23,22 @@ commits it. It is **not** for new repos: that is harness-initial-setup.
      and commits nothing.
 2. Read the `CHANGED:` / `OK:` / `TODO:` lines and tell the human what
    changed in two or three lines: the protocol copy recopied, the
-   harness-run line added to AGENTS.md, evaluator agent files generated
-   (restart Copilot CLI to see them).
-3. If the protocol was recopied, check `git diff` for local notes the old
+   harness-run line added to AGENTS.md, agent files regenerated (restart
+   Copilot CLI to see them), the kit version recorded in
+   `docs/agents/harness-kit-version`.
+3. Relay every `UPGRADE-NOTE: <version>: <note>` line: these are the
+   release notes' Upgrade steps for each release since this repo's last
+   upgrade, oldest first. Do the ones that only touch harness files once the
+   human agrees; list the rest as things the human must do.
+4. If the protocol was recopied, check `git diff` for local notes the old
    copy had below the shipped text; re-append them.
-4. Handle the `TODO:` lines by offering, never applying silently:
+5. Handle the `TODO:` lines by offering, never applying silently:
    - unbounded `scripts/e2e.sh` → wrap each command with the `step`
      function from the initial-setup `templates/e2e.sh.tmpl`;
    - `depends_on` / `paths` → offer **harness-audit**, which proposes them
      for the human to approve (without declared `depends_on`, a skipped
      feature stops a continuous run).
-5. Commit the upgrade as its own commit, explicit paths, message
+6. Commit the upgrade as its own commit, explicit paths, message
    `chore: upgrade harness structure` — never mixed with feature work.
    Never push; the human decides.
 

@@ -56,6 +56,7 @@ grep -q 'harness-run' "$R/AGENTS.md" || fail "upgrade: AGENTS.md missing the har
 [ -f "$R/.claude/agents/harness-evaluator.md" ] || fail "upgrade: evaluator agent files not generated"
 echo "$out" | grep -q '^CHANGED: docs/agents/harness-protocol.md' || fail "upgrade: protocol change not reported"
 echo "$out" | grep -q '^TODO: .*scripts/e2e.sh' || fail "upgrade: unbounded gate must be a TODO"
+echo "$out" | grep -q "^UPGRADE-NOTE: $(jq -r .version .claude-plugin/plugin.json): " || fail "upgrade: no stamp yet, so every release's notes must print"
 echo "$out" | grep -q '^TODO: .*harness-audit' || fail "upgrade: depends_on/paths via harness-audit must be a TODO"
 [ "$(g rev-parse HEAD)" = "$before" ] || fail "upgrade: must not commit"
 [ -z "$(g diff --cached --name-only)" ] || fail "upgrade: must not stage anything"
@@ -67,6 +68,48 @@ if echo "$out" | grep -q '^CHANGED:'; then fail "second run: nothing should chan
 echo "$out" | grep -q '^OK: docs/agents/harness-protocol.md' || fail "second run: protocol should be reported current"
 [ "$(git -C "$R" branch --show-current)" = harness-upgrade ] || fail "second run: must stay on the current branch"
 [ -z "$(git -C "$R" status --short)" ] || fail "second run: must leave the tree clean"
+
+# 4b. stale generated agents (M27-001): any harness agent file present →
+#     every role is regenerated for each CLI the repo already has, nothing
+#     for the others; a second run changes no agent file
+S="$WORK/stale"
+mkdir -p "$S/docs/agents" "$S/.claude/agents"
+git -C "$S" init -q -b main
+printf '{ "milestones": {"1":"C"}, "features": [ { "id": "M1-001", "milestone": 1, "title": "t", "status": "passing", "verify": "x", "depends_on": [] } ] }\n' > "$S/FEATURES.json"
+printf '# PROGRESS\n' > "$S/PROGRESS.md"
+printf '# AGENTS.md\nharness-run\n' > "$S/AGENTS.md"
+cp "$SHIPPED" "$S/docs/agents/harness-protocol.md"
+printf -- '---\nname: harness-builder\n---\nold builder\n' > "$S/.claude/agents/harness-builder.md"
+git -C "$S" -c user.email=t@t -c user.name=t add -A; git -C "$S" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stale agents: expected exit 0"
+for r in harness-builder harness-evaluator harness-brief-reviewer; do
+  grep -q 'Decisions:\|READY\|PASS' "$S/.claude/agents/$r.md" || fail "stale agents: $r not regenerated"
+done
+echo "$out" | grep -q '^CHANGED: .claude/agents/harness-builder.md' || fail "stale agents: builder change not reported"
+[ ! -d "$S/.codex" ] && [ ! -d "$S/.github" ] || fail "stale agents: must not add CLIs the repo does not use"
+git -C "$S" -c user.email=t@t -c user.name=t add -A; git -C "$S" -c user.email=t@t -c user.name=t commit -qm up
+out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stale agents second run: expected exit 0"
+if echo "$out" | grep -q '^CHANGED: .claude/agents'; then fail "stale agents second run: nothing should change"; fi
+
+# 4c. version stamp + release notes (M27-004): the first upgrade records the
+#     kit version and prints every release's Upgrade notes; a repo stamped
+#     with an older version gets only the newer ones; a current one none
+KIT_V="$(jq -r .version .claude-plugin/plugin.json)"
+[ "$(cat "$S/docs/agents/harness-kit-version")" = "$KIT_V" ] || fail "stamp: harness-kit-version must hold $KIT_V"
+oldest="$(sed -n 's/^## \([0-9][0-9.]*\) .*/\1/p' CHANGELOG.md | tail -1)"
+second="$(sed -n 's/^## \([0-9][0-9.]*\) .*/\1/p' CHANGELOG.md | grep -A1 -xF "$KIT_V" | sed -n 2p)"
+printf '%s\n' "$oldest" > "$S/docs/agents/harness-kit-version"
+git -C "$S" -c user.email=t@t -c user.name=t commit -qam "old stamp"
+out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stamp: expected exit 0"
+echo "$out" | grep -q "^UPGRADE-NOTE: $KIT_V: " || fail "stamp: notes for $KIT_V missing"
+echo "$out" | grep -q "^UPGRADE-NOTE: $second: " || fail "stamp: notes for $second missing"
+echo "$out" | grep -q "^UPGRADE-NOTE: $oldest: " && fail "stamp: notes for the recorded $oldest must not print"
+echo "$out" | grep -q '^CHANGED: docs/agents/harness-kit-version' || fail "stamp: version change not reported"
+git -C "$S" -c user.email=t@t -c user.name=t commit -qam "new stamp"
+out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stamp current: expected exit 0"
+echo "$out" | grep -q '^UPGRADE-NOTE:' && fail "stamp current: no notes when current"
+echo "$out" | grep -q "^OK: docs/agents/harness-kit-version" || fail "stamp current: OK line missing"
+grep -q 'UPGRADE-NOTE' skills/harness-upgrade-structure/SKILL.md || fail "SKILL.md: must relay UPGRADE-NOTE lines"
 
 # 5. SKILL.md contract: for repos that already have a harness, runs upgrade.sh,
 #    own commit, offers the audit; harness-session points at it

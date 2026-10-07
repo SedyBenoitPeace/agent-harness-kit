@@ -29,8 +29,8 @@ entry="$(jq -c --arg id "$id" '.features[]? | select(.id == $id)' FEATURES.json 
 [ -z "$(git status --porcelain)" ] || broken "the tree is dirty; commit or stash before a second opinion"
 head_before="$(git rev-parse HEAD)"
 
-model="$(jq -r --arg c "$cli" '.models[$c].strong // empty' "$kit/agents/models.json")"
-[ -n "$model" ] || broken "no strong model for $cli in agents/models.json"
+# "auto" or no entry: let the CLI choose (M27-002)
+model="$(jq -r --arg c "$cli" '.models[$c].strong // "auto"' "$kit/agents/models.json")"
 
 # The evaluator role, as gen-agents.sh writes it for every CLI.
 role="$(awk 'c>=2{print} /^---$/{c++}' "$kit/agents/src/harness-evaluator.md")"
@@ -49,17 +49,31 @@ Commit range: ${base}..HEAD"
 work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
 reply="$work/reply"
 
-case "$cli" in
-  codex)
-    codex exec --sandbox read-only --ephemeral -m "$model" -o "$reply" "$prompt" > "$work/log" 2>&1 || true ;;
-  claude)
-    claude -p "$prompt" --model "$model" --permission-mode dontAsk \
-      --allowedTools Read Grep Glob Bash --disallowedTools Edit Write NotebookEdit > "$reply" 2> "$work/log" || true ;;
-  copilot)
-    copilot -p "$prompt" -s --no-ask-user --model "$model" --allow-all-tools --deny-tool=write \
-      --deny-tool='shell(git commit)' --deny-tool='shell(git push)' --deny-tool='shell(git reset)' \
-      --deny-tool='shell(git checkout)' --deny-tool='shell(rm)' > "$reply" 2> "$work/log" || true ;;
-esac
+# ask MODEL: run the CLI once, read-only, with that model ("auto" = none)
+ask() {
+  local m="$1"
+  : > "$reply"
+  case "$cli" in
+    codex)
+      codex exec --sandbox read-only --ephemeral ${m:+-m "$m"} -o "$reply" "$prompt" > "$work/log" 2>&1 ;;
+    claude)
+      claude -p "$prompt" ${m:+--model "$m"} --permission-mode dontAsk \
+        --allowedTools Read Grep Glob Bash --disallowedTools Edit Write NotebookEdit > "$reply" 2> "$work/log" ;;
+    copilot)
+      copilot -p "$prompt" -s --no-ask-user ${m:+--model "$m"} --allow-all-tools --deny-tool=write \
+        --deny-tool='shell(git commit)' --deny-tool='shell(git push)' --deny-tool='shell(git reset)' \
+        --deny-tool='shell(git checkout)' --deny-tool='shell(rm)' > "$reply" 2> "$work/log" ;;
+  esac
+}
+named=""; [ "$model" = auto ] || named="$model"
+rc=0; ask "$named" || rc=$?
+# Fallback: a named model the CLI rejects (retired, not on this account) →
+# one retry with no model flag, so the CLI chooses its own.
+if [ -n "$named" ] && [ "$rc" -ne 0 ] && [ ! -s "$reply" ] && grep -qi 'model' "$work/log"; then
+  model_note="MODEL: $named unavailable, $cli chose its own"
+  model="auto"
+  ask "" || true
+fi
 touch "$reply"
 
 # Read-only flags differ per CLI; this check is the guarantee.
@@ -77,5 +91,6 @@ first="$(grep -m1 -v '^[[:space:]]*$' "$reply" | tr -d '[:space:]' || true)"
 if [ "$first" = PASS ]; then verdict=PASS; else verdict=NEEDS_WORK; fi
 echo "VERDICT: $verdict"
 echo "CLI: $cli ($model)"
+[ -z "${model_note:-}" ] || echo "$model_note"
 cat "$reply"
 [ "$verdict" = PASS ]
