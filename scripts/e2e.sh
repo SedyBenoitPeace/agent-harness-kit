@@ -515,6 +515,22 @@ jq -e '.models.claude.strong == "opus" and .models.claude.standard == "sonnet"
 jq -e '._instructions | test("auto") and test("fall")' agents/models.json >/dev/null || fail "agents/models.json: _instructions must explain auto and the fallback"
 grep -qF 'model is unavailable' "$RUN_SKILL/SKILL.md" || fail "harness-run: fallback when a named agent's model is unavailable missing"
 
+# --- a clear upgrade every release (M27-004) ---------------------------------------
+[ -f CHANGELOG.md ] || fail "CHANGELOG.md missing"
+cur_v="$(jq -r .version .claude-plugin/plugin.json)"
+cur_entry="$(awk -v v="## $cur_v " 'index($0, v) == 1 {on=1; print; next} on && /^## [0-9]/ {exit} on' CHANGELOG.md)"
+[ -n "$cur_entry" ] || fail "CHANGELOG.md: no entry for $cur_v"
+grep -q '^Upgrade:' <<< "$cur_entry" || fail "CHANGELOG.md: the $cur_v entry needs an Upgrade: block"
+grep -q '^## Upgrading after every release' README.md || fail "README: 'Upgrading after every release' checklist missing"
+up="$(sed -n '/^## Upgrading after every release/,/^## /p' README.md)"
+last=0
+for w in 'Update the plugins' 'branch' 'harness-upgrade-structure' 'UPGRADE-NOTE' 'harness-audit' 'scripts/e2e.sh' 'commit' 'pull request'; do
+  n="$(grep -nF -m1 -- "$w" <<< "$up" | cut -d: -f1)"
+  [ -n "$n" ] || fail "README upgrade checklist: step '$w' missing"
+  [ "$n" -ge "$last" ] || fail "README upgrade checklist: '$w' is out of order"
+  last="$n"
+done
+
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
 jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.tsx"

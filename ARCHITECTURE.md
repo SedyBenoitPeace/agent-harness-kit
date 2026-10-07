@@ -37,7 +37,7 @@
 | `skills/harness-session/` | Bounded session context report (`scripts/context.sh`, wraps harness-status) + concise gate wrapper (`scripts/run-gate.sh`) |
 | `skills/harness-run/` | Orchestrator (SKILL.md): one fresh subagent per feature, verified via status.sh; `scripts/second-opinion.sh` re-judges a feature with another vendor's CLI, read-only, and voids a verdict that changed the repo |
 | `skills/harness-continuous/` | Unattended-run command (SKILL.md only): reuses harness-run, skips instead of stopping; state in `.harness-run/`, report via `skills/harness-run/scripts/run-report.sh` |
-| `skills/harness-upgrade-structure/` | Upgrade of an already-harnessed repo: `scripts/upgrade.sh` (idempotent, commits nothing) + SKILL.md that explains and commits it |
+| `skills/harness-upgrade-structure/` | Upgrade of an already-harnessed repo: `scripts/upgrade.sh` (idempotent, commits nothing; recopies the protocol, regenerates agent files, stamps `docs/agents/harness-kit-version`, prints CHANGELOG Upgrade notes since the stamp) + SKILL.md that explains and commits it |
 | `skills/harness-brief/` | Rough prompt → `docs/briefs/` brief; check-brief.sh plus an independent read-only reviewer agent |
 | `claude/` | Second plugin `agent-harness-kit-claude` (Claude Code only): depends on the core plugin; holds evals and mods, never protocol or templates |
 | `claude/hooks/` | Mods (function hooks): `register.tsx` holds every hook (plus the band's JSX) (the engine follows `$` only within one file); `lib.ts` holds pure logic; tests in `claude/tests/` run with `claude plugin test`; `$.state` contract in `claude/types/index.d.ts` |
@@ -84,6 +84,7 @@ gate is green.
   statuses only from {failing, passing, deferred, superseded}.
 - **The Claude Code edition (`claude/`) never copies the protocol or templates**; it depends on the core plugin and ships its version in lockstep.
 - **Mods stay inert outside a harnessed repo** (no FEATURES.json, nothing registered) and **write only under `.harness-run/`**, which they make self-ignoring (`.harness-run/.gitignore` = `*`) so a run never leaves a dirty tree.
+- **Every release has a CHANGELOG.md entry with an Upgrade: block** (the gate checks the current version): upgrade.sh prints those blocks to existing repos.
 - **Both manifest versions stay identical and bump on every release**
   (plugin cache is keyed by version; without a bump, updates no-op).
 - **Gate greps are single-line:** any phrase the gate enforces must not

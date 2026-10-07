@@ -954,7 +954,7 @@
       "id": "M27-004",
       "milestone": 27,
       "title": "Clear upgrade process: CHANGELOG with Upgrade notes per release, version stamp, notes printed by upgrade.sh, README checklist",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M27-003"
       ],

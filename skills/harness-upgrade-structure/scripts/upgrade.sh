@@ -102,7 +102,43 @@ fi
 if [ "$copilot_changed" -eq 1 ]; then
   echo "TODO: restart Copilot CLI if it is running, so it reads the regenerated agents"
 fi
-rm -rf "$gen"
+
+# kit version stamp + release notes (M27-004): print the Upgrade: block of
+# every CHANGELOG release newer than the version this repo was last upgraded
+# to (all of them when none is recorded), then record the current version.
+KIT="$SKILLS/.."
+kit_v="$(jq -r '.version // empty' "$KIT/.claude-plugin/plugin.json" 2>/dev/null || true)"
+stamp=docs/agents/harness-kit-version
+have_v="$(tr -d '[:space:]' < "$stamp" 2>/dev/null || true)"
+if [ -n "$kit_v" ] && [ -f "$KIT/CHANGELOG.md" ]; then
+  awk '
+    /^## [0-9]+\.[0-9]+\.[0-9]+ / { v = $2; up = 0; next }
+    /^Upgrade:/ { up = 1; next }
+    up && /^- / { sub(/^- /, ""); print v "\t" $0; next }
+    up && /^[^ ]/ { up = 0 }
+  ' "$KIT/CHANGELOG.md" > "$gen.notes" 2>/dev/null || true
+  # vlt A B: version A < B, numerically per field (portable: no sort -V)
+  vlt() {
+    local a1 a2 a3 b1 b2 b3
+    IFS=. read -r a1 a2 a3 <<< "$1"; IFS=. read -r b1 b2 b3 <<< "$2"
+    [ "${a1:-0}" -lt "${b1:-0}" ] && return 0; [ "${a1:-0}" -gt "${b1:-0}" ] && return 1
+    [ "${a2:-0}" -lt "${b2:-0}" ] && return 0; [ "${a2:-0}" -gt "${b2:-0}" ] && return 1
+    [ "${a3:-0}" -lt "${b3:-0}" ]
+  }
+  # releases after the recorded one, up to the installed kit, oldest first
+  awk '{ l[NR] = $0 } END { for (i = NR; i > 0; i--) print l[i] }' "$gen.notes" | while IFS=$'\t' read -r v note; do
+    vlt "$kit_v" "$v" && continue
+    if [ -z "$have_v" ] || vlt "$have_v" "$v"; then echo "UPGRADE-NOTE: $v: $note"; fi
+  done
+  rm -f "$gen.notes"
+  if [ "$have_v" = "$kit_v" ]; then
+    echo "OK: $stamp is $kit_v"
+  else
+    mkdir -p docs/agents
+    printf '%s\n' "$kit_v" > "$stamp"
+    echo "CHANGED: $stamp (${have_v:-none} -> $kit_v)"
+  fi
+fi
 
 # things only a human or an agent can do
 if [ ! -f scripts/e2e.sh ]; then
@@ -117,4 +153,5 @@ if jq -e '[.features[] | select(.status == "failing" and (.depends_on | type) !=
 else
   echo "OK: failing features declare depends_on"
 fi
-echo "NEXT: review git diff, then commit the upgrade as its own commit."
+rm -rf "$gen"
+echo "NEXT: review git diff and every UPGRADE-NOTE line above, then commit the upgrade as its own commit."
