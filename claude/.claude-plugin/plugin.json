@@ -1,6 +1,6 @@
 {
-  "name": "agent-harness-kit",
-  "description": "Full long-running-agent harness toolkit: scaffold FEATURES.json / PROGRESS.md / plans / e2e gate into any repo, and audit repos for harness-readiness.",
+  "name": "agent-harness-kit-mods",
+  "description": "Claude Code edition of the agent harness: adds Claude Code-only features (agent effort, mods, eval suites) on top of agent-harness-kit.",
   "version": "3.2.0",
   "author": {
     "name": "Stefano Rifici"
@@ -10,9 +10,11 @@
   "license": "MIT",
   "keywords": [
     "harness",
-    "planning",
     "agents",
-    "scaffolding",
-    "audit"
+    "claude-code",
+    "mods"
+  ],
+  "dependencies": [
+    "agent-harness-kit"
   ]
 }

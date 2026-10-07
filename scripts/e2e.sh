@@ -332,7 +332,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.1.0" ] || fail "plugin version must be 3.1.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.2.0" ] || fail "plugin version must be 3.2.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -420,5 +420,46 @@ for w in 'Decisions:' 'effort' '(model: <name>)'; do
   sed -n '/^## Decision notes, effort and model-tagged rules/,/^## /p' README.md | grep -qF -- "$w" \
     || fail "README M23 section: '$w' missing"
 done
+
+# --- Claude edition plugin (M24-001) -------------------------------------------
+# A second plugin in this marketplace that adds Claude Code-only features on
+# top of the core plugin. It never copies the protocol: the core owns it.
+ED=".claude-plugin/plugin.json"
+ED_MANIFEST="claude/.claude-plugin/plugin.json"
+[ -f "$ED_MANIFEST" ] || fail "Claude edition: $ED_MANIFEST missing"
+jq -e '.name == "agent-harness-kit-mods" and ((.dependencies // []) | index("agent-harness-kit") != null)' "$ED_MANIFEST" >/dev/null \
+  || fail "Claude edition: plugin.json must be agent-harness-kit-mods and depend on agent-harness-kit"
+jq -e '[.plugins[] | select(.name == "agent-harness-kit-mods" and .source == "./claude")] | length == 1' .claude-plugin/marketplace.json >/dev/null \
+  || fail "marketplace.json: Claude edition entry (source ./claude) missing"
+core_v="$(jq -r .version "$ED")"
+[ "$(jq -r .version "$ED_MANIFEST")" = "$core_v" ] || fail "Claude edition: plugin.json version must match the core ($core_v)"
+[ "$(jq -r '.plugins[] | select(.name == "agent-harness-kit-mods") | .version' .claude-plugin/marketplace.json)" = "$core_v" ] \
+  || fail "marketplace.json: Claude edition version must match the core ($core_v)"
+if find claude -name 'harness-protocol.md' | grep -q .; then fail "Claude edition must not copy harness-protocol.md"; fi
+grep -qF '/plugin install agent-harness-kit-mods' README.md || fail "README: Claude edition install line missing"
+# claude plugin validate when the CLI is present (CI runners may not have it)
+if command -v claude >/dev/null; then
+  claude plugin validate --strict claude >/dev/null 2>&1 || fail "claude plugin validate --strict claude/ failed"
+  claude plugin validate . >/dev/null 2>&1 || fail "claude plugin validate . (marketplace) failed"
+fi
+
+# --- Claude edition: auto mode + eval suite (M24-003) ---------------------------
+edition="$(sed -n '/^## Claude Code edition/,/^## [^C]/p' README.md)"
+grep -qF 'claude --permission-mode auto' <<< "$edition" || fail "README Claude edition: auto mode start command missing"
+grep -qF 'harness-continuous' <<< "$edition" || fail "README Claude edition: harness-continuous on auto mode missing"
+grep -qF 'Never use the bypass mode' <<< "$edition" || fail "README Claude edition: must rule out bypass mode"
+if grep -qE 'bypassPermissions|--dangerously-skip-permissions' <<< "$edition"; then
+  fail "README Claude edition: must not name a bypass flag"
+fi
+grep -qF 'claude plugin eval . --eval-dir claude/evals' <<< "$edition" || fail "README Claude edition: eval command missing"
+for c in brief-from-rough-prompt:harness-brief session-builds-next-feature:harness-session; do
+  case_dir="claude/evals/${c%%:*}"; skill="${c##*:}"
+  [ -f "$case_dir/prompt.md" ] || fail "eval case $case_dir: prompt.md missing"
+  grep -qF 'plugins: ["../../.."]' "$case_dir/prompt.md" || fail "eval case $case_dir: must load the core plugin (plugins: [\"../../..\"])"
+  grep -rqF "$skill" "$case_dir/graders" || fail "eval case $case_dir: no grader names $skill"
+  [ -f "$case_dir/scaffold.sh" ] && shellcheck "$case_dir/scaffold.sh"
+  ls "$case_dir"/graders/*.md >/dev/null 2>&1 || fail "eval case $case_dir: no graders"
+done
+git check-ignore -q claude/evals/results/x || fail ".gitignore: claude/evals/results/ must be ignored"
 
 echo "GATE GREEN"

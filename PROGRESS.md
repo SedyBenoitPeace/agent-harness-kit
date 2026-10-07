@@ -3,6 +3,69 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 38 (M24-003)
+
+- Branch: `m24-claude-edition`.
+- Done: M24-003 — README "Claude Code edition": unattended runs start with
+  `claude --permission-mode auto`, never the bypass mode; how to run the
+  evals. `claude/evals/` suite: `brief-from-rough-prompt` (rough request →
+  brief with all sections, checker run, nothing built) and
+  `session-builds-next-feature` (harnessed fixture: builds only M1-001,
+  gate run, M1-002 untouched, Decisions: logged, SESSION line). Scaffold
+  scripts shellchecked by the gate; results/ ignored.
+- Eval result (`claude plugin eval . --eval-dir claude/evals --scaffold
+  --allow-tools Write Bash Edit`, 3 runs per arm, about $1.65):
+  brief-from-rough-prompt with 1.00 / without 0.50 (Δ +0.50);
+  session-builds-next-feature with 1.00 / without 0.75 (Δ +0.25). Every
+  case passing.
+- Found by the evals: harness-brief and harness-session did not always
+  trigger (Claude did the work freehand from the description). Rewrote both
+  descriptions to say when, and to always load the skill.
+- Decisions: graded files on disk, not prose (stable); dropped the
+  fixture's Decisions: line so the case measures what the skill adds (it
+  first scored Δ 0.00); kept the eval run out of the gate (costs model
+  usage, CI has no claude CLI) and gated the suite's structure instead;
+  installed bubblewrap/socat in this workspace so Bash cases are sandboxed.
+- Gate: green.
+- Next: release 3.2.0 (descriptions changed), then M25-001 (decision
+  register mod).
+
+## 2026-10-07 — session 37 (M24-002)
+
+- Branch: `m24-claude-edition`.
+- Done: M24-002 — `agents/src/*.md` take an optional `effort:`;
+  `gen-agents.sh` emits `effort:` for Claude Code and
+  `model_reasoning_effort` for Codex (no max there, so max → high), nothing
+  for Copilot, and rejects unknown levels. The evaluator source sets
+  `effort: high`. Fixtures in test-agents.sh (pass-through, max mapping on a
+  copy of the sources, rejection, no line when absent). Generated Claude
+  agents pass `claude plugin validate --strict`; Codex TOML parses.
+- Decisions: built into the core generator, not the edition plugin (Codex
+  has the same setting, so it is portable); rejected passing `xhigh` to
+  Codex for max (not sure every Codex version accepts it); left the builder
+  without a fixed effort because the feature's own `effort` (M23-002) is
+  passed per dispatch.
+- Gate: green.
+- Next: M24-003 (auto-mode docs, skill eval suite).
+
+## 2026-10-07 — session 36 (M24-001)
+
+- Branch: `m24-claude-edition` (off master after PR #24 merged).
+- Done: M24-001 — second plugin in the marketplace at `claude/`
+  (`source: ./claude`), named `agent-harness-kit-mods`, depending on
+  `agent-harness-kit`, version in lockstep (3.1.0). Gate checks the
+  manifest, the marketplace entry, versions, no protocol copy, the README
+  install line, and runs `claude plugin validate --strict claude` and
+  `claude plugin validate .` when the CLI is present. README "Claude Code
+  edition"; ARCHITECTURE module + invariant.
+- Decisions: renamed from `agent-harness-kit-claude` (validator warning:
+  reads as Anthropic's own); kept the folder `claude/` so the planned
+  paths hold; made the CLI validate conditional because CI has no
+  `claude` binary; assumed the core plugin (source `./`) does not load
+  `claude/` (it loads only its root skills/agents/hooks).
+- Gate: green.
+- Next: M24-002 (agent effort in the generator).
+
 ## 2026-10-07 — session 35 (M23-003)
 
 - Branch: `m23-decisions-and-effort`.

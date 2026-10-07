@@ -140,3 +140,15 @@ mods) without forking the protocol.
 - 2026-10-07 — Deferred: a cross-vendor second opinion (Codex evaluates
   Claude's commit, or the reverse). Revisit after M25; the generator
   already emits the evaluator for every CLI.
+- 2026-10-07 — Edition plugin named `agent-harness-kit-mods`, not
+  `agent-harness-kit-claude`: `claude plugin validate` warns that a name with
+  "claude" reads as one of Anthropic's own. The folder stays `claude/`.
+- 2026-10-07 — Evals target the core plugin from the repo root
+  (`claude plugin eval . --eval-dir claude/evals`): a case may only load
+  plugins under the eval target, so targeting `claude/` cannot load the core.
+- 2026-10-07 — First eval runs found two trigger failures: Claude wrote a
+  brief and built a feature without loading harness-brief / harness-session,
+  because each description gave away enough of the "how" (the output path)
+  to skip the skill. Descriptions now say when to use the skill and to
+  always load it; the how stays inside. Result over 3 runs: brief 1.00 with
+  vs 0.50 without, session 1.00 vs 0.75.

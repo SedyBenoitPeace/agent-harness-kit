@@ -1,6 +1,6 @@
 ---
 name: harness-session
-description: Use when asked to implement, continue, carry on, or execute a feature or an execution plan (docs/plans/) in a repo using the long-running-agent harness — runs one bounded coding session (context recovery, gate, red-green-refactor, close-out) instead of separate manual status/gate/log calls.
+description: Use when asked to implement, build, continue, carry on, or execute the next feature, a named feature, or an execution plan (docs/plans/) in a repo that has FEATURES.json and PROGRESS.md (the long-running-agent harness) — always load this skill for that, it runs the one bounded coding session (context recovery, gate, red-green-refactor, close-out with the Decisions line).
 ---
 
 # Harness Session
