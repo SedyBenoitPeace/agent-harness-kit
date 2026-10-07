@@ -72,7 +72,7 @@ Upgrade:
 
 ## 3.0.0 — 2026-10-01
 
-- `harness-setup` renamed `harness-initial-setup`; `harness-upgrade-structure`
+- `harness-setup` was renamed `harness-initial-setup`; `harness-upgrade-structure`
   added for repos that already have a harness.
 
 Upgrade:
