@@ -1,14 +1,33 @@
 import type { Register } from 'claude-code'
 
-import { appendLine, DECISION_TOOL, decisionSpec, decisionsPath, parseDecision, PLUGIN, RUN_DIR } from './lib'
+import {
+  appendLine,
+  DECISION_TOOL,
+  decisionSpec,
+  decisionsPath,
+  parseDecision,
+  parseSessionLine,
+  parseVerdict,
+  PLUGIN,
+  RUN_DIR,
+  skippedFile,
+  skippedPath,
+  supervisorPrompt,
+  transcriptText,
+  verdictStatus,
+  verifyOf,
+} from './lib'
 
 // agent-harness-kit-claude: Claude Code-only additions to the harness.
 // Every feature stays inert outside a harnessed repo (no FEATURES.json).
 // All hooks live in this file: the engine follows `$` only within it.
 export const register: Register = on => {
+  let isHarnessed = false
+  const checked = new Set<string>()
+
   on('session.start', async ($, e, next) => {
     const started = await next(e)
-    const isHarnessed = await $.fs.exists('FEATURES.json').catch(() => false)
+    isHarnessed = await $.fs.exists('FEATURES.json').catch(() => false)
     if (isHarnessed) {
       await $.tool.register(decisionSpec)
     }
@@ -25,5 +44,42 @@ export const register: Register = on => {
     // A self-ignoring run folder keeps the worktree clean for harness-run.
     if (!(await $.fs.exists(`${RUN_DIR}/.gitignore`))) await $.fs.write(`${RUN_DIR}/.gitignore`, '*\n')
     return { result: { recorded: parsed.line, file: path } }
+  })
+
+  // M25-002 — done-check supervisor: a session that ends with its SESSION line
+  // gets one cheap check against the feature's verify. The main loop forks its
+  // own (cached) transcript; a builder subagent's messages are read and sent
+  // to a small model, since a fork only ever sees the main thread.
+  on('turn.complete', async ($, e, next) => {
+    const result = await next(e)
+    const line = isHarnessed ? parseSessionLine(e.answer) : undefined
+    if (!line) return result
+    // One check per feature outcome: an orchestrator echoing a builder's
+    // SESSION line must not pay for a second check.
+    const key = `${line.feature} ${line.outcome}`
+    if (checked.has(key)) return result
+    checked.add(key)
+    const verify = verifyOf(await $.fs.read('FEATURES.json').catch(() => ''), line.feature)
+    if (verify === undefined) return result
+
+    let reply: string | undefined
+    if (e.agentId === undefined) {
+      const forked = await $.model.fork({ prompt: supervisorPrompt(line, verify) })
+      reply = forked.isAnswered ? forked.text : undefined
+    } else {
+      const messages = await $.session.messages({ agentId: e.agentId })
+      if (Array.isArray(messages)) {
+        const done = await $.model.complete({ model: 'haiku', prompt: supervisorPrompt(line, verify, transcriptText(messages)), maxTokens: 400 })
+        reply = done.isAnswered ? done.text : undefined
+      }
+    }
+
+    const verdict = reply === undefined ? undefined : parseVerdict(reply)
+    if (verdict && verdict.skipped.length > 0) {
+      await $.fs.write(skippedPath(line.feature), skippedFile(line.feature, verdict.skipped))
+      if (!(await $.fs.exists(`${RUN_DIR}/.gitignore`))) await $.fs.write(`${RUN_DIR}/.gitignore`, '*\n')
+    }
+    $.ui.status(verdictStatus(line.feature, verdict))
+    return result
   })
 }

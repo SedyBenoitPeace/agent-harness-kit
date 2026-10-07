@@ -784,7 +784,7 @@
       "id": "M25-002",
       "milestone": 25,
       "title": "Mod: done-check supervisor ($.model.fork on a builder turn.complete) reporting done/blocked/skipped_work against verify",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M25-001"
       ],
@@ -793,7 +793,7 @@
         "claude/types/"
       ],
       "verify": "claude plugin test claude/ passes tests proving that on a builder subagent turn.complete the mod forks once, parses {done, blocked, skipped_work}, writes skipped_work beside the decisions file, sets a status line, never writes outside .harness-run/, and does nothing for non-builder turns; bash scripts/e2e.sh exits 0",
-      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md"
+      "notes": "Plan: docs/plans/active/2026-10-07-m23-decisions-and-effort.md Built: the main loop forks (cached transcript); a builder subagent is checked with $.model.complete (haiku) over its own messages, because $.model.fork only ever sees the main thread (2.1.292 types). Triggers on the SESSION line, once per feature outcome."
     },
     {
       "id": "M25-003",

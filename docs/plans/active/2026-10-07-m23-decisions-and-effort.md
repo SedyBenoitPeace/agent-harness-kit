@@ -156,3 +156,8 @@ mods) without forking the protocol.
   (M25-005): it will hold more Claude-specific features than mods. The
   validator's "reads as Anthropic's own" warning is accepted; the gate's
   strict validate allows that one warning and fails on any other.
+- 2026-10-07 — M25-002: `$.model.fork` forks the main thread only, never a
+  subagent, so a builder subagent is checked with `$.model.complete`
+  (haiku) over its own messages; the main loop still forks (cache-served).
+  The trigger is the protocol's SESSION line, not an agent type, and each
+  feature outcome is checked once.

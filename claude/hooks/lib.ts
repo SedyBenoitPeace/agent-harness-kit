@@ -45,3 +45,74 @@ export function appendLine(before: string | undefined, feature: string, line: st
   const head = before ?? `# Decisions for ${feature}\n\n`
   return `${head.endsWith('\n') ? head : `${head}\n`}${line}\n`
 }
+
+// --- M25-002 done-check supervisor ---------------------------------------
+
+export type SessionLine = { feature: string; outcome: string; gate: string }
+
+// The protocol's last line of a session: `SESSION: <id> · <outcome> · gate <g> · ...`
+export function parseSessionLine(answer: string): SessionLine | undefined {
+  const m = /SESSION: (M\d+-\d{3}) · (passing|review|blocked) · gate (green|red)/.exec(answer)
+  return m ? { feature: m[1]!, outcome: m[2]!, gate: m[3]! } : undefined
+}
+
+export function verifyOf(featuresJson: string, feature: string): string | undefined {
+  try {
+    const data = JSON.parse(featuresJson) as { features?: { id?: string; verify?: string }[] }
+    return data.features?.find(f => f.id === feature)?.verify
+  } catch {
+    return undefined
+  }
+}
+
+export const SUPERVISOR_RULES =
+  'You check a finished harness coding session against its acceptance criterion. ' +
+  'Answer with one JSON object and nothing else: ' +
+  '{"done": boolean, "blocked": boolean, "skipped_work": string[]}. ' +
+  'done = the verify criterion is demonstrably met by what the session did. ' +
+  'blocked = the session stopped for something only a human can decide. ' +
+  'skipped_work = parts of the verify criterion, edge cases or checks the session ' +
+  'considered or needed and did not do, each in a few words; [] when none. ' +
+  'Judge only from the session; do not assume work you cannot see.'
+
+export function supervisorPrompt(line: SessionLine, verify: string, transcript?: string) {
+  return (
+    `${SUPERVISOR_RULES}\n\nFeature ${line.feature}, reported ${line.outcome}, gate ${line.gate}.\n` +
+    `Verify criterion: ${verify}\n` +
+    (transcript === undefined ? 'The session is the conversation above.' : `The session:\n${transcript}`)
+  )
+}
+
+export type Verdict = { done: boolean; blocked: boolean; skipped: string[] }
+
+export function parseVerdict(text: string): Verdict | undefined {
+  const m = /\{[\s\S]*\}/.exec(text)
+  if (!m) return undefined
+  try {
+    const v = JSON.parse(m[0]) as { done?: unknown; blocked?: unknown; skipped_work?: unknown }
+    if (typeof v.done !== 'boolean' || typeof v.blocked !== 'boolean' || !Array.isArray(v.skipped_work)) return undefined
+    return { done: v.done, blocked: v.blocked, skipped: v.skipped_work.map(x => String(x)).filter(x => x.trim() !== '') }
+  } catch {
+    return undefined
+  }
+}
+
+export const skippedPath = (feature: string) => `${RUN_DIR}/decisions/${feature}.skipped.md`
+
+export function skippedFile(feature: string, skipped: string[]) {
+  return `# Supervisor: work ${feature} may have skipped\n\n${skipped.map(s => `- ${s}`).join('\n')}\n`
+}
+
+export function verdictStatus(feature: string, v: Verdict | undefined) {
+  if (!v) return `supervisor ${feature}: no verdict`
+  const state = v.blocked ? 'blocked' : v.done ? 'done' : 'not done'
+  return v.skipped.length > 0 ? `supervisor ${feature}: ${state}, skipped ${v.skipped.length}` : `supervisor ${feature}: ${state}`
+}
+
+// A subagent's conversation as plain text, newest last, capped for a cheap call.
+export function transcriptText(messages: { role: string; text: string; toolUses?: { tool?: string }[] }[], max = 12000) {
+  const text = messages
+    .map(m => `${m.role}: ${m.text}${m.toolUses?.length ? ` [tools: ${m.toolUses.map(t => t.tool ?? '?').join(', ')}]` : ''}`)
+    .join('\n')
+  return text.length > max ? text.slice(text.length - max) : text
+}

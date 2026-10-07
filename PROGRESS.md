@@ -3,6 +3,25 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-07 — session 41 (M25-002)
+
+- Branch: `m25-mods`.
+- Done: M25-002 — done-check supervisor. On a `turn.complete` whose answer
+  has the protocol's `SESSION: <id> · …` line (harnessed repo only), one
+  cheap check against the feature's `verify` returns
+  `{done, blocked, skipped_work}`: the main loop forks its own cached
+  transcript; a builder subagent's messages are read and sent to haiku.
+  Skipped work goes to `.harness-run/decisions/<id>.skipped.md` (beside the
+  decisions file); a status line says done / blocked / skipped N. Once per
+  feature outcome. 7 engine tests (11 total), tsc clean.
+- Decisions: rejected forking for subagents (a fork only sees the main
+  thread, so it would judge the orchestrator); rejected matching on agent
+  type (the SESSION line is the protocol's own contract and works inline
+  too); kept the turn's answer unchanged (the supervisor reports, never
+  rewrites); capped the subagent transcript at 12k chars to keep it cheap.
+- Gate: green.
+- Next: M25-003 (budget guard).
+
 ## 2026-10-07 — session 40 (M25-001)
 
 - Branch: `m25-mods`.
