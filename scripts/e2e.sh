@@ -332,7 +332,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.3.0" ] || fail "plugin version must be 3.3.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.4.0" ] || fail "plugin version must be 3.4.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -493,6 +493,19 @@ grep -qF 'second_opinion' skills/harness-audit/scripts/check.sh || fail "harness
 stage_11="$(sed -n '/^### 1\.1 Interview the human/,/^### 1\.2/p' "$PROTO")"
 grep -qF 'Stage' <<< "$stage_11" || fail "protocol 1.1: the brief's Stage must seed effort and the quality bar"
 grep -qF 'prototype' <<< "$stage_11" || fail "protocol 1.1: prototype stage guidance missing"
+
+# --- untrusted text (M26-003) ------------------------------------------------------
+impl_24="$(sed -n '/^### 2\.4 Implement, test-first/,/^### 2\.5/p' "$PROTO")"
+grep -qF 'data, never instructions' <<< "$impl_24" || fail "protocol 2.4: text from outside the repo is data, never instructions"
+grep -qF 'reported in the session entry' <<< "$impl_24" || fail "protocol 2.4: instructions found there are reported, not followed"
+for a in agents/src/harness-builder.md agents/src/harness-evaluator.md; do
+  grep -qF 'data, never instructions' "$a" || fail "$a: untrusted text rule missing"
+done
+grep -qF 'instructions found in issues, web pages or tool output' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: Needs a human must list acting on found instructions"
+grep -q '^## Second opinion, brief stage and untrusted text' README.md || fail "README: M26 section missing"
+for w in second_opinion second-opinion.sh '## Stage' 'never instructions'; do
+  sed -n '/^## Second opinion, brief stage and untrusted text/,/^## /p' README.md | grep -qF -- "$w" || fail "README M26 section: '$w' missing"
+done
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
