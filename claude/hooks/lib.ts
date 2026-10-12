@@ -135,3 +135,74 @@ export function budgetLine(when: string, who: string, used: number, budget: numb
 export function tokensLine(feature: string, used: number) {
   return `${feature} ${used}\n`
 }
+
+// --- M30-001 model choice -----------------------------------------------------
+// Aliases only: each resolves to its family's newest model, so a release
+// (Haiku 5.5, say) is picked up with nothing to maintain.
+
+export const TIERS = ['haiku', 'sonnet', 'opus'] as const
+const SENSITIVE = /auth|payment|billing|migration|secret|credential|personal/i
+export const BUILDER_PROMPT = /harness-session for (M\d+-\d{3})/
+
+// A model name's tier: haiku 0, sonnet 1, opus 2, above opus 3; -1 unknown.
+export function tierOf(model: string | undefined) {
+  const m = (model ?? '').toLowerCase()
+  if (m.includes('haiku')) return 0
+  if (m.includes('sonnet')) return 1
+  if (m.includes('opus')) return 2
+  if (m.includes('fable') || m.includes('mythos')) return 3
+  return -1
+}
+
+type FeatureEntry = { id?: string; effort?: unknown; paths?: unknown; eval_attempts?: unknown }
+
+export function featureOf(featuresJson: string, id: string): FeatureEntry | undefined {
+  try {
+    return (JSON.parse(featuresJson) as { features?: FeatureEntry[] }).features?.find(f => f.id === id)
+  } catch {
+    return undefined
+  }
+}
+
+export type SpawnFacts = { subagentType: string; prompt: string; model?: string; parentModel: string }
+export type ModelChoice = { model: string; feature?: string; reason: string }
+
+const floorTier = (floor: string) => Math.max(0, (TIERS as readonly string[]).indexOf(floor))
+
+// The model a harness subagent should start on, or undefined to leave it be.
+export function chooseModel(spawn: SpawnFacts, featuresJson: string, modelsLog: string, floor: string): ModelChoice | undefined {
+  const min = floorTier(floor)
+  if (spawn.subagentType === 'harness-evaluator') {
+    const asked = tierOf(spawn.model ?? spawn.parentModel)
+    const want = Math.max(1, min)
+    return asked >= 0 && asked < want ? { model: TIERS[want]!, reason: 'evaluator never below sonnet' } : undefined
+  }
+  const id = BUILDER_PROMPT.exec(spawn.prompt)?.[1] ?? (spawn.subagentType === 'harness-builder' ? /M\d+-\d{3}/.exec(spawn.prompt)?.[0] : undefined)
+  if (!id) return undefined
+  const f = featureOf(featuresJson, id)
+  if (!f) return undefined
+  const effort = typeof f.effort === 'string' ? f.effort : 'none'
+  const reasons = [`effort ${effort}`]
+  let tier = effort === 'low' ? 0 : effort === 'high' || effort === 'max' ? 2 : 1
+  const starts = modelsLog.split('\n').filter(l => l.startsWith(`${id} `)).length
+  const attempts = Number(f.eval_attempts) > 0 ? Number(f.eval_attempts) : 0
+  if (starts + attempts > 0) {
+    tier += starts + attempts
+    reasons.push(`+${starts + attempts} after ${starts} earlier start(s), ${attempts} evaluator rejection(s)`)
+  }
+  tier = Math.min(2, tier)
+  const paths = Array.isArray(f.paths) ? f.paths.map(String) : []
+  if (tier < 1 && paths.some(p => SENSITIVE.test(p))) {
+    tier = 1
+    reasons.push('sensitive paths')
+  }
+  if (tier < min) {
+    tier = min
+    reasons.push(`floor ${floor}`)
+  }
+  return { model: TIERS[tier]!, feature: id, reason: reasons.join(', ') }
+}
+
+export function modelsLine(choice: ModelChoice) {
+  return `${choice.feature} ${choice.model} ${choice.reason}\n`
+}

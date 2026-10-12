@@ -3,6 +3,24 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-12 — session 61 (M30-001)
+
+- Branch: `m30-models-budget`.
+- Done: M30-001 — the Claude Code edition picks each harness builder's
+  model in an `agent.spawn` hook: effort low haiku, medium or none sonnet,
+  high/max opus (aliases only); one tier up per earlier start of the feature
+  (`.harness-run/models.log`) and per `eval_attempts`, capped at opus; the
+  evaluator and features whose paths touch auth, payments, billing,
+  migrations, secrets, credentials or personal data never below sonnet;
+  `model_floor` and `route_models` settings. Forks, teammates, workflow
+  agents, other subagents and the main session are untouched. Checked live
+  first on 2.1.296: the rewrite starts the subagent on `claude-haiku-5-5`.
+- Decisions: escalation counts earlier starts instead of parsing outcomes
+  (any retry means the last model was not enough); a feature with no effort
+  starts on sonnet, not haiku (an unlabelled feature is not known to be easy).
+- Gate: green (27 mod tests).
+- Next: M30-002 (budgets in dollars).
+
 ## 2026-10-07 — session 60 (M29-002 follow-up)
 
 - Branch: `m29-run-speed`.

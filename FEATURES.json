@@ -1120,7 +1120,7 @@
       "id": "M30-001",
       "milestone": 30,
       "title": "Claude Code edition picks each builder's model from the feature's effort, steps up on retries, never below sonnet for the evaluator or sensitive paths",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [],
       "paths": [
         "claude/"

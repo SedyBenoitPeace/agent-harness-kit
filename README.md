@@ -250,6 +250,14 @@ of git):
 - **Done-check supervisor** — when a session ends with its `SESSION:` line,
   one cheap check against the feature's `verify` reports done, blocked or
   skipped work (in a status line, and `.harness-run/decisions/<id>.skipped.md`).
+- **Model choice** — each builder a run starts gets the model its feature's
+  `effort` asks for: low `haiku`, medium (or none) `sonnet`, high or max
+  `opus`, by alias, so new models are picked up with nothing to update. A
+  retry or an evaluator rejection steps it up one tier; the evaluator and
+  features touching auth, payments, migrations or personal data never run
+  below `sonnet`. Set `model_floor` in `/config` to raise the minimum, or
+  turn `route_models` off. Your own session's model is never changed; the
+  choices land in `.harness-run/models.log` and the run report.
 - **Budget guard** — counts each feature's tokens (input, output, cache
   writes). Over `feature_token_budget` (set it in `/config`, default
   1,500,000) during an unattended run it writes `.harness-run/STOP`, so the

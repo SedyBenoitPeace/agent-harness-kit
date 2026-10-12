@@ -23,6 +23,23 @@
       "title": "Token budget per feature",
       "description": "Tokens one feature may use in an unattended run before the run is asked to stop after it (input + output + cache writes).",
       "default": 1500000
+    },
+    "route_models": {
+      "type": "boolean",
+      "title": "Choose builder models",
+      "description": "Start each harness builder on the model its feature's effort asks for (low haiku, medium sonnet, high opus), one tier up on retries.",
+      "default": true
+    },
+    "model_floor": {
+      "type": "string",
+      "title": "Lowest model",
+      "description": "The lowest model a harness builder or evaluator may start on.",
+      "options": [
+        "haiku",
+        "sonnet",
+        "opus"
+      ],
+      "default": "haiku"
     }
   }
 }

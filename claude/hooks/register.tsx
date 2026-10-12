@@ -3,6 +3,8 @@ import type { Register } from 'claude-code'
 import {
   appendLine,
   budgetLine,
+  chooseModel,
+  modelsLine,
   countedTokens,
   DEFAULT_BUDGET,
   DECISION_TOOL,
@@ -33,12 +35,33 @@ export const register: Register = (on, options) => {
   const used = new Map<string, number>() // per builder subagent, or 'main' between SESSION lines
   const flagged = new Set<string>()
   const measured = new Set<string>() // features whose tokens are logged (M29-003)
+  const route = options.route_models !== false
+  const floor = typeof options.model_floor === 'string' ? options.model_floor : 'haiku'
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)
     isHarnessed = await $.fs.exists('FEATURES.json').catch(() => false)
     if (isHarnessed) {
       await $.tool.register(decisionSpec)
+    }
+    return started
+  })
+
+  // M30-001 — model choice: a harness builder starts on the model its
+  // feature's effort asks for, one tier up per earlier start or evaluator
+  // rejection; the evaluator and sensitive features never below sonnet.
+  // The main session, forks, teammates and workflow agents are left alone.
+  on('agent.spawn', async ($, e, next) => {
+    if (!isHarnessed || !route || e.fork || e.isTeammate || e.workflow) return next(e)
+    const features = await $.fs.read('FEATURES.json').catch(() => '')
+    const logPath = `${RUN_DIR}/models.log`
+    const log = (await $.fs.exists(logPath)) ? await $.fs.read(logPath) : ''
+    const choice = chooseModel(e, features, log, floor)
+    if (!choice) return next(e)
+    const started = await next({ ...e, model: choice.model })
+    if (choice.feature) {
+      await $.fs.write(logPath, log + modelsLine(choice))
+      if (!(await $.fs.exists(`${RUN_DIR}/.gitignore`))) await $.fs.write(`${RUN_DIR}/.gitignore`, '*\n')
     }
     return started
   })

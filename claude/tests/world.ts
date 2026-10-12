@@ -32,7 +32,12 @@ export function world(on: On, files: Record<string, string> = {}) {
     return { value: undefined }
   })
   on('turn.complete', async (_$, e) => ({ text: e.answer }))
-  return { files, registered, statuses }
+  const spawns: { model?: string; subagentType: string }[] = []
+  on('agent.spawn', async (_$, e) => {
+    spawns.push({ model: e.model, subagentType: e.subagentType })
+    return { model: e.model ?? 'inherit', agentId: `agent-${spawns.length}` }
+  })
+  return { files, registered, statuses, spawns }
 }
 
 export const USAGE = { input_tokens: 10, output_tokens: 5, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 }
