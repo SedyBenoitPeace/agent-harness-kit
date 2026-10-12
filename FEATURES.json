@@ -1115,6 +1115,89 @@
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with: test-status.sh proving a paths: line under NEXT when the feature has paths; harness-run SKILL.md passing those paths in the builder dispatch; test-run.sh proving run-report.sh writes minutes per done feature from commit times and tokens from .harness-run/tokens.log; a mods test proving the budget guard appends <id> <tokens> to .harness-run/tokens.log at each SESSION line during a run; all manifests 3.7.0 with a CHANGELOG Upgrade block; template mirror PR synced; CI green on the PR",
       "notes": "Plan: docs/plans/completed/2026-10-07-m29-run-speed.md"
+    },
+    {
+      "id": "M30-001",
+      "milestone": 30,
+      "title": "Claude Code edition picks each builder's model from the feature's effort, steps up on retries, never below sonnet for the evaluator or sensitive paths",
+      "status": "failing",
+      "depends_on": [],
+      "paths": [
+        "claude/"
+      ],
+      "effort": "high",
+      "verify": "bash scripts/e2e.sh exits 0 with claude plugin test proving an agent.spawn of harness-builder for a feature with effort low/medium/high gets model haiku/sonnet/opus; a second start of the same feature (models.log) or eval_attempts 1 steps up one tier, capped at opus; paths touching auth/payments/migrations and the harness-evaluator never get below sonnet; model_floor raises the minimum; route_models false, forks, teammates, workflow agents and non-harness subagents are untouched; outside a harnessed repo nothing changes; each choice is appended to .harness-run/models.log",
+      "notes": "Plan: docs/plans/active/2026-10-12-m30-models-budget.md"
+    },
+    {
+      "id": "M30-002",
+      "milestone": 30,
+      "title": "Budgets in dollars from the session's own cost: per feature and per run, cost.log, report in dollars with the model",
+      "status": "failing",
+      "depends_on": [
+        "M30-001"
+      ],
+      "paths": [
+        "claude/",
+        "skills/harness-run/scripts/run-report.sh",
+        "scripts/test-run.sh"
+      ],
+      "effort": "high",
+      "verify": "bash scripts/e2e.sh exits 0 with mods tests proving: spending over feature_budget_usd during a run (cost from $.session.usage) writes .harness-run/STOP and budget.log; over run_budget_usd likewise; under budget writes nothing; outside a run it only warns; each feature's dollars go to .harness-run/cost.log once at its builder's SESSION line; no cost ledger means no budget action; feature_token_budget is gone from plugin.json; test-run.sh proving run-report.sh shows $ per feature from cost.log and the model (and a step-up) from models.log",
+      "notes": "Plan: docs/plans/active/2026-10-12-m30-models-budget.md"
+    },
+    {
+      "id": "M30-003",
+      "milestone": 30,
+      "title": "Harness status line beside the person's own, and a /harness command that costs no model call",
+      "status": "failing",
+      "depends_on": [
+        "M30-002"
+      ],
+      "paths": [
+        "claude/"
+      ],
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with mods tests proving the plugin's status line shows the feature, passing/total, dollars against the feature budget, the model and the waiting-on-you count, and keeps a budget or supervisor notice on it; /harness answers milestones, the next feature (held ones skipped), waiting-on-a-human questions and the run's cost with no model call; outside a harnessed repo /harness says so",
+      "notes": "Plan: docs/plans/active/2026-10-12-m30-models-budget.md"
+    },
+    {
+      "id": "M30-004",
+      "milestone": 30,
+      "title": "status.sh --line for a person's own status line script and --watch for a second terminal",
+      "status": "failing",
+      "depends_on": [
+        "M30-003"
+      ],
+      "paths": [
+        "skills/harness-status/",
+        "scripts/test-status.sh",
+        "README.md"
+      ],
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-status.sh proving --line prints exactly one line with next feature, passing/total and the waiting count (and run dollars when .harness-run/cost.log exists), and nothing for an uninitialized dir (exit 3 silent); --watch with a 1-second interval and a bounded count redraws the report; README shows how to add --line to an existing status line",
+      "notes": "Plan: docs/plans/active/2026-10-12-m30-models-budget.md"
+    },
+    {
+      "id": "M30-005",
+      "milestone": 30,
+      "title": "An approved plan's tasks enter FEATURES.json as failing in the plan's commit; audit enforces it; release 3.8.0",
+      "status": "failing",
+      "depends_on": [
+        "M30-004"
+      ],
+      "paths": [
+        "skills/",
+        "scripts/",
+        "CHANGELOG.md",
+        "package.json",
+        ".claude-plugin/",
+        "claude/.claude-plugin/",
+        "README.md"
+      ],
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with: protocol 1.5 saying an approved plan's tasks enter FEATURES.json as failing in the plan's commit; test-audit.sh proving harness-audit FAILs when a plan in docs/plans/active names a feature id missing from FEATURES.json and passes when all are present; all manifests 3.8.0 with a CHANGELOG Upgrade block; template mirror synced; CI green on the PR",
+      "notes": "Plan: docs/plans/active/2026-10-12-m30-models-budget.md"
     }
   ]
 }
