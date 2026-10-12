@@ -117,21 +117,182 @@ export function transcriptText(messages: { role: string; text: string; toolUses?
   return text.length > max ? text.slice(text.length - max) : text
 }
 
-// --- M25-003 budget guard -------------------------------------------------
+// --- M25-003 / M30-002 budget guard, in dollars ----------------------------
+// Measured from the session's own cost figure (subagents included), so the
+// kit keeps no price table. 0 turns a budget off.
 
-export const DEFAULT_BUDGET = 1_500_000
+export const DEFAULT_FEATURE_USD = 5
+export const DEFAULT_RUN_USD = 50
 
-// Tokens that cost real money: input, output and cache writes. Cache reads are
-// a tenth of the price and dominate long sessions, so they are left out.
-export function countedTokens(usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens: number } | undefined) {
-  return usage ? usage.input_tokens + usage.output_tokens + usage.cache_creation_input_tokens : 0
+export const usd = (n: number) => `$${n.toFixed(2)}`
+
+export function budgetLine(when: string, scope: string, spent: number, budget: number) {
+  return `${when} ${scope}: ${usd(spent)} over the ${usd(budget)} budget; run asked to stop after this feature\n`
 }
 
-export function budgetLine(when: string, who: string, used: number, budget: number) {
-  return `${when} ${who}: ${used} tokens over the ${budget} budget; run asked to stop after this feature\n`
+// One line per builder session in .harness-run/cost.log, read by run-report.sh
+export function costLine(feature: string, spent: number) {
+  return `${feature} ${spent.toFixed(4)}\n`
 }
 
-// M29-003 — one line per feature in .harness-run/tokens.log, read by run-report.sh
-export function tokensLine(feature: string, used: number) {
-  return `${feature} ${used}\n`
+// --- M30-001 model choice -----------------------------------------------------
+// Aliases only: each resolves to its family's newest model, so a release
+// (Haiku 5.5, say) is picked up with nothing to maintain.
+
+export const TIERS = ['haiku', 'sonnet', 'opus'] as const
+const SENSITIVE = /auth|payment|billing|migration|secret|credential|personal/i
+export const BUILDER_PROMPT = /harness-session for (M\d+-\d{3})/
+
+// A model name's tier: haiku 0, sonnet 1, opus 2, above opus 3; -1 unknown.
+export function tierOf(model: string | undefined) {
+  const m = (model ?? '').toLowerCase()
+  if (m.includes('haiku')) return 0
+  if (m.includes('sonnet')) return 1
+  if (m.includes('opus')) return 2
+  if (m.includes('fable') || m.includes('mythos')) return 3
+  return -1
+}
+
+type FeatureEntry = { id?: string; effort?: unknown; paths?: unknown; eval_attempts?: unknown }
+
+export function featureOf(featuresJson: string, id: string): FeatureEntry | undefined {
+  try {
+    return (JSON.parse(featuresJson) as { features?: FeatureEntry[] }).features?.find(f => f.id === id)
+  } catch {
+    return undefined
+  }
+}
+
+export type SpawnFacts = { subagentType: string; prompt: string; model?: string; parentModel: string }
+export type ModelChoice = { model: string; feature?: string; reason: string }
+
+const floorTier = (floor: string) => Math.max(0, (TIERS as readonly string[]).indexOf(floor))
+
+// The model a harness subagent should start on, or undefined to leave it be.
+export function chooseModel(spawn: SpawnFacts, featuresJson: string, modelsLog: string, floor: string): ModelChoice | undefined {
+  const min = floorTier(floor)
+  if (spawn.subagentType === 'harness-evaluator') {
+    const asked = tierOf(spawn.model ?? spawn.parentModel)
+    const want = Math.max(1, min)
+    return asked >= 0 && asked < want ? { model: TIERS[want]!, reason: 'evaluator never below sonnet' } : undefined
+  }
+  const id = BUILDER_PROMPT.exec(spawn.prompt)?.[1] ?? (spawn.subagentType === 'harness-builder' ? /M\d+-\d{3}/.exec(spawn.prompt)?.[0] : undefined)
+  if (!id) return undefined
+  const f = featureOf(featuresJson, id)
+  if (!f) return undefined
+  const effort = typeof f.effort === 'string' ? f.effort : 'none'
+  const reasons = [`effort ${effort}`]
+  let tier = effort === 'low' ? 0 : effort === 'high' || effort === 'max' ? 2 : 1
+  const starts = modelsLog.split('\n').filter(l => l.startsWith(`${id} `)).length
+  const attempts = Number(f.eval_attempts) > 0 ? Number(f.eval_attempts) : 0
+  if (starts + attempts > 0) {
+    tier += starts + attempts
+    reasons.push(`+${starts + attempts} after ${starts} earlier start(s), ${attempts} evaluator rejection(s)`)
+  }
+  tier = Math.min(2, tier)
+  const paths = Array.isArray(f.paths) ? f.paths.map(String) : []
+  if (tier < 1 && paths.some(p => SENSITIVE.test(p))) {
+    tier = 1
+    reasons.push('sensitive paths')
+  }
+  if (tier < min) {
+    tier = min
+    reasons.push(`floor ${floor}`)
+  }
+  return { model: TIERS[tier]!, feature: id, reason: reasons.join(', ') }
+}
+
+export function modelsLine(choice: ModelChoice) {
+  return `${choice.feature} ${choice.model} ${choice.reason}\n`
+}
+
+// --- M30-003 status line and /harness ------------------------------------------
+// Read from FEATURES.json alone: no model call, no shell.
+
+type Entry = { id: string; milestone?: unknown; title?: string; status?: string; notes?: unknown; depends_on?: unknown; effort?: unknown; paths?: unknown }
+
+export type Facts = {
+  passing: number
+  total: number
+  milestones: { key: string; name: string; passing: number; total: number }[]
+  next?: Entry
+  waiting: { id: string; question: string }[]
+  held: { id: string; on: string }[]
+}
+
+const WAITING = /^Needs a human:\s*/
+
+export function harnessFacts(featuresJson: string): Facts | undefined {
+  let data: { milestones?: Record<string, string>; features?: Entry[] }
+  try {
+    data = JSON.parse(featuresJson)
+  } catch {
+    return undefined
+  }
+  const fs = (data.features ?? []).filter(f => typeof f?.id === 'string')
+  const waiting = fs
+    .filter(f => f.status === 'deferred' && WAITING.test(String(f.notes ?? '')))
+    .map(f => ({ id: f.id, question: String(f.notes).replace(WAITING, '') }))
+  // held: failing features whose depends_on reaches a waiting one, transitively
+  const on = new Map<string, string>(waiting.map(w => [w.id, '']))
+  const failing = fs.filter(f => f.status === 'failing')
+  for (let changed = true; changed; ) {
+    changed = false
+    for (const f of failing) {
+      if (on.has(f.id) || !Array.isArray(f.depends_on)) continue
+      const hit = f.depends_on.map(String).find(d => on.has(d))
+      if (hit) {
+        on.set(f.id, hit)
+        changed = true
+      }
+    }
+  }
+  const held = [...on].filter(([, v]) => v !== '').map(([id, v]) => ({ id, on: v }))
+  const order = (f: Entry) => [Number(f.milestone) || 0, f.id] as const
+  const next = failing
+    .filter(f => !on.has(f.id))
+    .sort((a, b) => order(a)[0] - order(b)[0] || order(a)[1].localeCompare(order(b)[1]))[0]
+  const keys = [...new Set(fs.map(f => String(f.milestone)))].sort((a, b) => Number(a) - Number(b))
+  return {
+    passing: fs.filter(f => f.status === 'passing').length,
+    total: fs.length,
+    milestones: keys.map(key => {
+      const ms = fs.filter(f => String(f.milestone) === key)
+      return { key, name: data.milestones?.[key] ?? '?', passing: ms.filter(f => f.status === 'passing').length, total: ms.length }
+    }),
+    next,
+    waiting,
+    held,
+  }
+}
+
+export type LineState = { feature?: string; model?: string; spent?: number; budget?: number; notice?: string }
+
+export function statusLineText(f: Facts, s: LineState) {
+  const parts = [`harness ${s.feature ?? f.next?.id ?? 'done'}`, `${f.passing}/${f.total} passing`]
+  if (s.spent !== undefined) parts.push(s.budget ? `${usd(s.spent)}/${usd(s.budget)}` : usd(s.spent))
+  if (s.model) parts.push(s.model)
+  if (f.waiting.length > 0) parts.push(`${f.waiting.length} waiting on you`)
+  if (s.notice) parts.push(s.notice)
+  return parts.join(' · ')
+}
+
+export function harnessReport(f: Facts, runCost?: number) {
+  const lines = ['Harness status', '']
+  for (const m of f.milestones) lines.push(`M${m.key}: ${m.passing}/${m.total} passing — ${m.name}`)
+  lines.push('', `${f.passing}/${f.total} features passing`)
+  if (f.next) {
+    lines.push('', `Next: ${f.next.id} — ${f.next.title ?? ''}`)
+    if (typeof f.next.effort === 'string') lines.push(`  effort: ${f.next.effort}`)
+    if (Array.isArray(f.next.paths) && f.next.paths.length > 0) lines.push(`  paths: ${f.next.paths.join(', ')}`)
+  } else {
+    lines.push('', 'Next: nothing eligible')
+  }
+  if (f.waiting.length > 0) {
+    lines.push('', 'Waiting on you:')
+    for (const w of f.waiting) lines.push(`  ${w.id} — ${w.question}`)
+    for (const h of f.held) lines.push(`  held: ${h.id} (depends on ${h.on})`)
+  }
+  if (runCost !== undefined) lines.push('', `This session so far: ${usd(runCost)}`)
+  return lines.join('\n')
 }

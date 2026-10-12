@@ -1,12 +1,18 @@
-import type { Register } from 'claude-code'
+import type { EngineInterface, Register } from 'claude-code'
 
 import {
   appendLine,
   budgetLine,
-  countedTokens,
-  DEFAULT_BUDGET,
+  chooseModel,
+  costLine,
+  modelsLine,
+  DEFAULT_FEATURE_USD,
+  DEFAULT_RUN_USD,
   DECISION_TOOL,
   decisionSpec,
+  harnessFacts,
+  harnessReport,
+  type LineState,
   decisionsPath,
   parseDecision,
   parseSessionLine,
@@ -15,9 +21,10 @@ import {
   RUN_DIR,
   skippedFile,
   skippedPath,
+  statusLineText,
   supervisorPrompt,
-  tokensLine,
   transcriptText,
+  usd,
   verdictStatus,
   verifyOf,
 } from './lib'
@@ -26,19 +33,74 @@ import {
 // Every feature stays inert outside a harnessed repo (no FEATURES.json).
 // All hooks live in this file: the engine follows `$` only within it.
 
+// M30-003 — the plugin's own status line (beside the person's own one):
+// feature, passing/total, dollars against the feature budget, model,
+// features waiting on a human, and the last notice.
+async function showStatus($: EngineInterface, shown: LineState, featureBase: number | undefined, budget: number) {
+  const facts = harnessFacts(await $.fs.read('FEATURES.json').catch(() => ''))
+  if (!facts) return
+  const cost = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
+  const spent = cost !== undefined && featureBase !== undefined ? cost - featureBase : undefined
+  $.ui.status(statusLineText(facts, { ...shown, spent, budget }))
+}
+
 export const register: Register = (on, options) => {
   let isHarnessed = false
   const checked = new Set<string>()
-  const budget = typeof options.feature_token_budget === 'number' ? options.feature_token_budget : DEFAULT_BUDGET
-  const used = new Map<string, number>() // per builder subagent, or 'main' between SESSION lines
-  const flagged = new Set<string>()
-  const measured = new Set<string>() // features whose tokens are logged (M29-003)
+  const num = (v: unknown, d: number) => (typeof v === 'number' && v >= 0 ? v : d)
+  const featureBudget = num(options.feature_budget_usd, DEFAULT_FEATURE_USD)
+  const runBudget = num(options.run_budget_usd, DEFAULT_RUN_USD)
+  let featureBase: number | undefined // session cost when the current feature began
+  let runBase: number | undefined // session cost when this session first saw the run
+  let isFeatureFlagged = false
+  let isRunFlagged = false
+  const measured = new Set<string>() // features whose cost is logged since their builder started
+  const shown: { feature?: string; model?: string; notice?: string } = {} // what the status line shows (M30-003)
+  const route = options.route_models !== false
+  const floor = typeof options.model_floor === 'string' ? options.model_floor : 'haiku'
+
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)
     isHarnessed = await $.fs.exists('FEATURES.json').catch(() => false)
     if (isHarnessed) {
       await $.tool.register(decisionSpec)
+      // budgets count from here (M30-002)
+      featureBase = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
+      if (await $.fs.exists(`${RUN_DIR}/start`)) runBase = featureBase
+      await showStatus($, shown, featureBase, featureBudget)
+    }
+    await $.command.register({ name: 'harness', description: 'Harness status: milestones, next feature, what waits on you, cost (no model call)' })
+    return started
+  })
+
+  // M30-003 — /harness: the status from FEATURES.json, no model call
+  on('command.run', { command: 'harness' }, async $ => {
+    const facts = harnessFacts(await $.fs.read('FEATURES.json').catch(() => ''))
+    if (!facts) return { text: 'No harness here: FEATURES.json is missing or not valid JSON.' }
+    const cost = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
+    return { text: harnessReport(facts, cost) }
+  })
+
+  // M30-001 — model choice: a harness builder starts on the model its
+  // feature's effort asks for, one tier up per earlier start or evaluator
+  // rejection; the evaluator and sensitive features never below sonnet.
+  // The main session, forks, teammates and workflow agents are left alone.
+  on('agent.spawn', async ($, e, next) => {
+    if (!isHarnessed || !route || e.fork || e.isTeammate || e.workflow) return next(e)
+    const features = await $.fs.read('FEATURES.json').catch(() => '')
+    const logPath = `${RUN_DIR}/models.log`
+    const log = (await $.fs.exists(logPath)) ? await $.fs.read(logPath) : ''
+    const choice = chooseModel(e, features, log, floor)
+    if (!choice) return next(e)
+    const started = await next({ ...e, model: choice.model })
+    if (choice.feature) {
+      shown.feature = choice.feature
+      shown.model = choice.model
+      await showStatus($, shown, featureBase, featureBudget)
+      measured.delete(choice.feature)
+      await $.fs.write(logPath, log + modelsLine(choice))
+      if (!(await $.fs.exists(`${RUN_DIR}/.gitignore`))) await $.fs.write(`${RUN_DIR}/.gitignore`, '*\n')
     }
     return started
   })
@@ -64,34 +126,47 @@ export const register: Register = (on, options) => {
     if (!isHarnessed) return result
     const line = parseSessionLine(e.answer)
 
-    // M25-003 — budget guard: count what each feature spends. A builder
-    // subagent is one feature; the main loop counts between SESSION lines.
-    const who = e.agentId ?? 'main'
-    const total = (used.get(who) ?? 0) + countedTokens(e.usage)
-    used.set(who, total)
-    if (total > budget && !flagged.has(who)) {
-      flagged.add(who)
-      $.ui.status(`budget: ${who} used ${total} tokens (budget ${budget})`)
-      if (await $.fs.exists(`${RUN_DIR}/start`)) {
+    // M30-002 — budget guard in dollars: what the feature (since the last
+    // SESSION line) and the run (since this session saw it) have cost.
+    const cost = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
+    if (cost !== undefined) {
+      featureBase ??= cost
+      const isRun = await $.fs.exists(`${RUN_DIR}/start`)
+      if (isRun) runBase ??= cost
+      const stop = async (scope: string, spent: number, budget: number) => {
+        shown.notice = `budget: ${scope} ${usd(spent)} of ${usd(budget)}`
+        if (!isRun) return
         const log = `${RUN_DIR}/budget.log`
         const before = (await $.fs.exists(log)) ? await $.fs.read(log) : ''
-        await $.fs.write(log, before + budgetLine(new Date().toISOString(), who, total, budget))
-        await $.fs.write(`${RUN_DIR}/STOP`, `budget: ${who} used ${total} tokens\n`)
+        await $.fs.write(log, before + budgetLine(new Date().toISOString(), scope, spent, budget))
+        await $.fs.write(`${RUN_DIR}/STOP`, `budget: ${scope} ${usd(spent)} of ${usd(budget)}\n`)
+      }
+      const spent = cost - featureBase
+      if (featureBudget > 0 && spent > featureBudget && !isFeatureFlagged) {
+        isFeatureFlagged = true
+        await stop(`feature ${line?.feature ?? 'in progress'}`, spent, featureBudget)
+      }
+      if (isRun && runBase !== undefined && runBudget > 0 && cost - runBase > runBudget && !isRunFlagged) {
+        isRunFlagged = true
+        await stop('run', cost - runBase, runBudget)
+      }
+      // each builder session's cost, once (an orchestrator echoing its
+      // SESSION line is not a second session)
+      if (line && !measured.has(line.feature)) {
+        measured.add(line.feature)
+        if (isRun) {
+          const log = `${RUN_DIR}/cost.log`
+          const before = (await $.fs.exists(log)) ? await $.fs.read(log) : ''
+          await $.fs.write(log, before + costLine(line.feature, spent))
+        }
+      }
+      if (line) {
+        featureBase = cost
+        isFeatureFlagged = false
       }
     }
-    // M29-003 — tokens per feature for the run report: the first SESSION
-    // line for a feature is its builder's; an orchestrator's echo is not.
-    if (line && !measured.has(line.feature) && (await $.fs.exists(`${RUN_DIR}/start`))) {
-      measured.add(line.feature)
-      const log = `${RUN_DIR}/tokens.log`
-      const before = (await $.fs.exists(log)) ? await $.fs.read(log) : ''
-      await $.fs.write(log, before + tokensLine(line.feature, total))
-    }
-    if (line && who === 'main') {
-      used.delete('main')
-      flagged.delete('main')
-    }
 
+    await showStatus($, shown, featureBase, featureBudget)
     if (!line) return result
     // One check per feature outcome: an orchestrator echoing a builder's
     // SESSION line must not pay for a second check.
@@ -118,7 +193,8 @@ export const register: Register = (on, options) => {
       await $.fs.write(skippedPath(line.feature), skippedFile(line.feature, verdict.skipped))
       if (!(await $.fs.exists(`${RUN_DIR}/.gitignore`))) await $.fs.write(`${RUN_DIR}/.gitignore`, '*\n')
     }
-    $.ui.status(verdictStatus(line.feature, verdict))
+    shown.notice = verdictStatus(line.feature, verdict)
+    await showStatus($, shown, featureBase, featureBudget)
     return result
   })
 }

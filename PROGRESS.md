@@ -3,6 +3,92 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-12 — session 65 (M30-005, release 3.8.0)
+
+- Branch: `m30-models-budget`.
+- Done: M30-005 — protocol 1.5: once a plan is approved, its tasks enter
+  FEATURES.json as `failing` in the plan's commit. harness-audit FAILs when
+  a task heading in an active plan names an id missing from FEATURES.json
+  (ids mentioned in prose are ignored). Released 3.8.0 with its Upgrade
+  block (dollar budgets in /config, `model_floor`, re-run harness-audit).
+  Mirror synced: agent-harness-template PR #4. All M30 features pass; plan
+  moved to completed.
+- Decisions: audit reads task headings only, so a plan can mention other
+  features in prose; FAIL rather than WARN because a missing feature hides
+  the plan's progress, which is the point of the rule.
+- Gate: green (31 mod tests; shellcheck 0.9 clean).
+- Next: owner merges kit PR, then template PR #4.
+
+## 2026-10-12 — session 64 (M30-004)
+
+- Branch: `m30-models-budget`.
+- Done: M30-004 — `status.sh --line` prints the harness in one line for a
+  person's own status line script (next feature, passing/total, waiting on
+  a human, the run's dollars from `.harness-run/cost.log`), and nothing
+  (exit 3) outside a harness so their line is unchanged there. `--watch
+  [SECONDS]` redraws the report for a second terminal; `HARNESS_WATCH_COUNT`
+  bounds it for tests. Both for any agent. README explains both.
+- Decisions: `--line` computes the next feature with the same held logic as
+  the report (the jq definition moved up so both share it); silence rather
+  than an error line outside a harness, since it runs inside someone else's
+  status line.
+- Gate: green; shellcheck 0.9 clean.
+- Next: M30-005 (plan tasks in FEATURES.json once approved; release 3.8.0).
+
+## 2026-10-12 — session 63 (M30-003)
+
+- Branch: `m30-models-budget`.
+- Done: M30-003 — the edition's own status line (beside the person's own,
+  never replacing it): `harness <feature> · <passing>/<total> passing ·
+  $spent/$budget · <model> · N waiting on you`, with the last budget or
+  supervisor notice appended; refreshed at session start, each builder start
+  and each turn. `/harness` prints milestones, the next feature (held ones
+  skipped), what waits on a human and the session's cost from FEATURES.json:
+  no model call. Checked live with `claude -p "/harness"` on this repo, which
+  showed milestones 28-30 had no names in FEATURES.json: named now.
+- Decisions: the status helper is a top-level function (the engine follows
+  `$` only into top-level functions of the hooks file); the supervisor and
+  budget notices became part of the line instead of replacing it.
+- Gate: green (31 mod tests).
+- Next: M30-004 (status.sh --line and --watch).
+
+## 2026-10-12 — session 62 (M30-002)
+
+- Branch: `m30-models-budget`.
+- Done: M30-002 — budgets in dollars. `feature_budget_usd` (default $5)
+  and `run_budget_usd` (default $50) replace `feature_token_budget`; both
+  measured from `$.session.usage().cost.usd`, counted from session start and
+  reset per feature at each SESSION line. Over budget during a run: STOP and
+  a `budget.log` line; outside a run only the status line; 0 turns a budget
+  off; no cost ledger, no action. Each builder session's cost goes once to
+  `.harness-run/cost.log` (an orchestrator echo is not counted again). The
+  run report sums it per feature and adds the model and any step-up from
+  `models.log`. README updated.
+- Decisions: the session's own cost figure rather than tokens times a price
+  table (verified live to include subagents); per-feature cost is the delta
+  between SESSION lines, so parallel lanes share one figure (documented);
+  defaults $5 and $50 are placeholders for the owner to set in /config.
+- Gate: green (27 mod tests; shellcheck 0.9 clean).
+- Next: M30-003 (status line and /harness).
+
+## 2026-10-12 — session 61 (M30-001)
+
+- Branch: `m30-models-budget`.
+- Done: M30-001 — the Claude Code edition picks each harness builder's
+  model in an `agent.spawn` hook: effort low haiku, medium or none sonnet,
+  high/max opus (aliases only); one tier up per earlier start of the feature
+  (`.harness-run/models.log`) and per `eval_attempts`, capped at opus; the
+  evaluator and features whose paths touch auth, payments, billing,
+  migrations, secrets, credentials or personal data never below sonnet;
+  `model_floor` and `route_models` settings. Forks, teammates, workflow
+  agents, other subagents and the main session are untouched. Checked live
+  first on 2.1.296: the rewrite starts the subagent on `claude-haiku-5-5`.
+- Decisions: escalation counts earlier starts instead of parsing outcomes
+  (any retry means the last model was not enough); a feature with no effort
+  starts on sonnet, not haiku (an unlabelled feature is not known to be easy).
+- Gate: green (27 mod tests).
+- Next: M30-002 (budgets in dollars).
+
 ## 2026-10-07 — session 60 (M29-002 follow-up)
 
 - Branch: `m29-run-speed`.

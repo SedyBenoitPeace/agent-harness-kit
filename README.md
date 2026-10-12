@@ -250,10 +250,29 @@ of git):
 - **Done-check supervisor** — when a session ends with its `SESSION:` line,
   one cheap check against the feature's `verify` reports done, blocked or
   skipped work (in a status line, and `.harness-run/decisions/<id>.skipped.md`).
-- **Budget guard** — counts each feature's tokens (input, output, cache
-  writes). Over `feature_token_budget` (set it in `/config`, default
-  1,500,000) during an unattended run it writes `.harness-run/STOP`, so the
-  run ends after the current feature, and logs why in `.harness-run/budget.log`.
+- **Status line** — one line under the prompt, beside your own status line
+  (never replacing it): `harness M3-005 · 12/20 passing · $1.40/$5.00 ·
+  sonnet · 2 waiting on you`, plus the last budget or supervisor notice.
+  To merge it into your own status line script instead, call
+  `status.sh --line` there (core kit).
+- **`/harness`** — milestones, the next feature, what waits on you and the
+  session's cost, read from FEATURES.json: no model call, no tokens.
+- **Model choice** — each builder a run starts gets the model its feature's
+  `effort` asks for: low `haiku`, medium (or none) `sonnet`, high or max
+  `opus`, by alias, so new models are picked up with nothing to update. A
+  retry or an evaluator rejection steps it up one tier; the evaluator and
+  features touching auth, payments, migrations or personal data never run
+  below `sonnet`. Set `model_floor` in `/config` to raise the minimum, or
+  turn `route_models` off. Your own session's model is never changed; the
+  choices land in `.harness-run/models.log` and the run report.
+- **Budget guard** — budgets in dollars, from Claude Code's own cost
+  figure (subagents included; on a subscription it is the list-price
+  equivalent, still right for comparing and capping). Over
+  `feature_budget_usd` (default $5) or `run_budget_usd` (default $50) during
+  an unattended run it writes `.harness-run/STOP`, so the run ends after the
+  current feature, and logs why in `.harness-run/budget.log`; 0 turns a
+  budget off. Each feature's cost lands in `.harness-run/cost.log` and the
+  run report. Features built in parallel share one figure.
 
 Upgrading from 3.2.0: the edition was briefly named `agent-harness-kit-mods`;
 run `/plugin uninstall agent-harness-kit-mods`, then install
@@ -378,8 +397,16 @@ What it does, so nothing surprises you:
   milestone and leaves them local.
 - **The report**, `docs/runs/<date>.md`, is built by `run-report.sh` from
   git and FEATURES.json (no model calls) and committed: done (with minutes
-  per feature, and tokens with the Claude Code edition), skipped (with each
+  per feature, and dollars and the model with the Claude Code edition), skipped (with each
   question), waiting on a human, not started and why, branches used.
+- **Watching it from a terminal.** In a second tab, run
+  `bash <kit>/skills/harness-status/scripts/status.sh --watch` in the repo:
+  the status report redrawn every 5 seconds (`--watch 30` for every 30),
+  no model calls, any agent. For one line in your own status line script,
+  add the output of `status.sh --line`, e.g.
+  `harness M3-005 · 12/20 passing · 2 waiting on you · $4.10 this run`; it
+  prints nothing outside a harnessed repo, so your line stays as it was
+  there.
 - **Builders start from the feature's `paths`**, when FEATURES.json has
   them, instead of searching the repo for their files.
 

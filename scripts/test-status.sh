@@ -101,4 +101,17 @@ grep -qx '  paths: src/docs/, tests/docs/\*\*' <<< "$out" || fail "paths: line m
 out="$(bash "$STATUS" "$WORK/nohuman")"
 grep -q '^  paths:' <<< "$out" && fail "paths: no line for a feature without paths"
 
+# 7. --line and --watch (M30-004)
+out="$(bash "$STATUS" --line "$WORK/human")"
+[ "$out" = "harness M1-004 · 0/5 passing · 1 waiting on you" ] || fail "--line: got '$out'"
+mkdir -p "$WORK/human/.harness-run"; printf 'M1-004 0.5000\nM1-004 0.7500\n' > "$WORK/human/.harness-run/cost.log"
+out="$(bash "$STATUS" --line "$WORK/human")"
+[ "$out" = "harness M1-004 · 0/5 passing · 1 waiting on you · \$1.25 this run" ] || fail "--line with cost: got '$out'"
+rm -rf "$WORK/human/.harness-run"
+rc=0; out="$(bash "$STATUS" --line "$WORK/bare")" || rc=$?
+if [ "$rc" -ne 3 ] || [ -n "$out" ]; then fail "--line outside a harness: want silent exit 3, got $rc '$out'"; fi
+out="$(HARNESS_WATCH_COUNT=2 bash "$STATUS" --watch 1 "$WORK/human")"
+[ "$(grep -c '^HARNESS STATUS$' <<< "$out")" -eq 2 ] || fail "--watch: want the report drawn twice"
+grep -q '^harness-status --watch: every 1s' <<< "$out" || fail "--watch: header missing"
+
 echo "STATUS TESTS GREEN"
