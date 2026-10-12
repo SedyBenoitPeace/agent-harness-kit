@@ -250,6 +250,13 @@ of git):
 - **Done-check supervisor** — when a session ends with its `SESSION:` line,
   one cheap check against the feature's `verify` reports done, blocked or
   skipped work (in a status line, and `.harness-run/decisions/<id>.skipped.md`).
+- **Status line** — one line under the prompt, beside your own status line
+  (never replacing it): `harness M3-005 · 12/20 passing · $1.40/$5.00 ·
+  sonnet · 2 waiting on you`, plus the last budget or supervisor notice.
+  To merge it into your own status line script instead, call
+  `status.sh --line` there (core kit).
+- **`/harness`** — milestones, the next feature, what waits on you and the
+  session's cost, read from FEATURES.json: no model call, no tokens.
 - **Model choice** — each builder a run starts gets the model its feature's
   `effort` asks for: low `haiku`, medium (or none) `sonnet`, high or max
   `opus`, by alias, so new models are picked up with nothing to update. A

@@ -1,4 +1,4 @@
-import type { Register } from 'claude-code'
+import type { EngineInterface, Register } from 'claude-code'
 
 import {
   appendLine,
@@ -10,6 +10,9 @@ import {
   DEFAULT_RUN_USD,
   DECISION_TOOL,
   decisionSpec,
+  harnessFacts,
+  harnessReport,
+  type LineState,
   decisionsPath,
   parseDecision,
   parseSessionLine,
@@ -18,6 +21,7 @@ import {
   RUN_DIR,
   skippedFile,
   skippedPath,
+  statusLineText,
   supervisorPrompt,
   transcriptText,
   usd,
@@ -28,6 +32,17 @@ import {
 // agent-harness-kit-claude: Claude Code-only additions to the harness.
 // Every feature stays inert outside a harnessed repo (no FEATURES.json).
 // All hooks live in this file: the engine follows `$` only within it.
+
+// M30-003 — the plugin's own status line (beside the person's own one):
+// feature, passing/total, dollars against the feature budget, model,
+// features waiting on a human, and the last notice.
+async function showStatus($: EngineInterface, shown: LineState, featureBase: number | undefined, budget: number) {
+  const facts = harnessFacts(await $.fs.read('FEATURES.json').catch(() => ''))
+  if (!facts) return
+  const cost = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
+  const spent = cost !== undefined && featureBase !== undefined ? cost - featureBase : undefined
+  $.ui.status(statusLineText(facts, { ...shown, spent, budget }))
+}
 
 export const register: Register = (on, options) => {
   let isHarnessed = false
@@ -40,8 +55,10 @@ export const register: Register = (on, options) => {
   let isFeatureFlagged = false
   let isRunFlagged = false
   const measured = new Set<string>() // features whose cost is logged since their builder started
+  const shown: { feature?: string; model?: string; notice?: string } = {} // what the status line shows (M30-003)
   const route = options.route_models !== false
   const floor = typeof options.model_floor === 'string' ? options.model_floor : 'haiku'
+
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)
@@ -51,8 +68,18 @@ export const register: Register = (on, options) => {
       // budgets count from here (M30-002)
       featureBase = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
       if (await $.fs.exists(`${RUN_DIR}/start`)) runBase = featureBase
+      await showStatus($, shown, featureBase, featureBudget)
     }
+    await $.command.register({ name: 'harness', description: 'Harness status: milestones, next feature, what waits on you, cost (no model call)' })
     return started
+  })
+
+  // M30-003 — /harness: the status from FEATURES.json, no model call
+  on('command.run', { command: 'harness' }, async $ => {
+    const facts = harnessFacts(await $.fs.read('FEATURES.json').catch(() => ''))
+    if (!facts) return { text: 'No harness here: FEATURES.json is missing or not valid JSON.' }
+    const cost = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
+    return { text: harnessReport(facts, cost) }
   })
 
   // M30-001 — model choice: a harness builder starts on the model its
@@ -68,6 +95,9 @@ export const register: Register = (on, options) => {
     if (!choice) return next(e)
     const started = await next({ ...e, model: choice.model })
     if (choice.feature) {
+      shown.feature = choice.feature
+      shown.model = choice.model
+      await showStatus($, shown, featureBase, featureBudget)
       measured.delete(choice.feature)
       await $.fs.write(logPath, log + modelsLine(choice))
       if (!(await $.fs.exists(`${RUN_DIR}/.gitignore`))) await $.fs.write(`${RUN_DIR}/.gitignore`, '*\n')
@@ -104,7 +134,7 @@ export const register: Register = (on, options) => {
       const isRun = await $.fs.exists(`${RUN_DIR}/start`)
       if (isRun) runBase ??= cost
       const stop = async (scope: string, spent: number, budget: number) => {
-        $.ui.status(`budget: ${scope} ${usd(spent)} of ${usd(budget)}`)
+        shown.notice = `budget: ${scope} ${usd(spent)} of ${usd(budget)}`
         if (!isRun) return
         const log = `${RUN_DIR}/budget.log`
         const before = (await $.fs.exists(log)) ? await $.fs.read(log) : ''
@@ -136,6 +166,7 @@ export const register: Register = (on, options) => {
       }
     }
 
+    await showStatus($, shown, featureBase, featureBudget)
     if (!line) return result
     // One check per feature outcome: an orchestrator echoing a builder's
     // SESSION line must not pay for a second check.
@@ -162,7 +193,8 @@ export const register: Register = (on, options) => {
       await $.fs.write(skippedPath(line.feature), skippedFile(line.feature, verdict.skipped))
       if (!(await $.fs.exists(`${RUN_DIR}/.gitignore`))) await $.fs.write(`${RUN_DIR}/.gitignore`, '*\n')
     }
-    $.ui.status(verdictStatus(line.feature, verdict))
+    shown.notice = verdictStatus(line.feature, verdict)
+    await showStatus($, shown, featureBase, featureBudget)
     return result
   })
 }

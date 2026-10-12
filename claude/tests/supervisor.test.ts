@@ -39,7 +39,7 @@ describe('done-check supervisor (M25-002)', () => {
     await $.session.start(START)
     await $.turn.complete(turn('Just chatting.'))
     expect(m.fork.length + m.complete.length).toBe(0)
-    expect(w.statuses.length).toBe(0)
+    expect(w.statuses.some(x => x?.includes('supervisor'))).toBe(false)
   })
 
   test('does nothing outside a harnessed repo', async ($, on) => {

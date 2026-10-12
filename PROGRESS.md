@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-12 — session 63 (M30-003)
+
+- Branch: `m30-models-budget`.
+- Done: M30-003 — the edition's own status line (beside the person's own,
+  never replacing it): `harness <feature> · <passing>/<total> passing ·
+  $spent/$budget · <model> · N waiting on you`, with the last budget or
+  supervisor notice appended; refreshed at session start, each builder start
+  and each turn. `/harness` prints milestones, the next feature (held ones
+  skipped), what waits on a human and the session's cost from FEATURES.json:
+  no model call. Checked live with `claude -p "/harness"` on this repo, which
+  showed milestones 28-30 had no names in FEATURES.json: named now.
+- Decisions: the status helper is a top-level function (the engine follows
+  `$` only into top-level functions of the hooks file); the supervisor and
+  budget notices became part of the line instead of replacing it.
+- Gate: green (31 mod tests).
+- Next: M30-004 (status.sh --line and --watch).
+
 ## 2026-10-12 — session 62 (M30-002)
 
 - Branch: `m30-models-budget`.

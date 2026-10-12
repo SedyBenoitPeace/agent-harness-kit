@@ -205,3 +205,94 @@ export function chooseModel(spawn: SpawnFacts, featuresJson: string, modelsLog: 
 export function modelsLine(choice: ModelChoice) {
   return `${choice.feature} ${choice.model} ${choice.reason}\n`
 }
+
+// --- M30-003 status line and /harness ------------------------------------------
+// Read from FEATURES.json alone: no model call, no shell.
+
+type Entry = { id: string; milestone?: unknown; title?: string; status?: string; notes?: unknown; depends_on?: unknown; effort?: unknown; paths?: unknown }
+
+export type Facts = {
+  passing: number
+  total: number
+  milestones: { key: string; name: string; passing: number; total: number }[]
+  next?: Entry
+  waiting: { id: string; question: string }[]
+  held: { id: string; on: string }[]
+}
+
+const WAITING = /^Needs a human:\s*/
+
+export function harnessFacts(featuresJson: string): Facts | undefined {
+  let data: { milestones?: Record<string, string>; features?: Entry[] }
+  try {
+    data = JSON.parse(featuresJson)
+  } catch {
+    return undefined
+  }
+  const fs = (data.features ?? []).filter(f => typeof f?.id === 'string')
+  const waiting = fs
+    .filter(f => f.status === 'deferred' && WAITING.test(String(f.notes ?? '')))
+    .map(f => ({ id: f.id, question: String(f.notes).replace(WAITING, '') }))
+  // held: failing features whose depends_on reaches a waiting one, transitively
+  const on = new Map<string, string>(waiting.map(w => [w.id, '']))
+  const failing = fs.filter(f => f.status === 'failing')
+  for (let changed = true; changed; ) {
+    changed = false
+    for (const f of failing) {
+      if (on.has(f.id) || !Array.isArray(f.depends_on)) continue
+      const hit = f.depends_on.map(String).find(d => on.has(d))
+      if (hit) {
+        on.set(f.id, hit)
+        changed = true
+      }
+    }
+  }
+  const held = [...on].filter(([, v]) => v !== '').map(([id, v]) => ({ id, on: v }))
+  const order = (f: Entry) => [Number(f.milestone) || 0, f.id] as const
+  const next = failing
+    .filter(f => !on.has(f.id))
+    .sort((a, b) => order(a)[0] - order(b)[0] || order(a)[1].localeCompare(order(b)[1]))[0]
+  const keys = [...new Set(fs.map(f => String(f.milestone)))].sort((a, b) => Number(a) - Number(b))
+  return {
+    passing: fs.filter(f => f.status === 'passing').length,
+    total: fs.length,
+    milestones: keys.map(key => {
+      const ms = fs.filter(f => String(f.milestone) === key)
+      return { key, name: data.milestones?.[key] ?? '?', passing: ms.filter(f => f.status === 'passing').length, total: ms.length }
+    }),
+    next,
+    waiting,
+    held,
+  }
+}
+
+export type LineState = { feature?: string; model?: string; spent?: number; budget?: number; notice?: string }
+
+export function statusLineText(f: Facts, s: LineState) {
+  const parts = [`harness ${s.feature ?? f.next?.id ?? 'done'}`, `${f.passing}/${f.total} passing`]
+  if (s.spent !== undefined) parts.push(s.budget ? `${usd(s.spent)}/${usd(s.budget)}` : usd(s.spent))
+  if (s.model) parts.push(s.model)
+  if (f.waiting.length > 0) parts.push(`${f.waiting.length} waiting on you`)
+  if (s.notice) parts.push(s.notice)
+  return parts.join(' · ')
+}
+
+export function harnessReport(f: Facts, runCost?: number) {
+  const lines = ['Harness status', '']
+  for (const m of f.milestones) lines.push(`M${m.key}: ${m.passing}/${m.total} passing — ${m.name}`)
+  lines.push('', `${f.passing}/${f.total} features passing`)
+  if (f.next) {
+    lines.push('', `Next: ${f.next.id} — ${f.next.title ?? ''}`)
+    if (typeof f.next.effort === 'string') lines.push(`  effort: ${f.next.effort}`)
+    if (Array.isArray(f.next.paths) && f.next.paths.length > 0) lines.push(`  paths: ${f.next.paths.join(', ')}`)
+  } else {
+    lines.push('', 'Next: nothing eligible')
+  }
+  if (f.waiting.length > 0) {
+    lines.push('', 'Waiting on you:')
+    for (const w of f.waiting) lines.push(`  ${w.id} — ${w.question}`)
+    for (const h of f.held) lines.push(`  held: ${h.id} (depends on ${h.on})`)
+  }
+  if (runCost !== undefined) lines.push('', `This session so far: ${usd(runCost)}`)
+  return lines.join('\n')
+}
