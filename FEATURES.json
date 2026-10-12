@@ -1168,7 +1168,7 @@
       "id": "M30-004",
       "milestone": 30,
       "title": "status.sh --line for a person's own status line script and --watch for a second terminal",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M30-003"
       ],

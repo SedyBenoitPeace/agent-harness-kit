@@ -555,6 +555,12 @@ grep -qF 'costLine' claude/hooks/register.tsx || fail "Claude edition: budget gu
 jq -e '.userConfig.feature_budget_usd and .userConfig.run_budget_usd and .userConfig.model_floor and .userConfig.route_models' claude/.claude-plugin/plugin.json >/dev/null \
   || fail "Claude edition: dollar budgets and model settings missing (M30-001/002)"
 
+# --- status in the terminal (M30-004) ---------------------------------------------
+for w in -- '--line' '--watch'; do [ "$w" = -- ] && continue
+  grep -qF -- "$w" skills/harness-status/scripts/status.sh || fail "status.sh: $w missing (M30-004)"
+  grep -qF -- "status.sh $w" README.md || fail "README: status.sh $w missing (M30-004)"
+done
+
 # --- a clear upgrade every release (M27-004) ---------------------------------------
 [ -f CHANGELOG.md ] || fail "CHANGELOG.md missing"
 cur_v="$(jq -r .version .claude-plugin/plugin.json)"

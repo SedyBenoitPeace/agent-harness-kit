@@ -399,6 +399,14 @@ What it does, so nothing surprises you:
   git and FEATURES.json (no model calls) and committed: done (with minutes
   per feature, and dollars and the model with the Claude Code edition), skipped (with each
   question), waiting on a human, not started and why, branches used.
+- **Watching it from a terminal.** In a second tab, run
+  `bash <kit>/skills/harness-status/scripts/status.sh --watch` in the repo:
+  the status report redrawn every 5 seconds (`--watch 30` for every 30),
+  no model calls, any agent. For one line in your own status line script,
+  add the output of `status.sh --line`, e.g.
+  `harness M3-005 · 12/20 passing · 2 waiting on you · $4.10 this run`; it
+  prints nothing outside a harnessed repo, so your line stays as it was
+  there.
 - **Builders start from the feature's `paths`**, when FEATURES.json has
   them, instead of searching the repo for their files.
 

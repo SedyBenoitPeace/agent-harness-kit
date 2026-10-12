@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-12 — session 64 (M30-004)
+
+- Branch: `m30-models-budget`.
+- Done: M30-004 — `status.sh --line` prints the harness in one line for a
+  person's own status line script (next feature, passing/total, waiting on
+  a human, the run's dollars from `.harness-run/cost.log`), and nothing
+  (exit 3) outside a harness so their line is unchanged there. `--watch
+  [SECONDS]` redraws the report for a second terminal; `HARNESS_WATCH_COUNT`
+  bounds it for tests. Both for any agent. README explains both.
+- Decisions: `--line` computes the next feature with the same held logic as
+  the report (the jq definition moved up so both share it); silence rather
+  than an error line outside a harness, since it runs inside someone else's
+  status line.
+- Gate: green; shellcheck 0.9 clean.
+- Next: M30-005 (plan tasks in FEATURES.json once approved; release 3.8.0).
+
 ## 2026-10-12 — session 63 (M30-003)
 
 - Branch: `m30-models-budget`.

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # harness-status: read-only "where am I?" report for a harnessed repo.
-# Usage: status.sh [--run-gate] [--skip FILE] [TARGET_DIR]    (default: current directory)
+# Usage: status.sh [--run-gate] [--skip FILE] [--line | --watch [SECONDS]] [TARGET_DIR]
+#        (default: current directory)
+# --line (M30-004): the harness in one short line for a status line script:
+# next feature, passing/total, what waits on a human, the run's dollars when
+# .harness-run/cost.log exists. Prints nothing (exit 3) where no harness is.
+# --watch [SECONDS]: the report redrawn every SECONDS (default 5) for a second
+# terminal; HARNESS_WATCH_COUNT bounds the redraws (0 = until interrupted).
 # --skip FILE: one feature id per line; NEXT excludes those ids, their
 # transitive dependents, and dependency-less features that follow them.
 # Waiting on a human (M29-002): a deferred feature whose notes start with
@@ -12,17 +18,38 @@ set -euo pipefail
 RUN_GATE=0
 SKIP_FILE=""
 TARGET="."
+LINE=0
+WATCH=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --run-gate) RUN_GATE=1 ;;
+    --line) LINE=1 ;;
+    --watch)
+      WATCH=5
+      case "${2:-}" in ''|*[!0-9]*) ;; *) WATCH="$2"; shift ;; esac ;;
     --skip) SKIP_FILE="${2:?--skip needs a file}"; shift ;;
     *) TARGET="$1" ;;
   esac
   shift
 done
 [ -z "$SKIP_FILE" ] || SKIP_FILE="$(cd "$(dirname "$SKIP_FILE")" && pwd)/$(basename "$SKIP_FILE")"
+if [ -n "$WATCH" ]; then
+  self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+  args=(); [ "$RUN_GATE" -eq 0 ] || args+=(--run-gate); [ -z "$SKIP_FILE" ] || args+=(--skip "$SKIP_FILE")
+  n=0
+  while :; do
+    [ -t 1 ] && printf '\033[H\033[2J'
+    echo "harness-status --watch: every ${WATCH}s, $(date '+%H:%M:%S') (Ctrl-C to stop)"
+    echo
+    bash "$self" "${args[@]}" "$TARGET" || true
+    n=$((n + 1))
+    [ "${HARNESS_WATCH_COUNT:-0}" -gt 0 ] && [ "$n" -ge "$HARNESS_WATCH_COUNT" ] && exit 0
+    sleep "$WATCH"
+  done
+fi
 cd "$TARGET"
 
+if [ "$LINE" -eq 1 ] && { [ ! -f FEATURES.json ] || [ ! -f PROGRESS.md ]; }; then exit 3; fi
 if [ ! -f FEATURES.json ] || [ ! -f PROGRESS.md ]; then
   echo "HARNESS NOT INITIALIZED: FEATURES.json and/or PROGRESS.md missing."
   echo "Scaffold it with the harness-initial-setup skill (or harness-protocol-planning.md)."
@@ -32,6 +59,32 @@ fi
 command -v jq >/dev/null || { echo "ERROR: jq is required (brew install jq)" >&2; exit 2; }
 jq -e . FEATURES.json >/dev/null 2>&1 \
   || { echo "BROKEN HARNESS: FEATURES.json is not valid JSON — run the harness-audit skill."; exit 2; }
+
+# held: failing id -> the id it waits on, through depends_on, transitively
+# shellcheck disable=SC2016 # jq program: $w, $cur are jq variables
+HELD_DEF='def held: ([.features[] | select(.status == "deferred" and ((.notes // "") | tostring | startswith("Needs a human:"))) | .id]) as $w
+  | [.features[] | select(.status == "failing")] as $hf
+  | def hstep: . as $cur | reduce $hf[] as $x ($cur;
+      if has($x.id) then .
+      else (($x.depends_on // []) | if type == "array" then . else [] end
+            | map(select(. as $d | $cur | has($d))) | first) as $hit
+        | if $hit then .[$x.id] = $hit else . end
+      end);
+    ($w | map({key: ., value: ""}) | from_entries | until(. == hstep; hstep))
+    | with_entries(select(.value != "")); '
+
+if [ "$LINE" -eq 1 ]; then
+  run=""
+  [ -s .harness-run/cost.log ] && run="$(awk '{ t += $2 } END { printf " · $%.2f this run", t }' .harness-run/cost.log)"
+  jq -r --arg run "$run" "$HELD_DEF"'
+    held as $h
+    | ([.features[] | select(.status == "failing") | select(.id as $i | $h | has($i) | not)] | sort_by(.milestone, .id) | .[0].id // "done") as $next
+    | ([.features[] | select(.status == "deferred" and ((.notes // "") | tostring | startswith("Needs a human:")))] | length) as $w
+    | "harness \($next) · \([.features[] | select(.status == "passing")] | length)/\(.features | length) passing"
+      + (if $w > 0 then " · \($w) waiting on you" else "" end) + $run
+  ' FEATURES.json
+  exit 0
+fi
 
 echo "HARNESS STATUS"
 echo
@@ -53,18 +106,6 @@ jq -r '
 
 jq -r '[.features[] | select(.status == "review") | .id] | if length > 0 then "\n== Awaiting evaluator ==\nREVIEW: \(join(" "))" else empty end' FEATURES.json
 
-# held: failing id -> the id it waits on, through depends_on, transitively
-# shellcheck disable=SC2016 # jq program: $w, $cur are jq variables
-HELD_DEF='def held: ([.features[] | select(.status == "deferred" and ((.notes // "") | tostring | startswith("Needs a human:"))) | .id]) as $w
-  | [.features[] | select(.status == "failing")] as $hf
-  | def hstep: . as $cur | reduce $hf[] as $x ($cur;
-      if has($x.id) then .
-      else (($x.depends_on // []) | if type == "array" then . else [] end
-            | map(select(. as $d | $cur | has($d))) | first) as $hit
-        | if $hit then .[$x.id] = $hit else . end
-      end);
-    ($w | map({key: ., value: ""}) | from_entries | until(. == hstep; hstep))
-    | with_entries(select(.value != "")); '
 jq -r "$HELD_DEF"'
   held as $h
   | [.features[] | select(.status == "deferred" and ((.notes // "") | tostring | startswith("Needs a human:")))] as $w
