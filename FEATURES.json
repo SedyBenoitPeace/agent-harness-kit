@@ -1133,7 +1133,7 @@
       "id": "M30-002",
       "milestone": 30,
       "title": "Budgets in dollars from the session's own cost: per feature and per run, cost.log, report in dollars with the model",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M30-001"
       ],

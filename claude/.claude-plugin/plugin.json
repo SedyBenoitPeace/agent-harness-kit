@@ -18,11 +18,17 @@
     "agent-harness-kit"
   ],
   "userConfig": {
-    "feature_token_budget": {
+    "feature_budget_usd": {
       "type": "number",
-      "title": "Token budget per feature",
-      "description": "Tokens one feature may use in an unattended run before the run is asked to stop after it (input + output + cache writes).",
-      "default": 1500000
+      "title": "Budget per feature (USD)",
+      "description": "Dollars one feature may cost in an unattended run before the run is asked to stop after it, from Claude Code's own cost figure (subagents included). 0 = no limit.",
+      "default": 5
+    },
+    "run_budget_usd": {
+      "type": "number",
+      "title": "Budget per run (USD)",
+      "description": "Dollars a whole unattended run may cost before it is asked to stop after the current feature. 0 = no limit.",
+      "default": 50
     },
     "route_models": {
       "type": "boolean",

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Proves the harness-continuous SKILL.md contract (M20-002) and that
 # harness-run stays interactive. Exit 0 = green.
+# shellcheck disable=SC2016 # literal $ amounts in report fixtures
 set -euo pipefail
 cd "$(dirname "$0")/.."
 fail() { echo "RUN TEST FAIL: $*" >&2; exit 1; }
@@ -133,11 +134,11 @@ grep -q '^## Budget' "$rep" && fail "run-report: no Budget section without budge
 mkdir -p "$R/.harness-run/decisions"
 printf '*\n' > "$R/.harness-run/.gitignore"
 printf '# Supervisor: work M1-001 may have skipped\n\n- no test for an empty config\n- unicode names unchecked\n' > "$R/.harness-run/decisions/M1-001.skipped.md"
-printf '2026-03-04T10:30:00Z agent-3: 1600000 tokens over the 1500000 budget; run asked to stop after this feature\n' > "$R/.harness-run/budget.log"
+printf '2026-03-04T10:30:00Z feature M1-001: $5.40 over the $5.00 budget; run asked to stop after this feature\n' > "$R/.harness-run/budget.log"
 (cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "budget") >/dev/null || fail "run-report with signals: expected exit 0"
 sed -n '/^## Supervisor/,/^## /p' "$rep" | grep -q '^- M1-001 — boot: no test for an empty config; unicode names unchecked$' \
   || fail "run-report: Supervisor must list M1-001's skipped work"
-sed -n '/^## Budget/,/^## /p' "$rep" | grep -q 'agent-3: 1600000 tokens over the 1500000 budget' || fail "run-report: Budget must carry budget.log"
+sed -n '/^## Budget/,/^## /p' "$rep" | grep -qF 'feature M1-001: $5.40 over the $5.00 budget' || fail "run-report: Budget must carry budget.log"
 rm -rf "$R/.harness-run"
 
 # M29-002: features waiting on a human get their own section with the
@@ -153,14 +154,16 @@ sed -n '/^## Waiting on a human/,/^## /p' "$rep" | grep -q '^- M2-002 — who ap
 sed -n '/^## Not started/,/^## /p' "$rep" | grep -q 'M2-003.*held — depends on M2-002, which waits on a human' || fail "run-report: a held feature must say why"
 
 # M29-003: minutes per done feature from commit times (since the previous
-# feature or skip, not since unrelated commits); tokens from tokens.log
+# feature or skip, not since unrelated commits); dollars summed over each
+# builder session in cost.log, the model and any step-up from models.log
 jq '(.features[] | select(.id=="M2-001") | .status) = "passing"' "$R/FEATURES.json" > "$R/f.tmp" && mv "$R/f.tmp" "$R/FEATURES.json"
 g add FEATURES.json
 GIT_COMMITTER_DATE="2026-03-04T10:25:00+0000" GIT_AUTHOR_DATE="2026-03-04T10:25:00+0000" g commit -qm "feat(M2-001): extras"
 mkdir -p "$R/.harness-run"; printf '*\n' > "$R/.harness-run/.gitignore"
-printf 'M2-001 410000\n' > "$R/.harness-run/tokens.log"
+printf 'M2-001 0.4000\nM2-001 1.0300\n' > "$R/.harness-run/cost.log"
+printf 'M2-001 haiku effort low\nM2-001 sonnet effort low, +1\n' > "$R/.harness-run/models.log"
 rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")" || fail "run-report with timings: expected exit 0"
-sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M2-001 — extras — [0-9a-f]{7,} — 25 min, 410000 tokens$' || fail "run-report: M2-001 must show 25 min and its tokens"
+sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M2-001 — extras — [0-9a-f]{7,} — 25 min, \$1\.43, sonnet \(stepped up from haiku\)$' || fail "run-report: M2-001 must show 25 min, its dollars and the step-up"
 sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M1-001 — boot — [0-9a-f]{7,} — 0 min$' || fail "run-report: M1-001 must show its minutes and no tokens"
 rm -rf "$R/.harness-run"
 

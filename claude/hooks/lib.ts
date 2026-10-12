@@ -117,23 +117,22 @@ export function transcriptText(messages: { role: string; text: string; toolUses?
   return text.length > max ? text.slice(text.length - max) : text
 }
 
-// --- M25-003 budget guard -------------------------------------------------
+// --- M25-003 / M30-002 budget guard, in dollars ----------------------------
+// Measured from the session's own cost figure (subagents included), so the
+// kit keeps no price table. 0 turns a budget off.
 
-export const DEFAULT_BUDGET = 1_500_000
+export const DEFAULT_FEATURE_USD = 5
+export const DEFAULT_RUN_USD = 50
 
-// Tokens that cost real money: input, output and cache writes. Cache reads are
-// a tenth of the price and dominate long sessions, so they are left out.
-export function countedTokens(usage: { input_tokens: number; output_tokens: number; cache_creation_input_tokens: number } | undefined) {
-  return usage ? usage.input_tokens + usage.output_tokens + usage.cache_creation_input_tokens : 0
+export const usd = (n: number) => `$${n.toFixed(2)}`
+
+export function budgetLine(when: string, scope: string, spent: number, budget: number) {
+  return `${when} ${scope}: ${usd(spent)} over the ${usd(budget)} budget; run asked to stop after this feature\n`
 }
 
-export function budgetLine(when: string, who: string, used: number, budget: number) {
-  return `${when} ${who}: ${used} tokens over the ${budget} budget; run asked to stop after this feature\n`
-}
-
-// M29-003 — one line per feature in .harness-run/tokens.log, read by run-report.sh
-export function tokensLine(feature: string, used: number) {
-  return `${feature} ${used}\n`
+// One line per builder session in .harness-run/cost.log, read by run-report.sh
+export function costLine(feature: string, spent: number) {
+  return `${feature} ${spent.toFixed(4)}\n`
 }
 
 // --- M30-001 model choice -----------------------------------------------------

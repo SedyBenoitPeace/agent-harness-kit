@@ -69,23 +69,27 @@ decisions_of() {
 }
 
 # minutes per done feature (M29-003): from the previous feature's (or skip's,
-# or the start's) commit to the feature's own last commit; tokens from the
-# Claude Code edition's .harness-run/tokens.log when it exists
+# or the start's) commit to the feature's own last commit; dollars and the
+# model from the Claude Code edition's .harness-run/cost.log and models.log
+# when they exist (M30-002)
 times="$(prev="$(git log -1 --format=%ct "$START")"
   git log --reverse --format='%h %ct %s' "$START..HEAD" | while read -r h ct subj; do
     id="$(printf '%s\n' "$done_lines" | awk -F'\t' -v h="$h" '$2 == h { print $1; exit }')"
     if [ -n "$id" ]; then echo "$id $(( (ct - prev + 30) / 60 ))"; prev="$ct"
     else case "$subj" in "harness-run: skip"*) prev="$ct" ;; esac; fi
   done)"
-tokens_of() { [ -s .harness-run/tokens.log ] && awk -v id="$1" '$1 == id { t = $2 } END { if (t != "") print t }' .harness-run/tokens.log; }
+cost_of() { [ -s .harness-run/cost.log ] && awk -v id="$1" '$1 == id { t += $2; n++ } END { if (n) printf "$%.2f", t }' .harness-run/cost.log; }
+model_of() { [ -s .harness-run/models.log ] && awk -v id="$1" '$1 == id { if (!f) f = $2; l = $2 } END { if (l != "") { printf "%s", l; if (f != l) printf " (stepped up from %s)", f } }' .harness-run/models.log; }
 
 done_out=""; n_done=0
 while IFS=$'\t' read -r id hash; do
   [ -n "$id" ] || continue
   st="$(status_of "$id")"
   cost="$(printf '%s\n' "$times" | awk -v id="$id" '$1 == id { print " — " $2 " min" }')"
-  tok="$(tokens_of "$id" || true)"
-  [ -z "$tok" ] || cost="$cost, $tok tokens"
+  dollars="$(cost_of "$id" || true)"
+  [ -z "$dollars" ] || cost="$cost, $dollars"
+  model="$(model_of "$id" || true)"
+  [ -z "$model" ] || cost="$cost, $model"
   case "$st" in
     passing) done_out="$done_out- $id — $(title "$id") — $hash$cost
 " ;;

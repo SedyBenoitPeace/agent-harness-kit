@@ -549,8 +549,11 @@ grep -qF 'WAITING ON HUMAN' skills/harness-status/scripts/status.sh || fail "sta
 
 # --- paths hint and per-feature cost (M29-003) ------------------------------------
 grep -qF 'Start reading from: <paths>' "$RUN_SKILL/SKILL.md" || fail "harness-run: builder dispatch must pass the feature's paths (M29-003)"
-grep -qF 'tokens.log' skills/harness-run/scripts/run-report.sh || fail "run-report.sh: tokens per feature missing (M29-003)"
-grep -qF 'tokensLine' claude/hooks/register.tsx || fail "Claude edition: budget guard must log tokens per feature (M29-003)"
+grep -qF 'cost.log' skills/harness-run/scripts/run-report.sh || fail "run-report.sh: dollars per feature missing (M30-002)"
+grep -qF 'costLine' claude/hooks/register.tsx || fail "Claude edition: budget guard must log each feature's cost (M30-002)"
+! jq -e '.userConfig.feature_token_budget' claude/.claude-plugin/plugin.json >/dev/null || fail "Claude edition: the token budget is replaced by dollars (M30-002)"
+jq -e '.userConfig.feature_budget_usd and .userConfig.run_budget_usd and .userConfig.model_floor and .userConfig.route_models' claude/.claude-plugin/plugin.json >/dev/null \
+  || fail "Claude edition: dollar budgets and model settings missing (M30-001/002)"
 
 # --- a clear upgrade every release (M27-004) ---------------------------------------
 [ -f CHANGELOG.md ] || fail "CHANGELOG.md missing"
@@ -586,7 +589,7 @@ if git grep -nI -e 'agent-harness-kit-mods' -- . ':!docs/plans' ':!PROGRESS.md' 
    | grep -v 'was briefly named\|plugin uninstall agent-harness-kit-mods' | grep -q .; then
   fail "stale reference to the old edition name agent-harness-kit-mods"
 fi
-for w in register_decision 'decisions/<id>.md' 'SESSION:' feature_token_budget '.harness-run/STOP' 'agent-harness-kit-mods'; do
+for w in register_decision 'decisions/<id>.md' 'SESSION:' feature_budget_usd run_budget_usd model_floor '.harness-run/STOP' 'agent-harness-kit-mods'; do
   grep -qF -- "$w" <<< "$edition" || fail "README Claude edition: mods section must mention $w"
 done
 if command -v claude >/dev/null; then

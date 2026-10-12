@@ -3,6 +3,25 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-12 — session 62 (M30-002)
+
+- Branch: `m30-models-budget`.
+- Done: M30-002 — budgets in dollars. `feature_budget_usd` (default $5)
+  and `run_budget_usd` (default $50) replace `feature_token_budget`; both
+  measured from `$.session.usage().cost.usd`, counted from session start and
+  reset per feature at each SESSION line. Over budget during a run: STOP and
+  a `budget.log` line; outside a run only the status line; 0 turns a budget
+  off; no cost ledger, no action. Each builder session's cost goes once to
+  `.harness-run/cost.log` (an orchestrator echo is not counted again). The
+  run report sums it per feature and adds the model and any step-up from
+  `models.log`. README updated.
+- Decisions: the session's own cost figure rather than tokens times a price
+  table (verified live to include subagents); per-feature cost is the delta
+  between SESSION lines, so parallel lanes share one figure (documented);
+  defaults $5 and $50 are placeholders for the owner to set in /config.
+- Gate: green (27 mod tests; shellcheck 0.9 clean).
+- Next: M30-003 (status line and /harness).
+
 ## 2026-10-12 — session 61 (M30-001)
 
 - Branch: `m30-models-budget`.

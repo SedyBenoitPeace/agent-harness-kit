@@ -258,10 +258,14 @@ of git):
   below `sonnet`. Set `model_floor` in `/config` to raise the minimum, or
   turn `route_models` off. Your own session's model is never changed; the
   choices land in `.harness-run/models.log` and the run report.
-- **Budget guard** — counts each feature's tokens (input, output, cache
-  writes). Over `feature_token_budget` (set it in `/config`, default
-  1,500,000) during an unattended run it writes `.harness-run/STOP`, so the
-  run ends after the current feature, and logs why in `.harness-run/budget.log`.
+- **Budget guard** — budgets in dollars, from Claude Code's own cost
+  figure (subagents included; on a subscription it is the list-price
+  equivalent, still right for comparing and capping). Over
+  `feature_budget_usd` (default $5) or `run_budget_usd` (default $50) during
+  an unattended run it writes `.harness-run/STOP`, so the run ends after the
+  current feature, and logs why in `.harness-run/budget.log`; 0 turns a
+  budget off. Each feature's cost lands in `.harness-run/cost.log` and the
+  run report. Features built in parallel share one figure.
 
 Upgrading from 3.2.0: the edition was briefly named `agent-harness-kit-mods`;
 run `/plugin uninstall agent-harness-kit-mods`, then install
@@ -386,7 +390,7 @@ What it does, so nothing surprises you:
   milestone and leaves them local.
 - **The report**, `docs/runs/<date>.md`, is built by `run-report.sh` from
   git and FEATURES.json (no model calls) and committed: done (with minutes
-  per feature, and tokens with the Claude Code edition), skipped (with each
+  per feature, and dollars and the model with the Claude Code edition), skipped (with each
   question), waiting on a human, not started and why, branches used.
 - **Builders start from the feature's `paths`**, when FEATURES.json has
   them, instead of searching the repo for their files.
