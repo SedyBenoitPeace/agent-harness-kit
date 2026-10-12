@@ -147,4 +147,13 @@ make_fixture "$WORK/no-planning"
 rm "$WORK/no-planning/docs/agents/harness-protocol-planning.md"
 expect_fail "$WORK/no-planning" "harness-protocol-planning.md missing" "missing planning part (repo not upgraded)"
 
+# M30-005: an active plan's task ids must be in FEATURES.json
+make_fixture "$WORK/plan-ok"
+jq '.features += [{"id": "M1-001", "milestone": 1, "title": "t", "status": "failing", "verify": "x"}]' "$WORK/plan-ok/FEATURES.json" > "$WORK/plan-ok/f.json" && mv "$WORK/plan-ok/f.json" "$WORK/plan-ok/FEATURES.json"
+printf '# Plan\n\n## M1-001 — first task\n\nDepends on nothing; see M9-999 in prose.\n' > "$WORK/plan-ok/docs/plans/active/p.md"
+out="$(bash "$CHECK" "$WORK/plan-ok")" || fail "plan with its tasks in FEATURES.json: audit should pass ($out)"
+make_fixture "$WORK/plan-missing"
+printf '# Plan\n\n## M1-002 — not added yet\n' > "$WORK/plan-missing/docs/plans/active/p.md"
+expect_fail "$WORK/plan-missing" "names M1-002, which is not in FEATURES.json" "plan task missing from FEATURES.json"
+
 echo "AUDIT TESTS GREEN"

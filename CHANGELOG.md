@@ -10,6 +10,28 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.8.0 — 2026-10-12
+
+- Claude Code edition: each builder a run starts gets its model from the
+  feature's `effort` (low haiku, medium sonnet, high or max opus, by alias),
+  one tier up on retries; the evaluator and sensitive features never below
+  sonnet. `model_floor` and `route_models` settings.
+- Claude Code edition: budgets in dollars (`feature_budget_usd`,
+  `run_budget_usd`) from Claude Code's own cost figure, subagents included;
+  the run report shows dollars and the model per feature.
+- Claude Code edition: a harness status line beside your own, and `/harness`
+  (status with no model call).
+- `status.sh --line` for your own status line script, `--watch` for a second
+  terminal.
+- An approved plan's tasks enter FEATURES.json as `failing` in the plan's
+  commit; harness-audit fails when an active plan names a missing id.
+
+Upgrade:
+- Standard upgrade (new protocol: plan tasks in FEATURES.json once approved).
+- Claude Code edition: `feature_token_budget` is gone; set `feature_budget_usd` and `run_budget_usd` in /config (defaults $5 and $50; 0 = no limit).
+- Claude Code edition: builders now start on haiku for `effort: low` features; set `model_floor` to sonnet in /config if you do not want that yet.
+- Run harness-audit: it now fails if an active plan names a feature id that is not in FEATURES.json; add those tasks as `failing` features.
+
 ## 3.7.0 — 2026-10-07
 
 From a real run's troubleshooting:

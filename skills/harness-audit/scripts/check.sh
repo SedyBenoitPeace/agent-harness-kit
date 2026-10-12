@@ -75,6 +75,16 @@ fi
 # Plans directories
 if [ -d docs/plans/active ] && [ -d docs/plans/completed ]; then
   pass "docs/plans/active/ and docs/plans/completed/ exist"
+  # an approved plan's tasks are in FEATURES.json from the plan's commit
+  # (M30-005): every feature id a task heading names must exist
+  for plan in docs/plans/active/*.md; do
+    [ -f "$plan" ] || continue
+    while IFS= read -r id; do
+      [ -n "$id" ] || continue
+      if jq -e --arg id "$id" '[.features[]? | .id] | index($id) != null' FEATURES.json >/dev/null 2>&1; then :
+      else failc "$plan names $id, which is not in FEATURES.json — add the plan's tasks as failing features when the plan is approved"; fi
+    done < <({ grep -E '^#{2,4} ' "$plan" || true; } | grep -oE 'M[0-9]+-[0-9]{3}' | sort -u)
+  done
 else
   failc "docs/plans/active/ and/or docs/plans/completed/ missing"
 fi

@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-12 — session 65 (M30-005, release 3.8.0)
+
+- Branch: `m30-models-budget`.
+- Done: M30-005 — protocol 1.5: once a plan is approved, its tasks enter
+  FEATURES.json as `failing` in the plan's commit. harness-audit FAILs when
+  a task heading in an active plan names an id missing from FEATURES.json
+  (ids mentioned in prose are ignored). Released 3.8.0 with its Upgrade
+  block (dollar budgets in /config, `model_floor`, re-run harness-audit).
+  Mirror synced: agent-harness-template PR #4. All M30 features pass; plan
+  moved to completed.
+- Decisions: audit reads task headings only, so a plan can mention other
+  features in prose; FAIL rather than WARN because a missing feature hides
+  the plan's progress, which is the point of the rule.
+- Gate: green (31 mod tests; shellcheck 0.9 clean).
+- Next: owner merges kit PR, then template PR #4.
+
 ## 2026-10-12 — session 64 (M30-004)
 
 - Branch: `m30-models-budget`.

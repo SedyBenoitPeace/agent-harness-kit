@@ -198,6 +198,11 @@ Head each task section with its feature id and keep it self-contained, so
 a session reads only the section for its selected feature, never the
 whole file.
 
+Once the human approves the plan, every task in it enters FEATURES.json as
+a `failing` feature in the same commit as the plan: one task, one id. The
+status reports then show from the first session how much of the plan is
+left; a feature added only when it is done shows nothing until it is.
+
 Every plan opens with this header, verbatim, so that whoever picks it up
 executes it through the harness and not through some other workflow:
 

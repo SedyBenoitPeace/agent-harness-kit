@@ -349,7 +349,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.7.0" ] || fail "plugin version must be 3.7.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.8.0" ] || fail "plugin version must be 3.8.0"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -560,6 +560,10 @@ for w in -- '--line' '--watch'; do [ "$w" = -- ] && continue
   grep -qF -- "$w" skills/harness-status/scripts/status.sh || fail "status.sh: $w missing (M30-004)"
   grep -qF -- "status.sh $w" README.md || fail "README: status.sh $w missing (M30-004)"
 done
+
+# --- plan tasks in FEATURES.json once approved (M30-005) ---------------------------
+grep -qF 'enters FEATURES.json as' "$PROTO" || fail "protocol 1.5: approved plan tasks enter FEATURES.json as failing (M30-005)"
+grep -qF 'which is not in FEATURES.json' skills/harness-audit/scripts/check.sh || fail "harness-audit: plan ids missing from FEATURES.json must FAIL (M30-005)"
 
 # --- a clear upgrade every release (M27-004) ---------------------------------------
 [ -f CHANGELOG.md ] || fail "CHANGELOG.md missing"
