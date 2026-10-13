@@ -3,6 +3,14 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-13 — session 66 (release 3.8.1, docs only)
+
+- Branch: `release/3.8.1`.
+- Done: README section "Start a repo from scratch — just chat" (generic example prompt, scaffold provenance table, audit-then-commit flow). Released 3.8.1 with an Upgrade block (nothing to do). Bumped package.json, both .claude-plugin manifests, claude/.claude-plugin/plugin.json, the e2e version check and the AGENTS.md state line.
+- Decisions: patch bump, documentation only; template repo needs no sync because skills/harness-initial-setup/templates/ is unchanged. Considered always generating the agent files at setup; rejected for now, left as a possible later change.
+- Gate: GREEN (bash scripts/e2e.sh, all suites).
+- Next: merge by the maintainer.
+
 ## 2026-10-12 — session 65 (M30-005, release 3.8.0)
 
 - Branch: `m30-models-budget`.
