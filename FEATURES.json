@@ -31,7 +31,8 @@
     "27": "A clear upgrade every release, model fallback, a fuller run report",
     "28": "The lean pass: protocol split, no model names, size limits, rule expiry",
     "29": "Faster runs: reused baseline, waiting on a human, paths hint, per-feature cost",
-    "30": "Claude edition: model choice, dollar budgets, status line; plan tasks in FEATURES.json"
+    "30": "Claude edition: model choice, dollar budgets, status line; plan tasks in FEATURES.json",
+    "31": "Orchestration cost in the run report"
   },
   "features": [
     {
@@ -1201,6 +1202,23 @@
       "effort": "medium",
       "verify": "bash scripts/e2e.sh exits 0 with: protocol 1.5 saying an approved plan's tasks enter FEATURES.json as failing in the plan's commit; test-audit.sh proving harness-audit FAILs when a plan in docs/plans/active names a feature id missing from FEATURES.json and passes when all are present; all manifests 3.8.0 with a CHANGELOG Upgrade block; template mirror synced; CI green on the PR",
       "notes": "Plan: docs/plans/completed/2026-10-12-m30-models-budget.md"
+    },
+    {
+      "id": "M31-001",
+      "milestone": 31,
+      "title": "Run report shows the run cost split into feature agents and orchestration, and feature dollars per model (Claude Code edition)",
+      "status": "passing",
+      "depends_on": [
+        "M30-005"
+      ],
+      "paths": [
+        "claude/hooks/",
+        "claude/tests/",
+        "skills/harness-run/scripts/run-report.sh",
+        "scripts/test-run.sh"
+      ],
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with mod tests proving .harness-run/run-cost credits each cost slice to agents when any subagent runs (parallel lanes once) else to orchestration, and test-run.sh proving the report Summary prints the Cost split and Cost by model lines only when their files exist"
     }
   ]
 }

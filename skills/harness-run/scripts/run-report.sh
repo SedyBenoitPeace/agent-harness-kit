@@ -112,6 +112,24 @@ for f in .harness-run/decisions/*.skipped.md; do
   [ -n "$items" ] && supervisor_out="$supervisor_out- $id — $(title "$id"): $items
 "
 done
+# M31-001: where the run's dollars went. run-cost (Claude Code edition) splits
+# the session's cost into time a feature agent (builder or evaluator) was
+# running and time only the orchestrator was; cost.log + models.log give the
+# feature dollars per model, so a heavy model share is visible.
+cost_summary=""
+if [ -s .harness-run/run-cost ]; then
+  cost_summary="$(awk '$1 == "agents" { a = $2 } $1 == "orchestration" { o = $2 }
+    END { t = a + o; if (t > 0) printf "- Cost: $%.2f — feature agents $%.2f, orchestration $%.2f (%d%%)", t, a, o, (o * 100 / t) + 0.5 }' .harness-run/run-cost)"
+fi
+if [ -s .harness-run/cost.log ] && [ -s .harness-run/models.log ]; then
+  by_model="$(awk 'FNR == NR { m[$1] = $2; next } { c[$1] += $2 }
+    END { for (id in c) { k = (id in m) ? m[id] : "unknown"; d[k] += c[id]; n[k]++ }
+          for (k in d) printf "%.4f\t%s $%.2f (%d feature%s)\n", d[k], k, d[k], n[k], n[k] == 1 ? "" : "s" }' \
+    .harness-run/models.log .harness-run/cost.log | sort -t "$(printf '\t')" -k1,1gr | cut -f2 | paste -sd ';' - | sed 's/;/, /g')"
+  [ -z "$by_model" ] || cost_summary="${cost_summary:+$cost_summary
+}- Cost by model: $by_model"
+fi
+
 budget_out=""
 [ -s .harness-run/budget.log ] && budget_out="$(sed 's/^/- /' .harness-run/budget.log)
 "
@@ -174,6 +192,7 @@ list() { if [ -n "$1" ]; then printf '%s' "$1"; else echo "- none"; fi; }
   echo "- End: $(git log -1 --format="%h (%cd)" --date=format:"$fmt" HEAD)"
   echo "- Stop reason: $REASON"
   echo "- Counts: done $n_done · skipped $n_skipped · not started $n_not"
+  [ -z "$cost_summary" ] || printf '%s\n' "$cost_summary"
   echo
   echo "## Done"
   echo

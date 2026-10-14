@@ -135,6 +135,18 @@ export function costLine(feature: string, spent: number) {
   return `${feature} ${spent.toFixed(4)}\n`
 }
 
+// --- M31-001 where a run's dollars go ------------------------------------------
+// Each slice of the session's cost goes to `agents` when at least one subagent
+// (builder or evaluator) was running through it, else to `orchestration`. Lanes
+// running together share one slice, so nothing is counted twice. Read by
+// run-report.sh from .harness-run/run-cost.
+
+export type RunSpend = { agents: number; orchestration: number }
+
+export function runCostText(s: RunSpend) {
+  return `agents ${s.agents.toFixed(4)}\norchestration ${s.orchestration.toFixed(4)}\n`
+}
+
 // --- M30-001 model choice -----------------------------------------------------
 // Aliases only: each resolves to its family's newest model, so a release
 // (Haiku 5.5, say) is picked up with nothing to maintain.

@@ -165,6 +165,14 @@ printf 'M2-001 haiku effort low\nM2-001 sonnet effort low, +1\n' > "$R/.harness-
 rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")" || fail "run-report with timings: expected exit 0"
 sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M2-001 — extras — [0-9a-f]{7,} — 25 min, \$1\.43, sonnet \(stepped up from haiku\)$' || fail "run-report: M2-001 must show 25 min, its dollars and the step-up"
 sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M1-001 — boot — [0-9a-f]{7,} — 0 min$' || fail "run-report: M1-001 must show its minutes and no tokens"
+grep -q '^- Cost: ' "$rep" && fail "run-report: no Cost line without run-cost"
+sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Cost by model: sonnet $1.43 (1 feature)' || fail "run-report: Summary must split feature dollars by model"
+
+# M31-001: the run's total split into feature agents and orchestration
+printf 'agents 9.0000\norchestration 1.0000\n' > "$R/.harness-run/run-cost"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")" || fail "run-report with run-cost: expected exit 0"
+sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Cost: $10.00 — feature agents $9.00, orchestration $1.00 (10%)' \
+  || fail "run-report: Summary must split the run's cost into agents and orchestration"
 rm -rf "$R/.harness-run"
 
 # bad start commit: usage error, exit 2
