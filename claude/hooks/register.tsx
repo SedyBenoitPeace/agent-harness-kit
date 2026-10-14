@@ -19,6 +19,8 @@ import {
   parseVerdict,
   PLUGIN,
   RUN_DIR,
+  runCostText,
+  type RunSpend,
   skippedFile,
   skippedPath,
   statusLineText,
@@ -44,6 +46,18 @@ async function showStatus($: EngineInterface, shown: LineState, featureBase: num
   $.ui.status(statusLineText(facts, { ...shown, spent, budget }))
 }
 
+// M31-001 — credit the session cost since the last event to whoever was
+// running through it (any subagent, or the orchestrator alone), and keep the
+// run's split in .harness-run/run-cost for run-report.sh.
+type Ledger = { running: Set<string>; spend: RunSpend; lastCost?: number }
+async function tally($: EngineInterface, l: Ledger) {
+  const cost = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
+  if (cost === undefined) return
+  if (l.lastCost !== undefined && cost > l.lastCost) l.spend[l.running.size > 0 ? 'agents' : 'orchestration'] += cost - l.lastCost
+  l.lastCost = cost
+  if (await $.fs.exists(`${RUN_DIR}/start`)) await $.fs.write(`${RUN_DIR}/run-cost`, runCostText(l.spend))
+}
+
 export const register: Register = (on, options) => {
   let isHarnessed = false
   const checked = new Set<string>()
@@ -58,6 +72,8 @@ export const register: Register = (on, options) => {
   const shown: { feature?: string; model?: string; notice?: string } = {} // what the status line shows (M30-003)
   const route = options.route_models !== false
   const floor = typeof options.model_floor === 'string' ? options.model_floor : 'haiku'
+  // M31-001 — the run's cost split: agents running vs the orchestrator alone
+  const ledger: Ledger = { running: new Set(), spend: { agents: 0, orchestration: 0 } }
 
 
   on('session.start', async ($, e, next) => {
@@ -67,6 +83,7 @@ export const register: Register = (on, options) => {
       await $.tool.register(decisionSpec)
       // budgets count from here (M30-002)
       featureBase = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
+      ledger.lastCost = featureBase
       if (await $.fs.exists(`${RUN_DIR}/start`)) runBase = featureBase
       await showStatus($, shown, featureBase, featureBudget)
     }
@@ -87,13 +104,19 @@ export const register: Register = (on, options) => {
   // rejection; the evaluator and sensitive features never below sonnet.
   // The main session, forks, teammates and workflow agents are left alone.
   on('agent.spawn', async ($, e, next) => {
-    if (!isHarnessed || !route || e.fork || e.isTeammate || e.workflow) return next(e)
+    if (isHarnessed && !e.fork) await tally($, ledger)
+    const track = <T,>(started: T) => {
+      const id = (started as { agentId?: unknown } | undefined)?.agentId
+      if (isHarnessed && !e.fork && typeof id === 'string') ledger.running.add(id)
+      return started
+    }
+    if (!isHarnessed || !route || e.fork || e.isTeammate || e.workflow) return track(await next(e))
     const features = await $.fs.read('FEATURES.json').catch(() => '')
     const logPath = `${RUN_DIR}/models.log`
     const log = (await $.fs.exists(logPath)) ? await $.fs.read(logPath) : ''
     const choice = chooseModel(e, features, log, floor)
-    if (!choice) return next(e)
-    const started = await next({ ...e, model: choice.model })
+    if (!choice) return track(await next(e))
+    const started = track(await next({ ...e, model: choice.model }))
     if (choice.feature) {
       shown.feature = choice.feature
       shown.model = choice.model
@@ -124,6 +147,8 @@ export const register: Register = (on, options) => {
   on('turn.complete', async ($, e, next) => {
     const result = await next(e)
     if (!isHarnessed) return result
+    await tally($, ledger)
+    if (e.agentId !== undefined) ledger.running.delete(e.agentId)
     const line = parseSessionLine(e.answer)
 
     // M30-002 — budget guard in dollars: what the feature (since the last

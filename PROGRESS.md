@@ -3,6 +3,14 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-14 — session 67 (M31-001, into release 3.8.1)
+
+- Branch: `release/3.8.1`.
+- Done: M31-001 — the Claude Code edition splits a run's cost into feature agents (any subagent running) and orchestration (the orchestrator alone), slice by slice from the session's cost, so parallel lanes count once; written to `.harness-run/run-cost`. run-report.sh adds a Cost line (total, split, orchestration %) and a Cost by model line (cost.log by the model models.log recorded) to the Summary. Tests: 3 new mod tests, run-report tests in test-run.sh. README and CHANGELOG 3.8.1 updated.
+- Decisions: dollars, not tokens: token counts are not comparable across models (an opus token costs more than a sonnet one) and cache reads swamp them; the kit's budgets are already in dollars. Split by who was running rather than per-agent cost, because Claude Code reports one session cost; slices with a subagent running go to agents even if the orchestrator also spent then. Kept in 3.8.1 at the owner's request (not yet merged) rather than a 3.9.0. Protocol §2.8 left unchanged so the template mirror needs no sync.
+- Gate: GREEN (bash scripts/e2e.sh, all suites, 34 mod tests, shellcheck 0.11).
+- Next: merge by the maintainer.
+
 ## 2026-10-13 — session 66 (release 3.8.1, docs only)
 
 - Branch: `release/3.8.1`.

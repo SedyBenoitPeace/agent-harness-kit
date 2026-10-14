@@ -15,9 +15,14 @@ agent-harness-template>` and open a PR there; gate green; PR.
 - README: new "Start a repo from scratch — just chat" section (describe the
   project in the chat, name the harness, audit, commit), with a generic example
   prompt and a table of where each scaffold file comes from.
+- Claude Code edition: the run report's Summary shows what the run cost and
+  how much of it was orchestration (dispatch, verify, merges, gates) rather
+  than feature agents, counted once with parallel lanes, plus the feature
+  dollars per model (`.harness-run/run-cost`).
 
 Upgrade:
-- Nothing to do. Documentation only; no protocol, skill or template changes.
+- Claude Code edition: update the plugin (`claude plugin update`); nothing else to do.
+- No protocol or template changes.
 
 ## 3.8.0 — 2026-10-12
 

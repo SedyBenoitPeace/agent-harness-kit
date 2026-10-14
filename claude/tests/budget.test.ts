@@ -50,14 +50,14 @@ describe('budget guard in dollars (M30-002)', () => {
     expect(w.files['.harness-run/cost.log']).toBe('M1-001 0.7500\n')
   })
 
-  test('staying under budget writes nothing', BUDGET, async ($, on) => {
+  test("staying under budget writes no STOP or budget log, only the run's cost split", BUDGET, async ($, on) => {
     const w = world(on, { ...RUN })
     models(on, '{}')
     w.cost.usd = 0
     await $.session.start(START)
     w.cost.usd = 1
     await $.turn.complete(turn('a', 'agent-1'))
-    expect(written(w.files)).toEqual([])
+    expect(written(w.files)).toEqual(['.harness-run/run-cost'])
   })
 
   test('outside a run it warns but never writes STOP', BUDGET, async ($, on) => {
@@ -89,6 +89,53 @@ describe('budget guard in dollars (M30-002)', () => {
     w.cost.usd = 500
     await $.turn.complete(turn('b', 'agent-1'))
     expect(w.files['.harness-run/STOP']).toBeUndefined()
+  })
+
+  test('a run splits its cost into feature agents and orchestration (M31-001)', BUDGET, async ($, on) => {
+    const w = world(on, { ...RUN })
+    models(on, DONE)
+    const spawn = (id: string) => $.agent.spawn({ prompt: `Use harness-session for ${id}, inline.`, subagentType: 'harness-builder' })
+    w.cost.usd = 0
+    await $.session.start(START)
+    w.cost.usd = 0.5 // orchestrator: context, status
+    await spawn('M1-001')
+    w.cost.usd = 3.5 // builder agent-1 at work
+    await $.turn.complete(turn(session('M1-001'), 'agent-1'))
+    w.cost.usd = 4 // orchestrator: verify, next dispatch
+    await spawn('M1-002')
+    w.cost.usd = 6
+    await $.turn.complete(turn(session('M1-002'), 'agent-2'))
+    w.cost.usd = 6.25 // orchestrator: report
+    await $.turn.complete(turn('run complete'))
+    expect(w.files['.harness-run/run-cost']).toBe('agents 5.0000\norchestration 1.2500\n')
+  })
+
+  test('parallel lanes are counted once, not once per lane (M31-001)', BUDGET, async ($, on) => {
+    const w = world(on, { ...RUN })
+    models(on, DONE)
+    const spawn = (id: string) => $.agent.spawn({ prompt: `Use harness-session for ${id}, inline, as a parallel lane.`, subagentType: 'harness-builder' })
+    w.cost.usd = 0
+    await $.session.start(START)
+    w.cost.usd = 1
+    await spawn('M1-001')
+    await spawn('M1-002')
+    w.cost.usd = 5
+    await $.turn.complete(turn(session('M1-001'), 'agent-1'))
+    w.cost.usd = 7
+    await $.turn.complete(turn(session('M1-002'), 'agent-2'))
+    w.cost.usd = 7.5 // merges and the full gate
+    await $.turn.complete(turn('batch merged'))
+    expect(w.files['.harness-run/run-cost']).toBe('agents 6.0000\norchestration 1.5000\n')
+  })
+
+  test('outside a run no run cost is written (M31-001)', BUDGET, async ($, on) => {
+    const w = world(on, { 'FEATURES.json': FEATURES })
+    models(on, '{}')
+    w.cost.usd = 0
+    await $.session.start(START)
+    w.cost.usd = 1
+    await $.turn.complete(turn('a'))
+    expect(w.files['.harness-run/run-cost']).toBeUndefined()
   })
 
   test('does nothing outside a harnessed repo', BUDGET, async ($, on) => {

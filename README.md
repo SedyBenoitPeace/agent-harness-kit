@@ -273,6 +273,11 @@ of git):
   current feature, and logs why in `.harness-run/budget.log`; 0 turns a
   budget off. Each feature's cost lands in `.harness-run/cost.log` and the
   run report. Features built in parallel share one figure.
+- **Orchestration cost** — the run's total is split into time a builder or
+  evaluator was running and time the orchestrator ran alone (dispatching,
+  verifying, merging lanes, gates), counted once even with parallel lanes,
+  in `.harness-run/run-cost`. The run report's Summary shows that split and
+  the feature dollars per model, so a heavy `opus` share is easy to spot.
 
 Upgrading from 3.2.0: the edition was briefly named `agent-harness-kit-mods`;
 run `/plugin uninstall agent-harness-kit-mods`, then install
@@ -397,7 +402,8 @@ What it does, so nothing surprises you:
   milestone and leaves them local.
 - **The report**, `docs/runs/<date>.md`, is built by `run-report.sh` from
   git and FEATURES.json (no model calls) and committed: done (with minutes
-  per feature, and dollars and the model with the Claude Code edition), skipped (with each
+  per feature, and dollars and the model with the Claude Code edition, plus
+  the run's cost split into feature agents and orchestration, and by model), skipped (with each
   question), waiting on a human, not started and why, branches used.
 - **Watching it from a terminal.** In a second tab, run
   `bash <kit>/skills/harness-status/scripts/status.sh --watch` in the repo:
