@@ -3,6 +3,14 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-15 — session 68 (M32 plan: token usage for every CLI)
+
+- Branch: `m32-token-usage`.
+- Done: plan `docs/plans/active/2026-10-15-m32-token-usage.md` and its five tasks in FEATURES.json as `failing` (M32-001…005). No code yet.
+- Decisions: tokens for Claude Code, Codex and Copilot through one shared `.harness-run/usage.log`; dollars stay Claude Code only, no price table (owner, 2026-10-15). Codex and Copilot formats are confirmed on real sessions and committed as fixtures before code relies on them; without a real sample those tasks defer with `Needs a human:`. All tasks `effort: medium`.
+- Gate: GREEN (bash scripts/e2e.sh, all suites).
+- Next: owner reviews the plan; then M32-001, after which 002–004 can run as parallel lanes.
+
 ## 2026-10-14 — session 67 (M31-001, release 3.9.0)
 
 - Branch: `release/3.8.1`.
