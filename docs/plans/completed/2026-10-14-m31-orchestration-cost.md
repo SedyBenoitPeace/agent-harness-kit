@@ -27,4 +27,4 @@ were invisible, and he watches consumption closely.
 
 - 2026-10-14: dollars, not tokens: tokens are not comparable across models
   and cache reads dominate them; budgets are already in dollars.
-- 2026-10-14: shipped inside the unmerged 3.8.1 at the owner's request.
+- 2026-10-14: released as 3.9.0 together with the unpublished 3.8.1 README change.

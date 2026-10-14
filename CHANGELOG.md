@@ -10,7 +10,7 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
-## 3.8.1 — 2026-10-13
+## 3.9.0 — 2026-10-15
 
 - README: new "Start a repo from scratch — just chat" section (describe the
   project in the chat, name the harness, audit, commit), with a generic example
