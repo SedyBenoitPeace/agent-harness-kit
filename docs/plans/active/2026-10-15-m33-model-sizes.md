@@ -116,3 +116,21 @@ build below `medium`. A retry or an evaluator rejection steps up one size.
 - 2026-10-15: M32 runs first; its tasks carry `model` sizes now, which take
   effect once M33-002 ships. Until then the Claude edition routes by
   `effort` as before.
+- 2026-10-15 (owner, from each CLI's official docs; answers M33-003's open
+  question in place of real agent files on the owner machine):
+  1. Codex: custom agent TOML files (`.codex/agents/*.toml`,
+     `~/.codex/agents/`) take optional `model` and `model_reasoning_effort`
+     (also `model_reasoning_summary`, `model_verbosity`). A value in the file
+     wins over a spawn-time value, then the `[agents]` default, then the
+     parent's. A file that sets only `model` keeps the previously resolved
+     effort. `sandbox_mode`, `approval_policy`, `model_provider` and
+     `mcp_servers` cannot be set per agent. Source: OpenAI Codex docs,
+     Subagents.
+  2. Copilot: custom agent files (`.agent.md` or `.md`) take a `model`
+     frontmatter property: "Model to use when this custom agent executes. If
+     unset, inherits the default model." Applies to GitHub.com, Copilot CLI
+     and supported IDEs. Source: GitHub Docs, Custom agents configuration.
+  3. Design consequence: because the Codex file value wins over spawn, keep
+     per-size files (`harness-builder-small`/`-medium`/`-large`), each with
+     its model line and an effort line, and leave `harness-builder` with no
+     model line.
