@@ -1518,7 +1518,7 @@
       "id": "M34-007",
       "milestone": 34,
       "title": "Orchestrators wait once per builder via a results file and wait-result.sh, never poll or steer, read only script output, fresh conversation on resume",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M34-002"
       ],

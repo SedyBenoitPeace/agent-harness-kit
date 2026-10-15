@@ -1367,3 +1367,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: Single string, not a list (rejected: multi-resource features; add when needed). Wrote the tests and code in one pass, so no separate red run was observed (shortcut). Audit WARNs rather than fails, matching effort/model.
 - Gate: green (`bash scripts/e2e.sh`, exit 0).
 - Next: M34-007 (other lane), then M34-008.
+
+## 2026-10-15 — session 85 (M34-007 parallel lane merged, with M34-006)
+
+- Branch: `m34-run` (lanes `lane/M34-006` 217749a, `lane/M34-007` 12858a0; full gate green after both merges).
+- Done: M34-007 builders write `.harness-run/results/<id>.txt` as their last act; new `skills/harness-run/scripts/wait-result.sh <id> [--timeout <s>]` blocks in the shell and prints it; harness-run, harness-continuous and protocol 2.7 say one blocking wait per builder, no short polls, no steering messages, script output only, resumed runs in a fresh conversation; e2e.sh checks the phrases.
+- Decisions: M34-007 — wait-result.sh is the portable path (rejected model-side polling and relying only on a CLI's blocking wait); run-start.sh also archives `results/` so a stale result cannot satisfy the next run's wait; the "no whole-file reads" check is a line grep, not a semantic proof.
+- Gate: GREEN (run-gate.sh final).
+- Next: M34-008.
