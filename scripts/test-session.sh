@@ -130,6 +130,15 @@ make_lanes_repo "$WORK/l-missing" "[$(f M1-001 1 failing '' '["src/a/"]'),$(f M1
 make_lanes_repo "$WORK/l-cap" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]')]"
 [ "$(lanes "$WORK/l-cap")" = 'PARALLEL: M1-001 M1-002 M1-003' ] || fail "lanes: cap of 3 not applied"
 
+# exclusive (M34-006): same value never shares a batch; a third without it joins
+ex() { sed 's/}$/,"exclusive":"sim"}/'; }
+make_lanes_repo "$WORK/l-ex" "[$(f M1-001 1 failing '[]' '["a/"]' | ex),$(f M1-002 1 failing '[]' '["b/"]' | ex),$(f M1-003 1 failing '[]' '["c/"]')]"
+[ "$(lanes "$WORK/l-ex")" = 'PARALLEL: M1-001 M1-003' ] || fail "lanes: same exclusive value must not share a batch"
+make_lanes_repo "$WORK/l-ex2" "[$(f M1-001 1 failing '[]' '["a/"]' | ex),$(f M1-002 1 failing '[]' '["b/"]' | ex)]"
+[ "$(lanes "$WORK/l-ex2")" = 'PARALLEL: none' ] || fail "lanes: two same-exclusive features alone must be sequential"
+grep -q 'exclusive' skills/harness-initial-setup/templates/harness-protocol-planning.md || fail "protocol 1.4 must name exclusive"
+grep -q 'exclusive' skills/harness-initial-setup/templates/FEATURES.json.tmpl || fail "FEATURES template must name exclusive"
+
 # 5d. evaluator fields (M18): review is not-done and never NEXT; fields accepted;
 #     features without them behave exactly as before
 make_lanes_repo "$WORK/rv" "[$(f M1-001 1 review '[]' '["a/"]' | sed 's/}$/,"evaluate":"ui","bar":"matches the mockup","eval_attempts":1}/'),$(f M1-002 1 failing '["M1-001"]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]')]"

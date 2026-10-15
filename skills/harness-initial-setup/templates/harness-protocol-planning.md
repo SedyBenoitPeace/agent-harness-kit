@@ -138,7 +138,12 @@ answer is clear:
 - **Paths touched?** → `paths`: the directories or globs the feature
   changes, e.g. `["src/billing/", "tests/billing/**"]`.
 
-A feature with either field missing always runs sequentially — leaving
+- **Shares a resource?** → `exclusive` (optional): a name for a resource
+  only one feature may use at a time (a simulator, a device, a database),
+  e.g. `"ios-simulator"`. Two features with the same value never run in
+  one parallel batch, even when their `paths` are disjoint.
+
+A feature with either `depends_on` or `paths` missing always runs sequentially — leaving
 them out is always safe.
 
 Ask one more question per feature: **Can the gate prove this? If not, what

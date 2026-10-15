@@ -1499,7 +1499,7 @@
       "id": "M34-006",
       "milestone": 34,
       "title": "Optional exclusive field keeps features sharing a resource (simulator, device, database) out of the same parallel batch",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M34-005"
       ],

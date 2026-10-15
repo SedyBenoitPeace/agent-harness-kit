@@ -67,7 +67,7 @@ fi
 # Parallel lanes for harness-run: declared at planning time, never inferred.
 # Eligible = failing, in NEXT's milestone, declares depends_on (all passing)
 # and non-empty paths. Greedy from NEXT over non-overlapping glob prefixes,
-# max 3; fewer than 2 lanes, or NEXT itself ineligible → sequential.
+# max 3, never two with the same optional exclusive value; fewer than 2 lanes, or NEXT itself ineligible → sequential.
 jq -r --arg ex "$SKIPPED_IDS" '
   def prefix: sub("[*?\\[].*$"; "");
   def overlaps($a; $b): any($a[]; . as $x | any($b[]; . as $y
@@ -82,8 +82,10 @@ jq -r --arg ex "$SKIPPED_IDS" '
       | if ($el | length) == 0 or $el[0].id != $f[0].id then "PARALLEL: none" else
           reduce $el[] as $e ([];
             ($e.paths | map(prefix)) as $p
+            | ($e.exclusive // null) as $x
             | if length < 3 and all(.[]; overlaps(.p; $p) | not)
-              then . + [{id: $e.id, p: $p}] else . end)
+                and ($x == null or all(.[]; .x != $x))
+              then . + [{id: $e.id, p: $p, x: $x}] else . end)
           | if length >= 2 then "PARALLEL: " + (map(.id) | join(" ")) else "PARALLEL: none" end
         end
     end
