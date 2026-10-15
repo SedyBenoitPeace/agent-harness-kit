@@ -170,6 +170,23 @@ grep -q 'PLANNING-ONLY' "$rep2" && fail "run-report: a planning entry's Decision
 grep -qF -- '  - Decisions: rejected a plugin system; assumed LF endings.' "$rep2" || fail "run-report: M1-001 must take Decisions from its commit body"
 grep -qF -- '  - Decisions: none.' "$rep2" || fail "run-report: M1-002 must take Decisions from the entry whose Done: names it"
 
+# M34-010: harness-continuous End archives after the report; a report built
+# after the archive still titles the archived ids
+end="$(sed -n '/^## End/,/^## Red flags/p' "$md")"
+rl="$(grep -n 'run-report.sh' <<< "$end" | head -1 | cut -d: -f1 || true)"
+al="$(grep -n 'archive-features.sh' <<< "$end" | head -1 | cut -d: -f1 || true)"
+[ -n "$al" ] || fail "SKILL.md: End must run archive-features.sh"
+[ "$al" -gt "${rl:-0}" ] || fail "SKILL.md: End must archive after the report"
+grep -q 'docs/features-archive.json' <<< "$end" || fail "SKILL.md: End must commit docs/features-archive.json"
+R3="$WORK/repo3"; cp -R "$R2" "$R3"
+(cd "$R3" && bash "$OLDPWD/skills/harness-status/scripts/archive-features.sh" . >/dev/null) || fail "archive in a report fixture failed"
+git -C "$R3" -c user.email=t@t -c user.name=t add FEATURES.json docs/features-archive.json
+git -C "$R3" -c user.email=t@t -c user.name=t commit -qm "harness-continuous: archive M1"
+jq -e '.features | length == 0' "$R3/FEATURES.json" >/dev/null || fail "archive: M1 should have left FEATURES.json"
+rep3="$R3/$(cd "$R3" && bash "$REPORT" "$START2" --stop-reason "finished")" || fail "run-report after archive: expected exit 0"
+sed -n '/^## Done/,/^## /p' "$rep3" | grep -Eq '^- M1-001 — boot — [0-9a-f]{7,}' || fail "run-report: an archived id must keep its title"
+sed -n '/^## Done/,/^## /p' "$rep3" | grep -Eq '^- M1-002 — parser — [0-9a-f]{7,}' || fail "run-report: an archived id must keep its title (M1-002)"
+
 # M29-002: features waiting on a human get their own section with the
 # question, and the features they hold are explained under Not started
 grep -q '^## Waiting on a human' "$rep" && fail "run-report: no Waiting section when nothing waits"

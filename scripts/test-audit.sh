@@ -193,6 +193,16 @@ echo "$out" | grep -q "^WARN.*p.md.*depends_on" && fail "plan with a feature dec
 jq '(.features[] | select(.id=="M1-002")) |= del(.depends_on, .paths)' "$WORK/prov/FEATURES.json" > "$WORK/prov/F.tmp" && mv "$WORK/prov/F.tmp" "$WORK/prov/FEATURES.json"
 out="$(bash "$CHECK" "$WORK/prov")" || fail "plan without depends_on/paths must not fail the audit"
 echo "$out" | grep -q "^WARN.*p.md.*depends_on" || fail "plan without depends_on/paths: expected WARN naming the plan"
+# M34-010: archived ids stay unique across both files; a plan may name an archived id
+make_fixture "$WORK/arc"
+printf '{ "milestones": { "9": "Old" }, "features": [ { "id": "M9-001", "milestone": 9, "title": "old", "status": "passing", "verify": "x" } ] }\n' > "$WORK/arc/docs/features-archive.json"
+printf '# Plan\n\n## M9-001 — done long ago\n' > "$WORK/arc/docs/plans/active/p.md"
+out="$(bash "$CHECK" "$WORK/arc")" || fail "archive with unique ids must not fail the audit: $out"
+jq '.features[0].id = "M9-001"' "$WORK/arc/FEATURES.json" > "$WORK/arc/f.tmp" && mv "$WORK/arc/f.tmp" "$WORK/arc/FEATURES.json"
+expect_fail "$WORK/arc" "M9-001 is in both FEATURES.json and docs/features-archive.json" "id in both files"
+echo '{ nope' > "$WORK/arc/docs/features-archive.json"
+expect_fail "$WORK/arc" "docs/features-archive.json is not valid JSON" "broken archive"
+
 # this repo, with M34-005 as passing (its verify quotes the word list and is
 # flipped by the orchestrator); the repo itself is not self-harnessed, so
 # only the WARN lines matter, not the exit code

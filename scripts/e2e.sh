@@ -263,7 +263,7 @@ bash scripts/test-audit.sh
 
 STATUS_SKILL="skills/harness-status"
 [ -f "$STATUS_SKILL/scripts/status.sh" ] || fail "harness-status status.sh missing"
-shellcheck "$STATUS_SKILL/scripts/status.sh"
+shellcheck "$STATUS_SKILL/scripts/status.sh" "$STATUS_SKILL/scripts/archive-features.sh"
 [ -f "$STATUS_SKILL/SKILL.md" ] || fail "harness-status SKILL.md missing"
 [ "$(head -1 "$STATUS_SKILL/SKILL.md")" = "---" ] || fail "harness-status SKILL.md: missing frontmatter"
 grep -q '^name: harness-status$' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: frontmatter name wrong"

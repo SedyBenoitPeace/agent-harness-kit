@@ -28,7 +28,9 @@ parsing lives in `scripts/status.sh` — run it, never re-derive it by hand.
 4. Offer `--run-gate` only if the human wants health confirmed — gates
    can be slow.
 5. Status is read-only. Change nothing, flip no statuses. To do the
-   work, start a coding session (protocol §2).
+   work, start a coding session (protocol §2). `scripts/archive-features.sh`
+   is not part of status: harness-continuous End runs it to move fully
+   done milestones to `docs/features-archive.json` (the `Archived:` line).
 
 ## Red flags
 

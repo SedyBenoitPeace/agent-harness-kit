@@ -38,8 +38,12 @@ stamp="$(git log -1 --format=%cd --date=format:%Y-%m-%d-%H%M HEAD)"
 out="docs/runs/$stamp.md"
 mkdir -p docs/runs
 
-title() { jq -r --arg id "$1" '.features[] | select(.id == $id) | .title' FEATURES.json; }
-status_of() { jq -r --arg id "$1" '.features[] | select(.id == $id) | .status' FEATURES.json; }
+# every feature, archived ones too (M34-010): a report built after
+# archive-features.sh still titles the ids it moved
+ARCH=docs/features-archive.json; [ -f "$ARCH" ] || ARCH=/dev/null
+ALL="$(jq -cs '{features: [.[].features[]?]}' FEATURES.json "$ARCH")"
+title() { jq -r --arg id "$1" '.features[] | select(.id == $id) | .title' <<< "$ALL"; }
+status_of() { jq -r --arg id "$1" '.features[] | select(.id == $id) | .status' <<< "$ALL"; }
 
 # ids done: the newest non-skip commit since start naming a passing/review feature
 done_lines=""
@@ -50,7 +54,7 @@ while IFS=$'\t' read -r hash subject; do
       done_lines="$done_lines$id	$hash
 "
     fi
-  done < <(jq -r '.features[].id' FEATURES.json)
+  done < <(jq -r '.features[].id' <<< "$ALL")
 done < <(git log --reverse --format='%h%x09%s' "$START..HEAD")
 done_lines="$(printf '%s' "$done_lines" | awk -F'\t' 'NF { h[$1] = $2; if (!($1 in s)) { s[$1] = 1; ord[++n] = $1 } } END { for (i = 1; i <= n; i++) print ord[i] "\t" h[ord[i]] }')"
 

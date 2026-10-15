@@ -87,11 +87,13 @@ fi
 # Eligible = failing, in NEXT's milestone, declares depends_on (all passing)
 # and non-empty paths. Greedy from NEXT over non-overlapping glob prefixes,
 # max 3, never two with the same optional exclusive value; fewer than 2 lanes, or NEXT itself ineligible → sequential.
-jq -r --arg ex "$SKIPPED_IDS" '
+# Archived ids (docs/features-archive.json, M34-010) count as passing.
+ARCH=docs/features-archive.json; [ -f "$ARCH" ] || ARCH=/dev/null
+jq -r --arg ex "$SKIPPED_IDS" --slurpfile arc "$ARCH" '
   def prefix: sub("[*?\\[].*$"; "");
   def overlaps($a; $b): any($a[]; . as $x | any($b[]; . as $y
     | ($x | startswith($y)) or ($y | startswith($x))));
-  (.features | map({key: .id, value: .status}) | from_entries) as $st
+  ([$arc[].features[]?, .features[]] | map({key: .id, value: .status}) | from_entries) as $st
   | ([.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]
       | sort_by(.milestone, .id)) as $f
   | if ($f | length) == 0 then "PARALLEL: none" else

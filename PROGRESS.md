@@ -3,6 +3,32 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-15 -- session 74 (M34-010 features archive)
+
+- Branch: `m34-run`.
+- Done: M34-010. New `skills/harness-status/scripts/archive-features.sh` moves
+  every milestone whose features are all passing or superseded (features and
+  milestone name) from FEATURES.json to `docs/features-archive.json`, appended;
+  it refuses (exit 2, nothing written) when an id to move is already archived.
+  status.sh prints an `Archived:` line; context.sh counts archived ids as
+  passing for lane `depends_on`; run-report.sh reads ids, titles and statuses
+  from both files; the audit fails on an id in both files or a broken archive,
+  and lets an active plan name an archived id. harness-continuous End runs the
+  archive after the report and commits both files with it. On a copy of this
+  repo it moves M0-M33 (103 features) and FEATURES.json goes from 98 KB to 14 KB.
+- Decisions: rejected teaching status.sh's NEXT/--skip about the archive (it
+  already never blocks on a depends_on id that is not failing or waiting, so
+  only the new `Archived:` line was added; the test still proves it); rejected
+  `--argjson` with whole files (ARG_MAX) for `--slurpfile`; writes go through
+  `cat >` so file modes survive. Assumed Totals and `--line` count
+  FEATURES.json only (the current work), with the archive on its own line.
+  Left the FEATURES.json.tmpl `_instructions` ("DO NOT delete ... ids") and the
+  Claude edition's statusline (claude/hooks/lib.ts) unchanged: neither is in
+  this feature's paths; M34-013 docs should mention the archive. This repo's
+  own FEATURES.json is not archived here: End does it at the next run's end.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: M34-011.
+
 ## 2026-10-15 -- session 73 (M34-009 session brief)
 
 - Branch: `m34-run`.

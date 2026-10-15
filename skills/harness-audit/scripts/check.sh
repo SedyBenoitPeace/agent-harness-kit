@@ -52,6 +52,22 @@ else
   failc "FEATURES.json missing or invalid JSON"
 fi
 
+# Archive (M34-010): fully done milestones moved to docs/features-archive.json;
+# it parses and no id is in both files
+ARCH=docs/features-archive.json
+if [ -f "$ARCH" ]; then
+  if jq -e . "$ARCH" >/dev/null 2>&1; then
+    both="$(jq -rn --slurpfile f FEATURES.json --slurpfile a "$ARCH" \
+      '[$a[0].features[]?.id] as $ids | [$f[0].features[]?.id | select(IN($ids[]))] | unique | .[]' 2>/dev/null || true)"
+    if [ -z "$both" ]; then pass "$ARCH ids are not in FEATURES.json"; fi
+    for id in $both; do failc "$id is in both FEATURES.json and $ARCH — ids must stay unique"; done
+  else
+    failc "$ARCH is not valid JSON"; ARCH=/dev/null
+  fi
+else
+  ARCH=/dev/null
+fi
+
 # PROGRESS.md
 if [ -f PROGRESS.md ]; then pass "PROGRESS.md exists"; else failc "PROGRESS.md missing"; fi
 
@@ -81,7 +97,7 @@ if [ -d docs/plans/active ] && [ -d docs/plans/completed ]; then
     [ -f "$plan" ] || continue
     while IFS= read -r id; do
       [ -n "$id" ] || continue
-      if jq -e --arg id "$id" '[.features[]? | .id] | index($id) != null' FEATURES.json >/dev/null 2>&1; then :
+      if jq -es --arg id "$id" '[.[].features[]? | .id] | index($id) != null' FEATURES.json "$ARCH" >/dev/null 2>&1; then :
       else failc "$plan names $id, which is not in FEATURES.json — add the plan's tasks as failing features when the plan is approved"; fi
     done < <({ grep -E '^#{2,4} ' "$plan" || true; } | grep -oE 'M[0-9]+-[0-9]{3}' | sort -u)
   done

@@ -1577,7 +1577,7 @@
       "id": "M34-010",
       "milestone": 34,
       "title": "archive-features.sh moves fully done milestones to docs/features-archive.json; status, context, report and audit resolve archived ids",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M34-009"
       ],

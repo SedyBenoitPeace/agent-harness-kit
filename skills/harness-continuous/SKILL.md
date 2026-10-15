@@ -81,8 +81,13 @@ First, for the CLI running this session, run
 exists (it appends token counts to `.harness-run/usage.log`); no script, no
 tokens, and the report is unchanged. Then run
 `bash ../harness-run/scripts/run-report.sh <start-commit> --skip
-.harness-run/skip --stop-reason "<why the run stopped>"`, commit the
-file it prints (explicit path), and print that path as the last line. If
+.harness-run/skip --stop-reason "<why the run stopped>"`. After the
+report, run `bash ../harness-status/scripts/archive-features.sh`: it moves
+milestones whose features are all passing or superseded out of
+`FEATURES.json` into `docs/features-archive.json`, so later sessions read
+less. Commit the report file it printed, plus `FEATURES.json` and
+`docs/features-archive.json` when the archive printed milestones (explicit
+paths), and print the report path as the last line. If
 the report script cannot run (exit 2, e.g. no `FEATURES.json`), skip the
 file and print the stop reason as the last line instead. Skips
 and stashes are recoverable from the report and `git stash list`.
