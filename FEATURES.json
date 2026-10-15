@@ -1226,7 +1226,7 @@
       "id": "M32-001",
       "milestone": 32,
       "title": "Run report reads .harness-run/usage.log: tokens per feature, run total split by agents and orchestration, tokens by model; harness-continuous runs the CLI usage collector",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M31-001"
       ],
@@ -1244,7 +1244,7 @@
       "id": "M32-002",
       "milestone": 32,
       "title": "Claude Code edition appends builder and orchestration tokens to usage.log",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M32-001"
       ],
@@ -1253,14 +1253,15 @@
         "claude/tests/"
       ],
       "effort": "medium",
-      "verify": "The decision log records, from a real Claude Code session, whether turn.complete usage covers a builder session or only its last call; bash scripts/e2e.sh exits 0 with mod tests proving a builder tokens line lands on its feature, orchestrator slices land on orchestration, parallel lanes count once, the model is recorded, and nothing is written outside a run",
-      "model": "medium"
+      "verify": "The decision log records whether turn.complete usage covers a builder session or only its last call; bash scripts/e2e.sh exits 0 with mod tests proving a builder tokens line lands on its feature, orchestrator slices land on orchestration, parallel lanes count once, the model is recorded, and nothing is written outside a run",
+      "model": "medium",
+      "notes": "Unattended 2026-10-15: skipped — implementation is on branch lane/M32-002 (d6c511c, gate green, worktree ../harness-planning-skill-M32-002), but verify needs the decision log to record from a real Claude Code session whether turn.complete usage covers a builder's whole session or only its last call, and a lane cannot observe that. It also assumes main-loop usage excludes subagent tokens. Answered by the owner 2026-10-15: see the plan's decision log."
     },
     {
       "id": "M32-003",
       "milestone": 32,
-      "title": "Codex: usage-codex.sh collects tokens from Codex session files by feature window; second opinions log their tokens",
-      "status": "failing",
+      "title": "Codex: usage-codex.sh collects tokens per feature from Codex session files via each builder SESSION line; second opinions log their tokens",
+      "status": "passing",
       "depends_on": [
         "M32-001"
       ],
@@ -1268,36 +1269,35 @@
         "skills/harness-run/scripts/usage-codex.sh",
         "skills/harness-run/scripts/second-opinion.sh",
         "scripts/test-usage-codex.sh",
-        "scripts/test-second-opinion.sh",
-        "scripts/fixtures/codex/"
+        "scripts/test-second-opinion.sh"
       ],
       "effort": "medium",
-      "verify": "A trimmed real Codex session file is committed under scripts/fixtures/codex/; bash scripts/e2e.sh exits 0 with test-usage-codex.sh proving per-feature, parallel-batch and orchestration totals from it, and test-second-opinion.sh proving an `<id>/second-opinion codex` line from summed turn.completed usage",
-      "model": "medium"
+      "verify": "bash scripts/e2e.sh exits 0 with test-usage-codex.sh reproducing, from scripts/fixtures/codex/, the per-feature totals in scripts/fixtures/README.md (M1-001 summing its two builder sessions) and orchestration as orchestrator plus guardian, with the model per line; and test-second-opinion.sh proving an `<id>/second-opinion codex` line from summed turn.completed usage",
+      "model": "medium",
+      "notes": "Format confirmed 2026-10-15 on a real Codex run (CLI 0.162.1); the fixture in scripts/fixtures/codex/ is synthetic in that format, with format facts and expected totals in scripts/fixtures/README.md. Never commit a real session file (open-source repo)."
     },
     {
       "id": "M32-004",
       "milestone": 32,
-      "title": "Copilot: usage-copilot.sh collects tokens and premium requests from Copilot CLI data by feature window",
-      "status": "failing",
+      "title": "Copilot: usage-copilot.sh collects tokens and premium requests per feature from Copilot session-state via each subagent id and SESSION line",
+      "status": "passing",
       "depends_on": [
         "M32-001"
       ],
       "paths": [
         "skills/harness-run/scripts/usage-copilot.sh",
-        "skills/harness-run/scripts/usage-snapshot.sh",
-        "scripts/test-usage-copilot.sh",
-        "scripts/fixtures/copilot/"
+        "scripts/test-usage-copilot.sh"
       ],
       "effort": "medium",
-      "verify": "A trimmed real Copilot CLI sample is committed under scripts/fixtures/copilot/ and the decision log says where Copilot keeps session totals; bash scripts/e2e.sh exits 0 with test-usage-copilot.sh proving per-feature and orchestration token totals and premium=<n> when present",
-      "model": "medium"
+      "verify": "bash scripts/e2e.sh exits 0 with test-usage-copilot.sh reproducing, from scripts/fixtures/copilot/, the orchestration, M1-001 and M1-002 totals in scripts/fixtures/README.md, the model per line, and premium=1",
+      "model": "medium",
+      "notes": "Format confirmed 2026-10-15 on real Copilot sessions (CLI 1.0.94); the fixture in scripts/fixtures/copilot/ is synthetic in that format, with format facts and expected totals in scripts/fixtures/README.md. Never read or commit real session files (open-source repo)."
     },
     {
       "id": "M32-005",
       "milestone": 32,
       "title": "Protocol 2.8, README and CHANGELOG for token usage; release 3.10.0 and template mirror sync",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M32-002",
         "M32-003",
@@ -1315,13 +1315,14 @@
       ],
       "effort": "low",
       "verify": "bash scripts/e2e.sh exits 0 with version 3.10.0 checked; protocol 2.8 says the report carries tokens per feature where the CLI exposes them, with no CLI named; CHANGELOG 3.10.0 has an Upgrade block; sync-template.sh --check is clean against the mirror PR",
-      "model": "small"
+      "model": "small",
+      "notes": "Mirror branch sync-3.10.0 committed locally in the template repo (23271c2, one file: harness-protocol-runs.md); sync-template.sh --check is IN SYNC against it. Awaiting the owner to push it and open the mirror PR. Earlier blocked/skipped notes superseded."
     },
     {
       "id": "M33-001",
       "milestone": 33,
       "title": "Optional model field (small|medium|large or a CLI alias) in protocol 1.4, FEATURES template, status.sh and harness-audit",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M32-005"
       ],
@@ -1340,7 +1341,7 @@
       "id": "M33-002",
       "milestone": 33,
       "title": "Claude Code edition routes by model size first, effort only sets effort; effort mapping kept as fallback",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-001"
       ],
@@ -1356,7 +1357,7 @@
       "id": "M33-003",
       "milestone": 33,
       "title": "Optional per-repo size map (docs/agents/model-sizes.json) and per-size builder agents from gen-agents.sh for each CLI that can set a model",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-001"
       ],
@@ -1367,13 +1368,14 @@
       ],
       "model": "medium",
       "effort": "medium",
-      "verify": "The decision log records, from real agent files on the owner machine, how Codex and Copilot agent files take a model; bash scripts/e2e.sh exits 0 with test-agents.sh proving harness-builder-small/medium/large per CLI from a fixture map with the mapped model lines, none for a CLI without a map, the Claude trio from aliases, and harness-builder unchanged"
+      "verify": "The decision log records, from each CLI's official docs, how Codex and Copilot agent files take a model; bash scripts/e2e.sh exits 0 with test-agents.sh proving harness-builder-small/medium/large per CLI from a fixture map with the mapped model lines, none for a CLI without a map, the Claude trio from aliases, and harness-builder unchanged",
+      "notes": "Unattended 2026-10-15: skipped — implementation is on branch lane/M33-003 (649612d, full gate green, worktree ../harness-planning-skill-M33-003), but verify needs the decision log to record, from real agent files on the owner machine, how Codex and Copilot agent files take a model; none exist there (no ~/.codex/agents, ~/.copilot/agents or .github/agents). Indirect evidence in the lane's commit body: Codex config.toml uses top-level `model =`; Copilot CLI 1.0.98 changelog says custom/plugin agents honour a frontmatter model field. Answered by the owner 2026-10-15: see the plan's decision log."
     },
     {
       "id": "M33-004",
       "milestone": 33,
       "title": "harness-run and harness-continuous dispatch the per-size builder and log the model on every CLI; retries step up a size",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-002",
         "M33-003"
@@ -1391,7 +1393,8 @@
       "id": "M33-005",
       "milestone": 33,
       "title": "README and CHANGELOG for model sizes; release 3.11.0 and template mirror sync",
-      "status": "failing",
+      "status": "passing",
+      "notes": "Mirror branch sync-3.11.0 committed locally in the template repo, stacked on sync-3.10.0 (commit 2257a1c, two files: FEATURES.json and harness-protocol-planning.md); sync-template.sh --check is IN SYNC. Awaiting the owner to push sync-3.10.0 and sync-3.11.0 and open the mirror PRs.",
       "depends_on": [
         "M33-004"
       ],

@@ -1,6 +1,7 @@
 import type { EngineInterface, Register } from 'claude-code'
 
 import {
+  addUsage,
   appendLine,
   budgetLine,
   chooseModel,
@@ -23,9 +24,11 @@ import {
   type RunSpend,
   skippedFile,
   skippedPath,
+  type Tokens,
   statusLineText,
   supervisorPrompt,
   transcriptText,
+  usageLine,
   usd,
   verdictStatus,
   verifyOf,
@@ -68,6 +71,7 @@ export const register: Register = (on, options) => {
   let runBase: number | undefined // session cost when this session first saw the run
   let isFeatureFlagged = false
   let isRunFlagged = false
+  const builderTokens = new Map<string, Tokens>() // per builder subagent, summed over its turns (M32-002)
   const measured = new Set<string>() // features whose cost is logged since their builder started
   const shown: { feature?: string; model?: string; notice?: string } = {} // what the status line shows (M30-003)
   const route = options.route_models !== false
@@ -150,6 +154,26 @@ export const register: Register = (on, options) => {
     await tally($, ledger)
     if (e.agentId !== undefined) ledger.running.delete(e.agentId)
     const line = parseSessionLine(e.answer)
+
+    // M32-002 — tokens for the run report: a builder's turns sum on its
+    // feature at its SESSION line; the orchestrator's own turns are
+    // orchestration. Each subagent has its own usage, so lanes count once.
+    if (e.usage && (await $.fs.exists(`${RUN_DIR}/start`))) {
+      const logUsage = async (scope: string, t: Tokens) => {
+        const path = `${RUN_DIR}/usage.log`
+        const before = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
+        await $.fs.write(path, before + usageLine(scope, t))
+      }
+      if (e.agentId === undefined) await logUsage('orchestration', addUsage(undefined, e.usage))
+      else {
+        const t = addUsage(builderTokens.get(e.agentId), e.usage)
+        builderTokens.set(e.agentId, t)
+        if (line) {
+          builderTokens.delete(e.agentId)
+          await logUsage(line.feature, t)
+        }
+      }
+    }
 
     // M30-002 — budget guard in dollars: what the feature (since the last
     // SESSION line) and the run (since this session saw it) have cost.

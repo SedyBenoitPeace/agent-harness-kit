@@ -177,6 +177,23 @@ The session reads it as how much checking to do beyond the `verify`
 check, and an orchestrator passes it to the agent it dispatches. Leaving
 it out is always safe: the agent uses its usual effort.
 
+Then ask: **Which size of model should build it?** Record `model`: `small`,
+`medium` or `large`; optional. Size is separate from effort: effort is how
+hard the checking goes, size is who builds. Any size goes with any effort.
+
+| Size | When | Examples |
+|---|---|---|
+| `small` | Narrow, well specified, follows a pattern already in the repo, verified by one command | scaffolds, docs, changelog and version bumps, config, renames, tests that mirror existing ones, fixtures |
+| `medium` | The default: new logic, several files, debugging, long shell-heavy sessions | most features |
+| `large` | Design calls others build on, security or isolation, cross-cutting refactors | graders, sandboxes, auth, data models |
+
+A CLI's own model alias is accepted as an override and applies only on
+that CLI; every other CLI treats it as `medium`. Floors: the evaluator and
+any feature whose `paths` touch auth, payments, billing, migrations,
+secrets, credentials or personal data never build below `medium`. A retry
+or an evaluator rejection steps up one size. Leaving `model` out is always
+safe: the agent keeps its default.
+
 ### 1.5 Write the first execution plan
 
 Write the plan with the agent's own **native plan mode** — whatever the

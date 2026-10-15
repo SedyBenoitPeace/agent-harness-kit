@@ -95,6 +95,18 @@ jq '.features[0].effort = "turbo"' "$WORK/effort/FEATURES.json" > "$WORK/effort/
 out="$(bash "$CHECK" "$WORK/effort")" || fail "unknown effort must not fail the audit"
 echo "$out" | grep -q "^WARN.*effort.*M0-001" || fail "unknown effort: expected WARN naming the feature"
 
+# 2f2. model size (M33-001): a size or a lowercase alias passes silently;
+# anything else is a WARN naming the feature
+make_fixture "$WORK/msize"
+for v in small medium large haiku gpt-5.1; do
+  jq --arg v "$v" '.features[0].model = $v' "$WORK/msize/FEATURES.json" > "$WORK/msize/F.tmp" && mv "$WORK/msize/F.tmp" "$WORK/msize/FEATURES.json"
+  out="$(bash "$CHECK" "$WORK/msize")" || fail "valid model $v must not fail the audit"
+  echo "$out" | grep -q "^WARN.*model" && fail "valid model $v: no WARN expected"
+done
+jq '.features[0].model = "Big Model!"' "$WORK/msize/FEATURES.json" > "$WORK/msize/F.tmp" && mv "$WORK/msize/F.tmp" "$WORK/msize/FEATURES.json"
+out="$(bash "$CHECK" "$WORK/msize")" || fail "unknown model must not fail the audit"
+echo "$out" | grep -q "^WARN.*model.*M0-001" || fail "unknown model: expected WARN naming the feature"
+
 # 2g. model-tagged rules (M23-003): none = no WARN; tagged lines = a WARN
 # with their count, telling the human to re-test them on model change
 out="$(bash "$CHECK" "$WORK/good")" || fail "good fixture re-run exited non-zero"

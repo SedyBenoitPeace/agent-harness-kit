@@ -152,6 +152,16 @@ done
   || fail "harness-protocol.md must hold exactly section 2.1-2.6 (the session core)"
 [ "$(grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-runs.md" | sed -E 's/^##+ ([0-9.]+).*/\1/' | tr '\n' ' ')" = "2.7 2.8 " ] \
   || fail "harness-protocol-runs.md must hold exactly 2.7 and 2.8"
+# token usage in the run report (M32-005): the protocol names no CLI for it
+grep -q 'tokens per feature' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7/2.8: run report must carry tokens per feature"
+grep -q 'where the CLI exposes' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7/2.8: tokens only where the CLI exposes them"
+grep -q 'never estimates tokens' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7/2.8: report must never estimate tokens"
+! grep -qiE 'claude code|codex|copilot' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol runs: token line must not name a CLI"
+# model size (M33-001): the planning protocol carries the size table and floors
+grep -q 'Which size of model should build it' "$TMPL_DIR/harness-protocol-planning.md" || fail "protocol 1.4: model size question missing"
+grep -qF '| small |' <(tr -d '\`' < "$TMPL_DIR/harness-protocol-planning.md") || fail "protocol 1.4: size table missing"
+grep -qF 'never build below medium' <(tr -d '\`' < "$TMPL_DIR/harness-protocol-planning.md") || fail "protocol 1.4: size floor missing"
+grep -q 'model (small|medium|large' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: model field missing from _instructions"
 grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-planning.md" | grep -qvE '^##+ 1[. ]' && fail "harness-protocol-planning.md holds a section other than 1.x"
 grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-maintenance.md" | grep -qvE '^##+ 3[. ]' && fail "harness-protocol-maintenance.md holds a section other than 3.x"
 for f in harness-protocol-planning.md harness-protocol-runs.md harness-protocol-maintenance.md; do
@@ -316,6 +326,11 @@ grep -q 'reaching 2' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: STOP-a
 
 shellcheck skills/harness-run/scripts/run-report.sh
 bash scripts/test-run.sh
+# M32: every CLI's usage collector test (added by its own feature)
+for t in scripts/test-usage-*.sh; do
+  [ -f "$t" ] || continue
+  bash "$t"
+done
 
 # --- agents (M18) --------------------------------------------------------
 
@@ -349,7 +364,12 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.9.0" ] || fail "plugin version must be 3.9.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.11.0" ] || fail "plugin version must be 3.11.0"
+# --- model sizes documented and released (M33-005) ----------------------------
+grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
+grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"
+awk '/^## 3\.11\.0 /{on=1; next} on && /^## [0-9]/{exit} on' CHANGELOG.md | grep -q '^Upgrade:' \
+  || fail "CHANGELOG: 3.11.0 entry needs an Upgrade: block (M33-005)"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -585,6 +605,7 @@ done
 shellcheck scripts/sync-template.sh
 bash scripts/test-sync-template.sh
 grep -qF 'scripts/sync-template.sh' CHANGELOG.md || fail "CHANGELOG release checklist must name sync-template.sh"
+grep -q 'bash 3.2' CHANGELOG.md || fail "CHANGELOG: the 3.10.0 entry must name the macOS bash 3.2 / BWK awk gate fix"
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"

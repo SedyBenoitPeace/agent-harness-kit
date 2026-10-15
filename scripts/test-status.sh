@@ -55,6 +55,14 @@ out="$(bash "$STATUS" --skip "$WORK/skip" "$WORK/repo")" || fail "effort --skip 
 echo "$out" | grep -q "NEXT: M1-002" || fail "effort --skip: want NEXT M1-002"
 echo "$out" | grep -q "^  effort: high$" || fail "effort --skip: missing '  effort: high' under NEXT"
 
+# 2c. model size (M33-001): no line when absent; an indented model line
+# under NEXT when set (M1-002 is NEXT here)
+if echo "$out" | grep -q "model:"; then fail "model line printed for a feature without model"; fi
+jq '(.features[] | select(.id == "M1-002") | .model) = "small"' \
+  "$WORK/repo/FEATURES.json" > "$WORK/repo/F.tmp" && mv "$WORK/repo/F.tmp" "$WORK/repo/FEATURES.json"
+out="$(bash "$STATUS" --skip "$WORK/skip" "$WORK/repo")" || fail "model fixture: expected exit 0"
+echo "$out" | grep -q "^  model: small$" || fail "model: missing '  model: small' under NEXT"
+
 # 3. nothing failing: explicit NEXT: none message
 jq '.features[].status = "passing"' "$WORK/repo/FEATURES.json" > "$WORK/repo/F.tmp"
 mv "$WORK/repo/F.tmp" "$WORK/repo/FEATURES.json"

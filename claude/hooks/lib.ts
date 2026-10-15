@@ -135,6 +135,31 @@ export function costLine(feature: string, spent: number) {
   return `${feature} ${spent.toFixed(4)}\n`
 }
 
+// --- M32-002 tokens in .harness-run/usage.log ---------------------------------
+// `<scope> claude <model> <input> <cached> <output>`, scope a feature id or
+// `orchestration`; input includes the cache share, cached is the cache read.
+
+export type TurnUsage = {
+  input_tokens: number
+  output_tokens: number
+  cache_creation_input_tokens: number
+  cache_read_input_tokens: number
+  model?: string
+}
+export type Tokens = { input: number; cached: number; output: number; model: string }
+
+export function addUsage(sum: Tokens | undefined, u: TurnUsage): Tokens {
+  const cached = u.cache_read_input_tokens
+  return {
+    input: (sum?.input ?? 0) + u.input_tokens + u.cache_creation_input_tokens + cached,
+    cached: (sum?.cached ?? 0) + cached,
+    output: (sum?.output ?? 0) + u.output_tokens,
+    model: u.model || sum?.model || '-',
+  }
+}
+
+export const usageLine = (scope: string, t: Tokens) => `${scope} claude ${t.model} ${t.input} ${t.cached} ${t.output}\n`
+
 // --- M31-001 where a run's dollars go ------------------------------------------
 // Each slice of the session's cost goes to `agents` when at least one subagent
 // (builder or evaluator) was running through it, else to `orchestration`. Lanes
@@ -165,7 +190,7 @@ export function tierOf(model: string | undefined) {
   return -1
 }
 
-type FeatureEntry = { id?: string; effort?: unknown; paths?: unknown; eval_attempts?: unknown }
+type FeatureEntry = { id?: string; model?: unknown; effort?: unknown; paths?: unknown; eval_attempts?: unknown }
 
 export function featureOf(featuresJson: string, id: string): FeatureEntry | undefined {
   try {
@@ -193,8 +218,12 @@ export function chooseModel(spawn: SpawnFacts, featuresJson: string, modelsLog: 
   const f = featureOf(featuresJson, id)
   if (!f) return undefined
   const effort = typeof f.effort === 'string' ? f.effort : 'none'
-  const reasons = [`effort ${effort}`]
-  let tier = effort === 'low' ? 0 : effort === 'high' || effort === 'max' ? 2 : 1
+  // M33-002: a size (or a Claude alias) picks the model; effort only when `model` is absent.
+  // Any other value (another CLI's alias) counts as medium.
+  const size = typeof f.model === 'string' ? f.model.toLowerCase() : ''
+  const sized = size ? { small: 0, medium: 1, large: 2 }[size] ?? (tierOf(size) < 0 ? 1 : Math.min(2, tierOf(size))) : undefined
+  const reasons = [sized !== undefined ? `model ${size}` : `effort ${effort}`]
+  let tier = sized ?? (effort === 'low' ? 0 : effort === 'high' || effort === 'max' ? 2 : 1)
   const starts = modelsLog.split('\n').filter(l => l.startsWith(`${id} `)).length
   const attempts = Number(f.eval_attempts) > 0 ? Number(f.eval_attempts) : 0
   if (starts + attempts > 0) {

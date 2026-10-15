@@ -21,7 +21,13 @@ printf '%s\n' "$name" "$@" > "$STUB_LOG"
 [ "${STUB_TAMPER:-0}" = 1 ] && echo tampered > tampered.txt
 out=""
 while [ $# -gt 0 ]; do [ "$1" = "-o" ] && out="$2"; shift; done
-if [ "$name" = codex ] && [ -n "$out" ]; then printf '%s\n' "$STUB_REPLY" > "$out"; echo "codex progress noise"; else printf '%s\n' "$STUB_REPLY"; fi
+if [ "$name" = codex ] && [ -n "$out" ]; then
+  printf '%s\n' "$STUB_REPLY" > "$out"
+  echo "codex progress noise"
+  echo '{"type":"turn.started"}'
+  echo '{"type":"turn.completed","usage":{"input_tokens":1000,"cached_input_tokens":800,"output_tokens":50,"reasoning_output_tokens":10}}'
+  echo '{"type":"turn.completed","usage":{"input_tokens":2000,"cached_input_tokens":1500,"output_tokens":70,"reasoning_output_tokens":20}}'
+else printf '%s\n' "$STUB_REPLY"; fi
 STUB
 chmod +x "$W/bin/stub"
 for c in claude codex copilot; do ln -s stub "$W/bin/$c"; done
@@ -33,7 +39,7 @@ cat > FEATURES.json <<'JSON'
   { "id": "M1-001", "milestone": 1, "title": "greet", "status": "review", "second_opinion": "codex",
     "verify": "bash greet.sh Ada prints Hello, Ada!" } ] }
 JSON
-echo '# P' > PROGRESS.md && git add -A && git commit -qm base
+echo '# P' > PROGRESS.md && echo '.harness-run/' > .gitignore && git add -A && git commit -qm base
 base="$(git rev-parse HEAD)"
 printf 'echo "Hello, $1!"\n' > greet.sh && git add -A && git commit -qm feature
 cd - >/dev/null
@@ -56,6 +62,16 @@ for c in claude codex copilot; do
   esac
   [ -z "$(git -C "$W/repo" status --porcelain)" ] || fail "$c: script left the repo dirty"
 done
+
+# 1b. codex (via --json) logs its summed turn.completed usage; others log nothing
+ulog="$W/repo/.harness-run/usage.log"
+[ ! -e "$ulog" ] || fail "no .harness-run dir: nothing may be logged"
+mkdir "$W/repo/.harness-run"
+STUB_REPLY=PASS run claude M1-001 "$base" >/dev/null; [ ! -s "$ulog" ] || fail "claude must not log usage"
+STUB_REPLY=PASS run codex M1-001 "$base" >/dev/null
+[ "$(cat "$ulog")" = "M1-001/second-opinion codex - 3000 2300 120" ] || fail "codex usage line wrong: $(cat "$ulog")"
+grep -qx -- '--json' "$STUB_LOG" || fail "codex: --json missing"
+rm -rf "$W/repo/.harness-run"
 
 # 2. the prompt carries the evaluator contract, verify, commit range, effort
 prompt="$(cat "$STUB_LOG")"

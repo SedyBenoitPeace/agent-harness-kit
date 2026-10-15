@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-15 — session 71 (M32-002 Claude Code tokens in usage.log)
+
+- Branch: `m32-m33-run`.
+- Done: merged `lane/M32-002` (d6c511c) with `--no-ff` and checked it against the owner's 2.1.300 API-types answers in the M32 plan's decision log. Main-loop turns go to `orchestration`, subagent turns are summed per agentId onto the feature named in the SESSION line, and the model comes from the usage. Added two mod tests to `claude/tests/usage.test.ts`. The first proves an orchestration line is on disk after each completed main-loop turn, so a killed run keeps its orchestrator tokens. The second proves a resumed builder adds another line on the same feature, which run-report.sh already sums. No hook code changed. Both tests passed right away, which confirms the lane already appends one line per orchestrator turn.
+- Decisions: Kept the lane's design. Rejected an end-of-run flush for orchestration, because per-turn appends already survive a kill. Rejected keeping one running total per feature across SESSION lines, because the report sums repeated scope lines. The lane's two unverified assumptions (usage covers the whole turn, and main-loop usage leaves out subagents) are now settled by owner answers 1 and 3, so orchestration does not double count. Known gaps: a subagent turn without a SESSION line (an evaluator, or a builder killed before it finishes) stays in memory and is never logged, so those tokens are missing from the report. An inline builder with no agentId counts as orchestration. The new tests confirm existing behaviour, so they were never red.
+- Gate: GREEN (bash scripts/e2e.sh, all suites, 42 mod tests).
+- Next: M32-005.
+
+## 2026-10-15 — session 70 (M32 fixtures from real CLI sessions)
+
+- Branch: `m32-m33-run`.
+- Done: Codex and Copilot session formats confirmed on the owner's machine (Codex CLI 0.162.1, Copilot CLI 1.0.94). Fixtures in `scripts/fixtures/`, both synthetic in the confirmed formats (no real session data in this open-source repo): Codex shaped like a run with an orchestrator, four builders (one retry) and a guardian; Copilot with an orchestrator and two builders. `scripts/fixtures/README.md` holds the format facts and expected totals. M32 plan, M32-003 and M32-004 updated. No feature code yet.
+- Decisions: both CLIs tag subagents and builders end with their SESSION line, so Codex and Copilot tokens attribute to features exactly; time-window attribution and Copilot's status-line snapshot are dropped. Fixtures synthetic by owner decision: open-source repo, so no real session data, trimmed or not.
+- Gate: GREEN (bash scripts/e2e.sh, all suites).
+- Next: unattended run `harness-continuous through M33` from this branch.
+
 ## 2026-10-15 — session 69 (M33 plan: model size separate from effort)
 
 - Branch: `m32-token-usage`.
@@ -1222,3 +1238,84 @@ Newest-first session log. One entry per working session. Read this (plus
   `PROTOCOL: outdated` and are offered the recopy.
 - Gate: green.
 - Next: M20 (continuous runs) — plan is in `docs/plans/active/`; open the M19 PR.
+
+## 2026-10-15 — session 71 (M32-001)
+
+- Branch: `m32-m33-run`.
+- Done: M32-001 — run-report.sh reads `.harness-run/usage.log`: each done feature gets `<total> tok (in, cached, out)`, Summary gets `Tokens: <total> — feature agents <n>, orchestration <n>`, and the by-model line carries tokens (`Cost by model` with dollars, `Tokens by model` without cost.log). Nothing changes without usage.log. harness-continuous End runs `usage-<cli>.sh` first when it exists. e2e.sh runs every `scripts/test-usage-*.sh`. Fixtures in test-run.sh.
+- Decisions: total = input + output (cached is a share of input, not added). Humanising uses integer math (round half up, `1.2M`/`85k`), no printf float, so BWK awk and bash 3.2 stay deterministic. By-model line is a union of cost models and usage models, so orchestration's model shows even with no cost entry; matching is by exact model name, so a cost.log model name differing from the CLI's reported name shows as two entries (shortcut, not reconciled). Rejected: a second awk pass appending tokens only to existing cost entries (would hide the orchestrator's model).
+- Gate: green.
+- Next: M32-002 (Claude Code hooks write usage.log).
+
+## 2026-10-15 — session 72 (M32 parallel lanes, unattended)
+
+- Branch: `m32-m33-run` (harness-continuous through M33).
+- Done: M32-004 (lane, dff5342): `usage-copilot.sh` collects Copilot tokens per feature from SESSION lines, the rest is orchestration; `scripts/test-usage-copilot.sh` reproduces the fixture totals.
+- Decisions: M32-004: per-record timestamp filtering against the start commit time (rejected whole-session created_at; rejected session.shutdown totals: absent in crashed sessions, no per-feature split). jq required; repo match on workspace.yaml cwd/git_root only; env overrides COPILOT_HOME and HARNESS_USAGE_REPO for the fixture; premium cross-check not implemented.
+- Skipped: M32-002 (lane/M32-002 kept, d6c511c): verify needs an observation from a real Claude Code session; question in its notes. M32-003 (lane/M32-003, e4dcaf3) merged red on the gate's personal-path check (`$W/home/...` in test-usage-codex.sh matches `/home/[a-z]`); merge dropped, redone sequentially next.
+- Gate: green.
+
+## 2026-10-15 — session 73 (M32-003)
+
+- Branch: `m32-m33-run`.
+- Done: M32-003 — merged lane/M32-003 (e4dcaf3): `usage-codex.sh` collects Codex tokens per feature from SESSION lines (rest is orchestration, model per line); `second-opinion.sh` logs an `<id>/second-opinion codex` line from summed turn.completed usage. Fixed the red gate: test dir `$W/home` renamed `$W/codexhome` so it no longer matches the `/home/[a-z]` hygiene regex (check unchanged).
+- Decisions: rejected a time-window split (builder SESSION line attributes exactly); rejected summing token_count events (last total is cumulative). Assumed: a builder thread without a SESSION line counts as orchestration; second-opinion logs only when .harness-run exists, with model "-"; collector appends, so run once at End. Shortcut: .jsonl.zst skipped when zstd is missing, untested (no zst fixture). Rejected weakening the hygiene regex.
+- Gate: green.
+- Next: M33 features.
+
+## 2026-10-15 — session 74 (M32-005, blocked on the mirror)
+
+- Branch: `m32-m33-run`.
+- Done: M32-005 — protocol §2.7/§2.8 gains a token-usage bullet (tokens per feature where the CLI exposes them, nothing estimated, no CLI named); README run-report and upgrade step; CHANGELOG 3.10.0 entry with Upgrade block and the bash 3.2 / BWK awk gate fix; version 3.10.0 in package.json, both plugin manifests and marketplace.json; AGENTS.md state line. e2e.sh checks 3.10.0, the token line and the bash 3.2 changelog mention (red first, then green).
+- Decisions: the verify says "protocol 2.8", but the protocol has no numeric version; read it as §2.8 and put the token bullet in §2.7/§2.8 (the run report). Rejected a `PROTOCOL` version stamp (none exists, would be a new mechanism). Rejected estimating tokens for CLIs without usage. Assumed: the protocol copy change makes existing harness repos outdated, so the 3.10.0 Upgrade block says to run harness-upgrade-structure. Shortcut: the token phrase is checked by grep, not by rendering a run report.
+- Blocked: `sync-template.sh ../agent-harness-template --check` reports 9 stale files; the mirror PR is outside this repo and was not pushed or written. Status stays `failing` with the note in FEATURES.json.
+- Gate: green.
+- Next: owner opens the template mirror PR (sync-template.sh), then M32-005 flips to passing; M33 features.
+
+## 2026-10-15 — session 75 (M32-005, mirror prepared)
+
+- Branch: `m32-m33-run`.
+- Done: M32-005 — in the template repo cut `sync-3.10.0` from origin/master, ran sync-template.sh (wrote only docs/agents/harness-protocol-runs.md, the 3-line token bullet), committed locally as 23271c2; `--check` is IN SYNC. The mirror branch sync-3.10.0 is committed locally, NOT pushed: awaiting the owner's push and PR. Flipped to passing.
+- Decisions: rejected pushing or opening the PR (owner does that). Assumed "clean against the mirror PR" is satisfied by the local mirror branch. The earlier 9 stale files were just the old m13-sync base; origin/master needed only one.
+- Gate: green.
+
+## 2026-10-15 — session 76 (M33-001)
+
+- Branch: `m32-m33-run`.
+- Done: M33-001 — planning protocol §1.4 gains the `model` question, the small/medium/large table, the alias override, the floors and the step-up rule (no vendor names); FEATURES.json.tmpl `_instructions` names the field; status.sh prints `  model: <value>` under NEXT beside `effort:`; harness-audit WARNs on a model that is not a lowercase alias form (sizes are aliases of that form). Red first in test-status.sh, test-audit.sh and e2e.sh (protocol/template greps), then green.
+- Decisions: the plan says "protocol 1.4" and the table lives in harness-protocol-planning.md (the only 1.x file). Rejected an enum-plus-alias-list check in audit (the kit ships no CLI model names, so "known alias" can only mean a form: `^[a-z][a-z0-9._-]*$`); shortcut: a typo like `smal` passes as an alias. Rejected touching the protocol copy in this repo's docs/ (none exists; template is the source). Assumed the existing template mirror drift is handled by M33-005's sync.
+- Gate: green.
+- Next: M33-002 (Claude Code edition chooseModel reads `model`).
+
+## 2026-10-15 — session 77 (M33 parallel lanes, unattended)
+
+- Branch: `m32-m33-run` (harness-continuous through M33).
+- Done: M33-002 (lane, ed3c608): the Claude edition routes by `model` size first (small/medium/large → haiku/sonnet/opus; a Claude alias used as given), with effort mapping kept as the fallback; step-up and floors apply from the size; models.log names the source.
+- Decisions: M33-002: effort mapping kept as the only fallback; a Claude alias maps to its tier so step-up and floors still apply (fable/mythos capped at opus); unknown aliases count as medium. The register.tsx comment above agent.spawn still says "effort" (cosmetic, not refreshed).
+- Skipped: M33-003 (lane/M33-003 kept, 649612d, gate green): verify needs real Codex/Copilot agent files on the owner machine; question in its notes. M33-004 and M33-005 wait on it.
+- Gate: green.
+
+## 2026-10-15 — session 78 (M33-003 size map and per-size builders)
+
+- Branch: `m32-m33-run`.
+- Done: merged `lane/M33-003` (649612d) with `--no-ff`. Then aligned it with the owner's answer 3 in the M33 plan's decision log. Each Codex `harness-builder-small/-medium/-large.toml` now carries its `model` line and `model_reasoning_effort = "medium"`. Copilot sized files keep only `model`, and `harness-builder` has no model line on any CLI. Test first: test-agents.sh asserts one Codex effort line set to medium, no effort on Copilot or Claude sized files, and no model line on the base builder. The test was red ("codex small needs one effort line"), then green after the gen-agents.sh change.
+- Decisions: Every size gets `medium` effort. Rejected small=low / medium=medium / large=high, because that ties effort to size again, and M33 exists to keep them apart. Per-feature effort still reaches the builder as "Effort: <level>." in the prompt (M33-004). Pinning a value matters because a Codex file with only `model` inherits the parent's effort, which can be anything. Deviation from the literal answer 3: Claude Code sized files get no `effort:` line. The Claude hook sets only the model at spawn, and a fixed frontmatter effort could override the per-feature effort that M33-002 keeps in charge. Assumed, not verified: which one wins in Claude Code, frontmatter effort or spawn effort. The owner should confirm or ask for the line. Copilot gets no effort line because its agent files have no such property (owner answer 2). Kept the lane's shortcuts: a regex size-map parser with no nested braces, and a partial map rejected rather than skipped. The model-line syntax now rests on the owner's documentation answers, not on real agent files.
+- Gate: GREEN (bash scripts/e2e.sh, all suites, 47 mod tests).
+- Next: M33-004.
+
+## 2026-10-15 — session 79 (M33-004 dispatch by size)
+
+- Branch: `m32-m33-run`.
+- Done: M33-004 — new `skills/harness-run/scripts/dispatch.sh <target> <cli> <id> [retries]`: reads the feature's `model`, prints `AGENT: harness-builder-<size>` (file present for that CLI) or `harness-builder`, steps up one size per retry (cap large), appends `<id> <size> model <size>[, +n]` to `.harness-run/models.log`. harness-run step 3 and harness-continuous step 3 dispatch through it. test-run.sh: fixtures prove small/medium/large, retry step-up and cap, absent model and foreign alias -> medium, missing sized file -> `harness-builder`, the log lines, exit 2 on a bad CLI. Red first (script missing), then green.
+- Decisions: the dispatch choice had no code to test, so I put it in a small script instead of prose-only SKILL.md greps (rejected: grep-only proof). Rejected appending to models.log on Claude Code: its hook already logs there and a second line would double-count in run-report; "every CLI" is met by the hook plus the script. Claude without a size gets plain `harness-builder` (hook/effort mapping decides); Claude with a size gets the sized agent. Retry count = the feature's `eval_attempts` (the only retry the skills have; a blocked or red feature is skipped or stops, not retried). Assumed the log's model column is the size, not the vendor model name (the script cannot know the name without parsing the CLI's agent file). Effort still goes via the existing "Effort: <level>." step. Shortcut: I wrote dispatch.sh before its test, then proved red by moving it away.
+- Gate: green.
+- Next: M33-005.
+
+## 2026-10-15 — session 80 (M33-005 README, CHANGELOG, release 3.11.0, mirror sync)
+
+- Branch: `m32-m33-run`.
+- Done: M33-005. Red first: `scripts/e2e.sh` now expects plugin version 3.11.0, a README "Choosing a model size" section naming `docs/agents/model-sizes.json`, and a 3.11.0 CHANGELOG entry with an Upgrade block; the gate failed on the version check. Then bumped `package.json`, both `.claude-plugin` manifests and `claude/.claude-plugin/plugin.json` to 3.11.0, added the README section and the CHANGELOG 3.11.0 entry, and set AGENTS.md state to 3.11.0 (M0–M33). Mirror: created `sync-3.11.0` from the owner's local `sync-3.10.0` in the template repo, ran `sync-template.sh`, which changed only `FEATURES.json` and `docs/agents/harness-protocol-planning.md`, committed them as 2257a1c, and `--check` is IN SYNC. Moved the finished M32 and M33 plans to `docs/plans/completed/`.
+- Decisions: Rejected a separate "release" feature; the version bump rides with the docs change, since the e2e version check already ties them. Rejected writing the README size map as a table of model names; the kit names no models except via Claude aliases, per the plan. Rejected pushing or opening mirror PRs: the run is unattended and the owner pushes. Assumed the README's gen-agents line is for kit maintainers, since `gen-agents.sh` is a kit script that target repos do not ship. Shortcut: the README and CHANGELOG wording was checked by the gate's grep checks only, not read end to end by a reviewer.
+- Gate: green (`bash scripts/e2e.sh`, exit 0, version 3.11.0 checked). Baseline was green before the edits.
+- Awaiting the owner: `sync-3.10.0` (already 1 commit ahead of origin/master) and `sync-3.11.0` (stacked on it, 2257a1c) in the sibling local clone of agent-harness-template need pushing and mirror PRs. Nothing was pushed.
+- Next: M33 is complete; no failing features remain in M33.

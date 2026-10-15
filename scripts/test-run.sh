@@ -40,6 +40,9 @@ for w in 'blocked' 'gate is red' 'NEEDS_WORK'; do
 done
 grep -qi 'twice' "$md" || fail "SKILL.md: NEEDS_WORK twice rule missing"
 
+# M32-001: the End step runs the CLI's usage collector before the report
+grep -q 'usage-<cli>.sh' "$md" || fail "SKILL.md: End must run the CLI usage collector"
+
 # stop conditions
 for w in 'NEXT: none' 'cap' 'default 10' 'baseline problem' 'PREFLIGHT' 'UPGRADE: offer' 'neither a commit nor a'; do
   grep -qi "$w" "$md" || fail "SKILL.md: stop condition missing: $w"
@@ -173,10 +176,55 @@ printf 'agents 9.0000\norchestration 1.0000\n' > "$R/.harness-run/run-cost"
 rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")" || fail "run-report with run-cost: expected exit 0"
 sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Cost: $10.00 — feature agents $9.00, orchestration $1.00 (10%)' \
   || fail "run-report: Summary must split the run's cost into agents and orchestration"
+
+# M32-001: tokens from usage.log — per done feature, run total split into
+# feature agents and orchestration, per model; nothing without the file
+printf 'M2-001 claude sonnet 100000 80000 20000\nM2-001 claude sonnet 50000 40000 5000\norchestration claude opus 1000000 900000 50000\n' > "$R/.harness-run/usage.log"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")" || fail "run-report with usage.log: expected exit 0"
+sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M2-001 — extras — .*, 175k tok \(in 150k, cached 120k, out 25k\)$' || fail "run-report: M2-001 must show its summed tokens"
+sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M1-001 — boot — [0-9a-f]{7,} — 0 min$' || fail "run-report: a feature without usage lines shows no tokens"
+sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Tokens: 1.2M — feature agents 175k, orchestration 1.1M' || fail "run-report: Summary must split tokens into agents and orchestration"
+sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Cost by model: sonnet $1.43, 175k tok (1 feature), opus 1.1M tok' || fail "run-report: Cost by model must carry tokens"
+cp "$rep" "$WORK/usage-first.md"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")"
+cmp -s "$rep" "$WORK/usage-first.md" || fail "run-report: output with usage.log not deterministic"
+rm "$R/.harness-run/cost.log" "$R/.harness-run/models.log" "$R/.harness-run/run-cost"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")"
+sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Tokens by model: opus 1.1M tok, sonnet 175k tok' || fail "run-report: Tokens by model without cost.log"
+rm "$R/.harness-run/usage.log"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")"
+grep -q 'tok' "$rep" && fail "run-report: no token lines without usage.log"
 rm -rf "$R/.harness-run"
 
 # bad start commit: usage error, exit 2
 rc=0; (cd "$R" && bash "$REPORT" nope >/dev/null 2>&1) || rc=$?
 [ "$rc" -eq 2 ] || fail "run-report: unknown start commit should exit 2, got $rc"
+
+# --- M33-004: dispatch by size, models.log on every CLI, retry steps up -------
+DISPATCH="$PWD/skills/harness-run/scripts/dispatch.sh"
+[ -f "$DISPATCH" ] || fail "dispatch.sh missing"
+D="$WORK/disp"; mkdir -p "$D/.codex/agents" "$D/.claude/agents"
+cat > "$D/FEATURES.json" <<'JSON'
+{"features":[{"id":"S-1","model":"small"},{"id":"S-2","model":"large"},{"id":"S-3"},{"id":"S-4","model":"haiku"}]}
+JSON
+for z in small medium large; do : > "$D/.codex/agents/harness-builder-$z.toml"; : > "$D/.claude/agents/harness-builder-$z.md"; done
+disp() { bash "$DISPATCH" "$D" "$@" | tr '\n' ' '; }
+[ "$(disp codex S-1)" = "AGENT: harness-builder-small SIZE: small " ] || fail "dispatch: small -> harness-builder-small"
+[ "$(disp codex S-1 1)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: retry steps small up to medium"
+[ "$(disp codex S-2 1)" = "AGENT: harness-builder-large SIZE: large " ] || fail "dispatch: retry caps at large"
+[ "$(disp codex S-3)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: no model -> medium on codex"
+[ "$(disp codex S-4)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: another CLI's alias -> medium"
+[ "$(disp copilot S-1)" = "AGENT: harness-builder SIZE: small " ] || fail "dispatch: no sized file -> harness-builder"
+[ "$(disp claude S-3)" = "AGENT: harness-builder SIZE: - " ] || fail "dispatch: claude without a size keeps the hook (harness-builder)"
+[ "$(disp claude S-1)" = "AGENT: harness-builder-small SIZE: small " ] || fail "dispatch: claude small -> harness-builder-small"
+[ "$(cat "$D/.harness-run/models.log")" = "$(printf 'S-1 small model small\nS-1 medium model small, +1\nS-2 large model large, +1\nS-3 medium model medium\nS-4 medium model medium\nS-1 small model small')" ] \
+  || fail "dispatch: models.log lines wrong: $(cat "$D/.harness-run/models.log")"
+rc=0; bash "$DISPATCH" "$D" nope S-1 >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 2 ] || fail "dispatch: unknown cli should exit 2, got $rc"
+for f in "$run" "$md"; do
+  grep -q 'dispatch.sh' "$f" || fail "$f: must dispatch through dispatch.sh"
+done
+grep -q 'models.log' "$run" || fail "harness-run SKILL.md: models.log step missing"
+grep -qi 'next size up' "$run" || fail "harness-run SKILL.md: retry step-up missing"
 
 echo "RUN TESTS GREEN"

@@ -10,6 +10,42 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.11.0 — 2026-10-15
+
+- Model size, separate from effort: a feature can set `model` (`small`,
+  `medium`, `large`). Each CLI's builder starts on the model for that size,
+  from an optional `docs/agents/model-sizes.json` map. Claude Code takes the
+  map from its aliases, so nothing needs one. Effort still sets checking
+  depth only. Absent `model` keeps today's behaviour.
+- Per-size builder agents (`harness-builder-small|medium|large`) from
+  `scripts/gen-agents.sh` for each CLI that has a map; harness-run and
+  harness-continuous dispatch by size and step up one size on retry.
+- README: "Choosing a model size" with the size table and the size map.
+
+Upgrade:
+- Claude Code edition: update the plugin (`claude plugin update`). Features
+  without `model` route as before.
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to recopy
+  the protocol (§1.4 gained `model`); commit it as its own commit. Optional:
+  add `model` to features, and for Codex or Copilot add
+  `docs/agents/model-sizes.json` and run `scripts/gen-agents.sh`.
+
+## 3.10.0 — 2026-10-15
+
+- Run report: tokens per feature where the CLI exposes them, the run's
+  tokens split into feature agents and orchestration, and tokens by model.
+  Claude Code (builder and orchestration tokens), Codex and Copilot each
+  append to `.harness-run/usage.log`; nothing is estimated.
+- Protocol §2.7/§2.8 (run report) names the token line in agent-neutral
+  wording, with no CLI named.
+- Gate: green on macOS stock bash 3.2 and BWK awk (commit f2c6840, also in
+  PR #34).
+
+Upgrade:
+- Claude Code edition: update the plugin (`claude plugin update`); nothing else to do.
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to recopy
+  the protocol (§2.7/§2.8 gained the token line); commit it as its own commit.
+
 ## 3.9.0 — 2026-10-15
 
 - README: new "Start a repo from scratch — just chat" section (describe the
