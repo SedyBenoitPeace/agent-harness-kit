@@ -1517,20 +1517,23 @@
     {
       "id": "M34-007",
       "milestone": 34,
-      "title": "Leaner orchestrators: script output only, longest blocking wait, fresh conversation on resume (harness-run, harness-continuous, protocol 2.7)",
+      "title": "Orchestrators wait once per builder via a results file and wait-result.sh, never poll or steer, read only script output, fresh conversation on resume",
       "status": "failing",
       "depends_on": [
         "M34-002"
       ],
       "paths": [
         "skills/harness-run/SKILL.md",
+        "skills/harness-run/scripts/wait-result.sh",
         "skills/harness-continuous/SKILL.md",
+        "skills/harness-session/SKILL.md",
         "skills/harness-initial-setup/templates/harness-protocol-runs.md",
+        "scripts/test-run.sh",
         "scripts/e2e.sh"
       ],
       "model": "small",
-      "effort": "low",
-      "verify": "bash scripts/e2e.sh exits 0 with new e2e.sh checks that harness-run SKILL.md, harness-continuous SKILL.md and protocol 2.7 each state the three rules (read only script output, longest blocking wait instead of polling, fresh conversation when a run resumes) and that no orchestrator step tells it to read SKILL.md, PROGRESS.md, FEATURES.json or a plan whole"
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving wait-result.sh prints .harness-run/results/<id>.txt as soon as it appears, exits non-zero on timeout and prints nothing while waiting; harness-session tells a builder to write that file as its last act; e2e.sh checks harness-run, harness-continuous and protocol 2.7 state one blocking wait per builder, no short polls, no messages to steer a running builder, script output only, and a fresh conversation on resume, and that no orchestrator step reads SKILL.md, PROGRESS.md, FEATURES.json or a plan whole"
     },
     {
       "id": "M34-008",
@@ -1549,10 +1552,88 @@
       ],
       "model": "medium",
       "effort": "medium",
-      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving quiet.sh passes the command exit code through, writes the full output to .harness-run/logs/, prints at most 40 matched lines plus the last 20 with every line cut to 300 characters on a noisy fixture command, and run-gate.sh prints the same capped shape on a red stub gate; protocol section 2 tells builders to run builds, simulators and suites through quiet.sh"
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving quiet.sh passes the command exit code through, writes the full output to .harness-run/logs/, prints at most 40 matched lines plus the last 20 with every line cut to 300 characters on a noisy fixture command, and run-gate.sh prints the same capped shape on a red stub gate; protocol section 2 tells builders to run every build, simulator and test command (xcodebuild, simctl, test runners) through quiet.sh, never raw"
     },
     {
       "id": "M34-009",
+      "milestone": 34,
+      "title": "context.sh prints a short session brief (current milestone, NEXT entry, its plan section, newest PROGRESS entry); protocol: other files on demand with grep/sed -n, never whole",
+      "status": "failing",
+      "depends_on": [
+        "M34-006"
+      ],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-session/SKILL.md",
+        "skills/harness-initial-setup/templates/harness-protocol.md",
+        "scripts/test-session.sh",
+        "scripts/e2e.sh"
+      ],
+      "model": "medium",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving, on a fixture with 30 completed milestones, that context.sh output stays under 80 lines, lists only the current milestone plus one line for the completed ones, and contains NEXT full entry (verify, notes, paths), its plan section and only the newest PROGRESS entry; e2e.sh checks protocol section 2 and harness-session say FEATURES.json, PROGRESS.md, ARCHITECTURE.md, PRODUCT.md and plans are read with grep or sed -n, never whole"
+    },
+    {
+      "id": "M34-010",
+      "milestone": 34,
+      "title": "archive-features.sh moves fully done milestones to docs/features-archive.json; status, context, report and audit resolve archived ids",
+      "status": "failing",
+      "depends_on": [
+        "M34-009"
+      ],
+      "paths": [
+        "skills/harness-status/",
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-run/scripts/run-report.sh",
+        "skills/harness-audit/",
+        "skills/harness-continuous/SKILL.md",
+        "scripts/test-status.sh",
+        "scripts/test-run.sh",
+        "scripts/test-audit.sh"
+      ],
+      "model": "medium",
+      "effort": "high",
+      "verify": "bash scripts/e2e.sh exits 0 with tests proving archive-features.sh moves only milestones whose features are all passing or superseded, a failing feature whose depends_on names an archived id is still eligible in status.sh and context.sh, run-report.sh still titles an archived id, harness-audit fails on an id present in both files, and harness-continuous End runs the archive after the report"
+    },
+    {
+      "id": "M34-011",
+      "milestone": 34,
+      "title": "Session budget: past 60 tool calls or about 150k context a builder commits, notes a resume point and ends blocked with session budget; orchestrators retry once in a fresh session",
+      "status": "failing",
+      "depends_on": [
+        "M34-007"
+      ],
+      "paths": [
+        "skills/harness-initial-setup/templates/harness-protocol.md",
+        "skills/harness-session/SKILL.md",
+        "skills/harness-run/SKILL.md",
+        "skills/harness-continuous/SKILL.md",
+        "claude/hooks/",
+        "claude/tests/",
+        "scripts/e2e.sh"
+      ],
+      "model": "medium",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with e2e.sh checks that protocol section 2 states the budget and the session-budget SESSION line, and that harness-run and harness-continuous retry a session-budget stop once in a fresh session at the same size and skip on a second one; mod tests prove the Claude Code status-line notice at 80 percent of a configured budget and none below it"
+    },
+    {
+      "id": "M34-012",
+      "milestone": 34,
+      "title": "harness-audit warns about global memory or workflow plugins and MCP servers in Codex, Claude Code and Copilot setups",
+      "status": "failing",
+      "depends_on": [
+        "M34-005"
+      ],
+      "paths": [
+        "skills/harness-audit/",
+        "scripts/test-audit.sh"
+      ],
+      "model": "small",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh using HARNESS_AUDIT_HOME on a fixture home holding an engram MCP server in a Codex config.toml, a memory plugin in Claude Code settings and a clean Copilot mcp-config.json, proving exactly two WARNs naming the CLI and the server or plugin, no FAIL, no file changed, and no WARN with an empty home"
+    },
+    {
+      "id": "M34-013",
       "milestone": 34,
       "title": "README and CHANGELOG for M34; release 3.12.0; template mirror synced locally",
       "status": "failing",
@@ -1564,7 +1645,11 @@
         "M34-005",
         "M34-006",
         "M34-007",
-        "M34-008"
+        "M34-008",
+        "M34-009",
+        "M34-010",
+        "M34-011",
+        "M34-012"
       ],
       "paths": [
         "README.md",
@@ -1578,7 +1663,7 @@
       ],
       "model": "small",
       "effort": "low",
-      "verify": "bash scripts/e2e.sh exits 0 with version 3.12.0 checked; CHANGELOG 3.12.0 has an Upgrade block naming the handoff change, run-start.sh, exclusive, quiet.sh and the supervisor default; when ../agent-harness-template exists, sync-template.sh --check exits 0 against it after the sync, otherwise the PROGRESS entry says the mirror was absent; the M34 plan is moved to docs/plans/completed/"
+      "verify": "bash scripts/e2e.sh exits 0 with version 3.12.0 checked; CHANGELOG 3.12.0 has an Upgrade block naming the handoff change, run-start.sh, exclusive, quiet.sh, the supervisor default, the session brief, archive-features.sh, the session budget, wait-result.sh and the global plugin warnings; when ../agent-harness-template exists, sync-template.sh --check exits 0 against it after the sync, otherwise the PROGRESS entry says the mirror was absent; the M34 plan is moved to docs/plans/completed/"
     }
   ]
 }
