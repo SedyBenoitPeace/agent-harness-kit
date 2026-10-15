@@ -71,4 +71,42 @@ describe('model choice (M30-001)', () => {
     expect(w.spawns.map(s => s.model)).toEqual([undefined, undefined])
     expect(w.files['.harness-run/models.log']).toBeUndefined()
   })
+
+  test('model small, medium, large start haiku, sonnet, opus, effort ignored', async ($, on) => {
+    const w = world(on, { 'FEATURES.json': featuresOf(feature('M1-001', { model: 'small', effort: 'high' }), feature('M1-002', { model: 'medium', effort: 'low' }), feature('M1-003', { model: 'large', effort: 'low' })) })
+    await $.session.start(START)
+    for (const id of ['M1-001', 'M1-002', 'M1-003']) await $.agent.spawn(builder(id))
+    expect(w.spawns.map(s => s.model)).toEqual(['haiku', 'sonnet', 'opus'])
+    expect(w.files['.harness-run/models.log']).toContain('M1-001 haiku model small')
+  })
+
+  test('a Claude alias is used as given, a foreign alias counts as medium', async ($, on) => {
+    const w = world(on, { 'FEATURES.json': featuresOf(feature('M1-001', { model: 'haiku' }), feature('M1-002', { model: 'opus', effort: 'low' }), feature('M1-003', { model: 'gpt-mini', effort: 'low' })) })
+    await $.session.start(START)
+    for (const id of ['M1-001', 'M1-002', 'M1-003']) await $.agent.spawn(builder(id))
+    expect(w.spawns.map(s => s.model)).toEqual(['haiku', 'opus', 'sonnet'])
+  })
+
+  test('a retry steps up from the size', async ($, on) => {
+    const w = world(on, { 'FEATURES.json': featuresOf(feature('M1-001', { model: 'small' }), feature('M1-002', { model: 'small', eval_attempts: 1 })) })
+    await $.session.start(START)
+    await $.agent.spawn(builder('M1-001'))
+    await $.agent.spawn(builder('M1-001'))
+    await $.agent.spawn(builder('M1-002'))
+    expect(w.spawns.map(s => s.model)).toEqual(['haiku', 'sonnet', 'sonnet'])
+  })
+
+  test('sensitive paths floor a small feature at sonnet', async ($, on) => {
+    const w = world(on, { 'FEATURES.json': featuresOf(feature('M1-001', { model: 'small', paths: ['src/billing/'] })) })
+    await $.session.start(START)
+    await $.agent.spawn(builder('M1-001'))
+    expect(w.spawns[0]!.model).toBe('sonnet')
+  })
+
+  test('model_floor raises a small feature', { options: { model_floor: 'sonnet' } }, async ($, on) => {
+    const w = world(on, { 'FEATURES.json': featuresOf(feature('M1-001', { model: 'small' })) })
+    await $.session.start(START)
+    await $.agent.spawn(builder('M1-001'))
+    expect(w.spawns[0]!.model).toBe('sonnet')
+  })
 })
