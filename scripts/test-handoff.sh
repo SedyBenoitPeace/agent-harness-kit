@@ -27,7 +27,8 @@ make_repo() {
 JSON
   printf '## 2026-01-02 -- session 2\n- Done: M0-001.\n' > "$dir/PROGRESS.md"
   printf '# AGENTS.md\nSession loop lives here.\n' > "$dir/AGENTS.md"
-  printf '#!/usr/bin/env bash\nexit %s\n' "$gate_exit" > "$dir/scripts/e2e.sh"
+  # shellcheck disable=SC2016  # the stub must keep the literal ${GATE_LOG}
+  printf '#!/usr/bin/env bash\necho call >> "${GATE_LOG:-/dev/null}"\nexit %s\n' "$gate_exit" > "$dir/scripts/e2e.sh"
   git -C "$dir" init -q
   git -C "$dir" -c user.email=t@t -c user.name=t add -A
   git -C "$dir" -c user.email=t@t -c user.name=t commit -qm fixture
@@ -70,13 +71,57 @@ rc=0; out="$(bash "$HANDOFF" "$WORK/dirty")" || rc=$?
 echo "$out" | grep -q "HANDOFF BLOCKED" || fail "dirty tree: missing HANDOFF BLOCKED"
 echo "$out" | grep -qi "uncommitted" || fail "dirty tree: BLOCKED line must say uncommitted"
 
-# 6. red gate: exit 1 BLOCKED; --skip-gate turns it READY with a warning
+# 6. gate handling (M34-001): handoff never runs the gate by default.
+# GATE_LOG records every call the stub gate receives.
+export GATE_LOG="$WORK/gate-calls"; : > "$GATE_LOG"
+calls() { wc -l < "$GATE_LOG" | tr -d ' '; }
+GATE_SH="skills/harness-session/scripts/run-gate.sh"
+
+# 6a. changed tree since no green run: READY, NOTE, no gate call
+make_repo "$WORK/unproven" 0
+out="$(bash "$HANDOFF" "$WORK/unproven")" || fail "unproven: expected exit 0"
+echo "$out" | grep -q "HANDOFF READY" || fail "unproven: missing HANDOFF READY"
+echo "$out" | grep -q "NOTE: gate not confirmed" || fail "unproven: missing the not-confirmed NOTE"
+[ "$(calls)" -eq 0 ] || fail "unproven: handoff must not call the gate"
+echo "$out" | grep -q "Confirm bash scripts/e2e.sh is green" || fail "unproven: prompt must keep the baseline step"
+
+# 6b. unchanged since the last green gate: GATE line, no gate call
+make_repo "$WORK/proven" 0
+bash "$GATE_SH" final "$WORK/proven" >/dev/null || fail "proven: setup gate run failed"
+[ "$(calls)" -eq 1 ] || fail "proven: setup should call the gate once"
+echo '## 2026-01-03 -- session 3' >> "$WORK/proven/PROGRESS.md"   # bookkeeping is ignored
+git -C "$WORK/proven" -c user.email=t@t -c user.name=t commit -qam progress
+out="$(bash "$HANDOFF" "$WORK/proven")" || fail "proven: expected exit 0"
+echo "$out" | grep -qF "GATE: green (last green run, unchanged)" || fail "proven: missing the GATE green line"
+if echo "$out" | grep -q "NOTE: gate not confirmed"; then fail "proven: no NOTE expected"; fi
+[ "$(calls)" -eq 1 ] || fail "proven: handoff must not call the gate"
+
+# 6c. a code change after the green run: NOTE again, still no gate call
+echo '# changed' >> "$WORK/proven/scripts/e2e.sh"
+git -C "$WORK/proven" -c user.email=t@t -c user.name=t commit -qam change
+out="$(bash "$HANDOFF" "$WORK/proven")" || fail "changed: expected exit 0"
+echo "$out" | grep -q "NOTE: gate not confirmed" || fail "changed: missing the NOTE"
+[ "$(calls)" -eq 1 ] || fail "changed: handoff must not call the gate"
+
+# 6d. --run-gate: green is READY after one call; red is BLOCKED
+before="$(calls)"
+out="$(bash "$HANDOFF" --run-gate "$WORK/unproven")" || fail "--run-gate green: expected exit 0"
+[ "$(calls)" -eq $((before + 1)) ] || fail "--run-gate green: must call the gate once"
 make_repo "$WORK/redgate" 1
-rc=0; out="$(bash "$HANDOFF" "$WORK/redgate")" || rc=$?
+rc=0; out="$(bash "$HANDOFF" --run-gate "$WORK/redgate")" || rc=$?
 [ "$rc" -eq 1 ] || fail "red gate: expected exit 1, got $rc"
-echo "$out" | grep -qi "gate" || fail "red gate: BLOCKED line must mention the gate"
+echo "$out" | grep -q "HANDOFF BLOCKED" || fail "red gate: missing HANDOFF BLOCKED"
+echo "$out" | grep -qi "gate is red" || fail "red gate: BLOCKED line must mention the gate"
+make_repo "$WORK/nogate" 0; git -C "$WORK/nogate" rm -q scripts/e2e.sh
+git -C "$WORK/nogate" -c user.email=t@t -c user.name=t commit -qm nogate
+rc=0; out="$(bash "$HANDOFF" --run-gate "$WORK/nogate")" || rc=$?
+[ "$rc" -eq 1 ] || fail "--run-gate without a gate: expected exit 1, got $rc"
+
+# 6e. --skip-gate still works: READY, no gate call, a WARNING
+before="$(calls)"
 out="$(bash "$HANDOFF" --skip-gate "$WORK/redgate")" || fail "--skip-gate: expected exit 0"
 echo "$out" | grep -q "WARNING" || fail "--skip-gate: must print a WARNING line"
+[ "$(calls)" -eq "$before" ] || fail "--skip-gate: must not call the gate"
 
 # 7. nothing failing: exit 0, planning prompt instead of a feature prompt
 make_repo "$WORK/done" 0

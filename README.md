@@ -68,9 +68,11 @@ English:
   _"what's the harness status?"_.
 - **harness-audit** — check any repo's harness-readiness.
   `/agent-harness-kit:harness-audit` or _"audit this repo's harness"_.
-- **harness-handoff** — verify the session-end ritual (clean tree, green
-  gate, logged session) and get a paste-ready prompt for the next agent,
-  any vendor. `/agent-harness-kit:harness-handoff` or _"prepare the
+- **harness-handoff** — verify the session-end ritual (clean tree, gate
+  status, logged session) and get a paste-ready prompt for the next agent,
+  any vendor. It reuses the last green gate run (`GATE: green (last green
+  run, unchanged)`), notes when the tree changed since, and runs the full
+  gate only with `--run-gate`. `/agent-harness-kit:harness-handoff` or _"prepare the
   handoff for the next agent"_.
 
 Update to the latest release:

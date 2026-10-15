@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # harness-handoff: verify the session-end ritual and print the next agent's prompt.
-# Usage: handoff.sh [--skip-gate] [TARGET_DIR]    (default: current directory)
+# Usage: handoff.sh [--run-gate|--skip-gate] [TARGET_DIR]    (default: current directory)
 # Exit codes: 0 ready (prompt printed); 1 blocked; 2 harness file broken; 3 not initialized.
 set -euo pipefail
 
 SKIP_GATE=0
+RUN_GATE=0
 TARGET="."
 for arg in "$@"; do
   case "$arg" in
     --skip-gate) SKIP_GATE=1 ;;
+    --run-gate) RUN_GATE=1 ;;
     *) TARGET="$arg" ;;
   esac
 done
@@ -42,16 +44,42 @@ else
 "
 fi
 
-# ritual step 2: gate green
+# ritual step 2: gate. Never run by default (M34-001): reuse the fingerprint
+# harness-session/run-gate.sh records on every green run (same recipe: the
+# working tree's git tree, PROGRESS.md and docs/plans/ left out); anything
+# else is a NOTE, because the next session's baseline gate runs it anyway.
+fingerprint() {
+  local idx
+  idx="$(mktemp)"
+  cp "$(git rev-parse --git-path index)" "$idx" 2>/dev/null || rm -f "$idx"
+  GIT_INDEX_FILE="$idx" git add -A . >/dev/null 2>&1 \
+    && GIT_INDEX_FILE="$idx" git rm -rq --cached --ignore-unmatch PROGRESS.md docs/plans >/dev/null 2>&1 \
+    && GIT_INDEX_FILE="$idx" git write-tree
+  rm -f "$idx"
+}
+GATE_LINE=""
 if [ "$SKIP_GATE" -eq 1 ]; then
-  WARNINGS="${WARNINGS}WARNING: gate not verified (--skip-gate) — the next agent must run it before trusting the baseline
+  WARNINGS="${WARNINGS}WARNING: gate not confirmed (--skip-gate); the next session's baseline gate runs it
 "
-elif [ ! -f scripts/e2e.sh ]; then
-  BLOCKED="${BLOCKED}BLOCKED: no gate found (scripts/e2e.sh) — a handoff without a gate hands off unproven work
+elif [ "$RUN_GATE" -eq 1 ]; then
+  if [ ! -f scripts/e2e.sh ]; then
+    BLOCKED="${BLOCKED}BLOCKED: no gate found (scripts/e2e.sh) — a handoff without a gate hands off unproven work
 "
-elif ! bash scripts/e2e.sh >/dev/null 2>&1; then
-  BLOCKED="${BLOCKED}BLOCKED: gate is red — run: bash scripts/e2e.sh and fix before handing off
+  elif ! bash scripts/e2e.sh >/dev/null 2>&1; then
+    BLOCKED="${BLOCKED}BLOCKED: gate is red — run: bash scripts/e2e.sh and fix before handing off
 "
+  else
+    GATE_LINE="GATE: green (run now)"
+  fi
+else
+  GREEN_FILE=""
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 && GREEN_FILE="$(git rev-parse --git-path harness-gate-green)"
+  if [ -n "$GREEN_FILE" ] && [ -f "$GREEN_FILE" ] && [ "$(fingerprint)" = "$(cat "$GREEN_FILE")" ]; then
+    GATE_LINE="GATE: green (last green run, unchanged)"
+  else
+    WARNINGS="${WARNINGS}NOTE: gate not confirmed for the latest changes; the next session's baseline gate runs it (--run-gate runs it now)
+"
+  fi
 fi
 
 if [ -n "$BLOCKED" ]; then
@@ -61,6 +89,7 @@ if [ -n "$BLOCKED" ]; then
 fi
 
 echo "HANDOFF READY"
+[ -z "$GATE_LINE" ] || echo "$GATE_LINE"
 printf '%s' "$WARNINGS"
 
 # the prompt's opening depends on whether the target carries the protocol doc
