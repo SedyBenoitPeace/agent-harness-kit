@@ -34,7 +34,8 @@
     "30": "Claude edition: model choice, dollar budgets, status line; plan tasks in FEATURES.json",
     "31": "Orchestration cost in the run report",
     "32": "Token usage in the run report, for every CLI",
-    "33": "Model size separate from effort, for every CLI"
+    "33": "Model size separate from effort, for every CLI",
+    "34": "Run fixes: quick handoff, correct reports, cheaper runs"
   },
   "features": [
     {
@@ -1410,6 +1411,174 @@
       "model": "small",
       "effort": "low",
       "verify": "bash scripts/e2e.sh exits 0 with version 3.11.0 checked; README explains choosing a size and the size map; CHANGELOG 3.11.0 has an Upgrade block; sync-template.sh --check is clean against the mirror PR"
+    },
+    {
+      "id": "M34-001",
+      "milestone": 34,
+      "title": "Handoff reuses the last green gate instead of running the full gate; --run-gate runs it on request",
+      "status": "failing",
+      "depends_on": [
+        "M33-005"
+      ],
+      "paths": [
+        "skills/harness-handoff/",
+        "scripts/test-handoff.sh",
+        "README.md"
+      ],
+      "model": "small",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-handoff.sh proving, with a stub scripts/e2e.sh that records each call: an unchanged tree since the last green gate fingerprint hands off with `GATE: green (last green run, unchanged)` and no gate call; a changed tree hands off (exit 0) with the NOTE that the gate is not confirmed and no gate call; --run-gate calls the gate and exits 1 BLOCKED on red; --skip-gate still works"
+    },
+    {
+      "id": "M34-002",
+      "milestone": 34,
+      "title": "run-start.sh gives each continuous run clean run state, archiving the previous run under .harness-run/previous/<start>",
+      "status": "failing",
+      "depends_on": [
+        "M33-005"
+      ],
+      "paths": [
+        "skills/harness-run/scripts/run-start.sh",
+        "skills/harness-continuous/SKILL.md",
+        "scripts/test-run.sh"
+      ],
+      "model": "small",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving a second run-start.sh moves cost.log, run-cost, models.log, usage.log, budget.log and decisions/ of the first run into .harness-run/previous/<first start commit>/, writes a fresh start, leaves skip empty and STOP absent, and that run-report.sh afterwards shows only the second run; harness-continuous Start calls run-start.sh"
+    },
+    {
+      "id": "M34-003",
+      "milestone": 34,
+      "title": "Run report takes each feature Decisions line from its own commit body or the PROGRESS entry that marks it done, never from a planning entry",
+      "status": "failing",
+      "depends_on": [
+        "M33-005"
+      ],
+      "paths": [
+        "skills/harness-run/scripts/run-report.sh",
+        "scripts/test-run.sh"
+      ],
+      "model": "small",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with a test-run.sh fixture holding a planning PROGRESS entry that mentions two ids with its own Decisions line, a lane commit carrying Decisions: in its message body, and a normal session entry whose Done: line names its id; the report gives each done feature its own Decisions line and never the planning one"
+    },
+    {
+      "id": "M34-004",
+      "milestone": 34,
+      "title": "Claude Code edition: run-scoped ledger, models.log for lane builders, no step-up after a notes change, supervisor off by default and never for lanes",
+      "status": "failing",
+      "depends_on": [
+        "M33-005"
+      ],
+      "paths": [
+        "claude/hooks/",
+        "claude/tests/"
+      ],
+      "model": "medium",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with mod tests proving: cost split, budgets and pending usage reset when .harness-run/start changes; the exact harness-run parallel-lane dispatch prompt writes a models.log line; a start after the feature notes changed does not step up while one with unchanged notes does; the supervisor makes no model call by default, runs with supervisor true, and never for a parallel-lane prompt"
+    },
+    {
+      "id": "M34-005",
+      "milestone": 34,
+      "title": "Protocol 1.4: verify provable from the repo alone, owner-only checks go in a plan Before the run section; harness-audit warns on both that and plans without depends_on/paths",
+      "status": "failing",
+      "depends_on": [
+        "M33-005"
+      ],
+      "paths": [
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "skills/harness-audit/",
+        "scripts/test-audit.sh"
+      ],
+      "model": "small",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a WARN for a failing feature whose verify names a real session, the owner machine, hardware, a push, a PR or a human, a WARN for an active plan whose features declare neither depends_on nor paths, and no such WARN on this repo; the protocol neutrality check stays green and protocol 1.4 carries the rule and the Before the run section"
+    },
+    {
+      "id": "M34-006",
+      "milestone": 34,
+      "title": "Optional exclusive field keeps features sharing a resource (simulator, device, database) out of the same parallel batch",
+      "status": "failing",
+      "depends_on": [
+        "M34-005"
+      ],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-initial-setup/templates/FEATURES.json.tmpl",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "skills/harness-audit/",
+        "scripts/test-session.sh"
+      ],
+      "model": "medium",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving two otherwise independent features with the same exclusive value are never in one PARALLEL batch, a third without it still joins, and output is unchanged when no feature declares exclusive; protocol 1.4 and the FEATURES template name the field and harness-audit accepts it"
+    },
+    {
+      "id": "M34-007",
+      "milestone": 34,
+      "title": "Leaner orchestrators: script output only, longest blocking wait, fresh conversation on resume (harness-run, harness-continuous, protocol 2.7)",
+      "status": "failing",
+      "depends_on": [
+        "M34-002"
+      ],
+      "paths": [
+        "skills/harness-run/SKILL.md",
+        "skills/harness-continuous/SKILL.md",
+        "skills/harness-initial-setup/templates/harness-protocol-runs.md",
+        "scripts/e2e.sh"
+      ],
+      "model": "small",
+      "effort": "low",
+      "verify": "bash scripts/e2e.sh exits 0 with new e2e.sh checks that harness-run SKILL.md, harness-continuous SKILL.md and protocol 2.7 each state the three rules (read only script output, longest blocking wait instead of polling, fresh conversation when a run resumes) and that no orchestrator step tells it to read SKILL.md, PROGRESS.md, FEATURES.json or a plan whole"
+    },
+    {
+      "id": "M34-008",
+      "milestone": 34,
+      "title": "quiet.sh runs builds and tests with the full log on disk and a capped summary on screen; run-gate.sh output capped the same way; session protocol uses them",
+      "status": "failing",
+      "depends_on": [
+        "M34-006"
+      ],
+      "paths": [
+        "skills/harness-session/scripts/quiet.sh",
+        "skills/harness-session/scripts/run-gate.sh",
+        "skills/harness-session/SKILL.md",
+        "skills/harness-initial-setup/templates/harness-protocol.md",
+        "scripts/test-session.sh"
+      ],
+      "model": "medium",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving quiet.sh passes the command exit code through, writes the full output to .harness-run/logs/, prints at most 40 matched lines plus the last 20 with every line cut to 300 characters on a noisy fixture command, and run-gate.sh prints the same capped shape on a red stub gate; protocol section 2 tells builders to run builds, simulators and suites through quiet.sh"
+    },
+    {
+      "id": "M34-009",
+      "milestone": 34,
+      "title": "README and CHANGELOG for M34; release 3.12.0; template mirror synced locally",
+      "status": "failing",
+      "depends_on": [
+        "M34-001",
+        "M34-002",
+        "M34-003",
+        "M34-004",
+        "M34-005",
+        "M34-006",
+        "M34-007",
+        "M34-008"
+      ],
+      "paths": [
+        "README.md",
+        "CHANGELOG.md",
+        "package.json",
+        ".claude-plugin/",
+        "claude/.claude-plugin/",
+        "scripts/e2e.sh",
+        "AGENTS.md",
+        "docs/plans/"
+      ],
+      "model": "small",
+      "effort": "low",
+      "verify": "bash scripts/e2e.sh exits 0 with version 3.12.0 checked; CHANGELOG 3.12.0 has an Upgrade block naming the handoff change, run-start.sh, exclusive, quiet.sh and the supervisor default; when ../agent-harness-template exists, sync-template.sh --check exits 0 against it after the sync, otherwise the PROGRESS entry says the mirror was absent; the M34 plan is moved to docs/plans/completed/"
     }
   ]
 }
