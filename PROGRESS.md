@@ -1286,3 +1286,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: the plan says "protocol 1.4" and the table lives in harness-protocol-planning.md (the only 1.x file). Rejected an enum-plus-alias-list check in audit (the kit ships no CLI model names, so "known alias" can only mean a form: `^[a-z][a-z0-9._-]*$`); shortcut: a typo like `smal` passes as an alias. Rejected touching the protocol copy in this repo's docs/ (none exists; template is the source). Assumed the existing template mirror drift is handled by M33-005's sync.
 - Gate: green.
 - Next: M33-002 (Claude Code edition chooseModel reads `model`).
+
+## 2026-10-15 — session 77 (M33 parallel lanes, unattended)
+
+- Branch: `m32-m33-run` (harness-continuous through M33).
+- Done: M33-002 (lane, ed3c608): the Claude edition routes by `model` size first (small/medium/large → haiku/sonnet/opus; a Claude alias used as given), with effort mapping kept as the fallback; step-up and floors apply from the size; models.log names the source.
+- Decisions: M33-002: effort mapping kept as the only fallback; a Claude alias maps to its tier so step-up and floors still apply (fable/mythos capped at opus); unknown aliases count as medium. The register.tsx comment above agent.spawn still says "effort" (cosmetic, not refreshed).
+- Skipped: M33-003 (lane/M33-003 kept, 649612d, gate green): verify needs real Codex/Copilot agent files on the owner machine; question in its notes. M33-004 and M33-005 wait on it.
+- Gate: green.
