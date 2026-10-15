@@ -52,6 +52,22 @@ else
   failc "FEATURES.json missing or invalid JSON"
 fi
 
+# Archive (M34-010): fully done milestones moved to docs/features-archive.json;
+# it parses and no id is in both files
+ARCH=docs/features-archive.json
+if [ -f "$ARCH" ]; then
+  if jq -e . "$ARCH" >/dev/null 2>&1; then
+    both="$(jq -rn --slurpfile f FEATURES.json --slurpfile a "$ARCH" \
+      '[$a[0].features[]?.id] as $ids | [$f[0].features[]?.id | select(IN($ids[]))] | unique | .[]' 2>/dev/null || true)"
+    if [ -z "$both" ]; then pass "$ARCH ids are not in FEATURES.json"; fi
+    for id in $both; do failc "$id is in both FEATURES.json and $ARCH — ids must stay unique"; done
+  else
+    failc "$ARCH is not valid JSON"; ARCH=/dev/null
+  fi
+else
+  ARCH=/dev/null
+fi
+
 # PROGRESS.md
 if [ -f PROGRESS.md ]; then pass "PROGRESS.md exists"; else failc "PROGRESS.md missing"; fi
 
@@ -81,7 +97,7 @@ if [ -d docs/plans/active ] && [ -d docs/plans/completed ]; then
     [ -f "$plan" ] || continue
     while IFS= read -r id; do
       [ -n "$id" ] || continue
-      if jq -e --arg id "$id" '[.features[]? | .id] | index($id) != null' FEATURES.json >/dev/null 2>&1; then :
+      if jq -es --arg id "$id" '[.[].features[]? | .id] | index($id) != null' FEATURES.json "$ARCH" >/dev/null 2>&1; then :
       else failc "$plan names $id, which is not in FEATURES.json — add the plan's tasks as failing features when the plan is approved"; fi
     done < <({ grep -E '^#{2,4} ' "$plan" || true; } | grep -oE 'M[0-9]+-[0-9]{3}' | sort -u)
   done
@@ -131,6 +147,45 @@ bad_model="$(jq -r '[.features[]? | select(has("model") and ((.model | type) != 
 if [ -n "$bad_model" ]; then
   warn "model must be small, medium, large or a lowercase CLI alias — unknown value on: $bad_model"
 fi
+
+# Exclusive resource (WARN only, M34-006): optional non-empty string naming a
+# shared resource; features with the same value never share a parallel batch
+bad_excl="$(jq -r '[.features[]? | select(has("exclusive") and ((.exclusive | type) != "string" or (.exclusive | length) == 0)) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
+if [ -n "$bad_excl" ]; then
+  warn "exclusive must be a non-empty string naming the shared resource — fix on: $bad_excl"
+fi
+
+# Provable verify (WARN only, M34-005): a failing feature's verify must be
+# provable by a builder from the repo alone (protocol 1.4); a real session,
+# the owner's machine, hardware, a push, a PR or a human belongs in the
+# plan's "Before the run" section instead
+unprov="$(jq -r '[.features[]? | select(.status == "failing" and ((.verify? // "") | test("\\b(real session|owner|machine|device|hardware|push|pull request|PR|ask|human|manually)\\b"; "i"))) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
+if [ -n "$unprov" ]; then
+  warn "verify names something a builder cannot prove from the repo alone (real session, owner, machine, device, hardware, push, PR, human) on: $unprov — move it to the plan's Before the run section (protocol 1.4)"
+fi
+# Lanes (WARN only, M34-005): an active plan whose features declare neither
+# depends_on nor paths can only run sequentially
+for plan in docs/plans/active/*.md; do
+  [ -f "$plan" ] || continue
+  ids="$( { grep -E '^#{2,4} ' "$plan" || true; } | grep -oE 'M[0-9]+-[0-9]{3}' | sort -u | tr '\n' ' ')"
+  [ -n "$ids" ] || continue
+  if jq -e --arg ids "$ids" '($ids | split(" ")) as $i | [.features[]? | select(.id as $x | $i | index($x)) | select(has("depends_on") or has("paths"))] | length == 0' FEATURES.json >/dev/null 2>&1; then
+    warn "$plan: its features declare neither depends_on nor paths, so no two can run side by side (protocol 1.4)"
+  fi
+done
+
+# Global memory/workflow plugins (WARN only, M34-012): a memory or workflow
+# MCP server or plugin in the person's own CLI setup may inject its instructions
+# into every session of this repo. Informational, read-only; HARNESS_AUDIT_HOME for tests.
+GH="${HARNESS_AUDIT_HOME:-$HOME}"
+GPAT='memory|engram|mem0|workflow'
+gwarn() {  # $1 = CLI, $2 = matched names
+  [ -n "$2" ] && warn "global $1 setup has a memory/workflow plugin or MCP server ($2) that may inject its own instructions into every session here — informational only"
+  return 0
+}
+gwarn Codex "$( { grep -iE "^[[:space:]]*\[mcp_servers\.[^]]*($GPAT)|^[[:space:]]*command[[:space:]]*=.*($GPAT)" "$GH/.codex/config.toml" 2>/dev/null || true; } | tr -d '[]' | sed 's/^[[:space:]]*//' | paste -sd, - )"
+gwarn "Claude Code" "$(jq -r --arg p "$GPAT" '[((.enabledPlugins // {}) | to_entries[] | select(.value == true) | .key), ((.mcpServers // {}) | to_entries[] | .key + " " + (.value.command // ""))] | map(select(test($p; "i"))) | join(", ")' "$GH/.claude/settings.json" 2>/dev/null || true)"
+gwarn Copilot "$(jq -r --arg p "$GPAT" '[(.mcpServers // {}) | to_entries[] | .key + " " + (.value.command // "")] | map(select(test($p; "i"))) | join(", ")' "$GH/.copilot/mcp-config.json" 2>/dev/null || true)"
 
 # Second opinion (WARN only, M26-001): a feature names another vendor's CLI
 # to re-judge it; that CLI must be installed where the run happens

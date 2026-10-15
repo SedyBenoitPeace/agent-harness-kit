@@ -144,6 +144,70 @@ sed -n '/^## Supervisor/,/^## /p' "$rep" | grep -q '^- M1-001 — boot: no test 
 sed -n '/^## Budget/,/^## /p' "$rep" | grep -qF 'feature M1-001: $5.40 over the $5.00 budget' || fail "run-report: Budget must carry budget.log"
 rm -rf "$R/.harness-run"
 
+# M34-003: Decisions come from the feature's own commit body, else the
+# PROGRESS entry whose Done: line names it; a planning entry that only
+# mentions the ids never counts
+R2="$WORK/repo2"; mkdir -p "$R2"
+g2() { git -C "$R2" -c user.email=t@t -c user.name=t "$@"; }
+git -C "$R2" init -q -b main
+cat > "$R2/FEATURES.json" <<'JSON'
+{ "milestones": { "1": "Core" }, "features": [
+  { "id": "M1-001", "milestone": 1, "title": "boot", "status": "failing", "verify": "x" },
+  { "id": "M1-002", "milestone": 1, "title": "parser", "status": "failing", "verify": "x" } ] }
+JSON
+printf '# PROGRESS\n\n## 2026-03-01 -- session 1\n- Setup.\n' > "$R2/PROGRESS.md"
+g2 add -A; g2 commit -qm "seed"
+START2="$(git -C "$R2" rev-parse HEAD)"
+printf '# PROGRESS\n\n## 2026-03-02 -- planning (M1-001, M1-002)\n- Done: planned M1-001 and M1-002.\n- Decisions: PLANNING-ONLY text.\n\n## 2026-03-01 -- session 1\n- Setup.\n' > "$R2/PROGRESS.md"
+g2 add PROGRESS.md; g2 commit -qm "plan M1-001 M1-002"
+jq '(.features[] | select(.id=="M1-001") | .status) = "passing"' "$R2/FEATURES.json" > "$R2/f.tmp" && mv "$R2/f.tmp" "$R2/FEATURES.json"
+g2 add FEATURES.json; g2 commit -qm "lane: M1-001 boot" -m "Decisions: rejected a plugin system; assumed LF endings."
+jq '(.features[] | select(.id=="M1-002") | .status) = "passing"' "$R2/FEATURES.json" > "$R2/f.tmp" && mv "$R2/f.tmp" "$R2/FEATURES.json"
+printf '# PROGRESS\n\n## 2026-03-04 -- session 3 (M1-002)\n- Done: M1-002 parser.\n- Decisions: none.\n\n## 2026-03-02 -- planning (M1-001, M1-002)\n- Done: planned M1-001 and M1-002.\n- Decisions: PLANNING-ONLY text.\n' > "$R2/PROGRESS.md"
+g2 add FEATURES.json PROGRESS.md; g2 commit -qm "feat(M1-002): parser"
+rep2="$R2/$(cd "$R2" && bash "$REPORT" "$START2" --stop-reason "finished")" || fail "run-report M34-003: expected exit 0"
+grep -q 'PLANNING-ONLY' "$rep2" && fail "run-report: a planning entry's Decisions must never be used"
+grep -qF -- '  - Decisions: rejected a plugin system; assumed LF endings.' "$rep2" || fail "run-report: M1-001 must take Decisions from its commit body"
+grep -qF -- '  - Decisions: none.' "$rep2" || fail "run-report: M1-002 must take Decisions from the entry whose Done: names it"
+
+# M35-001: PROGRESS appended oldest-first, a planning entry whose Done: line
+# names the id, and the feature landing as a lane merge: Decisions come from
+# the entry the done commit (merge: against its first parent) added
+R4="$WORK/repo4"; mkdir -p "$R4"
+g4() { git -C "$R4" -c user.email=t@t -c user.name=t "$@"; }
+git -C "$R4" init -q -b main
+printf '{ "milestones": { "1": "Core" }, "features": [\n  { "id": "M1-001", "milestone": 1, "title": "boot", "status": "failing", "verify": "x" } ] }\n' > "$R4/FEATURES.json"
+printf '# PROGRESS\n\n## 2026-03-01 -- session 1\n- Setup.\n' > "$R4/PROGRESS.md"
+g4 add -A; g4 commit -qm "seed"
+START4="$(git -C "$R4" rev-parse HEAD)"
+printf '\n## 2026-03-02 -- planning\n- Done: planned M1-001.\n- Decisions: PLAN-APPEND text.\n' >> "$R4/PROGRESS.md"
+g4 add PROGRESS.md; g4 commit -qm "plan"
+g4 checkout -q -b lane/M1-001
+jq '(.features[] | select(.id=="M1-001") | .status) = "passing"' "$R4/FEATURES.json" > "$R4/f.tmp" && mv "$R4/f.tmp" "$R4/FEATURES.json"
+printf '\n## 2026-03-03 -- session 2\n- Done: M1-001 boot.\n- Decisions: LANE-ENTRY text.\n' >> "$R4/PROGRESS.md"
+g4 add FEATURES.json PROGRESS.md; g4 commit -qm "boot"
+g4 checkout -q main; g4 merge -q --no-ff lane/M1-001 -m "Merge lane/M1-001"
+rep4="$R4/$(cd "$R4" && bash "$REPORT" "$START4" --stop-reason "finished")" || fail "run-report M35-001: expected exit 0"
+grep -q 'PLAN-APPEND' "$rep4" && fail "run-report: a planning entry (append order) must never give a feature its Decisions"
+grep -qF -- '  - Decisions: LANE-ENTRY text.' "$rep4" || fail "run-report: a lane merge must take Decisions from the entry the lane added"
+
+# M34-010: harness-continuous End archives after the report; a report built
+# after the archive still titles the archived ids
+end="$(sed -n '/^## End/,/^## Red flags/p' "$md")"
+rl="$(grep -n 'run-report.sh' <<< "$end" | head -1 | cut -d: -f1 || true)"
+al="$(grep -n 'archive-features.sh' <<< "$end" | head -1 | cut -d: -f1 || true)"
+[ -n "$al" ] || fail "SKILL.md: End must run archive-features.sh"
+[ "$al" -gt "${rl:-0}" ] || fail "SKILL.md: End must archive after the report"
+grep -q 'docs/features-archive.json' <<< "$end" || fail "SKILL.md: End must commit docs/features-archive.json"
+R3="$WORK/repo3"; cp -R "$R2" "$R3"
+(cd "$R3" && bash "$OLDPWD/skills/harness-status/scripts/archive-features.sh" . >/dev/null) || fail "archive in a report fixture failed"
+git -C "$R3" -c user.email=t@t -c user.name=t add FEATURES.json docs/features-archive.json
+git -C "$R3" -c user.email=t@t -c user.name=t commit -qm "harness-continuous: archive M1"
+jq -e '.features | length == 0' "$R3/FEATURES.json" >/dev/null || fail "archive: M1 should have left FEATURES.json"
+rep3="$R3/$(cd "$R3" && bash "$REPORT" "$START2" --stop-reason "finished")" || fail "run-report after archive: expected exit 0"
+sed -n '/^## Done/,/^## /p' "$rep3" | grep -Eq '^- M1-001 — boot — [0-9a-f]{7,}' || fail "run-report: an archived id must keep its title"
+sed -n '/^## Done/,/^## /p' "$rep3" | grep -Eq '^- M1-002 — parser — [0-9a-f]{7,}' || fail "run-report: an archived id must keep its title (M1-002)"
+
 # M29-002: features waiting on a human get their own section with the
 # question, and the features they hold are explained under Not started
 grep -q '^## Waiting on a human' "$rep" && fail "run-report: no Waiting section when nothing waits"
@@ -226,5 +290,54 @@ for f in "$run" "$md"; do
 done
 grep -q 'models.log' "$run" || fail "harness-run SKILL.md: models.log step missing"
 grep -qi 'next size up' "$run" || fail "harness-run SKILL.md: retry step-up missing"
+
+# --- run-start.sh (M34-002): each run starts with clean run state ----------------
+START_SH="$PWD/skills/harness-run/scripts/run-start.sh"
+[ -f "$START_SH" ] || fail "run-start.sh missing"
+grep -q 'run-start.sh' "$md" || fail "harness-continuous Start must call run-start.sh"
+R5="$WORK/repo5"; mkdir -p "$R5"
+g5() { git -C "$R5" -c user.email=t@t -c user.name=t "$@"; }
+git -C "$R5" init -q -b main
+# run-start.sh commits on its own: give the fixture an identity (CI has none)
+g5 config user.email t@t; g5 config user.name t
+cp "$R/FEATURES.json" "$R5/FEATURES.json"; printf '# PROGRESS\n' > "$R5/PROGRESS.md"
+g5 add -A; g5 commit -qm seed
+bash "$START_SH" "$R5" >/dev/null || fail "run-start: first run failed"
+first="$(git -C "$R5" rev-parse HEAD)"
+[ "$(cat "$R5/.harness-run/start")" = "$first" ] || fail "run-start: start should be HEAD"
+git -C "$R5" check-ignore -q .harness-run || fail "run-start: .harness-run not ignored"
+[ -z "$(git -C "$R5" status --short)" ] || fail "run-start: tree must be clean after (ignore rule committed)"
+cd "$R5/.harness-run"
+printf 'M1-001 9.99\n' > cost.log; printf 'a 1\n' > run-cost; printf 'M1-001 small model small\n' > models.log
+printf 's c m 1 2 3\n' > usage.log; printf 'budget x\n' > budget.log; mkdir decisions; echo d > decisions/M1-001.md; mkdir results
+echo M1-002 > skip; touch STOP
+cd "$OLDPWD"
+g5 commit -q --allow-empty -m "run 1 work"
+second="$(git -C "$R5" rev-parse HEAD)"
+bash "$START_SH" "$R5" >/dev/null || fail "run-start: second run failed"
+[ "$(cat "$R5/.harness-run/start")" = "$second" ] || fail "run-start: second start should be new HEAD"
+[ ! -s "$R5/.harness-run/skip" ] || fail "run-start: skip must be empty"
+[ ! -e "$R5/.harness-run/STOP" ] || fail "run-start: stale STOP must be removed"
+for f in cost.log run-cost models.log usage.log budget.log decisions results; do
+  [ ! -e "$R5/.harness-run/$f" ] || fail "run-start: $f not moved out of the live run"
+  [ -e "$R5/.harness-run/previous/$first/$f" ] || fail "run-start: $f not archived under previous/<first start>"
+done
+(cd "$R5" && bash "$REPORT" "$second" --stop-reason x >/dev/null) || fail "run-start: report after second start failed"
+! grep -rq '9.99' "$R5/docs/runs" || fail "run-start: report shows the first run's cost"
+
+# M34-007: wait-result.sh blocks in the shell, prints the result file once, silent while waiting
+WAIT="skills/harness-run/scripts/wait-result.sh"
+[ -f "$WAIT" ] || fail "wait-result.sh missing"
+W="$(mktemp -d)"; mkdir -p "$W/.harness-run/results"
+( cd "$W"; sleep 2; printf 'SESSION: X-1 · passing · gate green · abc\nsummary\n' > .harness-run/results/X-1.tmp; mv .harness-run/results/X-1.tmp .harness-run/results/X-1.txt ) &
+t0=$(date +%s)
+out="$(cd "$W" && bash "$OLDPWD/$WAIT" X-1 --timeout 20 2>&1)" || fail "wait-result: should exit 0 once the file appears"
+t1=$(date +%s)
+[ "$((t1 - t0))" -lt 10 ] || fail "wait-result: did not return soon after the file appeared"
+[ "$out" = "$(printf 'SESSION: X-1 · passing · gate green · abc\nsummary')" ] || fail "wait-result: output must be exactly the result file (nothing while waiting)"
+wait
+if (cd "$W" && bash "$OLDPWD/$WAIT" X-2 --timeout 2 >"$W/o" 2>/dev/null); then fail "wait-result: timeout must exit non-zero"; fi
+[ ! -s "$W/o" ] || fail "wait-result: no stdout on timeout"
+rm -rf "$W"
 
 echo "RUN TESTS GREEN"

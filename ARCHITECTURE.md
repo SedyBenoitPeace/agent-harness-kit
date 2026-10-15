@@ -32,7 +32,7 @@
 | `skills/harness-initial-setup/` | Planning interview + scaffold orchestration (SKILL.md only) |
 | `skills/harness-initial-setup/templates/` | ★ Canonical source of every scaffolded file, incl. the protocol: `harness-protocol.md` (session core + index, read every session) and `harness-protocol-{planning,runs,maintenance}.md` (read only when needed) |
 | `skills/harness-audit/` | Readiness checker (`scripts/check.sh`) + report/repair judgment layer |
-| `skills/harness-status/` | Read-only progress report (`scripts/status.sh`) |
+| `skills/harness-status/` | Read-only progress report (`scripts/status.sh`); `scripts/archive-features.sh` moves fully done milestones to `docs/features-archive.json` (run by harness-continuous End; status, context, run-report and audit resolve archived ids) |
 | `skills/harness-handoff/` | Session-end ritual check + next-agent prompt (`scripts/handoff.sh`) |
 | `skills/harness-session/` | Bounded session context report (`scripts/context.sh`, wraps harness-status) + concise gate wrapper (`scripts/run-gate.sh`) |
 | `skills/harness-run/` | Orchestrator (SKILL.md): one fresh subagent per feature, verified via status.sh; `scripts/second-opinion.sh` re-judges a feature with another vendor's CLI, read-only, and voids a verdict that changed the repo |

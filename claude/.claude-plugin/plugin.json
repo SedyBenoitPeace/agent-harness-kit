@@ -1,7 +1,7 @@
 {
   "name": "agent-harness-kit-claude",
   "description": "Claude Code edition of the agent harness: adds Claude Code-only features (agent effort, mods, eval suites) on top of agent-harness-kit.",
-  "version": "3.11.0",
+  "version": "3.12.0",
   "author": {
     "name": "Stefano Rifici"
   },
@@ -29,6 +29,18 @@
       "title": "Budget per run (USD)",
       "description": "Dollars a whole unattended run may cost before it is asked to stop after the current feature. 0 = no limit.",
       "default": 50
+    },
+    "session_budget_tokens": {
+      "type": "number",
+      "title": "Session budget (context tokens)",
+      "description": "A builder's context size at which the status line says to wrap up (shown from 80 percent). The protocol makes the builder commit, note a resume point and end blocked with session budget. 0 = no notice.",
+      "default": 150000
+    },
+    "supervisor": {
+      "type": "boolean",
+      "title": "Done-check supervisor",
+      "description": "After a builder's SESSION line, check the session against the feature's verify with a cheap model call. Never judges parallel lanes.",
+      "default": false
     },
     "route_models": {
       "type": "boolean",

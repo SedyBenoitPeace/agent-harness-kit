@@ -123,6 +123,7 @@ export function transcriptText(messages: { role: string; text: string; toolUses?
 
 export const DEFAULT_FEATURE_USD = 5
 export const DEFAULT_RUN_USD = 50
+export const DEFAULT_SESSION_TOKENS = 150_000 // M34-011: a builder's context before it wraps up
 
 export const usd = (n: number) => `$${n.toFixed(2)}`
 
@@ -179,6 +180,7 @@ export function runCostText(s: RunSpend) {
 export const TIERS = ['haiku', 'sonnet', 'opus'] as const
 const SENSITIVE = /auth|payment|billing|migration|secret|credential|personal/i
 export const BUILDER_PROMPT = /harness-session for (M\d+-\d{3})/
+export const PARALLEL_LANE = /as a parallel lane in /
 
 // A model name's tier: haiku 0, sonnet 1, opus 2, above opus 3; -1 unknown.
 export function tierOf(model: string | undefined) {
@@ -224,7 +226,7 @@ export function chooseModel(spawn: SpawnFacts, featuresJson: string, modelsLog: 
   const sized = size ? { small: 0, medium: 1, large: 2 }[size] ?? (tierOf(size) < 0 ? 1 : Math.min(2, tierOf(size))) : undefined
   const reasons = [sized !== undefined ? `model ${size}` : `effort ${effort}`]
   let tier = sized ?? (effort === 'low' ? 0 : effort === 'high' || effort === 'max' ? 2 : 1)
-  const starts = modelsLog.split('\n').filter(l => l.startsWith(`${id} `)).length
+  const starts = modelsLog.split('\n').filter(l => l.startsWith(`${id} `) && l.endsWith(` notes:${notesKey(featuresJson, id)}`)).length
   const attempts = Number(f.eval_attempts) > 0 ? Number(f.eval_attempts) : 0
   if (starts + attempts > 0) {
     tier += starts + attempts
@@ -243,8 +245,16 @@ export function chooseModel(spawn: SpawnFacts, featuresJson: string, modelsLog: 
   return { model: TIERS[tier]!, feature: id, reason: reasons.join(', ') }
 }
 
-export function modelsLine(choice: ModelChoice) {
-  return `${choice.feature} ${choice.model} ${choice.reason}\n`
+// Short hash of a feature's notes (M34-004): an owner's answer changes the notes.
+export function notesKey(featuresJson: string, id: string) {
+  const n = String(featureOf(featuresJson, id)?.notes ?? '')
+  let h = 5381
+  for (const c of n) h = ((h * 33) ^ c.charCodeAt(0)) >>> 0
+  return h.toString(16)
+}
+
+export function modelsLine(choice: ModelChoice, featuresJson = '') {
+  return `${choice.feature} ${choice.model} ${choice.reason} notes:${notesKey(featuresJson, choice.feature!)}\n`
 }
 
 // --- M30-003 status line and /harness ------------------------------------------

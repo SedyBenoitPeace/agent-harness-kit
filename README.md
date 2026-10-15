@@ -38,10 +38,18 @@ English:
 - **harness-session** — run one coding session with bounded, non-mutating
   context recovery and a concise gate report. `/agent-harness-kit:harness-session`,
   _"Implement M1-004 following the harness."_, or _"Continue the current
-  harness feature."_ Orchestration and gate-log compression (the
-  `run-gate.sh` wrapper retains the full log while keeping the terminal
-  report short) live in the plugin; project-specific readiness checks are
-  optional and live in the target repo's own `scripts/preflight.sh`.
+  harness feature."_ The session starts from a short brief (`context.sh`:
+  the current milestone, the next feature's full entry and plan section,
+  the newest PROGRESS entry, under 80 lines); FEATURES.json, PROGRESS.md,
+  plans and docs are then read on demand with `grep` or `sed -n`, never
+  whole. Builds, simulators and tests run through `quiet.sh <name> --
+  <command>`, which keeps the full log in `.harness-run/logs/` and prints
+  only the exit code, the log path, up to 40 error/fail/warning lines and
+  the last 20 lines; `run-gate.sh` prints the same shape. A session that
+  passes about 60 tool calls or 150k tokens of context commits what is
+  safe, notes where to resume and ends `blocked · session budget`.
+  Project-specific readiness checks are optional and live in the target
+  repo's own `scripts/preflight.sh`.
 - **harness-run** — work through many features in one conversation
   without its context growing: each feature runs as a harness-session in
   a fresh subagent, verified from the repo before the next starts;
@@ -68,9 +76,18 @@ English:
   _"what's the harness status?"_.
 - **harness-audit** — check any repo's harness-readiness.
   `/agent-harness-kit:harness-audit` or _"audit this repo's harness"_.
-- **harness-handoff** — verify the session-end ritual (clean tree, green
-  gate, logged session) and get a paste-ready prompt for the next agent,
-  any vendor. `/agent-harness-kit:harness-handoff` or _"prepare the
+  It also warns when a failing feature's `verify` needs something only you
+  can give (a live session, your machine, a device, a push, a PR, an
+  answer: that belongs in the plan's `## Before the run`), when an active
+  plan declares neither `depends_on` nor `paths` (no parallel lanes
+  possible), and, for information only, when your global Codex, Claude
+  Code or Copilot setup has a memory or workflow server or plugin that may
+  add its own instructions to every session. It never edits your setup.
+- **harness-handoff** — verify the session-end ritual (clean tree, gate
+  status, logged session) and get a paste-ready prompt for the next agent,
+  any vendor. It reuses the last green gate run (`GATE: green (last green
+  run, unchanged)`), notes when the tree changed since, and runs the full
+  gate only with `--run-gate`. `/agent-harness-kit:harness-handoff` or _"prepare the
   handoff for the next agent"_.
 
 Update to the latest release:
@@ -273,9 +290,12 @@ of git):
   time it picks one option over another or assumes something; the lines
   land in `.harness-run/decisions/<id>.md` and the session folds them into
   the PROGRESS.md `Decisions:` line.
-- **Done-check supervisor** — when a session ends with its `SESSION:` line,
-  one cheap check against the feature's `verify` reports done, blocked or
+- **Done-check supervisor** — off by default (`supervisor` in `/config`
+  turns it on). When on and a session ends with its `SESSION:` line, one
+  cheap check against the feature's `verify` reports done, blocked or
   skipped work (in a status line, and `.harness-run/decisions/<id>.skipped.md`).
+  It never judges a parallel-lane builder, whose transcript always ends
+  mid-work by design.
 - **Status line** — one line under the prompt, beside your own status line
   (never replacing it): `harness M3-005 · 12/20 passing · $1.40/$5.00 ·
   sonnet · 2 waiting on you`, plus the last budget or supervisor notice.
@@ -286,7 +306,9 @@ of git):
 - **Model choice** — each builder a run starts gets the model its feature's
   `effort` asks for: low `haiku`, medium (or none) `sonnet`, high or max
   `opus`, by alias, so new models are picked up with nothing to update. A
-  retry or an evaluator rejection steps it up one tier; the evaluator and
+  retry or an evaluator rejection steps it up one tier, but only when the
+  feature's `notes` are unchanged since the earlier start (an answer from
+  you gives a fresh attempt at the planned size); the evaluator and
   features touching auth, payments, migrations or personal data never run
   below `sonnet`. Set `model_floor` in `/config` to raise the minimum, or
   turn `route_models` off. Your own session's model is never changed; the
@@ -298,7 +320,12 @@ of git):
   an unattended run it writes `.harness-run/STOP`, so the run ends after the
   current feature, and logs why in `.harness-run/budget.log`; 0 turns a
   budget off. Each feature's cost lands in `.harness-run/cost.log` and the
-  run report. Features built in parallel share one figure.
+  run report. Features built in parallel share one figure. The cost
+  split, budgets and pending usage reset when a new run starts
+  (`.harness-run/start` changes), so each run reports alone.
+- **Session budget notice** — at 80% of `session_budget_tokens` (default
+  150000, 0 turns it off) of a builder's context, the status line shows
+  `session budget: Nk of Mk tokens, wrap up`.
 - **Orchestration cost** — the run's total is split into time a builder or
   evaluator was running and time the orchestrator ran alone (dispatching,
   verifying, merging lanes, gates), counted once even with parallel lanes,
@@ -427,16 +454,37 @@ What it does, so nothing surprises you:
   `.harness-run/STOP`, on a baseline problem (dirty tree, `UPGRADE: offer`,
   a red gate), or when a dispatch produced neither a commit nor a skip.
 - **Run state** lives in `.harness-run/` (start commit, skip list, stop
-  file). The run adds `.harness-run/` to `.gitignore` in its own commit if
-  it is not there yet.
+  file). `run-start.sh` begins each run: it adds `.harness-run/` to
+  `.gitignore` in its own commit if needed, and moves the previous run's
+  logs and results into `.harness-run/previous/<old start>/` (kept, never
+  deleted), so a report only ever sees its own run.
+- **One wait per builder.** Each builder's last act writes
+  `.harness-run/results/<id>.txt` (its `SESSION:` line and a short
+  summary); the orchestrator blocks once per builder (the CLI's own wait,
+  or `wait-result.sh <id>`), never polls or steers a running builder, and
+  reads only script output, never whole skills, plans, PROGRESS.md or
+  FEATURES.json.
+- **Session budget.** A builder that stops on its session budget is
+  retried once in a fresh session at the same size; a second budget stop
+  is a skip.
+- **Shared resources.** Features that set the same `exclusive` value (e.g.
+  `simulator`, `device`, `database`) never run in the same parallel batch;
+  others still can.
 - **Never pushes.** With `through M<n>` it creates one stacked branch per
   milestone and leaves them local.
 - **The report**, `docs/runs/<date>.md`, is built by `run-report.sh` from
   git and FEATURES.json (no model calls) and committed: done (with minutes
   per feature, and dollars and the model with the Claude Code edition, plus
   the run's cost split into feature agents and orchestration, and by model;
-  tokens per feature and by model where the CLI exposes them), skipped (with each
+  tokens per feature and by model where the CLI exposes them; each
+  feature's `Decisions:` comes from its own commit or the PROGRESS entry
+  that commit added, never from a planning entry), skipped (with each
   question), waiting on a human, not started and why, branches used.
+- **Archive.** After the report, `archive-features.sh` moves every
+  milestone whose features are all `passing` or `superseded` from
+  FEATURES.json to `docs/features-archive.json` (same schema, appended).
+  Status, the session brief, the report and the audit still resolve
+  archived ids, so FEATURES.json stays small.
 - **Watching it from a terminal.** In a second tab, run
   `bash <kit>/skills/harness-status/scripts/status.sh --watch` in the repo:
   the status report redrawn every 5 seconds (`--watch 30` for every 30),
@@ -637,18 +685,24 @@ skills/
 │   └── scripts/check.sh          deterministic readiness checker
 ├── harness-status/
 │   ├── SKILL.md        status orchestration: read-only report
-│   └── scripts/status.sh         deterministic progress/next-feature report
+│   └── scripts/
+│       ├── status.sh              deterministic progress/next-feature report
+│       └── archive-features.sh    moves fully done milestones to the archive
 ├── harness-handoff/
 │   ├── SKILL.md        handoff orchestration: ritual check + prompt relay
 │   └── scripts/handoff.sh        session-end checks + next-agent prompt
 ├── harness-session/
 │   ├── SKILL.md        session orchestration: bounded recovery + gate
 │   └── scripts/
-│       ├── context.sh             bounded session context + PARALLEL lanes
-│       └── run-gate.sh            concise gate wrapper, full log retained
+│       ├── context.sh             short session brief + PARALLEL lanes
+│       ├── run-gate.sh            concise gate wrapper, full log retained
+│       └── quiet.sh               any build/test command: log on disk, capped summary
 ├── harness-run/
 │   ├── SKILL.md        multi-feature orchestrator: one subagent per feature
-│   └── scripts/run-report.sh      end-of-run report from git + FEATURES.json
+│   └── scripts/
+│       ├── run-report.sh          end-of-run report from git + FEATURES.json
+│       ├── run-start.sh           fresh run state, previous run archived
+│       └── wait-result.sh         one blocking wait for a builder's result
 ├── harness-continuous/
 │   └── SKILL.md        unattended run: skip what it cannot finish, then report
 └── harness-upgrade-structure/

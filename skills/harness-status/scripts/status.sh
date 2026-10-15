@@ -96,6 +96,11 @@ jq -r '
   | ([.[] | select(.status == "passing")] | length) as $p
   | "M\($k): \($p)/\(length) passing — \($m[$k] // "?")"
 ' FEATURES.json
+# M34-010: fully done milestones live in docs/features-archive.json
+if [ -f docs/features-archive.json ]; then
+  jq -r '"Archived: \(.milestones | length) milestones, \(.features | length) features in docs/features-archive.json"' docs/features-archive.json 2>/dev/null \
+    || echo "Archived: docs/features-archive.json is not valid JSON — run the harness-audit skill"
+fi
 
 echo
 echo "== Totals =="

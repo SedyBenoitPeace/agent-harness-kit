@@ -38,8 +38,12 @@ stamp="$(git log -1 --format=%cd --date=format:%Y-%m-%d-%H%M HEAD)"
 out="docs/runs/$stamp.md"
 mkdir -p docs/runs
 
-title() { jq -r --arg id "$1" '.features[] | select(.id == $id) | .title' FEATURES.json; }
-status_of() { jq -r --arg id "$1" '.features[] | select(.id == $id) | .status' FEATURES.json; }
+# every feature, archived ones too (M34-010): a report built after
+# archive-features.sh still titles the ids it moved
+ARCH=docs/features-archive.json; [ -f "$ARCH" ] || ARCH=/dev/null
+ALL="$(jq -cs '{features: [.[].features[]?]}' FEATURES.json "$ARCH")"
+title() { jq -r --arg id "$1" '.features[] | select(.id == $id) | .title' <<< "$ALL"; }
+status_of() { jq -r --arg id "$1" '.features[] | select(.id == $id) | .status' <<< "$ALL"; }
 
 # ids done: the newest non-skip commit since start naming a passing/review feature
 done_lines=""
@@ -50,22 +54,33 @@ while IFS=$'\t' read -r hash subject; do
       done_lines="$done_lines$id	$hash
 "
     fi
-  done < <(jq -r '.features[].id' FEATURES.json)
+  done < <(jq -r '.features[].id' <<< "$ALL")
 done < <(git log --reverse --format='%h%x09%s' "$START..HEAD")
 done_lines="$(printf '%s' "$done_lines" | awk -F'\t' 'NF { h[$1] = $2; if (!($1 in s)) { s[$1] = 1; ord[++n] = $1 } } END { for (i = 1; i <= n; i++) print ord[i] "\t" h[ord[i]] }')"
 
-# The newest PROGRESS.md entry naming <id> that has a Decisions: line, as one
-# line (wrapped continuation lines joined) — M27-003
+# A feature's Decisions: line (M27-003, M34-003), as one line (wrapped
+# continuation lines joined): from its own commit message body (lanes put it
+# there), else the PROGRESS.md entry whose Done: line names it. Both are read
+# only from what the done commit brought in (a lane merge: against its first
+# parent), so a planning entry never counts, whatever order PROGRESS.md uses
+# (M35-001).
 decisions_of() {
-  [ -f PROGRESS.md ] || return 0
-  awk -v id="$1" '
-    /^## / { if (hit && dec != "") { print dec; exit } hit = index($0, id) > 0; indec = 0; dec = ""; next }
-    index($0, id) > 0 { hit = 1 }
-    /^- Decisions:/ { indec = 1; dec = $0; next }
-    indec && /^  [^ -]/ { sub(/^ +/, ""); dec = dec " " $0; next }
+  local d
+  d="$(git log --format=%b "$2^1..$2" | awk '
+    /^Decisions:/ { indec = 1; dec = $0; next }
+    indec && /^[ \t]+[^ \t]/ { sub(/^[ \t]+/, ""); dec = dec " " $0; next }
     { indec = 0 }
+    END { if (dec != "") print dec }')"
+  if [ -n "$d" ]; then printf '%s\n' "$d"; return 0; fi
+  git diff "$2^1" "$2" -- PROGRESS.md | sed -n '/^+++/d; s/^+//p' | awk -v id="$1" '
+    /^## / { if (hit && dec != "") { print dec; exit } hit = 0; indone = 0; indec = 0; dec = ""; next }
+    /^- Done:/ { indone = 1; if (index($0, id) > 0) hit = 1; next }
+    indone && /^  [^ -]/ { if (index($0, id) > 0) hit = 1; next }
+    /^- Decisions:/ { indone = 0; indec = 1; dec = $0; next }
+    indec && /^  [^ -]/ { sub(/^ +/, ""); dec = dec " " $0; next }
+    { indone = 0; indec = 0 }
     END { if (hit && dec != "") print dec }
-  ' PROGRESS.md | head -1 | sed 's/^- //'
+  ' | head -1 | sed 's/^- //'
 }
 
 # minutes per done feature (M29-003): from the previous feature's (or skip's,
@@ -106,7 +121,7 @@ while IFS=$'\t' read -r id hash; do
 " ;;
     *) continue ;;
   esac
-  dec="$(decisions_of "$id")"
+  dec="$(decisions_of "$id" "$hash")"
   [ -z "$dec" ] || done_out="$done_out  - $dec
 "
   n_done=$((n_done + 1))

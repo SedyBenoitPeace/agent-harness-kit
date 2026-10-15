@@ -130,6 +130,15 @@ make_lanes_repo "$WORK/l-missing" "[$(f M1-001 1 failing '' '["src/a/"]'),$(f M1
 make_lanes_repo "$WORK/l-cap" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]')]"
 [ "$(lanes "$WORK/l-cap")" = 'PARALLEL: M1-001 M1-002 M1-003' ] || fail "lanes: cap of 3 not applied"
 
+# exclusive (M34-006): same value never shares a batch; a third without it joins
+ex() { sed 's/}$/,"exclusive":"sim"}/'; }
+make_lanes_repo "$WORK/l-ex" "[$(f M1-001 1 failing '[]' '["a/"]' | ex),$(f M1-002 1 failing '[]' '["b/"]' | ex),$(f M1-003 1 failing '[]' '["c/"]')]"
+[ "$(lanes "$WORK/l-ex")" = 'PARALLEL: M1-001 M1-003' ] || fail "lanes: same exclusive value must not share a batch"
+make_lanes_repo "$WORK/l-ex2" "[$(f M1-001 1 failing '[]' '["a/"]' | ex),$(f M1-002 1 failing '[]' '["b/"]' | ex)]"
+[ "$(lanes "$WORK/l-ex2")" = 'PARALLEL: none' ] || fail "lanes: two same-exclusive features alone must be sequential"
+grep -q 'exclusive' skills/harness-initial-setup/templates/harness-protocol-planning.md || fail "protocol 1.4 must name exclusive"
+grep -q 'exclusive' skills/harness-initial-setup/templates/FEATURES.json.tmpl || fail "FEATURES template must name exclusive"
+
 # 5d. evaluator fields (M18): review is not-done and never NEXT; fields accepted;
 #     features without them behave exactly as before
 make_lanes_repo "$WORK/rv" "[$(f M1-001 1 review '[]' '["a/"]' | sed 's/}$/,"evaluate":"ui","bar":"matches the mockup","eval_attempts":1}/'),$(f M1-002 1 failing '["M1-001"]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]')]"
@@ -174,6 +183,30 @@ bash "$RUN_GATE" final "$WORK/red" >"$WORK/red.out" 2>&1 || rc=$?
 [ "$rc" -eq 7 ] || fail "red gate: expected exit 7, got $rc"
 grep -q 'GATE: red (final)' "$WORK/red.out" || fail "red gate: missing status line"
 grep -q 'intentional failure sentinel' "$WORK/red.out" || fail "red gate: failure tail not exposed"
+
+# 7c. quiet.sh (M34-008): exit passthrough, full log on disk, capped summary
+QUIET="$PWD/skills/harness-session/scripts/quiet.sh"
+Q="$WORK/quiet"; mkdir -p "$Q"
+noisy() { local i; for i in $(seq 1 100); do echo "error line $i $(printf 'x%.0s' $(seq 1 400))"; done; for i in $(seq 1 100); do echo "plain $i"; done; return 5; }
+export -f noisy
+rc=0; (cd "$Q" && bash "$QUIET" noisy -- bash -c noisy) >"$WORK/q.out" || rc=$?
+[ "$rc" -eq 5 ] || fail "quiet: exit code not passed through (got $rc)"
+grep -q '^EXIT: 5' "$WORK/q.out" || fail "quiet: missing EXIT line"
+qlog="$(sed -n 's/^FULL_LOG: //p' "$WORK/q.out")"
+[ "$(wc -l < "$Q/$qlog")" -eq 200 ] || fail "quiet: full output not on disk in .harness-run/logs/"
+case "$qlog" in .harness-run/logs/noisy-*) ;; *) fail "quiet: log path wrong: $qlog" ;; esac
+[ "$(grep -c '^error line' "$WORK/q.out")" -eq 40 ] || fail "quiet: matches not capped at 40"
+[ "$(grep -c '^plain' "$WORK/q.out")" -eq 20 ] || fail "quiet: tail not 20 lines"
+[ "$(awk '{ if (length($0) > m) m = length($0) } END { print m }' "$WORK/q.out")" -le 300 ] || fail "quiet: a line exceeds 300 characters"
+rc=0; bash "$QUIET" bad >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 2 ] || fail "quiet: usage error should exit 2"
+
+# 7d. run-gate.sh red output has the same capped shape
+make_gate_target "$WORK/redq" 150 3 'error sentinel'
+rc=0; bash "$RUN_GATE" final "$WORK/redq" >"$WORK/redq.out" 2>&1 || rc=$?
+[ "$rc" -eq 3 ] || fail "red gate (capped): expected exit 3"
+[ "$(wc -l < "$WORK/redq.out")" -le 70 ] || fail "red gate: report exceeded 70 lines"
+grep -q -- '--- last 20 lines ---' "$WORK/redq.out" || fail "red gate: not the quiet.sh shape"
 
 # 7b. baseline reuse (M29-001): a green run fingerprints the tree; a later
 #     baseline on an identical clean tree (bookkeeping aside) skips the gate
@@ -281,5 +314,29 @@ out="$(bash "$CONTEXT" --skip "$WORK/skip.ids" "$WORK/skip")" || fail "context -
 echo "$out" | grep -q '^NEXT: M3-001' || fail "context --skip: NEXT not passed through"
 echo "$out" | grep -q 'PLAN: none mentioning M3-001' || fail "context --skip: PLAN should follow the eligible feature"
 echo "$out" | grep -q '^PARALLEL: none' || fail "context --skip: PARALLEL should be none"
+
+# 10. session brief (M34-009): 30 completed milestones stay one line; NEXT's
+#     full entry, its plan section and only the newest PROGRESS entry show
+mkdir -p "$WORK/brief/docs/plans/active"
+{
+  printf '{"milestones":{'
+  for i in $(seq 0 29); do printf '"%s":"Done %s",' "$i" "$i"; done
+  printf '"30":"Current"},"features":['
+  for i in $(seq 0 29); do printf '{"id":"M%s-001","milestone":%s,"title":"t","status":"passing","verify":"x"},' "$i" "$i"; done
+  printf '{"id":"M30-001","milestone":30,"title":"cur","status":"failing","verify":"VERIFYTEXT","notes":"NOTETEXT","paths":["src/a/"]}]}'
+} > "$WORK/brief/FEATURES.json"
+printf '## 2026-02 -- session 31\n- NEWEST.\n\n## 2026-01 -- session 30\n- OLDER.\n' > "$WORK/brief/PROGRESS.md"
+{ printf '# Plan\n\n## M29-001 other\n- OTHERSECTION\n\n## M30-001 current\n- PLANSECTION\n'; } > "$WORK/brief/docs/plans/active/p.md"
+git -C "$WORK/brief" init -q -b main
+git -C "$WORK/brief" -c user.email=t@t -c user.name=t add -A
+git -C "$WORK/brief" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$CONTEXT" "$WORK/brief")" || fail "brief: expected exit 0"
+[ "$(echo "$out" | wc -l)" -lt 80 ] || fail "brief: output must stay under 80 lines"
+[ "$(echo "$out" | grep -c '^M[0-9]*: ')" -eq 1 ] || fail "brief: only the current milestone gets its own line"
+echo "$out" | grep -q '^M0-M29 complete (30 milestones)' || fail "brief: completed milestones must be one line"
+for w in VERIFYTEXT NOTETEXT 'paths: src/a/' PLANSECTION NEWEST; do
+  echo "$out" | grep -q "$w" || fail "brief: missing $w"
+done
+if echo "$out" | grep -qE 'OTHERSECTION|OLDER'; then fail "brief: leaked another plan section or older PROGRESS entry"; fi
 
 echo "SESSION TESTS GREEN"

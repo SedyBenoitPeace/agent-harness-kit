@@ -15,7 +15,18 @@ SKIP=()
 if [ "${1:-}" = "--skip" ]; then SKIP=(--skip "${2:?--skip needs a file}"); shift 2; fi
 TARGET="${1:-.}"
 
-bash "$STATUS" ${SKIP[@]+"${SKIP[@]}"} "$TARGET"
+# Brief, not history (M34-009): completed milestones collapse to one line.
+rc=0; report="$(bash "$STATUS" ${SKIP[@]+"${SKIP[@]}"} "$TARGET")" || rc=$?
+if [ "$rc" -ne 0 ]; then printf '%s\n' "$report"; exit "$rc"; fi
+printf '%s\n' "$report" | awk '
+  function flush() { if (done > 0) print "M" first "-M" last " complete (" done " milestones)"; done = 0; print "" }
+  inm && /^$/ { next }
+  /^== /{ if (inm) flush(); inm = ($0 == "== Milestones =="); print; next }
+  inm && /^M[0-9]+: [0-9]+\/[0-9]+ passing/ {
+    split($2, a, "/"); k = substr($1, 2, length($1) - 2)
+    if (a[1] == a[2]) { if (done == 0) first = k; last = k; done++; next }
+  }
+  { print }'
 SKIPPED_IDS=""
 if [ ${#SKIP[@]} -gt 0 ]; then
   skip_report="$(bash "$STATUS" "${SKIP[@]}" "$TARGET")"
@@ -45,12 +56,20 @@ next_id="$(jq -r --arg ex "$SKIPPED_IDS" '
   | if length == 0 then "" else .[0].id end
 ' FEATURES.json)"
 
+if [ -n "$next_id" ]; then
+  jq -r --arg id "$next_id" '.features[] | select(.id == $id) | select((.notes // "") != "") | "NEXT_NOTES: \(.notes)"' FEATURES.json
+fi
+
 echo
 echo "== Active plan references =="
 if [ -n "$next_id" ]; then
   matches="$(grep -ril --include='*.md' "$next_id" docs/plans/active 2>/dev/null || true)"
   if [ -n "$matches" ]; then
     printf '%s\n' "$matches" | sed 's/^/PLAN: /'
+    # the feature's own plan section (heading naming its id), capped at 30 lines
+    printf '%s\n' "$matches" | while IFS= read -r pf; do
+      awk -v id="$next_id" '/^## /{ on = (index($0, id) > 0) } on' "$pf" | head -30
+    done
   else
     echo "PLAN: none mentioning $next_id"
   fi
@@ -67,12 +86,14 @@ fi
 # Parallel lanes for harness-run: declared at planning time, never inferred.
 # Eligible = failing, in NEXT's milestone, declares depends_on (all passing)
 # and non-empty paths. Greedy from NEXT over non-overlapping glob prefixes,
-# max 3; fewer than 2 lanes, or NEXT itself ineligible → sequential.
-jq -r --arg ex "$SKIPPED_IDS" '
+# max 3, never two with the same optional exclusive value; fewer than 2 lanes, or NEXT itself ineligible → sequential.
+# Archived ids (docs/features-archive.json, M34-010) count as passing.
+ARCH=docs/features-archive.json; [ -f "$ARCH" ] || ARCH=/dev/null
+jq -r --arg ex "$SKIPPED_IDS" --slurpfile arc "$ARCH" '
   def prefix: sub("[*?\\[].*$"; "");
   def overlaps($a; $b): any($a[]; . as $x | any($b[]; . as $y
     | ($x | startswith($y)) or ($y | startswith($x))));
-  (.features | map({key: .id, value: .status}) | from_entries) as $st
+  ([$arc[].features[]?, .features[]] | map({key: .id, value: .status}) | from_entries) as $st
   | ([.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]
       | sort_by(.milestone, .id)) as $f
   | if ($f | length) == 0 then "PARALLEL: none" else
@@ -82,8 +103,10 @@ jq -r --arg ex "$SKIPPED_IDS" '
       | if ($el | length) == 0 or $el[0].id != $f[0].id then "PARALLEL: none" else
           reduce $el[] as $e ([];
             ($e.paths | map(prefix)) as $p
+            | ($e.exclusive // null) as $x
             | if length < 3 and all(.[]; overlaps(.p; $p) | not)
-              then . + [{id: $e.id, p: $p}] else . end)
+                and ($x == null or all(.[]; .x != $x))
+              then . + [{id: $e.id, p: $p, x: $x}] else . end)
           | if length >= 2 then "PARALLEL: " + (map(.id) | join(" ")) else "PARALLEL: none" end
         end
     end

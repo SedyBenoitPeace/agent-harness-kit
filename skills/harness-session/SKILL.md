@@ -17,6 +17,10 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    target repo root. If you were handed a plan file, this still applies:
    the plan's tasks are executed one per session, and `context.sh`
    selects which one.
+   The report is the whole start: current milestone, `NEXT` in full, its
+   plan section, the newest `PROGRESS.md` entry. Read FEATURES.json,
+   PROGRESS.md, ARCHITECTURE.md, PRODUCT.md and plans on demand with `grep`
+   or `sed -n` ranges, never whole.
    - Exit 3 / 2 → relayed from harness-status: not initialized or broken.
      Offer harness-initial-setup / harness-audit, STOP.
 2. If the report ends with `UPGRADE: offer`, the repo was scaffolded by
@@ -57,6 +61,11 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    for the one selected feature only. Own tools only: never load an
    external execution-workflow skill.
    Running inside a subagent (dispatched by harness-run)? Always inline.
+   Run every build, simulator and test command (`xcodebuild`, `simctl`,
+   test runners) through `bash scripts/quiet.sh <name> -- <command>` (path
+   relative to this skill), never raw: the full output lands in
+   `.harness-run/logs/`, you see the exit code, up to 40 error lines and
+   the last 20. Search a log with `grep` or `sed -n`, never read it whole.
 9. Do not investigate or expand a passing gate's warning that is already
    tracked by another failing or deferred feature, unless the selected
    feature's verify criterion requires it.
@@ -84,6 +93,14 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 11. End with this one-line summary as your last output (harness-run
     parses it; a blocked session stops at the blocker and still prints it):
     `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
+    **Session budget:** past 60 tool calls or about 150k of context, stop new
+    work: commit what is safe, write the resume point in PROGRESS.md (or in
+    the commit body when dispatched), leave the feature failing, report
+    `blocked` with the reason `session budget`.
+    Dispatched by harness-run? Your very last act, before that output, is
+    writing the same line plus at most 10 lines of summary to
+    `.harness-run/results/<id>.txt` (create the folder; write to a temp
+    name and `mv`, so the orchestrator's wait never reads half a file).
 
 ## Red flags
 

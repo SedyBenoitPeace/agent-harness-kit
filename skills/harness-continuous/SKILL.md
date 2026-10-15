@@ -33,11 +33,11 @@ permissions only — never a skip-all-permissions flag.
    report (see End) with that reason and STOP: exit 2 or 3, a dirty
    worktree, `UPGRADE: offer`, a `PREFLIGHT:` line, or a red baseline gate
    (`bash ../harness-session/scripts/run-gate.sh baseline <target>`).
-2. If `git check-ignore -q .harness-run` fails, add `.harness-run/` to
-   `.gitignore` and commit that file alone ("harness-run: ignore run
-   state"). Create `.harness-run/`, write `git rev-parse HEAD` to `start`, and
-   empty `skip`. Delete a `STOP` left over from an earlier run; invoking
-   the command is the signal to start.
+2. Run `bash ../harness-run/scripts/run-start.sh <target>`. If `git check-ignore`
+   fails it ignores `.harness-run/` (committing `.gitignore` alone), writes `start`, empties
+   `skip`, deletes a `STOP` left over from an earlier run, and archives the
+   previous run's logs under `.harness-run/previous/<its start commit>/`.
+   Invoking the command is the signal to start.
 
 ## Loop
 
@@ -53,12 +53,17 @@ permissions only — never a skip-all-permissions flag.
    no push) and continue; beyond the range, stop.
 3. Dispatch and verify exactly as harness-run Workflow steps 3–5 (the agent
    harness-run's `scripts/dispatch.sh` names, `harness-builder-<size>` or `harness-builder`,
-   with the retry step-up and models.log line, its `SESSION:` line, then `status.sh --skip
+   with the retry step-up and models.log line, its single wait for the `SESSION:` line
+   (one blocking wait per builder, never short polls, never send a message to steer a running builder,
+   script output only, a fresh conversation on resume), then `status.sh --skip
    .harness-run/skip` and `git status --short` as proof), including its
    Evaluator step and Parallel lanes. A blocked parallel lane becomes a skip.
 4. Verified (`NEXT` no longer names the id, tree clean) → print
    `<id> passing · <commit>`, loop.
-5. **Skip, don't stop,** when the session is `blocked`, its gate is red,
+5. A `blocked` line with the reason `session budget` is retried
+   once in a fresh session at the same size (the builder left a resume point);
+   a second `session budget` is a skip (below).
+   **Skip, don't stop,** when the session is `blocked`, its gate is red,
    the evaluator returned NEEDS_WORK twice, or `second-opinion.sh` exited 2
    or printed `VERDICT: REJECTED` (where harness-run would STOP and relay):
    1. leftover changes → `git stash push -u -m "harness-run skip <id>"`;
@@ -79,8 +84,13 @@ First, for the CLI running this session, run
 exists (it appends token counts to `.harness-run/usage.log`); no script, no
 tokens, and the report is unchanged. Then run
 `bash ../harness-run/scripts/run-report.sh <start-commit> --skip
-.harness-run/skip --stop-reason "<why the run stopped>"`, commit the
-file it prints (explicit path), and print that path as the last line. If
+.harness-run/skip --stop-reason "<why the run stopped>"`. After the
+report, run `bash ../harness-status/scripts/archive-features.sh`: it moves
+milestones whose features are all passing or superseded out of
+`FEATURES.json` into `docs/features-archive.json`, so later sessions read
+less. Commit the report file it printed, plus `FEATURES.json` and
+`docs/features-archive.json` when the archive printed milestones (explicit
+paths), and print the report path as the last line. If
 the report script cannot run (exit 2, e.g. no `FEATURES.json`), skip the
 file and print the stop reason as the last line instead. Skips
 and stashes are recoverable from the report and `git stash list`.

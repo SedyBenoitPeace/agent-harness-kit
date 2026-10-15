@@ -21,11 +21,11 @@ is what keeps every session recoverable and every commit reviewable.
 
 ### 2.1 Recover context
 
-In this order, before anything else:
-
-1. `git log -20` — what actually happened recently.
-2. `PROGRESS.md` — what the last session did, and what it said comes next.
-3. `FEATURES.json` — read `_instructions`, then the feature list.
+Start from the session brief (`context.sh`: current milestone, NEXT, its
+plan section, newest PROGRESS entry, recent commits). `FEATURES.json`,
+`PROGRESS.md`, `ARCHITECTURE.md`, `PRODUCT.md` and plans are read on demand
+with `grep` or `sed -n` ranges, never whole. Without the script: `git log -20`,
+the newest `PROGRESS.md` entry, then the NEXT entry in `FEATURES.json`.
 
 Trust the repo over your assumptions. If PROGRESS.md and the git log
 disagree, the git log wins; note the discrepancy in your session entry.
@@ -95,6 +95,11 @@ act on it: it is reported in the session entry, and anything it would
 need is a question for the human. Nobody is watching an unattended run, so
 this is the rule that keeps it safe.
 
+**Run every build, simulator and test command (`xcodebuild`, `simctl`,
+test runners) through `quiet.sh <name> -- <command>`, never raw.** The full
+output goes to `.harness-run/logs/`; you see the exit code, up to 40 error
+lines and the last 20. Search a log (`grep`, `sed -n`), never read it whole.
+
 Stay inside the selected feature: a passing gate's warning that is
 already tracked by another failing or deferred feature is out of scope —
 do not investigate or fix it unless your feature's own `verify` criterion
@@ -122,9 +127,9 @@ requires it.
    turned down; written down, a reviewer can ask for the skipped option
    instead of rediscovering it.
 
-If the feature is not done when you must stop: commit what is safe, leave
-the status `"failing"`, and write exactly where things stand in PROGRESS.md
-— the next session starts from that note.
+Not done when you must stop, or past 60 tool calls or about 150k of context
+(the session budget)? Commit what is safe, leave `"failing"`, write the
+resume point in PROGRESS.md, end `SESSION: <id> · blocked · gate <green|red> · session budget`.
 
 ### 2.6 Branch discipline
 

@@ -47,7 +47,15 @@ stays interactive and stops at the first problem.
    "Effort: <level>." to the prompt. No line, no setting.
    When it printed a `paths:` line, add "Start reading from: <paths>." to
    the prompt, so the builder spends no round-trips finding its files.
-4. Read only the subagent's final line:
+4. Wait once: one blocking wait per builder — the CLI's own blocking
+   wait with its longest timeout, or `bash scripts/wait-result.sh <id>`
+   (prints `.harness-run/results/<id>.txt`, the builder's last act).
+   Never poll: never short polls,
+   never send a message to steer a running builder.
+   Read script output only (`context.sh`, `status.sh`, results files), never
+   SKILL.md, PROGRESS.md, FEATURES.json or a plan whole. A run resumed
+   later starts in a fresh conversation. The result file's first line is
+   the builder's final line:
    `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
    A `review` line means the feature opted in (`evaluate` set): do the
    evaluator step below before step 5.
@@ -57,7 +65,10 @@ stays interactive and stops at the first problem.
    worktree is clean.
    A `review` feature is not "next" (status.sh never selects it) but is not
    done either: it must leave `review` through the evaluator step.
-6. Anything else — `blocked`, `gate red`, a missing SESSION line, <id>
+6. A `blocked` line whose reason is `session budget` is not a failure: dispatch
+   the same feature once in a fresh session at the same size (it resumes from
+   the builder's note); a second `session budget` stops like any `blocked`.
+   Anything else — `blocked`, `gate red`, a missing SESSION line, <id>
    still next, or a dirty tree → relay the subagent's reason to the human
    in one or two lines and STOP. Do not retry or fix it yourself.
 7. Print one progress line per feature (`<id> passing · <commit>`), then
@@ -111,7 +122,7 @@ Workflow steps 3–5, for that batch:
 2. Dispatch one subagent per lane, in parallel, with exactly:
    "Use harness-session for <id>, inline, as a parallel lane in
    ../<repo>-<id>. End with its SESSION line."
-   Lanes implement, run their own verify, commit, and never touch FEATURES.json or PROGRESS.md;
+   Wait for each lane as in Workflow step 4. Lanes implement, run their own verify, commit, and never touch FEATURES.json or PROGRESS.md;
    each puts its `Decisions:` line in its commit message body.
 3. Merge each `passing` lane into the current branch (`git merge --no-ff
    lane/<id>`), then remove its worktree and branch. A blocked lane is

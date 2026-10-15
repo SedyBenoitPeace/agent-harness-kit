@@ -49,6 +49,12 @@ fi
 
 # this repo's scripts are clean shell
 shellcheck scripts/*.sh
+# a function defined twice in one file is SC2218 on CI's shellcheck but not on
+# every local one, so the gate checks it itself
+for f in $(git ls-files '*.sh'); do
+  dup="$(grep -oE '^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*\(\)' "$f" | tr -d ' ()' | sort | uniq -d || true)"
+  [ -z "$dup" ] || fail "$f defines $dup more than once (rename one; CI shellcheck SC2218)"
+done
 
 # --- open-source hygiene --------------------------------------------------
 
@@ -157,6 +163,10 @@ grep -q 'tokens per feature' "$TMPL_DIR/harness-protocol-runs.md" || fail "proto
 grep -q 'where the CLI exposes' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7/2.8: tokens only where the CLI exposes them"
 grep -q 'never estimates tokens' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7/2.8: report must never estimate tokens"
 ! grep -qiE 'claude code|codex|copilot' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol runs: token line must not name a CLI"
+# quiet wrapper (M34-008): builders run build/test commands through quiet.sh
+for w in quiet.sh 'never raw' xcodebuild; do grep -q "$w" "$CORE" || fail "protocol 2.4: missing '$w'"; done
+grep -q 'quiet.sh' "$CORE" || fail "protocol 2.4: must tell builders to run build/test commands through quiet.sh, never raw"
+grep -q 'quiet.sh' skills/harness-session/SKILL.md || fail "harness-session: must name quiet.sh"
 # model size (M33-001): the planning protocol carries the size table and floors
 grep -q 'Which size of model should build it' "$TMPL_DIR/harness-protocol-planning.md" || fail "protocol 1.4: model size question missing"
 grep -qF '| small |' <(tr -d '\`' < "$TMPL_DIR/harness-protocol-planning.md") || fail "protocol 1.4: size table missing"
@@ -259,7 +269,7 @@ bash scripts/test-audit.sh
 
 STATUS_SKILL="skills/harness-status"
 [ -f "$STATUS_SKILL/scripts/status.sh" ] || fail "harness-status status.sh missing"
-shellcheck "$STATUS_SKILL/scripts/status.sh"
+shellcheck "$STATUS_SKILL/scripts/status.sh" "$STATUS_SKILL/scripts/archive-features.sh"
 [ -f "$STATUS_SKILL/SKILL.md" ] || fail "harness-status SKILL.md missing"
 [ "$(head -1 "$STATUS_SKILL/SKILL.md")" = "---" ] || fail "harness-status SKILL.md: missing frontmatter"
 grep -q '^name: harness-status$' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: frontmatter name wrong"
@@ -364,12 +374,18 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.11.0" ] || fail "plugin version must be 3.11.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.12.0" ] || fail "plugin version must be 3.12.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"
 awk '/^## 3\.11\.0 /{on=1; next} on && /^## [0-9]/{exit} on' CHANGELOG.md | grep -q '^Upgrade:' \
   || fail "CHANGELOG: 3.11.0 entry needs an Upgrade: block (M33-005)"
+# --- M34 release notes name every M34 change (M34-013) ------------------------
+m34_entry="$(awk '/^## 3\.12\.0 /{on=1; next} on && /^## [0-9]/{exit} on' CHANGELOG.md)"
+grep -q '^Upgrade:' <<< "$m34_entry" || fail "CHANGELOG: 3.12.0 entry needs an Upgrade: block (M34-013)"
+for w in 'handoff' 'run-start.sh' 'exclusive' 'quiet.sh' 'supervisor' 'session brief' 'archive-features.sh' 'session budget' 'wait-result.sh' 'plugin'; do
+  grep -qF -- "$w" <<< "$m34_entry" || fail "CHANGELOG: 3.12.0 entry must name '$w' (M34-013)"
+done
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
@@ -397,7 +413,7 @@ done
 old_name="harness-""setup"
 [ ! -e "skills/$old_name" ] || fail "skills/$old_name still exists (renamed to harness-initial-setup)"
 # the README's one rename note ("was renamed") is the only allowed mention
-if git grep -nI -e "$old_name" -- . ':!docs/plans' ':!docs/specs' ':!PROGRESS.md' ':!FEATURES.json' | grep -v 'was renamed' | grep -q .; then
+if git grep -nI -e "$old_name" -- . ':!docs/plans' ':!docs/specs' ':!PROGRESS.md' ':!FEATURES.json' ':!docs/features-archive.json' | grep -v 'was renamed' | grep -q .; then
   fail "stale reference to the old skill name '$old_name'"
 fi
 [ -f skills/harness-initial-setup/SKILL.md ] || fail "harness-initial-setup SKILL.md missing"
@@ -454,6 +470,15 @@ done
 grep -qF 'more than 90 days ago' <<< "$(sed -n '/^### 3\.2 Doc gardening/,/^### 3\.3/p' "$PROTO")" \
   || fail "protocol 3.2: re-test rules older than 90 days and model-tagged ones on a model change"
 grep -qF 'added more than 90 days ago' skills/harness-audit/scripts/check.sh || fail "harness-audit: rule expiry WARN missing (M28-003)"
+
+# session brief (M34-009): on-demand reads, never whole files
+for f in "$CORE" skills/harness-session/SKILL.md; do
+  flat="$(tr -d '`' < "$f" | tr '\n' ' ' | tr -s ' ')"
+  grep -qF 'FEATURES.json, PROGRESS.md, ARCHITECTURE.md, PRODUCT.md' <<< "$flat" \
+    || fail "$f: must name FEATURES.json, PROGRESS.md, ARCHITECTURE.md, PRODUCT.md as read on demand (M34-009)"
+  grep -qF 'grep or sed -n ranges, never whole' <<< "$flat" \
+    || fail "$f: must say read with grep or sed -n ranges, never whole (M34-009)"
+done
 
 # --- size limits (M28-003): what every session reads stays lean ----------------
 # Raising a limit is a decision for the owner, not a session: cut first.
@@ -567,6 +592,32 @@ for f in "$TMPL_DIR/AGENTS.md.tmpl" "$SESSION_SKILL_MD" "$TMPL_DIR/FEATURES.json
 done
 grep -qF 'WAITING ON HUMAN' skills/harness-status/scripts/status.sh || fail "status.sh: waiting-on-human list missing (M29-002)"
 
+# --- orchestrators wait once, read script output only (M34-007) --------------------
+grep -qF 'wait-result.sh' skills/harness-run/SKILL.md || fail "harness-run: must name wait-result.sh (M34-007)"
+grep -qF '.harness-run/results/<id>.txt' "$SESSION_SKILL_MD" || fail "harness-session: builder's last act is the results file (M34-007)"
+for f in skills/harness-run/SKILL.md skills/harness-continuous/SKILL.md "$TMPL_DIR/harness-protocol-runs.md"; do
+  for w in 'one blocking wait per builder' 'never short polls' 'to steer a running builder' 'script output only' 'fresh conversation'; do
+    grep -qF "$w" "$f" || fail "$(basename "$(dirname "$f")")/$(basename "$f"): '$w' missing (M34-007)"
+  done
+done
+for f in skills/harness-run/SKILL.md skills/harness-continuous/SKILL.md; do
+  ! grep -qiE '^[0-9]+\. .*\b(cat|read) +(PROGRESS\.md|FEATURES\.json)' "$f" || fail "$f: an orchestrator step reads a repo file whole (M34-007)"
+done
+grep -qF 'SKILL.md, PROGRESS.md, FEATURES.json or a plan whole' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7: no-whole-file-reads rule missing (M34-007)"
+shellcheck skills/harness-run/scripts/wait-result.sh
+
+# --- session budget: 60 tool calls or about 150k context (M34-011) ------------------
+for w in '60 tool calls' '150k' 'resume point' 'session budget'; do
+  grep -qF "$w" "$CORE" || fail "protocol section 2: session budget '$w' missing (M34-011)"
+done
+grep -qF 'session budget' skills/harness-session/SKILL.md || fail "harness-session: session budget stop missing (M34-011)"
+for f in skills/harness-run/SKILL.md skills/harness-continuous/SKILL.md; do
+  grep -qF 'session budget' "$f" || fail "$f: must handle a session-budget stop (M34-011)"
+  grep -qF 'once in a fresh session' "$f" || fail "$f: session-budget stop retried once in a fresh session (M34-011)"
+  grep -qF 'same size' "$f" || fail "$f: the retry keeps the same builder size (M34-011)"
+done
+jq -e '.userConfig.session_budget_tokens.default == 150000' claude/.claude-plugin/plugin.json >/dev/null || fail "Claude edition: session_budget_tokens option missing (M34-011)"
+
 # --- paths hint and per-feature cost (M29-003) ------------------------------------
 grep -qF 'Start reading from: <paths>' "$RUN_SKILL/SKILL.md" || fail "harness-run: builder dispatch must pass the feature's paths (M29-003)"
 grep -qF 'cost.log' skills/harness-run/scripts/run-report.sh || fail "run-report.sh: dollars per feature missing (M30-002)"
@@ -616,7 +667,7 @@ jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fai
 grep -qF '.harness-run/decisions/<id>.md' "$SESSION_SKILL_MD" || fail "harness-session: must fold .harness-run/decisions/<id>.md into Decisions:"
 git check-ignore -q claude/.claude-plugin/types/x || fail ".gitignore: claude/.claude-plugin/types/ (engine-written) must be ignored"
 # M25-005: the 3.2.0 name lives on only in history and the README's upgrade note
-if git grep -nI -e 'agent-harness-kit-mods' -- . ':!docs/plans' ':!PROGRESS.md' ':!FEATURES.json' ':!scripts/e2e.sh' \
+if git grep -nI -e 'agent-harness-kit-mods' -- . ':!docs/plans' ':!PROGRESS.md' ':!FEATURES.json' ':!docs/features-archive.json' ':!scripts/e2e.sh' \
    | grep -v 'was briefly named\|plugin uninstall agent-harness-kit-mods' | grep -q .; then
   fail "stale reference to the old edition name agent-harness-kit-mods"
 fi
