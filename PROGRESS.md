@@ -1433,3 +1433,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: per the owner's answer, the word list is memory, engram, mem0, workflow, with no third-party plugin name and no pattern trick around the hygiene grep; the WARN only informs and never tells the person to change their setup. Rejected a TOML parser (grep on `[mcp_servers.*]` headers and command lines). Shortcut: Codex matching is line-based, so a multi-line command array is missed.
 - Gate: GREEN (run-gate.sh final).
 - Next: M34-013.
+
+## 2026-10-15 — session 89 (M34-013 release 3.12.0)
+
+- Branch: `m34-run`.
+- Done: M34-013. Version 3.12.0 in package.json, both plugin manifests, marketplace.json and AGENTS.md. CHANGELOG 3.12.0 entry with an Upgrade block naming every M34 change; e2e.sh checks the entry for those terms and the 3.12.0 version. Template mirror `../agent-harness-template` synced with `sync-template.sh` (uncommitted there, `--check` IN SYNC). M34 plan moved to `docs/plans/completed/`.
+- Decisions: Release notes written from the M34 feature titles, not from a diff of each change (shortcut). Left the 3.11.0 Upgrade check in e2e.sh and only moved the version check to 3.12.0. No README edit: the verify does not require one and the CHANGELOG carries the M34 notes (shortcut against the title, which says README). Mirror commit and PR left to the owner, as the plan says. Assumed the `docs/agents/harness-protocol.md` path in this repo is the template file and not a copy.
+- Gate: green (`bash scripts/e2e.sh`, exit 0, baseline and final).
+- Next: none failing. M34 is complete; the next run starts from the owner's next plan.

@@ -1637,7 +1637,7 @@
       "id": "M34-013",
       "milestone": 34,
       "title": "README and CHANGELOG for M34; release 3.12.0; template mirror synced locally",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M34-001",
         "M34-002",

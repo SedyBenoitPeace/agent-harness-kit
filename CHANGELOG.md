@@ -10,6 +10,42 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.12.0 — 2026-10-15
+
+- Run fixes (M34): handoff reuses the last green gate instead of running the
+  full gate; `--run-gate` runs it on request.
+- Each continuous run starts clean: `run-start.sh` archives the previous run's
+  state under `.harness-run/previous/`; the run report shows only the current run.
+- Decisions in the run report come from the feature's own commit or the entry
+  that marks it done, never from a planning entry.
+- Claude Code edition: run-scoped ledger, models.log for lane builders, no
+  step-up after a notes change, supervisor off by default and never for lanes.
+- Protocol 1.4: `verify` must be provable from the repo alone; harness-audit
+  WARNs on owner-only checks and on plans without `depends_on`/`paths`.
+- Optional feature field `exclusive` keeps features sharing a resource out of
+  the same parallel batch.
+- Orchestrators wait once per builder via `wait-result.sh`, never poll.
+- `quiet.sh` runs builds and tests with the full log on disk and a capped
+  summary on screen; `run-gate.sh` output is capped the same way.
+- `context.sh` prints a short session brief; the protocol reads other files on
+  demand.
+- `archive-features.sh` moves fully done milestones to
+  `docs/features-archive.json`; status, report and audit resolve archived ids.
+- Session budget: past 60 tool calls or about 150k context a builder ends
+  `blocked` with `session budget`; orchestrators retry once in a fresh session.
+- harness-audit WARNs on global memory or workflow plugins and MCP servers.
+
+Upgrade:
+- Claude Code edition: update the plugin (`claude plugin update`). Existing
+  `supervisor` behaviour changes: the done-check supervisor is now off unless
+  the `supervisor` option is set to true.
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to recopy
+  the protocol (1.4 `exclusive`, 2.4 quiet.sh, 2.5 session budget, 2.7
+  wait-result.sh); commit it as its own commit.
+- Optional: add `exclusive` to features that share a simulator, device or
+  database; run `archive-features.sh` to move finished milestones out of
+  FEATURES.json.
+
 ## 3.11.0 — 2026-10-15
 
 - Model size, separate from effort: a feature can set `model` (`small`,
