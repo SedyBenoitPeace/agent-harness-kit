@@ -1425,3 +1425,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: Context measured per builder turn as input + cache tokens of that turn (rejected: counting tool calls in the mod, the host events give no tool-call count; the 60-call limit is therefore protocol text only, not mechanically enforced). Notice only, no STOP file (rejected: stopping a builder from the mod, it cannot end a builder cleanly). Default is on at 150000, so the existing status tests stayed green only because their usage is small. Tests were written first; only the first of the two failed red (the "off" test passes vacuously). Paragraph compressed to keep the protocol at 150 lines.
 - Gate: green (`bash scripts/e2e.sh`, exit 0).
 - Next: M34-013 (after M34-012 and the lanes merge).
+
+## 2026-10-15 — session 88 (M34-012 lane merged, with M34-011)
+
+- Branch: `m34-run` (lane `lane/M34-012` 12923f7, merged with `lane/M34-011` 8aa2fde; full gate green after both merges).
+- Done: M34-012. harness-audit gives an informational WARN (never a FAIL, never an edit) for a global memory or workflow MCP server or plugin in Codex config.toml, Claude Code settings.json or Copilot mcp-config.json under `HARNESS_AUDIT_HOME` (default `$HOME`).
+- Decisions: per the owner's answer, the word list is memory, engram, mem0, workflow, with no third-party plugin name and no pattern trick around the hygiene grep; the WARN only informs and never tells the person to change their setup. Rejected a TOML parser (grep on `[mcp_servers.*]` headers and command lines). Shortcut: Codex matching is line-based, so a multi-line command array is missed.
+- Gate: GREEN (run-gate.sh final).
+- Next: M34-013.

@@ -1620,7 +1620,7 @@
       "id": "M34-012",
       "milestone": 34,
       "title": "harness-audit warns about global memory or workflow plugins and MCP servers in Codex, Claude Code and Copilot setups",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M34-005"
       ],
