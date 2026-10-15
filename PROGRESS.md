@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-15 — session 72 (M34 plan extended)
+
+- Branch: `m34-run-fixes`.
+- Done: M34 extended from the owner's review of 30 Codex sessions on the iOS project: M34-007 now waits once per builder (results file + wait-result.sh, no polling or steering), new M34-009 session brief, M34-010 archive of completed milestones, M34-011 session budget, M34-012 audit of global memory/workflow plugins; release moved to M34-013. No code yet.
+- Decisions: mechanisms over prose: the protocol already said "read only when needed" and "keep only a summary", and agents did not follow it. context.sh itself printed every milestone, so the brief starts there.
+- Gate: GREEN (bash scripts/e2e.sh, all suites).
+- Next: owner reviews the plan; then `harness-continuous` on this branch.
+
+## 2026-10-15 — session 71 (M34 plan: run fixes)
+
+- Branch: `m34-run-fixes`.
+- Done: plan `docs/plans/active/2026-10-15-m34-run-fixes.md` and M34-001…009 as `failing`. No code yet.
+- Decisions: one milestone at the owner's request, handoff fix first (M34-001, first parallel batch with M34-002 and M34-004). Scope is every problem found in the 2026-10-15 run reports and the Codex session analysis: full gate at handoff, run state carried across runs, decisions misattributed, lane models unrecorded, step-up after an owner answer, supervisor noise, owner-only checks inside verify, sequential plans, shared simulator, orchestrator and builder reading too much. Every verify is provable from the repo; nothing waits on the owner during the run.
+- Gate: GREEN (bash scripts/e2e.sh, all suites).
+- Next: owner reviews the plan; then `harness-continuous` on this branch.
+
 ## 2026-10-15 — session 71 (M32-002 Claude Code tokens in usage.log)
 
 - Branch: `m32-m33-run`.
