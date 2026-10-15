@@ -132,6 +132,25 @@ if [ -n "$bad_model" ]; then
   warn "model must be small, medium, large or a lowercase CLI alias — unknown value on: $bad_model"
 fi
 
+# Provable verify (WARN only, M34-005): a failing feature's verify must be
+# provable by a builder from the repo alone (protocol 1.4); a real session,
+# the owner's machine, hardware, a push, a PR or a human belongs in the
+# plan's "Before the run" section instead
+unprov="$(jq -r '[.features[]? | select(.status == "failing" and ((.verify? // "") | test("\\b(real session|owner|machine|device|hardware|push|pull request|PR|ask|human|manually)\\b"; "i"))) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
+if [ -n "$unprov" ]; then
+  warn "verify names something a builder cannot prove from the repo alone (real session, owner, machine, device, hardware, push, PR, human) on: $unprov — move it to the plan's Before the run section (protocol 1.4)"
+fi
+# Lanes (WARN only, M34-005): an active plan whose features declare neither
+# depends_on nor paths can only run sequentially
+for plan in docs/plans/active/*.md; do
+  [ -f "$plan" ] || continue
+  ids="$( { grep -E '^#{2,4} ' "$plan" || true; } | grep -oE 'M[0-9]+-[0-9]{3}' | sort -u | tr '\n' ' ')"
+  [ -n "$ids" ] || continue
+  if jq -e --arg ids "$ids" '($ids | split(" ")) as $i | [.features[]? | select(.id as $x | $i | index($x)) | select(has("depends_on") or has("paths"))] | length == 0' FEATURES.json >/dev/null 2>&1; then
+    warn "$plan: its features declare neither depends_on nor paths, so no two can run side by side (protocol 1.4)"
+  fi
+done
+
 # Second opinion (WARN only, M26-001): a feature names another vendor's CLI
 # to re-judge it; that CLI must be installed where the run happens
 for so_cli in $(jq -r '[.features[]? | .second_opinion? // empty] | unique | .[]' FEATURES.json 2>/dev/null || true); do

@@ -119,6 +119,13 @@ BAD   "verify": "code is clean and tested"       (not a criterion)
 for.** If you can't say how to prove it, you don't understand it yet — go
 back to the interview.
 
+**Rule: `verify` must be provable by a builder from the repo alone**
+(scripts, fixtures, tests). Anything that needs a live session, the
+owner's machine, hardware, a push, a pull request or an answer from a
+human is not a `verify`: put it in the plan's `## Before the run` section
+(§1.5), settled before the run starts, or in a step the owner does after
+it.
+
 Size each feature to be completable in one session, including its test. If
 it doesn't fit, split it and let the ids reflect the order.
 
@@ -210,6 +217,11 @@ log** section at the bottom. Every non-obvious choice made during planning
 gets a dated entry there. Plans are first-class artifacts: they are
 committed, updated as work proceeds, and moved to `docs/plans/completed/`
 by the session that finishes the plan's last feature (§2.5).
+
+Give every plan a `## Before the run` section right after its goal: what
+must be settled before any builder starts (credentials, approvals,
+hardware, answers only the owner has), or the single word "Nothing" when
+every `verify` is provable from the repo alone.
 
 Head each task section with its feature id and keep it self-contained, so
 a session reads only the section for its selected feature, never the
