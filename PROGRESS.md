@@ -1335,3 +1335,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Gate: green (`bash scripts/e2e.sh`, exit 0, version 3.11.0 checked). Baseline was green before the edits.
 - Awaiting the owner: `sync-3.10.0` (already 1 commit ahead of origin/master) and `sync-3.11.0` (stacked on it, 2257a1c) in the sibling local clone of agent-harness-template need pushing and mirror PRs. Nothing was pushed.
 - Next: M33 is complete; no failing features remain in M33.
+
+## 2026-10-15 — session 81 (M34-001 handoff reuses the last green gate)
+
+- Branch: `lane/M34-001` (parallel lane, worktree `../harness-planning-skill-M34-001`).
+- Done: M34-001. `handoff.sh` no longer runs the gate by default: an unchanged tree (same fingerprint as `run-gate.sh` records, PROGRESS.md and docs/plans/ ignored) prints `GATE: green (last green run, unchanged)`; a changed tree is still READY with `NOTE: gate not confirmed ...`; `--run-gate` runs the gate (red or missing = BLOCKED); `--skip-gate` still works with a WARNING. SKILL.md and README describe the three cases. Red first: `test-handoff.sh` was rewritten with a stub gate that logs each call and failed on the missing NOTE, then went green.
+- Decisions: Copied the ~8-line fingerprint function into `handoff.sh` instead of calling `harness-session/scripts/run-gate.sh`, so the handoff skill stays self-contained (rejected: cross-skill path coupling; cost: the recipe exists twice and must change together). `--skip-gate` keeps the WARNING prefix rather than the plain NOTE, since the old test and callers match on it; the text matches the NOTE. Assumed the fixture-tested green file path (`git rev-parse --git-path harness-gate-green`) is stable. Added a shellcheck SC2016 disable on the stub-gate printf (the literal `${GATE_LOG}` is intended).
+- Gate: green (`bash scripts/e2e.sh`, exit 0).
+- Next: M34-002 and M34-004 (other lanes), then M34-003.

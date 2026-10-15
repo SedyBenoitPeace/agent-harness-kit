@@ -1416,7 +1416,7 @@
       "id": "M34-001",
       "milestone": 34,
       "title": "Handoff reuses the last green gate instead of running the full gate; --run-gate runs it on request",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-005"
       ],

@@ -1,6 +1,6 @@
 ---
 name: harness-handoff
-description: Use when ending a work session, switching to another AI agent (Codex, Cursor, Gemini, another Claude), or asked to "hand off", "prepare the repo for the next agent", or "end the session properly" on a repo using the long-running-agent harness — verifies the session-end ritual (clean tree, green gate, logged session) via a deterministic script and prints a paste-ready prompt telling the next agent exactly which one feature to build.
+description: Use when ending a work session, switching to another AI agent (Codex, Cursor, Gemini, another Claude), or asked to "hand off", "prepare the repo for the next agent", or "end the session properly" on a repo using the long-running-agent harness — verifies the session-end ritual (clean tree, gate status, logged session) via a deterministic script and prints a paste-ready prompt telling the next agent exactly which one feature to build.
 ---
 
 # Harness Handoff
@@ -26,9 +26,12 @@ vendor it is. The mechanical checks and the prompt live in
 3. Tell them how to feed it: paste into any agent chat, or from a
    terminal `codex "<prompt>"` / `codex exec "<prompt>"` — Codex and
    most CLIs also read AGENTS.md natively, so the prompt is sufficient.
-4. Offer `--skip-gate` only when the human explicitly accepts an
-   unverified baseline (it prints a WARNING; the next agent must run the
-   gate first).
+4. The gate is not run by default. The script reuses the last green gate:
+   unchanged tree prints `GATE: green (last green run, unchanged)`; a
+   changed tree prints a NOTE that the gate is not confirmed (still READY;
+   the next session's baseline gate runs it). Offer `--run-gate` only when
+   the human wants the full gate now (red = BLOCKED). `--skip-gate` prints
+   the same not-confirmed warning without checking.
 5. Handoff is read-only. Fixing blockers is the human's call — offer,
    don't act unilaterally.
 
