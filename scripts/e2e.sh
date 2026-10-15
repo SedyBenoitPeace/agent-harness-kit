@@ -567,6 +567,20 @@ for f in "$TMPL_DIR/AGENTS.md.tmpl" "$SESSION_SKILL_MD" "$TMPL_DIR/FEATURES.json
 done
 grep -qF 'WAITING ON HUMAN' skills/harness-status/scripts/status.sh || fail "status.sh: waiting-on-human list missing (M29-002)"
 
+# --- orchestrators wait once, read script output only (M34-007) --------------------
+grep -qF 'wait-result.sh' skills/harness-run/SKILL.md || fail "harness-run: must name wait-result.sh (M34-007)"
+grep -qF '.harness-run/results/<id>.txt' "$SESSION_SKILL_MD" || fail "harness-session: builder's last act is the results file (M34-007)"
+for f in skills/harness-run/SKILL.md skills/harness-continuous/SKILL.md "$TMPL_DIR/harness-protocol-runs.md"; do
+  for w in 'one blocking wait per builder' 'never short polls' 'to steer a running builder' 'script output only' 'fresh conversation'; do
+    grep -qF "$w" "$f" || fail "$(basename "$(dirname "$f")")/$(basename "$f"): '$w' missing (M34-007)"
+  done
+done
+for f in skills/harness-run/SKILL.md skills/harness-continuous/SKILL.md; do
+  ! grep -qiE '^[0-9]+\. .*\b(cat|read) +(PROGRESS\.md|FEATURES\.json)' "$f" || fail "$f: an orchestrator step reads a repo file whole (M34-007)"
+done
+grep -qF 'SKILL.md, PROGRESS.md, FEATURES.json or a plan whole' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7: no-whole-file-reads rule missing (M34-007)"
+shellcheck skills/harness-run/scripts/wait-result.sh
+
 # --- paths hint and per-feature cost (M29-003) ------------------------------------
 grep -qF 'Start reading from: <paths>' "$RUN_SKILL/SKILL.md" || fail "harness-run: builder dispatch must pass the feature's paths (M29-003)"
 grep -qF 'cost.log' skills/harness-run/scripts/run-report.sh || fail "run-report.sh: dollars per feature missing (M30-002)"

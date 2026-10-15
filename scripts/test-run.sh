@@ -269,7 +269,7 @@ git -C "$R2" check-ignore -q .harness-run || fail "run-start: .harness-run not i
 [ -z "$(git -C "$R2" status --short)" ] || fail "run-start: tree must be clean after (ignore rule committed)"
 cd "$R2/.harness-run"
 printf 'M1-001 9.99\n' > cost.log; printf 'a 1\n' > run-cost; printf 'M1-001 small model small\n' > models.log
-printf 's c m 1 2 3\n' > usage.log; printf 'budget x\n' > budget.log; mkdir decisions; echo d > decisions/M1-001.md
+printf 's c m 1 2 3\n' > usage.log; printf 'budget x\n' > budget.log; mkdir decisions; echo d > decisions/M1-001.md; mkdir results
 echo M1-002 > skip; touch STOP
 cd "$OLDPWD"
 g2 commit -q --allow-empty -m "run 1 work"
@@ -278,11 +278,26 @@ bash "$START_SH" "$R2" >/dev/null || fail "run-start: second run failed"
 [ "$(cat "$R2/.harness-run/start")" = "$second" ] || fail "run-start: second start should be new HEAD"
 [ ! -s "$R2/.harness-run/skip" ] || fail "run-start: skip must be empty"
 [ ! -e "$R2/.harness-run/STOP" ] || fail "run-start: stale STOP must be removed"
-for f in cost.log run-cost models.log usage.log budget.log decisions; do
+for f in cost.log run-cost models.log usage.log budget.log decisions results; do
   [ ! -e "$R2/.harness-run/$f" ] || fail "run-start: $f not moved out of the live run"
   [ -e "$R2/.harness-run/previous/$first/$f" ] || fail "run-start: $f not archived under previous/<first start>"
 done
 (cd "$R2" && bash "$REPORT" "$second" --stop-reason x >/dev/null) || fail "run-start: report after second start failed"
 ! grep -rq '9.99' "$R2/docs/runs" || fail "run-start: report shows the first run's cost"
+
+# M34-007: wait-result.sh blocks in the shell, prints the result file once, silent while waiting
+WAIT="skills/harness-run/scripts/wait-result.sh"
+[ -f "$WAIT" ] || fail "wait-result.sh missing"
+W="$(mktemp -d)"; mkdir -p "$W/.harness-run/results"
+( cd "$W"; sleep 2; printf 'SESSION: X-1 · passing · gate green · abc\nsummary\n' > .harness-run/results/X-1.tmp; mv .harness-run/results/X-1.tmp .harness-run/results/X-1.txt ) &
+t0=$(date +%s)
+out="$(cd "$W" && bash "$OLDPWD/$WAIT" X-1 --timeout 20 2>&1)" || fail "wait-result: should exit 0 once the file appears"
+t1=$(date +%s)
+[ "$((t1 - t0))" -lt 10 ] || fail "wait-result: did not return soon after the file appeared"
+[ "$out" = "$(printf 'SESSION: X-1 · passing · gate green · abc\nsummary')" ] || fail "wait-result: output must be exactly the result file (nothing while waiting)"
+wait
+if (cd "$W" && bash "$OLDPWD/$WAIT" X-2 --timeout 2 >"$W/o" 2>/dev/null); then fail "wait-result: timeout must exit non-zero"; fi
+[ ! -s "$W/o" ] || fail "wait-result: no stdout on timeout"
+rm -rf "$W"
 
 echo "RUN TESTS GREEN"

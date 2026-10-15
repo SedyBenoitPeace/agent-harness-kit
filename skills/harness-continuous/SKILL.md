@@ -53,7 +53,9 @@ permissions only — never a skip-all-permissions flag.
    no push) and continue; beyond the range, stop.
 3. Dispatch and verify exactly as harness-run Workflow steps 3–5 (the agent
    harness-run's `scripts/dispatch.sh` names, `harness-builder-<size>` or `harness-builder`,
-   with the retry step-up and models.log line, its `SESSION:` line, then `status.sh --skip
+   with the retry step-up and models.log line, its single wait for the `SESSION:` line
+   (one blocking wait per builder, never short polls, never send a message to steer a running builder,
+   script output only, a fresh conversation on resume), then `status.sh --skip
    .harness-run/skip` and `git status --short` as proof), including its
    Evaluator step and Parallel lanes. A blocked parallel lane becomes a skip.
 4. Verified (`NEXT` no longer names the id, tree clean) → print

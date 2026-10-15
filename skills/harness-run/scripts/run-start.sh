@@ -14,7 +14,7 @@ fi
 d=.harness-run; mkdir -p "$d"
 if [ -s "$d/start" ]; then
   p="$d/previous/$(cat "$d/start")"
-  for f in cost.log run-cost models.log usage.log budget.log decisions; do
+  for f in cost.log run-cost models.log usage.log budget.log decisions results; do
     [ -e "$d/$f" ] || continue
     mkdir -p "$p"; mv "$d/$f" "$p/"
   done

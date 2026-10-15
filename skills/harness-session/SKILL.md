@@ -84,6 +84,10 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 11. End with this one-line summary as your last output (harness-run
     parses it; a blocked session stops at the blocker and still prints it):
     `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
+    Dispatched by harness-run? Your very last act, before that output, is
+    writing the same line plus at most 10 lines of summary to
+    `.harness-run/results/<id>.txt` (create the folder; write to a temp
+    name and `mv`, so the orchestrator's wait never reads half a file).
 
 ## Red flags
 
