@@ -97,7 +97,9 @@ for src in "$here"/agents/src/*.md; do
       else rm -f "$target/.github/agents/$name-$z.agent.md"; fi
       if [ "$has_codex" -eq 3 ]; then
         {
-          printf 'name = "%s-%s"\ndescription = "%s"\nmodel = "%s"\n' "$name" "$z" "$desc" "$(size_of codex "$z")"
+          # Codex: a file value wins over spawn and a model-only file keeps the
+          # parent's effort, so pin it; medium for every size (size != effort)
+          printf 'name = "%s-%s"\ndescription = "%s"\nmodel = "%s"\nmodel_reasoning_effort = "medium"\n' "$name" "$z" "$desc" "$(size_of codex "$z")"
           printf "developer_instructions = '''\n"
           body "$src"
           printf "'''\n"

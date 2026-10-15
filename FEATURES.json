@@ -1357,7 +1357,7 @@
       "id": "M33-003",
       "milestone": 33,
       "title": "Optional per-repo size map (docs/agents/model-sizes.json) and per-size builder agents from gen-agents.sh for each CLI that can set a model",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-001"
       ],

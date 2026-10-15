@@ -134,3 +134,13 @@ build below `medium`. A retry or an evaluator rejection steps up one size.
      per-size files (`harness-builder-small`/`-medium`/`-large`), each with
      its model line and an effort line, and leave `harness-builder` with no
      model line.
+- 2026-10-15 (M33-003 session): sized builders and effort. Codex sized
+  files carry `model_reasoning_effort = "medium"` for all three sizes: size
+  and effort are separate (any size with any effort), and a pinned value
+  keeps a Codex builder from inheriting whatever the parent runs at. The
+  per-feature effort still reaches it as "Effort: <level>." in the prompt
+  (M33-004). Copilot files get only `model`: Copilot agent files have no
+  effort property. Claude Code sized files get only `model`: the edition's
+  hook picks the model, and a fixed `effort:` there could override the
+  per-feature effort that M33-002 keeps in charge. `harness-builder` has
+  no model line on any CLI.

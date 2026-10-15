@@ -68,7 +68,7 @@ for z in small:haiku medium:sonnet large:opus; do
   [ -f "$f" ] || fail "claude: missing harness-builder-${z%%:*}"
   grep -qx "name: harness-builder-${z%%:*}" "$f" || fail "claude sized builder name wrong"
   grep -qx "model: ${z##*:}" "$f" || fail "claude ${z%%:*} must be model: ${z##*:}"
-  grep -q '^effort:' "$f" && fail "sized builder must have no effort line"
+  grep -q '^effort:' "$f" && fail "claude sized builder must have no effort line (the per-feature effort stays in charge)"
   grep -q '^tools:' "$f" && fail "sized builder must keep full tools"
 done
 ls "$t"/.github/agents/harness-builder-* "$t"/.codex/agents/harness-builder-* >/dev/null 2>&1 \
@@ -86,8 +86,12 @@ for z in small:S medium:M large:L; do
   grep -q "^developer_instructions = '''" "$x" || fail "codex $zz instructions"
   grep -qx "model: Fixture Copilot $k" "$g" || fail "copilot $zz model line"
   grep -qx "name: harness-builder-$zz" "$g" || fail "copilot $zz name"
-  grep -Eq '^(effort|model_reasoning_effort)' "$x" "$g" && fail "sized builder has effort"
+  # Codex: the file value wins over spawn, so each sized file pins its effort
+  [ "$(grep -c '^model_reasoning_effort' "$x")" -eq 1 ] || fail "codex $zz needs one effort line"
+  grep -qx 'model_reasoning_effort = "medium"' "$x" || fail "codex $zz effort must be medium"
+  grep -Eq '^(effort|model_reasoning_effort)' "$g" && fail "copilot has no per-agent effort"
 done
+grep -q '^model' "$s2/.codex/agents/harness-builder.toml" "$s2/.github/agents/harness-builder.agent.md" "$s2/.claude/agents/harness-builder.md" && fail "base harness-builder must have no model line"
 cmp -s "$t/.codex/agents/harness-builder.toml" "$s2/.codex/agents/harness-builder.toml" || fail "base codex builder must be unchanged by a map"
 cmp -s "$t/.github/agents/harness-builder.agent.md" "$s2/.github/agents/harness-builder.agent.md" || fail "base copilot builder must be unchanged by a map"
 # removing the map removes the stale sized files
