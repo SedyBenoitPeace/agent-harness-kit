@@ -1449,3 +1449,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: rejected "newest matching entry" (it depends on PROGRESS.md order too: the M34-003 fixture is newest-first, this repo is oldest-first); the done commit's own diff is order-free. Lane merges are read against their first parent so the lane's entry and commit body count. Combined entries (one entry naming two lane features) still give both the same line.
 - Gate: GREEN (run-gate.sh final).
 - Next: M35-002 (README, template mirror).
+
+## 2026-10-15 — session 91 (M35-002 README for M34, template mirror)
+
+- Branch: `m34-run`.
+- Done: M35-002. README documents the M34 changes (session brief, quiet.sh, session budget and its Claude Code notice, audit warnings incl. the informational global-plugin one, supervisor off by default and never for lanes, notes-aware step-up, run-scoped ledger, run-start.sh, one wait per builder, `exclusive`, archive-features.sh, repo layout); CHANGELOG 3.12.0 names M35. Template mirror synced (`sync-template.sh --check`: IN SYNC) and committed on its open `sync-3.11.0` branch, so its PR covers 3.10.0–3.12.0.
+- Decisions: added the 3.12.0 sync to the mirror's open PR branch instead of a new branch off master (a new branch would repeat that PR's 3.10/3.11 changes and conflict with it). Session budget's unenforced 60-call limit left for later (owner).
+- Gate: GREEN (run-gate.sh final).
+- Next: none; owner merges the PRs.

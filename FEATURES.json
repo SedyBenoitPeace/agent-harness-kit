@@ -16,6 +16,21 @@
         "skills/harness-run/scripts/run-report.sh",
         "scripts/test-run.sh"
       ]
+    },
+    {
+      "id": "M35-002",
+      "milestone": 35,
+      "title": "README documents every M34 change; template mirror synced to 3.12.0 and its PR updated",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0; README names the session brief, quiet.sh, session budget, audit warnings, supervisor default, run-start.sh, wait-result.sh, exclusive and archive-features.sh; sync-template.sh ../agent-harness-template --check prints IN SYNC",
+      "effort": "low",
+      "depends_on": [
+        "M35-001"
+      ],
+      "paths": [
+        "README.md",
+        "CHANGELOG.md"
+      ]
     }
   ]
 }

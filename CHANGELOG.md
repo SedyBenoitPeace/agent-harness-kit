@@ -17,7 +17,8 @@ agent-harness-template>` and open a PR there; gate green; PR.
 - Each continuous run starts clean: `run-start.sh` archives the previous run's
   state under `.harness-run/previous/`; the run report shows only the current run.
 - Decisions in the run report come from the feature's own commit or the entry
-  that marks it done, never from a planning entry.
+  that commit added (a lane merge: against its first parent), never from a
+  planning entry, whatever order PROGRESS.md uses (M35-001).
 - Claude Code edition: run-scoped ledger, models.log for lane builders, no
   step-up after a notes change, supervisor off by default and never for lanes.
 - Protocol 1.4: `verify` must be provable from the repo alone; harness-audit
@@ -33,7 +34,9 @@ agent-harness-template>` and open a PR there; gate green; PR.
   `docs/features-archive.json`; status, report and audit resolve archived ids.
 - Session budget: past 60 tool calls or about 150k context a builder ends
   `blocked` with `session budget`; orchestrators retry once in a fresh session.
-- harness-audit WARNs on global memory or workflow plugins and MCP servers.
+- harness-audit WARNs, for information only, on global memory or workflow
+  plugins and MCP servers; it never edits your setup.
+- README documents all of the above (M35-002).
 
 Upgrade:
 - Claude Code edition: update the plugin (`claude plugin update`). Existing
