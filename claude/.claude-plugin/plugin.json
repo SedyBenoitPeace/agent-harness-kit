@@ -30,6 +30,12 @@
       "description": "Dollars a whole unattended run may cost before it is asked to stop after the current feature. 0 = no limit.",
       "default": 50
     },
+    "supervisor": {
+      "type": "boolean",
+      "title": "Done-check supervisor",
+      "description": "After a builder's SESSION line, check the session against the feature's verify with a cheap model call. Never judges parallel lanes.",
+      "default": false
+    },
     "route_models": {
       "type": "boolean",
       "title": "Choose builder models",

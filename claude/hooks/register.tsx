@@ -22,6 +22,7 @@ import {
   RUN_DIR,
   runCostText,
   type RunSpend,
+  PARALLEL_LANE,
   skippedFile,
   skippedPath,
   type Tokens,
@@ -53,6 +54,10 @@ async function showStatus($: EngineInterface, shown: LineState, featureBase: num
 // running through it (any subagent, or the orchestrator alone), and keep the
 // run's split in .harness-run/run-cost for run-report.sh.
 type Ledger = { running: Set<string>; spend: RunSpend; lastCost?: number }
+const sessionCost = ($: EngineInterface) => $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
+async function runStart($: EngineInterface) {
+  return (await $.fs.exists(`${RUN_DIR}/start`)) ? await $.fs.read(`${RUN_DIR}/start`) : undefined
+}
 async function tally($: EngineInterface, l: Ledger) {
   const cost = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
   if (cost === undefined) return
@@ -75,10 +80,29 @@ export const register: Register = (on, options) => {
   const measured = new Set<string>() // features whose cost is logged since their builder started
   const shown: { feature?: string; model?: string; notice?: string } = {} // what the status line shows (M30-003)
   const route = options.route_models !== false
+  const supervisor = options.supervisor === true // M34-004: off by default
+  const lanes = new Set<string>() // parallel-lane builders, never judged
   const floor = typeof options.model_floor === 'string' ? options.model_floor : 'haiku'
   // M31-001 — the run's cost split: agents running vs the orchestrator alone
   const ledger: Ledger = { running: new Set(), spend: { agents: 0, orchestration: 0 } }
 
+
+  // M34-004 — a new .harness-run/start is a new run: its dollars, budgets and
+  // pending builder usage count from here, not from the run before it.
+  let seenStart: string | undefined
+  const applyStart = (start: string | undefined, cost: number | undefined) => {
+    if (start === seenStart) return
+    seenStart = start
+    if (start === undefined) return
+    ledger.spend = { agents: 0, orchestration: 0 }
+    ledger.lastCost = cost
+    runBase = cost
+    featureBase = cost
+    isRunFlagged = false
+    isFeatureFlagged = false
+    builderTokens.clear()
+    measured.clear()
+  }
 
   on('session.start', async ($, e, next) => {
     const started = await next(e)
@@ -89,6 +113,7 @@ export const register: Register = (on, options) => {
       featureBase = await $.session.usage().then(u => u.cost?.usd).catch(() => undefined)
       ledger.lastCost = featureBase
       if (await $.fs.exists(`${RUN_DIR}/start`)) runBase = featureBase
+      seenStart = await runStart($)
       await showStatus($, shown, featureBase, featureBudget)
     }
     await $.command.register({ name: 'harness', description: 'Harness status: milestones, next feature, what waits on you, cost (no model call)' })
@@ -108,7 +133,10 @@ export const register: Register = (on, options) => {
   // rejection; the evaluator and sensitive features never below sonnet.
   // The main session, forks, teammates and workflow agents are left alone.
   on('agent.spawn', async ($, e, next) => {
-    if (isHarnessed && !e.fork) await tally($, ledger)
+    if (isHarnessed && !e.fork) {
+      applyStart(await runStart($), await sessionCost($))
+      await tally($, ledger)
+    }
     const track = <T,>(started: T) => {
       const id = (started as { agentId?: unknown } | undefined)?.agentId
       if (isHarnessed && !e.fork && typeof id === 'string') ledger.running.add(id)
@@ -121,12 +149,14 @@ export const register: Register = (on, options) => {
     const choice = chooseModel(e, features, log, floor)
     if (!choice) return track(await next(e))
     const started = track(await next({ ...e, model: choice.model }))
+    const laneId = (started as { agentId?: unknown } | undefined)?.agentId
+    if (PARALLEL_LANE.test(e.prompt) && typeof laneId === 'string') lanes.add(laneId)
     if (choice.feature) {
       shown.feature = choice.feature
       shown.model = choice.model
       await showStatus($, shown, featureBase, featureBudget)
       measured.delete(choice.feature)
-      await $.fs.write(logPath, log + modelsLine(choice))
+      await $.fs.write(logPath, log + modelsLine(choice, features))
       if (!(await $.fs.exists(`${RUN_DIR}/.gitignore`))) await $.fs.write(`${RUN_DIR}/.gitignore`, '*\n')
     }
     return started
@@ -151,6 +181,7 @@ export const register: Register = (on, options) => {
   on('turn.complete', async ($, e, next) => {
     const result = await next(e)
     if (!isHarnessed) return result
+    applyStart(await runStart($), await sessionCost($))
     await tally($, ledger)
     if (e.agentId !== undefined) ledger.running.delete(e.agentId)
     const line = parseSessionLine(e.answer)
@@ -216,7 +247,7 @@ export const register: Register = (on, options) => {
     }
 
     await showStatus($, shown, featureBase, featureBudget)
-    if (!line) return result
+    if (!line || !supervisor || (e.agentId !== undefined && lanes.has(e.agentId))) return result
     // One check per feature outcome: an orchestrator echoing a builder's
     // SESSION line must not pay for a second check.
     const key = `${line.feature} ${line.outcome}`

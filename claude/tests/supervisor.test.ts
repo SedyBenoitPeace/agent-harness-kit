@@ -6,8 +6,10 @@ const SESSION_OK = 'Done.\nSESSION: M1-001 · passing · gate green · abc123'
 const SKIPPED = '{"done": true, "blocked": false, "skipped_work": ["no test for the empty-name case"]}'
 const CLEAN = '{"done": true, "blocked": false, "skipped_work": []}'
 
+const ON = { options: { supervisor: true } }
+
 describe('done-check supervisor (M25-002)', () => {
-  test('main loop: forks once against verify, writes skipped work, sets a status', async ($, on) => {
+  test('main loop: forks once against verify, writes skipped work, sets a status', ON, async ($, on) => {
     const w = world(on, { 'FEATURES.json': FEATURES })
     const m = models(on, SKIPPED)
     await $.session.start(START)
@@ -20,7 +22,7 @@ describe('done-check supervisor (M25-002)', () => {
     expect(w.statuses.at(-1)).toContain('skipped 1')
   })
 
-  test('builder subagent: reads its own messages and completes, not forks', async ($, on) => {
+  test('builder subagent: reads its own messages and completes, not forks', ON, async ($, on) => {
     const w = world(on, { 'FEATURES.json': FEATURES })
     const m = models(on, CLEAN)
     await $.session.start(START)
@@ -33,7 +35,7 @@ describe('done-check supervisor (M25-002)', () => {
     expect(w.statuses.at(-1)).toContain('done')
   })
 
-  test('does nothing for a turn without a SESSION line', async ($, on) => {
+  test('does nothing for a turn without a SESSION line', ON, async ($, on) => {
     const w = world(on, { 'FEATURES.json': FEATURES })
     const m = models(on, CLEAN)
     await $.session.start(START)
@@ -42,7 +44,7 @@ describe('done-check supervisor (M25-002)', () => {
     expect(w.statuses.some(x => x?.includes('supervisor'))).toBe(false)
   })
 
-  test('does nothing outside a harnessed repo', async ($, on) => {
+  test('does nothing outside a harnessed repo', ON, async ($, on) => {
     world(on, {})
     const m = models(on, CLEAN)
     await $.session.start(START)
@@ -50,7 +52,7 @@ describe('done-check supervisor (M25-002)', () => {
     expect(m.fork.length + m.complete.length).toBe(0)
   })
 
-  test('an unparseable verdict writes nothing and says so', async ($, on) => {
+  test('an unparseable verdict writes nothing and says so', ON, async ($, on) => {
     const w = world(on, { 'FEATURES.json': FEATURES })
     models(on, 'I think it is fine')
     await $.session.start(START)
@@ -59,7 +61,7 @@ describe('done-check supervisor (M25-002)', () => {
     expect(w.statuses.at(-1)).toContain('no verdict')
   })
 
-  test('never writes outside .harness-run/', async ($, on) => {
+  test('never writes outside .harness-run/', ON, async ($, on) => {
     const w = world(on, { 'FEATURES.json': FEATURES })
     models(on, SKIPPED)
     await $.session.start(START)
@@ -68,7 +70,7 @@ describe('done-check supervisor (M25-002)', () => {
     expect(Object.keys(w.files).filter(p => p !== 'FEATURES.json').every(p => p.startsWith('.harness-run/'))).toBe(true)
   })
 
-  test('checks a feature once even when the orchestrator echoes its SESSION line', async ($, on) => {
+  test('checks a feature once even when the orchestrator echoes its SESSION line', ON, async ($, on) => {
     world(on, { 'FEATURES.json': FEATURES })
     const m = models(on, CLEAN)
     await $.session.start(START)
