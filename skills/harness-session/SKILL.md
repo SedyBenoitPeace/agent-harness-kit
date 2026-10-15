@@ -17,6 +17,10 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    target repo root. If you were handed a plan file, this still applies:
    the plan's tasks are executed one per session, and `context.sh`
    selects which one.
+   The report is the whole start: current milestone, `NEXT` in full, its
+   plan section, the newest `PROGRESS.md` entry. Read FEATURES.json,
+   PROGRESS.md, ARCHITECTURE.md, PRODUCT.md and plans on demand with `grep`
+   or `sed -n` ranges, never whole.
    - Exit 3 / 2 → relayed from harness-status: not initialized or broken.
      Offer harness-initial-setup / harness-audit, STOP.
 2. If the report ends with `UPGRADE: offer`, the repo was scaffolded by

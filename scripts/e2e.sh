@@ -459,6 +459,15 @@ grep -qF 'more than 90 days ago' <<< "$(sed -n '/^### 3\.2 Doc gardening/,/^### 
   || fail "protocol 3.2: re-test rules older than 90 days and model-tagged ones on a model change"
 grep -qF 'added more than 90 days ago' skills/harness-audit/scripts/check.sh || fail "harness-audit: rule expiry WARN missing (M28-003)"
 
+# session brief (M34-009): on-demand reads, never whole files
+for f in "$CORE" skills/harness-session/SKILL.md; do
+  flat="$(tr -d '`' < "$f" | tr '\n' ' ' | tr -s ' ')"
+  grep -qF 'FEATURES.json, PROGRESS.md, ARCHITECTURE.md, PRODUCT.md' <<< "$flat" \
+    || fail "$f: must name FEATURES.json, PROGRESS.md, ARCHITECTURE.md, PRODUCT.md as read on demand (M34-009)"
+  grep -qF 'grep or sed -n ranges, never whole' <<< "$flat" \
+    || fail "$f: must say read with grep or sed -n ranges, never whole (M34-009)"
+done
+
 # --- size limits (M28-003): what every session reads stays lean ----------------
 # Raising a limit is a decision for the owner, not a session: cut first.
 [ "$(wc -l < "$CORE")" -le 150 ] || fail "harness-protocol.md (session core) exceeds 150 lines — move text to a part read only when needed, or cut"

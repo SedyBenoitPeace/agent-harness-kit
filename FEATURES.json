@@ -1558,7 +1558,7 @@
       "id": "M34-009",
       "milestone": 34,
       "title": "context.sh prints a short session brief (current milestone, NEXT entry, its plan section, newest PROGRESS entry); protocol: other files on demand with grep/sed -n, never whole",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M34-006"
       ],

@@ -3,6 +3,14 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-15 -- session 73 (M34-009 session brief)
+
+- Branch: `m34-run`.
+- Done: M34-009. context.sh now filters status.sh output: completed milestones collapse to one line (`M0-M33 complete (34 milestones)`), the current milestone keeps its line, NEXT_NOTES and NEXT's plan section (heading naming its id, max 30 lines) are added. Protocol 2.1 and harness-session say FEATURES.json, PROGRESS.md, ARCHITECTURE.md, PRODUCT.md and plans are read with grep or sed -n, never whole; e2e.sh checks both.
+- Decisions: rejected changing status.sh (harness-status and run reports share it; M34-010 will touch it), so context.sh filters instead. Assumed "current milestone" = every milestone not fully passing. Protocol was at the 150-line cap, so the 2.1 list was rewritten in place. The new test was run against the old context.sh and failed there, as intended.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: M34-010.
+
 ## 2026-10-15 — session 72 (M34 plan extended)
 
 - Branch: `m34-run-fixes`.

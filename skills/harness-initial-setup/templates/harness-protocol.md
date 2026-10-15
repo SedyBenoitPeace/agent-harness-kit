@@ -21,11 +21,11 @@ is what keeps every session recoverable and every commit reviewable.
 
 ### 2.1 Recover context
 
-In this order, before anything else:
-
-1. `git log -20` — what actually happened recently.
-2. `PROGRESS.md` — what the last session did, and what it said comes next.
-3. `FEATURES.json` — read `_instructions`, then the feature list.
+Start from the session brief (`context.sh`: current milestone, NEXT, its
+plan section, newest PROGRESS entry, recent commits). `FEATURES.json`,
+`PROGRESS.md`, `ARCHITECTURE.md`, `PRODUCT.md` and plans are read on demand
+with `grep` or `sed -n` ranges, never whole. Without the script: `git log -20`,
+the newest `PROGRESS.md` entry, then the NEXT entry in `FEATURES.json`.
 
 Trust the repo over your assumptions. If PROGRESS.md and the git log
 disagree, the git log wins; note the discrepancy in your session entry.

@@ -315,4 +315,28 @@ echo "$out" | grep -q '^NEXT: M3-001' || fail "context --skip: NEXT not passed t
 echo "$out" | grep -q 'PLAN: none mentioning M3-001' || fail "context --skip: PLAN should follow the eligible feature"
 echo "$out" | grep -q '^PARALLEL: none' || fail "context --skip: PARALLEL should be none"
 
+# 10. session brief (M34-009): 30 completed milestones stay one line; NEXT's
+#     full entry, its plan section and only the newest PROGRESS entry show
+mkdir -p "$WORK/brief/docs/plans/active"
+{
+  printf '{"milestones":{'
+  for i in $(seq 0 29); do printf '"%s":"Done %s",' "$i" "$i"; done
+  printf '"30":"Current"},"features":['
+  for i in $(seq 0 29); do printf '{"id":"M%s-001","milestone":%s,"title":"t","status":"passing","verify":"x"},' "$i" "$i"; done
+  printf '{"id":"M30-001","milestone":30,"title":"cur","status":"failing","verify":"VERIFYTEXT","notes":"NOTETEXT","paths":["src/a/"]}]}'
+} > "$WORK/brief/FEATURES.json"
+printf '## 2026-02 -- session 31\n- NEWEST.\n\n## 2026-01 -- session 30\n- OLDER.\n' > "$WORK/brief/PROGRESS.md"
+{ printf '# Plan\n\n## M29-001 other\n- OTHERSECTION\n\n## M30-001 current\n- PLANSECTION\n'; } > "$WORK/brief/docs/plans/active/p.md"
+git -C "$WORK/brief" init -q -b main
+git -C "$WORK/brief" -c user.email=t@t -c user.name=t add -A
+git -C "$WORK/brief" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$CONTEXT" "$WORK/brief")" || fail "brief: expected exit 0"
+[ "$(echo "$out" | wc -l)" -lt 80 ] || fail "brief: output must stay under 80 lines"
+[ "$(echo "$out" | grep -c '^M[0-9]*: ')" -eq 1 ] || fail "brief: only the current milestone gets its own line"
+echo "$out" | grep -q '^M0-M29 complete (30 milestones)' || fail "brief: completed milestones must be one line"
+for w in VERIFYTEXT NOTETEXT 'paths: src/a/' PLANSECTION NEWEST; do
+  echo "$out" | grep -q "$w" || fail "brief: missing $w"
+done
+if echo "$out" | grep -qE 'OTHERSECTION|OLDER'; then fail "brief: leaked another plan section or older PROGRESS entry"; fi
+
 echo "SESSION TESTS GREEN"
