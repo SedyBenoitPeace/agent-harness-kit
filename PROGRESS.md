@@ -1238,3 +1238,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: total = input + output (cached is a share of input, not added). Humanising uses integer math (round half up, `1.2M`/`85k`), no printf float, so BWK awk and bash 3.2 stay deterministic. By-model line is a union of cost models and usage models, so orchestration's model shows even with no cost entry; matching is by exact model name, so a cost.log model name differing from the CLI's reported name shows as two entries (shortcut, not reconciled). Rejected: a second awk pass appending tokens only to existing cost entries (would hide the orchestrator's model).
 - Gate: green.
 - Next: M32-002 (Claude Code hooks write usage.log).
+
+## 2026-10-15 — session 72 (M32 parallel lanes, unattended)
+
+- Branch: `m32-m33-run` (harness-continuous through M33).
+- Done: M32-004 (lane, dff5342): `usage-copilot.sh` collects Copilot tokens per feature from SESSION lines, the rest is orchestration; `scripts/test-usage-copilot.sh` reproduces the fixture totals.
+- Decisions: M32-004: per-record timestamp filtering against the start commit time (rejected whole-session created_at; rejected session.shutdown totals: absent in crashed sessions, no per-feature split). jq required; repo match on workspace.yaml cwd/git_root only; env overrides COPILOT_HOME and HARNESS_USAGE_REPO for the fixture; premium cross-check not implemented.
+- Skipped: M32-002 (lane/M32-002 kept, d6c511c): verify needs an observation from a real Claude Code session; question in its notes. M32-003 (lane/M32-003, e4dcaf3) merged red on the gate's personal-path check (`$W/home/...` in test-usage-codex.sh matches `/home/[a-z]`); merge dropped, redone sequentially next.
+- Gate: green.
