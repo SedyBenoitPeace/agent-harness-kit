@@ -316,6 +316,11 @@ grep -q 'reaching 2' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: STOP-a
 
 shellcheck skills/harness-run/scripts/run-report.sh
 bash scripts/test-run.sh
+# M32: every CLI's usage collector test (added by its own feature)
+for t in scripts/test-usage-*.sh; do
+  [ -f "$t" ] || continue
+  bash "$t"
+done
 
 # --- agents (M18) --------------------------------------------------------
 

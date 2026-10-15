@@ -1226,7 +1226,7 @@
       "id": "M32-001",
       "milestone": 32,
       "title": "Run report reads .harness-run/usage.log: tokens per feature, run total split by agents and orchestration, tokens by model; harness-continuous runs the CLI usage collector",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M31-001"
       ],

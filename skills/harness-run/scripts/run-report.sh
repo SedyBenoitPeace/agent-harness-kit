@@ -81,6 +81,13 @@ times="$(prev="$(git log -1 --format=%ct "$START")"
 cost_of() { [ -s .harness-run/cost.log ] && awk -v id="$1" '$1 == id { t += $2; n++ } END { if (n) printf "$%.2f", t }' .harness-run/cost.log; }
 model_of() { [ -s .harness-run/models.log ] && awk -v id="$1" '$1 == id { if (!f) f = $2; l = $2 } END { if (l != "") { printf "%s", l; if (f != l) printf " (stepped up from %s)", f } }' .harness-run/models.log; }
 
+# M32-001: tokens from .harness-run/usage.log (<scope> <cli> <model> <in> <cached> <out>),
+# humanised with integer math so the report stays deterministic
+USAGE=.harness-run/usage.log
+HUMAN='function h(n) { if (n >= 1000000) return sprintf("%d.%dM", int((n + 50000) / 1000000), int(((n + 50000) % 1000000) / 100000)); if (n >= 1000) return sprintf("%dk", int((n + 500) / 1000)); return n "" }'
+tok_of() { [ -s "$USAGE" ] && awk "$HUMAN"' $1 == id { i += $4; c += $5; o += $6; n++ }
+  END { if (n) printf "%s tok (in %s, cached %s, out %s)", h(i + o), h(i), h(c), h(o) }' id="$1" "$USAGE"; }
+
 done_out=""; n_done=0
 while IFS=$'\t' read -r id hash; do
   [ -n "$id" ] || continue
@@ -90,6 +97,8 @@ while IFS=$'\t' read -r id hash; do
   [ -z "$dollars" ] || cost="$cost, $dollars"
   model="$(model_of "$id" || true)"
   [ -z "$model" ] || cost="$cost, $model"
+  tokens="$(tok_of "$id" || true)"
+  [ -z "$tokens" ] || cost="$cost, $tokens"
   case "$st" in
     passing) done_out="$done_out- $id — $(title "$id") — $hash$cost
 " ;;
@@ -121,13 +130,31 @@ if [ -s .harness-run/run-cost ]; then
   cost_summary="$(awk '$1 == "agents" { a = $2 } $1 == "orchestration" { o = $2 }
     END { t = a + o; if (t > 0) printf "- Cost: $%.2f — feature agents $%.2f, orchestration $%.2f (%d%%)", t, a, o, (o * 100 / t) + 0.5 }' .harness-run/run-cost)"
 fi
-if [ -s .harness-run/cost.log ] && [ -s .harness-run/models.log ]; then
-  by_model="$(awk 'FNR == NR { m[$1] = $2; next } { c[$1] += $2 }
-    END { for (id in c) { k = (id in m) ? m[id] : "unknown"; d[k] += c[id]; n[k]++ }
-          for (k in d) printf "%.4f\t%s $%.2f (%d feature%s)\n", d[k], k, d[k], n[k], (n[k] == 1 ? "" : "s") }' \
-    .harness-run/models.log .harness-run/cost.log | sort -t "$(printf '\t')" -k1,1gr | cut -f2 | paste -sd ';' - | sed 's/;/, /g')"
+if [ -s "$USAGE" ]; then
+  tok_line="$(awk "$HUMAN"' $1 == "orchestration" { o += $4 + $6; next } { a += $4 + $6 }
+    END { if (a + o > 0) printf "- Tokens: %s — feature agents %s, orchestration %s", h(a + o), h(a), h(o) }' "$USAGE")"
+  [ -z "$tok_line" ] || cost_summary="${cost_summary:+$cost_summary
+}$tok_line"
+fi
+have_cost=""; [ -s .harness-run/cost.log ] && [ -s .harness-run/models.log ] && have_cost=1
+if [ -n "$have_cost" ] || [ -s "$USAGE" ]; then
+  cl=/dev/null; ml=/dev/null; ul=/dev/null
+  [ -n "$have_cost" ] && { cl=.harness-run/cost.log; ml=.harness-run/models.log; }
+  [ -s "$USAGE" ] && ul="$USAGE"
+  by_model="$(awk "$HUMAN"' FILENAME == ARGV[1] { m[$1] = $2; next }
+    FILENAME == ARGV[2] { c[$1] += $2; next }
+    { t[$3] += $4 + $6 }
+    END { for (id in c) { k = (id in m) ? m[id] : "unknown"; d[k] += c[id]; n[k]++; all[k] = 1 }
+          for (k in t) all[k] = 1
+          for (k in all) {
+            s = k
+            if (k in d) s = s sprintf(" $%.2f", d[k])
+            if (k in t) s = s (k in d ? "," : "") " " h(t[k]) " tok"
+            if (k in d) s = s sprintf(" (%d feature%s)", n[k], (n[k] == 1 ? "" : "s"))
+            printf "%.4f\t%d\t%s\n", d[k], t[k], s } }' "$ml" "$cl" "$ul" | sort -t "$(printf '\t')" -k1,1gr -k2,2gr -k3 | cut -f3 | paste -sd ';' - | sed 's/;/, /g')"
+  label="Cost"; [ -n "$have_cost" ] || label="Tokens"
   [ -z "$by_model" ] || cost_summary="${cost_summary:+$cost_summary
-}- Cost by model: $by_model"
+}- $label by model: $by_model"
 fi
 
 budget_out=""

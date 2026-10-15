@@ -40,6 +40,9 @@ for w in 'blocked' 'gate is red' 'NEEDS_WORK'; do
 done
 grep -qi 'twice' "$md" || fail "SKILL.md: NEEDS_WORK twice rule missing"
 
+# M32-001: the End step runs the CLI's usage collector before the report
+grep -q 'usage-<cli>.sh' "$md" || fail "SKILL.md: End must run the CLI usage collector"
+
 # stop conditions
 for w in 'NEXT: none' 'cap' 'default 10' 'baseline problem' 'PREFLIGHT' 'UPGRADE: offer' 'neither a commit nor a'; do
   grep -qi "$w" "$md" || fail "SKILL.md: stop condition missing: $w"
@@ -173,6 +176,24 @@ printf 'agents 9.0000\norchestration 1.0000\n' > "$R/.harness-run/run-cost"
 rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")" || fail "run-report with run-cost: expected exit 0"
 sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Cost: $10.00 — feature agents $9.00, orchestration $1.00 (10%)' \
   || fail "run-report: Summary must split the run's cost into agents and orchestration"
+
+# M32-001: tokens from usage.log — per done feature, run total split into
+# feature agents and orchestration, per model; nothing without the file
+printf 'M2-001 claude sonnet 100000 80000 20000\nM2-001 claude sonnet 50000 40000 5000\norchestration claude opus 1000000 900000 50000\n' > "$R/.harness-run/usage.log"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")" || fail "run-report with usage.log: expected exit 0"
+sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M2-001 — extras — .*, 175k tok \(in 150k, cached 120k, out 25k\)$' || fail "run-report: M2-001 must show its summed tokens"
+sed -n '/^## Done/,/^## /p' "$rep" | grep -Eq '^- M1-001 — boot — [0-9a-f]{7,} — 0 min$' || fail "run-report: a feature without usage lines shows no tokens"
+sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Tokens: 1.2M — feature agents 175k, orchestration 1.1M' || fail "run-report: Summary must split tokens into agents and orchestration"
+sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Cost by model: sonnet $1.43, 175k tok (1 feature), opus 1.1M tok' || fail "run-report: Cost by model must carry tokens"
+cp "$rep" "$WORK/usage-first.md"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")"
+cmp -s "$rep" "$WORK/usage-first.md" || fail "run-report: output with usage.log not deterministic"
+rm "$R/.harness-run/cost.log" "$R/.harness-run/models.log" "$R/.harness-run/run-cost"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")"
+sed -n '/^## Summary/,/^## /p' "$rep" | grep -qF -- '- Tokens by model: opus 1.1M tok, sonnet 175k tok' || fail "run-report: Tokens by model without cost.log"
+rm "$R/.harness-run/usage.log"
+rep="$R/$(cd "$R" && bash "$REPORT" "$START" --skip "$WORK/skip" --stop-reason "cap")"
+grep -q 'tok' "$rep" && fail "run-report: no token lines without usage.log"
 rm -rf "$R/.harness-run"
 
 # bad start commit: usage error, exit 2

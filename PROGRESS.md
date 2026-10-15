@@ -1230,3 +1230,11 @@ Newest-first session log. One entry per working session. Read this (plus
   `PROTOCOL: outdated` and are offered the recopy.
 - Gate: green.
 - Next: M20 (continuous runs) — plan is in `docs/plans/active/`; open the M19 PR.
+
+## 2026-10-15 — session 71 (M32-001)
+
+- Branch: `m32-m33-run`.
+- Done: M32-001 — run-report.sh reads `.harness-run/usage.log`: each done feature gets `<total> tok (in, cached, out)`, Summary gets `Tokens: <total> — feature agents <n>, orchestration <n>`, and the by-model line carries tokens (`Cost by model` with dollars, `Tokens by model` without cost.log). Nothing changes without usage.log. harness-continuous End runs `usage-<cli>.sh` first when it exists. e2e.sh runs every `scripts/test-usage-*.sh`. Fixtures in test-run.sh.
+- Decisions: total = input + output (cached is a share of input, not added). Humanising uses integer math (round half up, `1.2M`/`85k`), no printf float, so BWK awk and bash 3.2 stay deterministic. By-model line is a union of cost models and usage models, so orchestration's model shows even with no cost entry; matching is by exact model name, so a cost.log model name differing from the CLI's reported name shows as two entries (shortcut, not reconciled). Rejected: a second awk pass appending tokens only to existing cost entries (would hide the orchestrator's model).
+- Gate: green.
+- Next: M32-002 (Claude Code hooks write usage.log).
