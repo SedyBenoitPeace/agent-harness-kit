@@ -144,6 +144,32 @@ sed -n '/^## Supervisor/,/^## /p' "$rep" | grep -q '^- M1-001 — boot: no test 
 sed -n '/^## Budget/,/^## /p' "$rep" | grep -qF 'feature M1-001: $5.40 over the $5.00 budget' || fail "run-report: Budget must carry budget.log"
 rm -rf "$R/.harness-run"
 
+# M34-003: Decisions come from the feature's own commit body, else the
+# PROGRESS entry whose Done: line names it; a planning entry that only
+# mentions the ids never counts
+R2="$WORK/repo2"; mkdir -p "$R2"
+g2() { git -C "$R2" -c user.email=t@t -c user.name=t "$@"; }
+git -C "$R2" init -q -b main
+cat > "$R2/FEATURES.json" <<'JSON'
+{ "milestones": { "1": "Core" }, "features": [
+  { "id": "M1-001", "milestone": 1, "title": "boot", "status": "failing", "verify": "x" },
+  { "id": "M1-002", "milestone": 1, "title": "parser", "status": "failing", "verify": "x" } ] }
+JSON
+printf '# PROGRESS\n\n## 2026-03-01 -- session 1\n- Setup.\n' > "$R2/PROGRESS.md"
+g2 add -A; g2 commit -qm "seed"
+START2="$(git -C "$R2" rev-parse HEAD)"
+printf '# PROGRESS\n\n## 2026-03-02 -- planning (M1-001, M1-002)\n- Done: planned M1-001 and M1-002.\n- Decisions: PLANNING-ONLY text.\n\n## 2026-03-01 -- session 1\n- Setup.\n' > "$R2/PROGRESS.md"
+g2 add PROGRESS.md; g2 commit -qm "plan M1-001 M1-002"
+jq '(.features[] | select(.id=="M1-001") | .status) = "passing"' "$R2/FEATURES.json" > "$R2/f.tmp" && mv "$R2/f.tmp" "$R2/FEATURES.json"
+g2 add FEATURES.json; g2 commit -qm "lane: M1-001 boot" -m "Decisions: rejected a plugin system; assumed LF endings."
+jq '(.features[] | select(.id=="M1-002") | .status) = "passing"' "$R2/FEATURES.json" > "$R2/f.tmp" && mv "$R2/f.tmp" "$R2/FEATURES.json"
+printf '# PROGRESS\n\n## 2026-03-04 -- session 3 (M1-002)\n- Done: M1-002 parser.\n- Decisions: none.\n\n## 2026-03-02 -- planning (M1-001, M1-002)\n- Done: planned M1-001 and M1-002.\n- Decisions: PLANNING-ONLY text.\n' > "$R2/PROGRESS.md"
+g2 add FEATURES.json PROGRESS.md; g2 commit -qm "feat(M1-002): parser"
+rep2="$R2/$(cd "$R2" && bash "$REPORT" "$START2" --stop-reason "finished")" || fail "run-report M34-003: expected exit 0"
+grep -q 'PLANNING-ONLY' "$rep2" && fail "run-report: a planning entry's Decisions must never be used"
+grep -qF -- '  - Decisions: rejected a plugin system; assumed LF endings.' "$rep2" || fail "run-report: M1-001 must take Decisions from its commit body"
+grep -qF -- '  - Decisions: none.' "$rep2" || fail "run-report: M1-002 must take Decisions from the entry whose Done: names it"
+
 # M29-002: features waiting on a human get their own section with the
 # question, and the features they hold are explained under Not started
 grep -q '^## Waiting on a human' "$rep" && fail "run-report: no Waiting section when nothing waits"
