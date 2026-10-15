@@ -170,6 +170,27 @@ grep -q 'PLANNING-ONLY' "$rep2" && fail "run-report: a planning entry's Decision
 grep -qF -- '  - Decisions: rejected a plugin system; assumed LF endings.' "$rep2" || fail "run-report: M1-001 must take Decisions from its commit body"
 grep -qF -- '  - Decisions: none.' "$rep2" || fail "run-report: M1-002 must take Decisions from the entry whose Done: names it"
 
+# M35-001: PROGRESS appended oldest-first, a planning entry whose Done: line
+# names the id, and the feature landing as a lane merge: Decisions come from
+# the entry the done commit (merge: against its first parent) added
+R4="$WORK/repo4"; mkdir -p "$R4"
+g4() { git -C "$R4" -c user.email=t@t -c user.name=t "$@"; }
+git -C "$R4" init -q -b main
+printf '{ "milestones": { "1": "Core" }, "features": [\n  { "id": "M1-001", "milestone": 1, "title": "boot", "status": "failing", "verify": "x" } ] }\n' > "$R4/FEATURES.json"
+printf '# PROGRESS\n\n## 2026-03-01 -- session 1\n- Setup.\n' > "$R4/PROGRESS.md"
+g4 add -A; g4 commit -qm "seed"
+START4="$(git -C "$R4" rev-parse HEAD)"
+printf '\n## 2026-03-02 -- planning\n- Done: planned M1-001.\n- Decisions: PLAN-APPEND text.\n' >> "$R4/PROGRESS.md"
+g4 add PROGRESS.md; g4 commit -qm "plan"
+g4 checkout -q -b lane/M1-001
+jq '(.features[] | select(.id=="M1-001") | .status) = "passing"' "$R4/FEATURES.json" > "$R4/f.tmp" && mv "$R4/f.tmp" "$R4/FEATURES.json"
+printf '\n## 2026-03-03 -- session 2\n- Done: M1-001 boot.\n- Decisions: LANE-ENTRY text.\n' >> "$R4/PROGRESS.md"
+g4 add FEATURES.json PROGRESS.md; g4 commit -qm "boot"
+g4 checkout -q main; g4 merge -q --no-ff lane/M1-001 -m "Merge lane/M1-001"
+rep4="$R4/$(cd "$R4" && bash "$REPORT" "$START4" --stop-reason "finished")" || fail "run-report M35-001: expected exit 0"
+grep -q 'PLAN-APPEND' "$rep4" && fail "run-report: a planning entry (append order) must never give a feature its Decisions"
+grep -qF -- '  - Decisions: LANE-ENTRY text.' "$rep4" || fail "run-report: a lane merge must take Decisions from the entry the lane added"
+
 # M34-010: harness-continuous End archives after the report; a report built
 # after the archive still titles the archived ids
 end="$(sed -n '/^## End/,/^## Red flags/p' "$md")"

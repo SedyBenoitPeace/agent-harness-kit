@@ -1,5 +1,21 @@
 {
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
-  "milestones": {},
-  "features": []
+  "milestones": {
+    "35": "M34 follow-ups: run-report decisions, README, template mirror"
+  },
+  "features": [
+    {
+      "id": "M35-001",
+      "milestone": 35,
+      "title": "Run report reads a feature's Decisions only from what its done commit brought in (first parent for a lane merge), so a planning entry never counts in either PROGRESS.md order",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving, on an append-order PROGRESS.md whose planning entry's Done: line names the id and a feature landing as a lane merge, that the report uses the lane's entry and never the planning one",
+      "effort": "low",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/run-report.sh",
+        "scripts/test-run.sh"
+      ]
+    }
+  ]
 }

@@ -1441,3 +1441,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: Release notes written from the M34 feature titles, not from a diff of each change (shortcut). Left the 3.11.0 Upgrade check in e2e.sh and only moved the version check to 3.12.0. No README edit: the verify does not require one and the CHANGELOG carries the M34 notes (shortcut against the title, which says README). Mirror commit and PR left to the owner, as the plan says. Assumed the `docs/agents/harness-protocol.md` path in this repo is the template file and not a copy.
 - Gate: green (`bash scripts/e2e.sh`, exit 0, baseline and final).
 - Next: none failing. M34 is complete; the next run starts from the owner's next plan.
+
+## 2026-10-15 — session 90 (M35-001 run-report decisions from the done commit)
+
+- Branch: `m34-run`.
+- Done: M35-001. `run-report.sh` reads a feature's Decisions only from what its done commit brought in (`<hash>^1..<hash>`: commit bodies, then the PROGRESS lines that diff added). Red first: a test-run.sh fixture with an append-order PROGRESS.md, a planning entry whose Done: line names the id, and a lane merge failed on the planning text, then passed; the real M34 run now gives M34-011 and M34-012 their own lines. Also: the gate's history-name checks now exclude `docs/features-archive.json` like FEATURES.json (the archive commit b3c958c had turned the gate red on old M21 titles; the gate ran green before that commit only because git grep skips untracked files).
+- Decisions: rejected "newest matching entry" (it depends on PROGRESS.md order too: the M34-003 fixture is newest-first, this repo is oldest-first); the done commit's own diff is order-free. Lane merges are read against their first parent so the lane's entry and commit body count. Combined entries (one entry naming two lane features) still give both the same line.
+- Gate: GREEN (run-gate.sh final).
+- Next: M35-002 (README, template mirror).

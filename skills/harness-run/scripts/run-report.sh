@@ -60,18 +60,19 @@ done_lines="$(printf '%s' "$done_lines" | awk -F'\t' 'NF { h[$1] = $2; if (!($1 
 
 # A feature's Decisions: line (M27-003, M34-003), as one line (wrapped
 # continuation lines joined): from its own commit message body (lanes put it
-# there), else the newest PROGRESS.md entry whose Done: line names it. An entry
-# that only mentions the id (a planning session) never counts.
+# there), else the PROGRESS.md entry whose Done: line names it. Both are read
+# only from what the done commit brought in (a lane merge: against its first
+# parent), so a planning entry never counts, whatever order PROGRESS.md uses
+# (M35-001).
 decisions_of() {
   local d
-  d="$(git log -1 --format=%b "$2" | awk '
+  d="$(git log --format=%b "$2^1..$2" | awk '
     /^Decisions:/ { indec = 1; dec = $0; next }
     indec && /^[ \t]+[^ \t]/ { sub(/^[ \t]+/, ""); dec = dec " " $0; next }
     { indec = 0 }
     END { if (dec != "") print dec }')"
   if [ -n "$d" ]; then printf '%s\n' "$d"; return 0; fi
-  [ -f PROGRESS.md ] || return 0
-  awk -v id="$1" '
+  git diff "$2^1" "$2" -- PROGRESS.md | sed -n '/^+++/d; s/^+//p' | awk -v id="$1" '
     /^## / { if (hit && dec != "") { print dec; exit } hit = 0; indone = 0; indec = 0; dec = ""; next }
     /^- Done:/ { indone = 1; if (index($0, id) > 0) hit = 1; next }
     indone && /^  [^ -]/ { if (index($0, id) > 0) hit = 1; next }
@@ -79,7 +80,7 @@ decisions_of() {
     indec && /^  [^ -]/ { sub(/^ +/, ""); dec = dec " " $0; next }
     { indone = 0; indec = 0 }
     END { if (hit && dec != "") print dec }
-  ' PROGRESS.md | head -1 | sed 's/^- //'
+  ' | head -1 | sed 's/^- //'
 }
 
 # minutes per done feature (M29-003): from the previous feature's (or skip's,

@@ -407,7 +407,7 @@ done
 old_name="harness-""setup"
 [ ! -e "skills/$old_name" ] || fail "skills/$old_name still exists (renamed to harness-initial-setup)"
 # the README's one rename note ("was renamed") is the only allowed mention
-if git grep -nI -e "$old_name" -- . ':!docs/plans' ':!docs/specs' ':!PROGRESS.md' ':!FEATURES.json' | grep -v 'was renamed' | grep -q .; then
+if git grep -nI -e "$old_name" -- . ':!docs/plans' ':!docs/specs' ':!PROGRESS.md' ':!FEATURES.json' ':!docs/features-archive.json' | grep -v 'was renamed' | grep -q .; then
   fail "stale reference to the old skill name '$old_name'"
 fi
 [ -f skills/harness-initial-setup/SKILL.md ] || fail "harness-initial-setup SKILL.md missing"
@@ -661,7 +661,7 @@ jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fai
 grep -qF '.harness-run/decisions/<id>.md' "$SESSION_SKILL_MD" || fail "harness-session: must fold .harness-run/decisions/<id>.md into Decisions:"
 git check-ignore -q claude/.claude-plugin/types/x || fail ".gitignore: claude/.claude-plugin/types/ (engine-written) must be ignored"
 # M25-005: the 3.2.0 name lives on only in history and the README's upgrade note
-if git grep -nI -e 'agent-harness-kit-mods' -- . ':!docs/plans' ':!PROGRESS.md' ':!FEATURES.json' ':!scripts/e2e.sh' \
+if git grep -nI -e 'agent-harness-kit-mods' -- . ':!docs/plans' ':!PROGRESS.md' ':!FEATURES.json' ':!docs/features-archive.json' ':!scripts/e2e.sh' \
    | grep -v 'was briefly named\|plugin uninstall agent-harness-kit-mods' | grep -q .; then
   fail "stale reference to the old edition name agent-harness-kit-mods"
 fi
