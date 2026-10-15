@@ -1465,3 +1465,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: a gate check over pinning shellcheck versions (pinning would not help the next local/CI gap); parallel lanes adding test fixtures can collide on names — not prevented beyond this check.
 - Gate: GREEN (run-gate.sh final).
 - Next: none; owner merges PR #37.
+
+## 2026-10-15 — session 93 (CI reproduced locally: scripts/ci-local.sh)
+
+- Branch: `m34-run`.
+- Done: PR #37's CI went red three times on gaps the local gate cannot see: a duplicate fixture function (newer shellcheck), an empty `docs/plans/active` (absent in a clean checkout, now tracked with `.gitkeep`), and `run-start.sh` committing in a fixture with no git identity (CI has none; fixture now sets one). New `scripts/ci-local.sh` runs CI's gate the way gate.yml does: clean clone of HEAD, `ubuntu:24.04` with apt jq + shellcheck, no git identity (`--no-docker`: clean clone, no git config, local tools). It reproduced the identity failure on 4d9ca40 and is green after the fix. AGENTS.md: run it before every push.
+- Decisions: Docker over `act` (no extra install, same image and apt step as the workflow); apt on every run (~30s) rather than a baked image (ponytail note in the script). ubuntu-latest moves to Ubuntu 26 from 2026-10-19: update the image tag then.
+- Gate: GREEN (ci-local.sh, Docker).
+- Next: none; owner merges PR #37.
