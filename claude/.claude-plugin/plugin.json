@@ -30,6 +30,12 @@
       "description": "Dollars a whole unattended run may cost before it is asked to stop after the current feature. 0 = no limit.",
       "default": 50
     },
+    "session_budget_tokens": {
+      "type": "number",
+      "title": "Session budget (context tokens)",
+      "description": "A builder's context size at which the status line says to wrap up (shown from 80 percent). The protocol makes the builder commit, note a resume point and end blocked with session budget. 0 = no notice.",
+      "default": 150000
+    },
     "supervisor": {
       "type": "boolean",
       "title": "Done-check supervisor",

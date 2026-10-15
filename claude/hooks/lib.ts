@@ -123,6 +123,7 @@ export function transcriptText(messages: { role: string; text: string; toolUses?
 
 export const DEFAULT_FEATURE_USD = 5
 export const DEFAULT_RUN_USD = 50
+export const DEFAULT_SESSION_TOKENS = 150_000 // M34-011: a builder's context before it wraps up
 
 export const usd = (n: number) => `$${n.toFixed(2)}`
 

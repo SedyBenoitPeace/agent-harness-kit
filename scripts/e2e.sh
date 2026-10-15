@@ -594,6 +594,18 @@ done
 grep -qF 'SKILL.md, PROGRESS.md, FEATURES.json or a plan whole' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7: no-whole-file-reads rule missing (M34-007)"
 shellcheck skills/harness-run/scripts/wait-result.sh
 
+# --- session budget: 60 tool calls or about 150k context (M34-011) ------------------
+for w in '60 tool calls' '150k' 'resume point' 'session budget'; do
+  grep -qF "$w" "$CORE" || fail "protocol section 2: session budget '$w' missing (M34-011)"
+done
+grep -qF 'session budget' skills/harness-session/SKILL.md || fail "harness-session: session budget stop missing (M34-011)"
+for f in skills/harness-run/SKILL.md skills/harness-continuous/SKILL.md; do
+  grep -qF 'session budget' "$f" || fail "$f: must handle a session-budget stop (M34-011)"
+  grep -qF 'once in a fresh session' "$f" || fail "$f: session-budget stop retried once in a fresh session (M34-011)"
+  grep -qF 'same size' "$f" || fail "$f: the retry keeps the same builder size (M34-011)"
+done
+jq -e '.userConfig.session_budget_tokens.default == 150000' claude/.claude-plugin/plugin.json >/dev/null || fail "Claude edition: session_budget_tokens option missing (M34-011)"
+
 # --- paths hint and per-feature cost (M29-003) ------------------------------------
 grep -qF 'Start reading from: <paths>' "$RUN_SKILL/SKILL.md" || fail "harness-run: builder dispatch must pass the feature's paths (M29-003)"
 grep -qF 'cost.log' skills/harness-run/scripts/run-report.sh || fail "run-report.sh: dollars per feature missing (M30-002)"

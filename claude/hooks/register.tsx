@@ -8,6 +8,7 @@ import {
   costLine,
   modelsLine,
   DEFAULT_FEATURE_USD,
+  DEFAULT_SESSION_TOKENS,
   DEFAULT_RUN_USD,
   DECISION_TOOL,
   decisionSpec,
@@ -72,6 +73,7 @@ export const register: Register = (on, options) => {
   const num = (v: unknown, d: number) => (typeof v === 'number' && v >= 0 ? v : d)
   const featureBudget = num(options.feature_budget_usd, DEFAULT_FEATURE_USD)
   const runBudget = num(options.run_budget_usd, DEFAULT_RUN_USD)
+  const sessionBudget = num(options.session_budget_tokens, DEFAULT_SESSION_TOKENS) // M34-011
   let featureBase: number | undefined // session cost when the current feature began
   let runBase: number | undefined // session cost when this session first saw the run
   let isFeatureFlagged = false
@@ -244,6 +246,13 @@ export const register: Register = (on, options) => {
         featureBase = cost
         isFeatureFlagged = false
       }
+    }
+
+    // M34-011 — a builder's context at 80% of its session budget: tell the person
+    // (the builder stops itself by the protocol's own tool-call/context rule).
+    if (e.usage && e.agentId !== undefined && sessionBudget > 0) {
+      const ctx = e.usage.input_tokens + e.usage.cache_creation_input_tokens + e.usage.cache_read_input_tokens
+      if (ctx >= sessionBudget * 0.8) shown.notice = `session budget: ${Math.round(ctx / 1000)}k of ${Math.round(sessionBudget / 1000)}k tokens, wrap up`
     }
 
     await showStatus($, shown, featureBase, featureBudget)
