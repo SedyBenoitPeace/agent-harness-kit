@@ -1,0 +1,4 @@
+{
+  "codex": { "small": "fixture-codex-s", "medium": "fixture-codex-m", "large": "fixture-codex-l" },
+  "copilot": { "small": "Fixture Copilot S", "medium": "Fixture Copilot M", "large": "Fixture Copilot L" }
+}
