@@ -76,7 +76,7 @@ times="$(prev="$(git log -1 --format=%ct "$START")"
   git log --reverse --format='%h %ct %s' "$START..HEAD" | while read -r h ct subj; do
     id="$(printf '%s\n' "$done_lines" | awk -F'\t' -v h="$h" '$2 == h { print $1; exit }')"
     if [ -n "$id" ]; then echo "$id $(( (ct - prev + 30) / 60 ))"; prev="$ct"
-    else case "$subj" in "harness-run: skip"*) prev="$ct" ;; esac; fi
+    else case "$subj" in ("harness-run: skip"*) prev="$ct" ;; esac; fi
   done)"
 cost_of() { [ -s .harness-run/cost.log ] && awk -v id="$1" '$1 == id { t += $2; n++ } END { if (n) printf "$%.2f", t }' .harness-run/cost.log; }
 model_of() { [ -s .harness-run/models.log ] && awk -v id="$1" '$1 == id { if (!f) f = $2; l = $2 } END { if (l != "") { printf "%s", l; if (f != l) printf " (stepped up from %s)", f } }' .harness-run/models.log; }
@@ -124,7 +124,7 @@ fi
 if [ -s .harness-run/cost.log ] && [ -s .harness-run/models.log ]; then
   by_model="$(awk 'FNR == NR { m[$1] = $2; next } { c[$1] += $2 }
     END { for (id in c) { k = (id in m) ? m[id] : "unknown"; d[k] += c[id]; n[k]++ }
-          for (k in d) printf "%.4f\t%s $%.2f (%d feature%s)\n", d[k], k, d[k], n[k], n[k] == 1 ? "" : "s" }' \
+          for (k in d) printf "%.4f\t%s $%.2f (%d feature%s)\n", d[k], k, d[k], n[k], (n[k] == 1 ? "" : "s") }' \
     .harness-run/models.log .harness-run/cost.log | sort -t "$(printf '\t')" -k1,1gr | cut -f2 | paste -sd ';' - | sed 's/;/, /g')"
   [ -z "$by_model" ] || cost_summary="${cost_summary:+$cost_summary
 }- Cost by model: $by_model"
