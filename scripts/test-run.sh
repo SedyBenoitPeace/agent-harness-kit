@@ -227,4 +227,36 @@ done
 grep -q 'models.log' "$run" || fail "harness-run SKILL.md: models.log step missing"
 grep -qi 'next size up' "$run" || fail "harness-run SKILL.md: retry step-up missing"
 
+# --- run-start.sh (M34-002): each run starts with clean run state ----------------
+START_SH="$PWD/skills/harness-run/scripts/run-start.sh"
+[ -f "$START_SH" ] || fail "run-start.sh missing"
+grep -q 'run-start.sh' "$md" || fail "harness-continuous Start must call run-start.sh"
+R2="$WORK/repo2"; mkdir -p "$R2"
+g2() { git -C "$R2" -c user.email=t@t -c user.name=t "$@"; }
+git -C "$R2" init -q -b main
+cp "$R/FEATURES.json" "$R2/FEATURES.json"; printf '# PROGRESS\n' > "$R2/PROGRESS.md"
+g2 add -A; g2 commit -qm seed
+bash "$START_SH" "$R2" >/dev/null || fail "run-start: first run failed"
+first="$(git -C "$R2" rev-parse HEAD)"
+[ "$(cat "$R2/.harness-run/start")" = "$first" ] || fail "run-start: start should be HEAD"
+git -C "$R2" check-ignore -q .harness-run || fail "run-start: .harness-run not ignored"
+[ -z "$(git -C "$R2" status --short)" ] || fail "run-start: tree must be clean after (ignore rule committed)"
+cd "$R2/.harness-run"
+printf 'M1-001 9.99\n' > cost.log; printf 'a 1\n' > run-cost; printf 'M1-001 small model small\n' > models.log
+printf 's c m 1 2 3\n' > usage.log; printf 'budget x\n' > budget.log; mkdir decisions; echo d > decisions/M1-001.md
+echo M1-002 > skip; touch STOP
+cd "$OLDPWD"
+g2 commit -q --allow-empty -m "run 1 work"
+second="$(git -C "$R2" rev-parse HEAD)"
+bash "$START_SH" "$R2" >/dev/null || fail "run-start: second run failed"
+[ "$(cat "$R2/.harness-run/start")" = "$second" ] || fail "run-start: second start should be new HEAD"
+[ ! -s "$R2/.harness-run/skip" ] || fail "run-start: skip must be empty"
+[ ! -e "$R2/.harness-run/STOP" ] || fail "run-start: stale STOP must be removed"
+for f in cost.log run-cost models.log usage.log budget.log decisions; do
+  [ ! -e "$R2/.harness-run/$f" ] || fail "run-start: $f not moved out of the live run"
+  [ -e "$R2/.harness-run/previous/$first/$f" ] || fail "run-start: $f not archived under previous/<first start>"
+done
+(cd "$R2" && bash "$REPORT" "$second" --stop-reason x >/dev/null) || fail "run-start: report after second start failed"
+! grep -rq '9.99' "$R2/docs/runs" || fail "run-start: report shows the first run's cost"
+
 echo "RUN TESTS GREEN"

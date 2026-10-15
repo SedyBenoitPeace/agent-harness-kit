@@ -33,11 +33,11 @@ permissions only — never a skip-all-permissions flag.
    report (see End) with that reason and STOP: exit 2 or 3, a dirty
    worktree, `UPGRADE: offer`, a `PREFLIGHT:` line, or a red baseline gate
    (`bash ../harness-session/scripts/run-gate.sh baseline <target>`).
-2. If `git check-ignore -q .harness-run` fails, add `.harness-run/` to
-   `.gitignore` and commit that file alone ("harness-run: ignore run
-   state"). Create `.harness-run/`, write `git rev-parse HEAD` to `start`, and
-   empty `skip`. Delete a `STOP` left over from an earlier run; invoking
-   the command is the signal to start.
+2. Run `bash ../harness-run/scripts/run-start.sh <target>`. If `git check-ignore`
+   fails it ignores `.harness-run/` (committing `.gitignore` alone), writes `start`, empties
+   `skip`, deletes a `STOP` left over from an earlier run, and archives the
+   previous run's logs under `.harness-run/previous/<its start commit>/`.
+   Invoking the command is the signal to start.
 
 ## Loop
 
