@@ -209,6 +209,32 @@ protocol so every agent follows them:
   the gate caps the protocol's session core at 150 lines and the AGENTS.md
   template at 70.
 
+## Choosing a model size
+
+A feature can carry `"model": "small" | "medium" | "large"`: which size of
+model builds it. It is separate from `effort`, which only sets how hard the
+model checks its own work. Any size works with any effort.
+
+| Size | Use it for |
+|---|---|
+| `small` | Narrow, well-specified work that follows a pattern already in the repo, checked by one command: scaffolds, docs, CHANGELOG and version bumps, config, renames, fixtures |
+| `medium` | The default and the safe choice: new logic, several files, debugging |
+| `large` | Design calls others build on, security or isolation, cross-cutting refactors |
+
+Leave `model` out and nothing changes. The Claude Code edition still picks
+the builder from `effort`. Other CLIs use `medium`. The evaluator and
+features touching auth, payments, billing, migrations, secrets, credentials
+or personal data never build below `medium`. A retry or an evaluator
+rejection steps up one size.
+
+The size map says which model each size means for each CLI. It lives in
+the repo at `docs/agents/model-sizes.json`, one object per CLI
+(`{"codex": {"small": "...", "medium": "...", "large": "..."}}`). The kit
+ships no model names except for Claude Code, whose aliases (`haiku`,
+`sonnet`, `opus`) never go stale. A CLI with no map gets no per-size agents
+and uses its default model. The kit's `scripts/gen-agents.sh <repo>` writes
+the per-size agent files from the map.
+
 ## Second opinion, brief stage and untrusted text
 
 - **Second opinion from another vendor.** Give a feature

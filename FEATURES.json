@@ -1393,7 +1393,8 @@
       "id": "M33-005",
       "milestone": 33,
       "title": "README and CHANGELOG for model sizes; release 3.11.0 and template mirror sync",
-      "status": "failing",
+      "status": "passing",
+      "notes": "Mirror branch sync-3.11.0 committed locally in the template repo, stacked on sync-3.10.0 (commit 2257a1c, two files: FEATURES.json and harness-protocol-planning.md); sync-template.sh --check is IN SYNC. Awaiting the owner to push sync-3.10.0 and sync-3.11.0 and open the mirror PRs.",
       "depends_on": [
         "M33-004"
       ],

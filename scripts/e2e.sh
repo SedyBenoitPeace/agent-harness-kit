@@ -364,7 +364,12 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.10.0" ] || fail "plugin version must be 3.10.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.11.0" ] || fail "plugin version must be 3.11.0"
+# --- model sizes documented and released (M33-005) ----------------------------
+grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
+grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"
+awk '/^## 3\.11\.0 /{on=1; next} on && /^## [0-9]/{exit} on' CHANGELOG.md | grep -q '^Upgrade:' \
+  || fail "CHANGELOG: 3.11.0 entry needs an Upgrade: block (M33-005)"
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
   sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
