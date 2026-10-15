@@ -12,6 +12,14 @@ the repo — not the subagent's word — before starting the next. Rules:
 
 - Every dispatched session is a normal §2 session, run inline, ending
   with one line: `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`.
+- Each builder's last act is writing `.harness-run/results/<id>.txt`: its
+  SESSION line and at most 10 lines of summary. The orchestrator does
+  one blocking wait per builder (the agent's own blocking wait with its
+  longest timeout, or `wait-result.sh <id>`), never short polls, never sends a
+  message to steer a running builder, reads script output only
+  (`context.sh`, `status.sh`, results files) and never
+  SKILL.md, PROGRESS.md, FEATURES.json or a plan whole.
+  A run resumed later starts in a fresh conversation.
 - The orchestrator never reads diffs or gate logs; a blocked session is
   relayed to the human and the run stops. It also stops at a milestone
   boundary and at a feature cap.
