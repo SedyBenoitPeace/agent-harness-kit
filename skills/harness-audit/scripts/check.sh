@@ -132,6 +132,13 @@ if [ -n "$bad_model" ]; then
   warn "model must be small, medium, large or a lowercase CLI alias — unknown value on: $bad_model"
 fi
 
+# Exclusive resource (WARN only, M34-006): optional non-empty string naming a
+# shared resource; features with the same value never share a parallel batch
+bad_excl="$(jq -r '[.features[]? | select(has("exclusive") and ((.exclusive | type) != "string" or (.exclusive | length) == 0)) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
+if [ -n "$bad_excl" ]; then
+  warn "exclusive must be a non-empty string naming the shared resource — fix on: $bad_excl"
+fi
+
 # Provable verify (WARN only, M34-005): a failing feature's verify must be
 # provable by a builder from the repo alone (protocol 1.4); a real session,
 # the owner's machine, hardware, a push, a PR or a human belongs in the

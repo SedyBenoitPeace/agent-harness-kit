@@ -1359,3 +1359,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: M34-003 — rejected scanning every entry that mentions the id (that is how planning text leaked); commit-body `Decisions:` starts at column 0, wraps indented. M34-005 — WARN, not FAIL (advice); lanes WARN only when no feature in the plan declares either field; word-list match may give false positives on words like "ask".
 - Gate: GREEN (run-gate.sh final).
 - Next: M34-006.
+
+## 2026-10-15 — session 84 (M34-006 exclusive field)
+
+- Branch: `lane/M34-006` (parallel lane, worktree `../harness-planning-skill-M34-006`).
+- Done: M34-006. New optional `exclusive` string per feature: `context.sh` PARALLEL greedy selection skips a feature whose `exclusive` equals one already in the batch (output unchanged when no feature declares it); protocol 1.4 and the FEATURES template describe it; harness-audit WARNs when it is not a non-empty string. Tests in `test-session.sh` (same value excluded, a third joins, two same-value alone = none) and `test-audit.sh`.
+- Decisions: Single string, not a list (rejected: multi-resource features; add when needed). Wrote the tests and code in one pass, so no separate red run was observed (shortcut). Audit WARNs rather than fails, matching effort/model.
+- Gate: green (`bash scripts/e2e.sh`, exit 0).
+- Next: M34-007 (other lane), then M34-008.

@@ -107,6 +107,15 @@ jq '.features[0].model = "Big Model!"' "$WORK/msize/FEATURES.json" > "$WORK/msiz
 out="$(bash "$CHECK" "$WORK/msize")" || fail "unknown model must not fail the audit"
 echo "$out" | grep -q "^WARN.*model.*M0-001" || fail "unknown model: expected WARN naming the feature"
 
+# exclusive (M34-006): a non-empty string passes; anything else is a WARN
+make_fixture "$WORK/excl"
+jq '.features[0].exclusive = "ios-simulator"' "$WORK/excl/FEATURES.json" > "$WORK/excl/F.tmp" && mv "$WORK/excl/F.tmp" "$WORK/excl/FEATURES.json"
+out="$(bash "$CHECK" "$WORK/excl")" || fail "valid exclusive must not fail the audit"
+echo "$out" | grep -q "^WARN.*exclusive" && fail "valid exclusive: no WARN expected"
+jq '.features[0].exclusive = 3' "$WORK/excl/FEATURES.json" > "$WORK/excl/F.tmp" && mv "$WORK/excl/F.tmp" "$WORK/excl/FEATURES.json"
+out="$(bash "$CHECK" "$WORK/excl")" || fail "bad exclusive must not fail the audit"
+echo "$out" | grep -q "^WARN.*exclusive.*M0-001" || fail "bad exclusive: expected WARN naming the feature"
+
 # 2g. model-tagged rules (M23-003): none = no WARN; tagged lines = a WARN
 # with their count, telling the human to re-test them on model change
 out="$(bash "$CHECK" "$WORK/good")" || fail "good fixture re-run exited non-zero"
