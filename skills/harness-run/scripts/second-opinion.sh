@@ -4,7 +4,8 @@
 # Runs that CLI non-interactively and read-only, as the harness evaluator, on
 # the commits base..HEAD, with the CLI's own default model.
 # Prints VERDICT: PASS | NEEDS_WORK | REJECTED, the CLI, then the
-# agent's reply. Writes nothing to the target repo.
+# agent's reply. Writes nothing to the target repo except, for codex inside a
+# run (.harness-run exists), a usage.log line (ignored by git).
 # Exit codes: 0 PASS; 1 NEEDS_WORK, or REJECTED (the agent changed the tree
 # or HEAD; the change is left for the human); 2 broken (unknown or missing
 # CLI, unknown feature, dirty tree before the run).
@@ -49,7 +50,7 @@ reply="$work/reply"
 # Run the CLI once, read-only, with its own default model.
 case "$cli" in
   codex)
-    codex exec --sandbox read-only --ephemeral -o "$reply" "$prompt" > "$work/log" 2>&1 || true ;;
+    codex exec --json --sandbox read-only --ephemeral -o "$reply" "$prompt" > "$work/log" 2>&1 || true ;;
   claude)
     claude -p "$prompt" --permission-mode dontAsk \
       --allowedTools Read Grep Glob Bash --disallowedTools Edit Write NotebookEdit > "$reply" 2> "$work/log" || true ;;
@@ -69,6 +70,15 @@ if [ "$(git rev-parse HEAD)" != "$head_before" ] || [ -n "$changes" ]; then
   [ "$(git rev-parse HEAD)" != "$head_before" ] && echo "HEAD moved: $head_before -> $(git rev-parse HEAD)"
   printf '%s\n' "$changes"
   exit 1
+fi
+
+# Codex's --json stream carries token usage: log the summed turn.completed
+# usage (M32-003). After the integrity check, and only inside a run.
+if [ "$cli" = codex ] && [ -d .harness-run ]; then
+  jq -Rr 'fromjson? | select(.type? == "turn.completed") | .usage
+    | [.input_tokens // 0, .cached_input_tokens // 0, .output_tokens // 0] | @tsv' "$work/log" 2>/dev/null \
+    | awk -F'\t' -v id="$id" '{ i += $1; c += $2; o += $3; n++ }
+        END { if (n) printf "%s/second-opinion codex - %d %d %d\n", id, i, c, o }' >> .harness-run/usage.log || true
 fi
 
 first="$(grep -m1 -v '^[[:space:]]*$' "$reply" | tr -d '[:space:]' || true)"
