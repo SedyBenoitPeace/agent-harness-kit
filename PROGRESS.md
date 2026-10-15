@@ -1457,3 +1457,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: added the 3.12.0 sync to the mirror's open PR branch instead of a new branch off master (a new branch would repeat that PR's 3.10/3.11 changes and conflict with it). Session budget's unenforced 60-call limit left for later (owner).
 - Gate: GREEN (run-gate.sh final).
 - Next: none; owner merges the PRs.
+
+## 2026-10-15 — session 92 (CI gate fix: duplicate fixture function)
+
+- Branch: `m34-run`.
+- Done: CI gate red on PR #37 (SC2218): the M34-002 and M34-003 lanes each added a `R2`/`g2()` fixture at `$WORK/repo2` in scripts/test-run.sh, so `g2` was defined twice and the second fixture re-initialised the first one's repo (the "re-init" warning). Renamed the M34-002 fixture to `R5`/`g5`/`repo5`. e2e.sh now fails on any function defined twice in one tracked .sh file, because local shellcheck 0.11 does not flag it and CI's does (seen red on the old file, green after).
+- Decisions: a gate check over pinning shellcheck versions (pinning would not help the next local/CI gap); parallel lanes adding test fixtures can collide on names — not prevented beyond this check.
+- Gate: GREEN (run-gate.sh final).
+- Next: none; owner merges PR #37.

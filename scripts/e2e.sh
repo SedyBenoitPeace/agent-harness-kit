@@ -49,6 +49,12 @@ fi
 
 # this repo's scripts are clean shell
 shellcheck scripts/*.sh
+# a function defined twice in one file is SC2218 on CI's shellcheck but not on
+# every local one, so the gate checks it itself
+for f in $(git ls-files '*.sh'); do
+  dup="$(grep -oE '^[[:space:]]*[A-Za-z_][A-Za-z0-9_]*\(\)' "$f" | tr -d ' ()' | sort | uniq -d || true)"
+  [ -z "$dup" ] || fail "$f defines $dup more than once (rename one; CI shellcheck SC2218)"
+done
 
 # --- open-source hygiene --------------------------------------------------
 
