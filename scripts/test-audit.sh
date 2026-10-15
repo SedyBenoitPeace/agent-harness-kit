@@ -168,4 +168,32 @@ make_fixture "$WORK/plan-missing"
 printf '# Plan\n\n## M1-002 — not added yet\n' > "$WORK/plan-missing/docs/plans/active/p.md"
 expect_fail "$WORK/plan-missing" "names M1-002, which is not in FEATURES.json" "plan task missing from FEATURES.json"
 
+# M34-005: verify must be provable from the repo alone (WARN naming the
+# feature); an active plan whose features declare neither depends_on nor
+# paths allows no lanes (WARN). Neither fails the audit.
+make_fixture "$WORK/prov"
+jq '.features += [{"id":"M1-001","milestone":1,"title":"t","status":"failing","verify":"bash scripts/e2e.sh exits 0 with the fixture"},
+                  {"id":"M1-002","milestone":1,"title":"t","status":"failing","verify":"a real session on the owner machine shows it","depends_on":[],"paths":["x/"]},
+                  {"id":"M1-003","milestone":1,"title":"t","status":"passing","verify":"pushed by a human","depends_on":[],"paths":["x/"]}]' \
+  "$WORK/prov/FEATURES.json" > "$WORK/prov/F.tmp" && mv "$WORK/prov/F.tmp" "$WORK/prov/FEATURES.json"
+printf '# Plan\n\n## M1-001 — a\n\n## M1-002 — b\n' > "$WORK/prov/docs/plans/active/p.md"
+out="$(bash "$CHECK" "$WORK/prov")" || fail "unprovable verify must not fail the audit"
+echo "$out" | grep -q "^WARN.*verify.*M1-002" || fail "unprovable verify: expected WARN naming M1-002"
+echo "$out" | grep -q "^WARN.*verify.*M1-00[13]" && fail "provable or passing feature wrongly flagged"
+echo "$out" | grep -q "^WARN.*p.md.*depends_on" && fail "plan with a feature declaring paths: no lanes WARN expected"
+jq '(.features[] | select(.id=="M1-002")) |= del(.depends_on, .paths)' "$WORK/prov/FEATURES.json" > "$WORK/prov/F.tmp" && mv "$WORK/prov/F.tmp" "$WORK/prov/FEATURES.json"
+out="$(bash "$CHECK" "$WORK/prov")" || fail "plan without depends_on/paths must not fail the audit"
+echo "$out" | grep -q "^WARN.*p.md.*depends_on" || fail "plan without depends_on/paths: expected WARN naming the plan"
+# this repo, with M34-005 as passing (its verify quotes the word list and is
+# flipped by the orchestrator); the repo itself is not self-harnessed, so
+# only the WARN lines matter, not the exit code
+mkdir -p "$WORK/self/docs/plans"
+cp -R FEATURES.json "$WORK/self/"; cp -R docs/plans/active "$WORK/self/docs/plans/"
+jq '(.features[] | select(.id=="M34-005")).status = "passing"' FEATURES.json > "$WORK/self/FEATURES.json"
+out="$(bash "$CHECK" "$WORK/self" || true)"
+echo "$out" | grep -q "^WARN.*\(verify names\|declare neither\)" && fail "this repo wrongly gets a provability/lanes WARN"
+# protocol 1.4 carries the rule and the plan section
+grep -q 'Before the run' "$TMPL/harness-protocol-planning.md" || fail "protocol 1.4: Before the run section missing"
+grep -q 'provable by a builder from the repo alone' "$TMPL/harness-protocol-planning.md" || fail "protocol 1.4: provable-verify rule missing"
+
 echo "AUDIT TESTS GREEN"
