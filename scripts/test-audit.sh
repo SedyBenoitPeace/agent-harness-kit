@@ -215,4 +215,20 @@ echo "$out" | grep -q "^WARN.*\(verify names\|declare neither\)" && fail "this r
 grep -q 'Before the run' "$TMPL/harness-protocol-planning.md" || fail "protocol 1.4: Before the run section missing"
 grep -q 'provable by a builder from the repo alone' "$TMPL/harness-protocol-planning.md" || fail "protocol 1.4: provable-verify rule missing"
 
+# M34-012: global memory/workflow plugins and MCP servers (WARN, read-only)
+H="$WORK/home"; mkdir -p "$H/.codex" "$H/.claude" "$H/.copilot"
+make_fixture "$WORK/glob"
+out="$(HARNESS_AUDIT_HOME="$H" bash "$CHECK" "$WORK/glob")" || fail "empty home: audit should pass"
+echo "$out" | grep -q "^WARN.*global" && fail "empty home: no global WARN expected"
+printf '[mcp_servers.engram]\ncommand = "engram"\n' > "$H/.codex/config.toml"
+echo '{"enabledPlugins":{"memory-keeper@x":true,"other@y":false}}' > "$H/.claude/settings.json"
+echo '{"mcpServers":{"files":{"command":"npx","args":["fs"]}}}' > "$H/.copilot/mcp-config.json"
+before="$(cat "$H"/.codex/config.toml "$H"/.claude/settings.json "$H"/.copilot/mcp-config.json)"
+out="$(HARNESS_AUDIT_HOME="$H" bash "$CHECK" "$WORK/glob")" || fail "global plugins must not fail the audit"
+[ "$(echo "$out" | grep -c '^WARN.*global')" -eq 2 ] || fail "expected exactly two global WARNs ($out)"
+echo "$out" | grep '^WARN.*global' | grep -q "Codex.*engram" || fail "Codex WARN must name engram"
+echo "$out" | grep '^WARN.*global' | grep -q "Claude Code.*memory-keeper" || fail "Claude WARN must name memory-keeper"
+echo "$out" | grep -q "^FAIL" && fail "global plugins: no FAIL expected"
+[ "$before" = "$(cat "$H"/.codex/config.toml "$H"/.claude/settings.json "$H"/.copilot/mcp-config.json)" ] || fail "audit changed a global config"
+
 echo "AUDIT TESTS GREEN"

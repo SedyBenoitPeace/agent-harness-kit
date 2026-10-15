@@ -174,6 +174,19 @@ for plan in docs/plans/active/*.md; do
   fi
 done
 
+# Global memory/workflow plugins (WARN only, M34-012): a memory or workflow
+# MCP server or plugin in the person's own CLI setup may inject its instructions
+# into every session of this repo. Informational, read-only; HARNESS_AUDIT_HOME for tests.
+GH="${HARNESS_AUDIT_HOME:-$HOME}"
+GPAT='memory|engram|mem0|workflow'
+gwarn() {  # $1 = CLI, $2 = matched names
+  [ -n "$2" ] && warn "global $1 setup has a memory/workflow plugin or MCP server ($2) that may inject its own instructions into every session here — informational only"
+  return 0
+}
+gwarn Codex "$( { grep -iE "^[[:space:]]*\[mcp_servers\.[^]]*($GPAT)|^[[:space:]]*command[[:space:]]*=.*($GPAT)" "$GH/.codex/config.toml" 2>/dev/null || true; } | tr -d '[]' | sed 's/^[[:space:]]*//' | paste -sd, - )"
+gwarn "Claude Code" "$(jq -r --arg p "$GPAT" '[((.enabledPlugins // {}) | to_entries[] | select(.value == true) | .key), ((.mcpServers // {}) | to_entries[] | .key + " " + (.value.command // ""))] | map(select(test($p; "i"))) | join(", ")' "$GH/.claude/settings.json" 2>/dev/null || true)"
+gwarn Copilot "$(jq -r --arg p "$GPAT" '[(.mcpServers // {}) | to_entries[] | .key + " " + (.value.command // "")] | map(select(test($p; "i"))) | join(", ")' "$GH/.copilot/mcp-config.json" 2>/dev/null || true)"
+
 # Second opinion (WARN only, M26-001): a feature names another vendor's CLI
 # to re-judge it; that CLI must be installed where the run happens
 for so_cli in $(jq -r '[.features[]? | .second_opinion? // empty] | unique | .[]' FEATURES.json 2>/dev/null || true); do
