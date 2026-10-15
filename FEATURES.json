@@ -1322,7 +1322,7 @@
       "id": "M33-001",
       "milestone": 33,
       "title": "Optional model field (small|medium|large or a CLI alias) in protocol 1.4, FEATURES template, status.sh and harness-audit",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M32-005"
       ],

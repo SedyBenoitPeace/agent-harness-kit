@@ -125,6 +125,13 @@ if [ -n "$bad_effort" ]; then
   warn "effort must be low, medium, high or max — unknown value on: $bad_effort"
 fi
 
+# Model size (WARN only, M33-001): small|medium|large or a CLI alias
+# (lowercase letters, digits, dot, dash, underscore)
+bad_model="$(jq -r '[.features[]? | select(has("model") and ((.model | type) != "string" or (.model | test("^[a-z][a-z0-9._-]*$") | not))) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
+if [ -n "$bad_model" ]; then
+  warn "model must be small, medium, large or a lowercase CLI alias — unknown value on: $bad_model"
+fi
+
 # Second opinion (WARN only, M26-001): a feature names another vendor's CLI
 # to re-judge it; that CLI must be installed where the run happens
 for so_cli in $(jq -r '[.features[]? | .second_opinion? // empty] | unique | .[]' FEATURES.json 2>/dev/null || true); do

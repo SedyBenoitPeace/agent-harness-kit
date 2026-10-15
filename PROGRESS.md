@@ -1278,3 +1278,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Done: M32-005 — in the template repo cut `sync-3.10.0` from origin/master, ran sync-template.sh (wrote only docs/agents/harness-protocol-runs.md, the 3-line token bullet), committed locally as 23271c2; `--check` is IN SYNC. The mirror branch sync-3.10.0 is committed locally, NOT pushed: awaiting the owner's push and PR. Flipped to passing.
 - Decisions: rejected pushing or opening the PR (owner does that). Assumed "clean against the mirror PR" is satisfied by the local mirror branch. The earlier 9 stale files were just the old m13-sync base; origin/master needed only one.
 - Gate: green.
+
+## 2026-10-15 — session 76 (M33-001)
+
+- Branch: `m32-m33-run`.
+- Done: M33-001 — planning protocol §1.4 gains the `model` question, the small/medium/large table, the alias override, the floors and the step-up rule (no vendor names); FEATURES.json.tmpl `_instructions` names the field; status.sh prints `  model: <value>` under NEXT beside `effort:`; harness-audit WARNs on a model that is not a lowercase alias form (sizes are aliases of that form). Red first in test-status.sh, test-audit.sh and e2e.sh (protocol/template greps), then green.
+- Decisions: the plan says "protocol 1.4" and the table lives in harness-protocol-planning.md (the only 1.x file). Rejected an enum-plus-alias-list check in audit (the kit ships no CLI model names, so "known alias" can only mean a form: `^[a-z][a-z0-9._-]*$`); shortcut: a typo like `smal` passes as an alias. Rejected touching the protocol copy in this repo's docs/ (none exists; template is the source). Assumed the existing template mirror drift is handled by M33-005's sync.
+- Gate: green.
+- Next: M33-002 (Claude Code edition chooseModel reads `model`).

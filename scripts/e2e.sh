@@ -157,6 +157,11 @@ grep -q 'tokens per feature' "$TMPL_DIR/harness-protocol-runs.md" || fail "proto
 grep -q 'where the CLI exposes' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7/2.8: tokens only where the CLI exposes them"
 grep -q 'never estimates tokens' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7/2.8: report must never estimate tokens"
 ! grep -qiE 'claude code|codex|copilot' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol runs: token line must not name a CLI"
+# model size (M33-001): the planning protocol carries the size table and floors
+grep -q 'Which size of model should build it' "$TMPL_DIR/harness-protocol-planning.md" || fail "protocol 1.4: model size question missing"
+grep -qF '| small |' <(tr -d '\`' < "$TMPL_DIR/harness-protocol-planning.md") || fail "protocol 1.4: size table missing"
+grep -qF 'never build below medium' <(tr -d '\`' < "$TMPL_DIR/harness-protocol-planning.md") || fail "protocol 1.4: size floor missing"
+grep -q 'model (small|medium|large' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: model field missing from _instructions"
 grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-planning.md" | grep -qvE '^##+ 1[. ]' && fail "harness-protocol-planning.md holds a section other than 1.x"
 grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-maintenance.md" | grep -qvE '^##+ 3[. ]' && fail "harness-protocol-maintenance.md holds a section other than 3.x"
 for f in harness-protocol-planning.md harness-protocol-runs.md harness-protocol-maintenance.md; do
