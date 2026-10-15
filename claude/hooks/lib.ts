@@ -135,6 +135,31 @@ export function costLine(feature: string, spent: number) {
   return `${feature} ${spent.toFixed(4)}\n`
 }
 
+// --- M32-002 tokens in .harness-run/usage.log ---------------------------------
+// `<scope> claude <model> <input> <cached> <output>`, scope a feature id or
+// `orchestration`; input includes the cache share, cached is the cache read.
+
+export type TurnUsage = {
+  input_tokens: number
+  output_tokens: number
+  cache_creation_input_tokens: number
+  cache_read_input_tokens: number
+  model?: string
+}
+export type Tokens = { input: number; cached: number; output: number; model: string }
+
+export function addUsage(sum: Tokens | undefined, u: TurnUsage): Tokens {
+  const cached = u.cache_read_input_tokens
+  return {
+    input: (sum?.input ?? 0) + u.input_tokens + u.cache_creation_input_tokens + cached,
+    cached: (sum?.cached ?? 0) + cached,
+    output: (sum?.output ?? 0) + u.output_tokens,
+    model: u.model || sum?.model || '-',
+  }
+}
+
+export const usageLine = (scope: string, t: Tokens) => `${scope} claude ${t.model} ${t.input} ${t.cached} ${t.output}\n`
+
 // --- M31-001 where a run's dollars go ------------------------------------------
 // Each slice of the session's cost goes to `agents` when at least one subagent
 // (builder or evaluator) was running through it, else to `orchestration`. Lanes
