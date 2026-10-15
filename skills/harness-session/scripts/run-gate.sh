@@ -21,6 +21,7 @@ case "$PHASE" in
     ;;
 esac
 TARGET="${2:-.}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 cd "$TARGET"
 if [ ! -f scripts/e2e.sh ]; then
@@ -73,11 +74,12 @@ fi
 if [ "$status" -eq 0 ]; then
   echo "GATE: green (${PHASE})"
   echo "FULL_LOG: $LOG"
-  tail -n 20 "$LOG"
+  tail -n 20 "$LOG" | cut -c1-300
 else
   echo "GATE: red (${PHASE})"
   echo "FULL_LOG: $LOG"
-  tail -n 80 "$LOG"
+  # same capped shape as quiet.sh (M34-008): matched lines plus the tail
+  bash "$HERE/quiet.sh" --summary "$LOG"
 fi
 
 exit "$status"

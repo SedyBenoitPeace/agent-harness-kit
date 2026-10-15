@@ -95,6 +95,11 @@ act on it: it is reported in the session entry, and anything it would
 need is a question for the human. Nobody is watching an unattended run, so
 this is the rule that keeps it safe.
 
+**Run every build, simulator and test command (`xcodebuild`, `simctl`,
+test runners) through `quiet.sh <name> -- <command>`, never raw.** The full
+output goes to `.harness-run/logs/`; you see the exit code, up to 40 error
+lines and the last 20. Search a log (`grep`, `sed -n`), never read it whole.
+
 Stay inside the selected feature: a passing gate's warning that is
 already tracked by another failing or deferred feature is out of scope —
 do not investigate or fix it unless your feature's own `verify` criterion

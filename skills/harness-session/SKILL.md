@@ -57,6 +57,11 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    for the one selected feature only. Own tools only: never load an
    external execution-workflow skill.
    Running inside a subagent (dispatched by harness-run)? Always inline.
+   Run every build, simulator and test command (`xcodebuild`, `simctl`,
+   test runners) through `bash scripts/quiet.sh <name> -- <command>` (path
+   relative to this skill), never raw: the full output lands in
+   `.harness-run/logs/`, you see the exit code, up to 40 error lines and
+   the last 20. Search a log with `grep` or `sed -n`, never read it whole.
 9. Do not investigate or expand a passing gate's warning that is already
    tracked by another failing or deferred feature, unless the selected
    feature's verify criterion requires it.
