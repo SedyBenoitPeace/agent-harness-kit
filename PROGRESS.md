@@ -1375,3 +1375,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: M34-007 — wait-result.sh is the portable path (rejected model-side polling and relying only on a CLI's blocking wait); run-start.sh also archives `results/` so a stale result cannot satisfy the next run's wait; the "no whole-file reads" check is a line grep, not a semantic proof.
 - Gate: GREEN (run-gate.sh final).
 - Next: M34-008.
+
+## 2026-10-15 — session 86 (M34-008 parallel lane)
+
+- Branch: `lane/M34-008` (parallel lane, worktree `../harness-planning-skill-M34-008`).
+- Done: M34-008. New `skills/harness-session/scripts/quiet.sh <name> -- <cmd>`: passes the exit code through, keeps the full output in `.harness-run/logs/<name>-<time>-<pid>.log`, prints EXIT, FULL_LOG, at most 40 error|fail|warning lines and the last 20, each cut to 300 characters; `--summary <log>` prints just that shape. run-gate.sh uses it for red gates and cuts green tails to 300 characters. Protocol 2.4 and harness-session tell builders to run every build, simulator and test command through quiet.sh, never raw; e2e.sh checks the phrases; tests in `test-session.sh`.
+- Decisions: Summary shared as `quiet.sh --summary` (rejected: a sourced library, a duplicated snippet). Green gate keeps its 20-line tail with no match section (existing 25-line test). Matched lines may reappear in the tail (no dedupe). Tests were written with the code in one pass, so no separate red run was observed (shortcut). Compressed protocol wording to stay under the 150-line core cap.
+- Gate: green (`bash scripts/e2e.sh`, exit 0).
+- Next: M34-009.

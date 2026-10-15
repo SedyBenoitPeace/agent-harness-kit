@@ -1539,7 +1539,7 @@
       "id": "M34-008",
       "milestone": 34,
       "title": "quiet.sh runs builds and tests with the full log on disk and a capped summary on screen; run-gate.sh output capped the same way; session protocol uses them",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M34-006"
       ],

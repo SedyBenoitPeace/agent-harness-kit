@@ -184,6 +184,30 @@ bash "$RUN_GATE" final "$WORK/red" >"$WORK/red.out" 2>&1 || rc=$?
 grep -q 'GATE: red (final)' "$WORK/red.out" || fail "red gate: missing status line"
 grep -q 'intentional failure sentinel' "$WORK/red.out" || fail "red gate: failure tail not exposed"
 
+# 7c. quiet.sh (M34-008): exit passthrough, full log on disk, capped summary
+QUIET="$PWD/skills/harness-session/scripts/quiet.sh"
+Q="$WORK/quiet"; mkdir -p "$Q"
+noisy() { local i; for i in $(seq 1 100); do echo "error line $i $(printf 'x%.0s' $(seq 1 400))"; done; for i in $(seq 1 100); do echo "plain $i"; done; return 5; }
+export -f noisy
+rc=0; (cd "$Q" && bash "$QUIET" noisy -- bash -c noisy) >"$WORK/q.out" || rc=$?
+[ "$rc" -eq 5 ] || fail "quiet: exit code not passed through (got $rc)"
+grep -q '^EXIT: 5' "$WORK/q.out" || fail "quiet: missing EXIT line"
+qlog="$(sed -n 's/^FULL_LOG: //p' "$WORK/q.out")"
+[ "$(wc -l < "$Q/$qlog")" -eq 200 ] || fail "quiet: full output not on disk in .harness-run/logs/"
+case "$qlog" in .harness-run/logs/noisy-*) ;; *) fail "quiet: log path wrong: $qlog" ;; esac
+[ "$(grep -c '^error line' "$WORK/q.out")" -eq 40 ] || fail "quiet: matches not capped at 40"
+[ "$(grep -c '^plain' "$WORK/q.out")" -eq 20 ] || fail "quiet: tail not 20 lines"
+[ "$(awk '{ if (length($0) > m) m = length($0) } END { print m }' "$WORK/q.out")" -le 300 ] || fail "quiet: a line exceeds 300 characters"
+rc=0; bash "$QUIET" bad >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 2 ] || fail "quiet: usage error should exit 2"
+
+# 7d. run-gate.sh red output has the same capped shape
+make_gate_target "$WORK/redq" 150 3 'error sentinel'
+rc=0; bash "$RUN_GATE" final "$WORK/redq" >"$WORK/redq.out" 2>&1 || rc=$?
+[ "$rc" -eq 3 ] || fail "red gate (capped): expected exit 3"
+[ "$(wc -l < "$WORK/redq.out")" -le 70 ] || fail "red gate: report exceeded 70 lines"
+grep -q -- '--- last 20 lines ---' "$WORK/redq.out" || fail "red gate: not the quiet.sh shape"
+
 # 7b. baseline reuse (M29-001): a green run fingerprints the tree; a later
 #     baseline on an identical clean tree (bookkeeping aside) skips the gate
 R="$WORK/reuse"; mkdir -p "$R/scripts" "$R/docs/plans/active" "$R/src"
