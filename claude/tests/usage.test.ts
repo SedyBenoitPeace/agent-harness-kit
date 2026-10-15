@@ -30,6 +30,29 @@ describe('usage.log (M32-002)', () => {
     )
   })
 
+  test('each completed main-loop turn is on disk at once, so a killed run keeps its orchestration tokens', async ($, on) => {
+    const w = world(on, { ...RUN })
+    models(on, DONE)
+    await $.session.start(START)
+    await $.turn.complete(turn('dispatching', undefined, 1000))
+    expect(w.files[LOG]).toBe('orchestration claude claude-sonnet-5-5 50900 50000 100\n')
+    await $.turn.complete(turn('still going', undefined, 2000))
+    expect(w.files[LOG]).toBe(
+      'orchestration claude claude-sonnet-5-5 50900 50000 100\norchestration claude claude-sonnet-5-5 51900 50000 100\n',
+    )
+  })
+
+  test('a resumed builder adds another turn on the same feature', async ($, on) => {
+    const w = world(on, { ...RUN })
+    models(on, DONE)
+    await $.session.start(START)
+    await $.turn.complete(turn(session('M1-001').replace('passing', 'blocked'), 'agent-1', 1000))
+    await $.turn.complete(turn(session('M1-001'), 'agent-1', 2000))
+    expect(w.files[LOG]).toBe(
+      'M1-001 claude claude-sonnet-5-5 50900 50000 100\nM1-001 claude claude-sonnet-5-5 51900 50000 100\n',
+    )
+  })
+
   test('parallel lanes each count once, on their own feature', async ($, on) => {
     const w = world(on, { ...RUN })
     models(on, DONE)

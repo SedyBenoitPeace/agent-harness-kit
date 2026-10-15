@@ -3,6 +3,14 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-15 — session 71 (M32-002 Claude Code tokens in usage.log)
+
+- Branch: `m32-m33-run`.
+- Done: merged `lane/M32-002` (d6c511c) with `--no-ff` and checked it against the owner's 2.1.300 API-types answers in the M32 plan's decision log. Main-loop turns go to `orchestration`, subagent turns are summed per agentId onto the feature named in the SESSION line, and the model comes from the usage. Added two mod tests to `claude/tests/usage.test.ts`. The first proves an orchestration line is on disk after each completed main-loop turn, so a killed run keeps its orchestrator tokens. The second proves a resumed builder adds another line on the same feature, which run-report.sh already sums. No hook code changed. Both tests passed right away, which confirms the lane already appends one line per orchestrator turn.
+- Decisions: Kept the lane's design. Rejected an end-of-run flush for orchestration, because per-turn appends already survive a kill. Rejected keeping one running total per feature across SESSION lines, because the report sums repeated scope lines. The lane's two unverified assumptions (usage covers the whole turn, and main-loop usage leaves out subagents) are now settled by owner answers 1 and 3, so orchestration does not double count. Known gaps: a subagent turn without a SESSION line (an evaluator, or a builder killed before it finishes) stays in memory and is never logged, so those tokens are missing from the report. An inline builder with no agentId counts as orchestration. The new tests confirm existing behaviour, so they were never red.
+- Gate: GREEN (bash scripts/e2e.sh, all suites, 42 mod tests).
+- Next: M32-005.
+
 ## 2026-10-15 — session 70 (M32 fixtures from real CLI sessions)
 
 - Branch: `m32-m33-run`.

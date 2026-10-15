@@ -1244,7 +1244,7 @@
       "id": "M32-002",
       "milestone": 32,
       "title": "Claude Code edition appends builder and orchestration tokens to usage.log",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M32-001"
       ],
