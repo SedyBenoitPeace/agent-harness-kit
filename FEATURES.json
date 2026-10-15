@@ -1316,7 +1316,7 @@
       "effort": "low",
       "verify": "bash scripts/e2e.sh exits 0 with version 3.10.0 checked; protocol 2.8 says the report carries tokens per feature where the CLI exposes them, with no CLI named; CHANGELOG 3.10.0 has an Upgrade block; sync-template.sh --check is clean against the mirror PR",
       "model": "small",
-      "notes": "Unattended 2026-10-15: blocked — protocol, README, CHANGELOG 3.10.0, version bump to 3.10.0 and the gate check are done locally (gate green). Verify step 'sync-template.sh --check is clean against the mirror PR' needs a template-mirror PR in ../agent-harness-template, which is outside this repo and was not pushed; --check reports the mirror stale (9 files). Question for the human: open the mirror PR with sync-template.sh, then flip to passing."
+      "notes": "Unattended 2026-10-15: blocked — protocol, README, CHANGELOG 3.10.0, version bump to 3.10.0 and the gate check are done locally (gate green). Verify step 'sync-template.sh --check is clean against the mirror PR' needs a template-mirror PR in ../agent-harness-template, which is outside this repo and was not pushed; --check reports the mirror stale (9 files). Question for the human: open the mirror PR with sync-template.sh, then flip to passing. Unattended 2026-10-15: skipped — everything local is done in 032df75 (gate green, 3.10.0, protocol, README, CHANGELOG), but verify needs sync-template.sh --check clean against the template-mirror PR; ../agent-harness-template reports 9 stale files and an unattended run never pushes or opens PRs. Question for the human: will you open the template-mirror sync PR (bash scripts/sync-template.sh ../agent-harness-template) so M32-005 can be flipped to passing?"
     },
     {
       "id": "M33-001",
