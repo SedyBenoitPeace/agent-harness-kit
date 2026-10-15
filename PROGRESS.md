@@ -1271,3 +1271,10 @@ Newest-first session log. One entry per working session. Read this (plus
 - Blocked: `sync-template.sh ../agent-harness-template --check` reports 9 stale files; the mirror PR is outside this repo and was not pushed or written. Status stays `failing` with the note in FEATURES.json.
 - Gate: green.
 - Next: owner opens the template mirror PR (sync-template.sh), then M32-005 flips to passing; M33 features.
+
+## 2026-10-15 — session 75 (M32-005, mirror prepared)
+
+- Branch: `m32-m33-run`.
+- Done: M32-005 — in the template repo cut `sync-3.10.0` from origin/master, ran sync-template.sh (wrote only docs/agents/harness-protocol-runs.md, the 3-line token bullet), committed locally as 23271c2; `--check` is IN SYNC. The mirror branch sync-3.10.0 is committed locally, NOT pushed: awaiting the owner's push and PR. Flipped to passing.
+- Decisions: rejected pushing or opening the PR (owner does that). Assumed "clean against the mirror PR" is satisfied by the local mirror branch. The earlier 9 stale files were just the old m13-sync base; origin/master needed only one.
+- Gate: green.
