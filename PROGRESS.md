@@ -1417,3 +1417,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: Summary shared as `quiet.sh --summary` (rejected: a sourced library, a duplicated snippet). Green gate keeps its 20-line tail with no match section (existing 25-line test). Matched lines may reappear in the tail (no dedupe). Tests were written with the code in one pass, so no separate red run was observed (shortcut). Compressed protocol wording to stay under the 150-line core cap.
 - Gate: green (`bash scripts/e2e.sh`, exit 0).
 - Next: M34-009.
+
+## 2026-10-15 — session 87 (M34-011 session budget, parallel lane)
+
+- Branch: `lane/M34-011` (parallel lane, worktree `../harness-planning-skill-M34-011`).
+- Done: M34-011. Protocol 2.5 and harness-session: past 60 tool calls or about 150k of context a builder commits, writes the resume point and ends `blocked` with reason `session budget`. harness-run and harness-continuous retry that once in a fresh session at the same size; a second one stops (run) or skips (continuous). Claude edition: new option `session_budget_tokens` (default 150000, 0 = off); a builder turn whose context reaches 80% puts `session budget: Nk of Mk tokens, wrap up` on the status line. e2e.sh checks the phrases and the option; two mod tests in `statusline.test.ts`.
+- Decisions: Context measured per builder turn as input + cache tokens of that turn (rejected: counting tool calls in the mod, the host events give no tool-call count; the 60-call limit is therefore protocol text only, not mechanically enforced). Notice only, no STOP file (rejected: stopping a builder from the mod, it cannot end a builder cleanly). Default is on at 150000, so the existing status tests stayed green only because their usage is small. Tests were written first; only the first of the two failed red (the "off" test passes vacuously). Paragraph compressed to keep the protocol at 150 lines.
+- Gate: green (`bash scripts/e2e.sh`, exit 0).
+- Next: M34-013 (after M34-012 and the lanes merge).

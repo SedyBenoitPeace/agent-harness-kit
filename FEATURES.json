@@ -1599,7 +1599,7 @@
       "id": "M34-011",
       "milestone": 34,
       "title": "Session budget: past 60 tool calls or about 150k context a builder commits, notes a resume point and ends blocked with session budget; orchestrators retry once in a fresh session",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M34-007"
       ],

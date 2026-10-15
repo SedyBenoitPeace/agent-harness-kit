@@ -93,6 +93,10 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 11. End with this one-line summary as your last output (harness-run
     parses it; a blocked session stops at the blocker and still prints it):
     `SESSION: <id> · <passing|review|blocked> · gate <green|red> · <commit|reason>`
+    **Session budget:** past 60 tool calls or about 150k of context, stop new
+    work: commit what is safe, write the resume point in PROGRESS.md (or in
+    the commit body when dispatched), leave the feature failing, report
+    `blocked` with the reason `session budget`.
     Dispatched by harness-run? Your very last act, before that output, is
     writing the same line plus at most 10 lines of summary to
     `.harness-run/results/<id>.txt` (create the folder; write to a temp

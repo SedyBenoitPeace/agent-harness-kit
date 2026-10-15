@@ -60,7 +60,10 @@ permissions only — never a skip-all-permissions flag.
    Evaluator step and Parallel lanes. A blocked parallel lane becomes a skip.
 4. Verified (`NEXT` no longer names the id, tree clean) → print
    `<id> passing · <commit>`, loop.
-5. **Skip, don't stop,** when the session is `blocked`, its gate is red,
+5. A `blocked` line with the reason `session budget` is retried
+   once in a fresh session at the same size (the builder left a resume point);
+   a second `session budget` is a skip (below).
+   **Skip, don't stop,** when the session is `blocked`, its gate is red,
    the evaluator returned NEEDS_WORK twice, or `second-opinion.sh` exited 2
    or printed `VERDICT: REJECTED` (where harness-run would STOP and relay):
    1. leftover changes → `git stash push -u -m "harness-run skip <id>"`;

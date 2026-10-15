@@ -59,3 +59,25 @@ describe('status line and /harness (M30-003)', () => {
     expect(out.text).toContain('No harness here')
   })
 })
+
+describe('session budget notice (M34-011)', () => {
+  const OPT = { options: { session_budget_tokens: 100_000 } }
+  // spent(n) = n - 100 input + 50k cached read: a context of n + 49,900
+  test('a builder turn at 80 percent of the budget puts a notice on the line', OPT, async ($, on) => {
+    const w = world(on, { 'FEATURES.json': FEATURES })
+    models(on, '{}')
+    await $.session.start(START)
+    await $.turn.complete(turn('working', 'agent-1', 29_000))
+    expect(w.statuses.at(-1)).not.toContain('session budget')
+    await $.turn.complete(turn('working', 'agent-1', 35_100))
+    expect(w.statuses.at(-1)).toContain('session budget: 85k of 100k tokens, wrap up')
+  })
+
+  test('0 turns the notice off', { options: { session_budget_tokens: 0 } }, async ($, on) => {
+    const w = world(on, { 'FEATURES.json': FEATURES })
+    models(on, '{}')
+    await $.session.start(START)
+    await $.turn.complete(turn('working', 'agent-1', 900_000))
+    expect(w.statuses.at(-1)).not.toContain('session budget')
+  })
+})

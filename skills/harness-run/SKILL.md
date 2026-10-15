@@ -65,7 +65,10 @@ stays interactive and stops at the first problem.
    worktree is clean.
    A `review` feature is not "next" (status.sh never selects it) but is not
    done either: it must leave `review` through the evaluator step.
-6. Anything else — `blocked`, `gate red`, a missing SESSION line, <id>
+6. A `blocked` line whose reason is `session budget` is not a failure: dispatch
+   the same feature once in a fresh session at the same size (it resumes from
+   the builder's note); a second `session budget` stops like any `blocked`.
+   Anything else — `blocked`, `gate red`, a missing SESSION line, <id>
    still next, or a dirty tree → relay the subagent's reason to the human
    in one or two lines and STOP. Do not retry or fix it yourself.
 7. Print one progress line per feature (`<id> passing · <commit>`), then

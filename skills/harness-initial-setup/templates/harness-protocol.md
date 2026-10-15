@@ -127,9 +127,9 @@ requires it.
    turned down; written down, a reviewer can ask for the skipped option
    instead of rediscovering it.
 
-If the feature is not done when you must stop: commit what is safe, leave
-the status `"failing"`, and write exactly where things stand in PROGRESS.md
-— the next session starts from that note.
+Not done when you must stop, or past 60 tool calls or about 150k of context
+(the session budget)? Commit what is safe, leave `"failing"`, write the
+resume point in PROGRESS.md, end `SESSION: <id> · blocked · gate <green|red> · session budget`.
 
 ### 2.6 Branch discipline
 
