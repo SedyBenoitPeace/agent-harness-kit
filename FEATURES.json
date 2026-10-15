@@ -1375,7 +1375,7 @@
       "id": "M33-004",
       "milestone": 33,
       "title": "harness-run and harness-continuous dispatch the per-size builder and log the model on every CLI; retries step up a size",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-002",
         "M33-003"

@@ -200,4 +200,31 @@ rm -rf "$R/.harness-run"
 rc=0; (cd "$R" && bash "$REPORT" nope >/dev/null 2>&1) || rc=$?
 [ "$rc" -eq 2 ] || fail "run-report: unknown start commit should exit 2, got $rc"
 
+# --- M33-004: dispatch by size, models.log on every CLI, retry steps up -------
+DISPATCH="$PWD/skills/harness-run/scripts/dispatch.sh"
+[ -f "$DISPATCH" ] || fail "dispatch.sh missing"
+D="$WORK/disp"; mkdir -p "$D/.codex/agents" "$D/.claude/agents"
+cat > "$D/FEATURES.json" <<'JSON'
+{"features":[{"id":"S-1","model":"small"},{"id":"S-2","model":"large"},{"id":"S-3"},{"id":"S-4","model":"haiku"}]}
+JSON
+for z in small medium large; do : > "$D/.codex/agents/harness-builder-$z.toml"; : > "$D/.claude/agents/harness-builder-$z.md"; done
+disp() { bash "$DISPATCH" "$D" "$@" | tr '\n' ' '; }
+[ "$(disp codex S-1)" = "AGENT: harness-builder-small SIZE: small " ] || fail "dispatch: small -> harness-builder-small"
+[ "$(disp codex S-1 1)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: retry steps small up to medium"
+[ "$(disp codex S-2 1)" = "AGENT: harness-builder-large SIZE: large " ] || fail "dispatch: retry caps at large"
+[ "$(disp codex S-3)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: no model -> medium on codex"
+[ "$(disp codex S-4)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: another CLI's alias -> medium"
+[ "$(disp copilot S-1)" = "AGENT: harness-builder SIZE: small " ] || fail "dispatch: no sized file -> harness-builder"
+[ "$(disp claude S-3)" = "AGENT: harness-builder SIZE: - " ] || fail "dispatch: claude without a size keeps the hook (harness-builder)"
+[ "$(disp claude S-1)" = "AGENT: harness-builder-small SIZE: small " ] || fail "dispatch: claude small -> harness-builder-small"
+[ "$(cat "$D/.harness-run/models.log")" = "$(printf 'S-1 small model small\nS-1 medium model small, +1\nS-2 large model large, +1\nS-3 medium model medium\nS-4 medium model medium\nS-1 small model small')" ] \
+  || fail "dispatch: models.log lines wrong: $(cat "$D/.harness-run/models.log")"
+rc=0; bash "$DISPATCH" "$D" nope S-1 >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 2 ] || fail "dispatch: unknown cli should exit 2, got $rc"
+for f in "$run" "$md"; do
+  grep -q 'dispatch.sh' "$f" || fail "$f: must dispatch through dispatch.sh"
+done
+grep -q 'models.log' "$run" || fail "harness-run SKILL.md: models.log step missing"
+grep -qi 'next size up' "$run" || fail "harness-run SKILL.md: retry step-up missing"
+
 echo "RUN TESTS GREEN"

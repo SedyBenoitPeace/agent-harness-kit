@@ -30,8 +30,15 @@ stays interactive and stops at the first problem.
    boundary: when the next id belongs to a different milestone than the
    first one this run dispatched, report and STOP.
    Also stop at the cap (default 10 features per run; the human may name another).
-3. Dispatch the named agent `harness-builder` (generated per CLI by
-   `../../scripts/gen-agents.sh`; if absent, the agent's own built-in subagent) with exactly:
+3. Run `bash scripts/dispatch.sh <target> <cli> <id> [retries]` (path relative
+   to this skill; `retries` = the feature's `eval_attempts`, 0 for a first
+   build). It prints the agent to dispatch (`harness-builder-<size>` when
+   that agent exists for the CLI, else `harness-builder`, both generated per
+   CLI by `../../scripts/gen-agents.sh`; if absent, the agent's own built-in
+   subagent) and appends `<id> <size> <reason>` to `.harness-run/models.log`
+   on every CLI but Claude Code, whose hook logs its own. A retry (a feature
+   rebuilt after an evaluator NEEDS_WORK) dispatches the next size up.
+   Dispatch that agent with exactly:
    "Use harness-session for <id>, inline. End with its SESSION line."
    Own tools only — never load an external workflow skill.
    When status.sh printed an `effort: <level>` line under `NEXT:`, the
