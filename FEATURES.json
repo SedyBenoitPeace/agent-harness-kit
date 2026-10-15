@@ -33,7 +33,8 @@
     "29": "Faster runs: reused baseline, waiting on a human, paths hint, per-feature cost",
     "30": "Claude edition: model choice, dollar budgets, status line; plan tasks in FEATURES.json",
     "31": "Orchestration cost in the run report",
-    "32": "Token usage in the run report, for every CLI"
+    "32": "Token usage in the run report, for every CLI",
+    "33": "Model size separate from effort, for every CLI"
   },
   "features": [
     {
@@ -1236,7 +1237,8 @@
         "scripts/e2e.sh"
       ],
       "effort": "medium",
-      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh fixtures proving: with usage.log each done feature shows `<total> tok (in, cached, out)`, Summary shows `Tokens: <total> — feature agents <n>, orchestration <n>`, Cost by model carries tokens (Tokens by model without cost.log); without usage.log none of these lines appear; output stays deterministic; e2e.sh runs every scripts/test-usage-*.sh"
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh fixtures proving: with usage.log each done feature shows `<total> tok (in, cached, out)`, Summary shows `Tokens: <total> — feature agents <n>, orchestration <n>`, Cost by model carries tokens (Tokens by model without cost.log); without usage.log none of these lines appear; output stays deterministic; e2e.sh runs every scripts/test-usage-*.sh",
+      "model": "small"
     },
     {
       "id": "M32-002",
@@ -1251,7 +1253,8 @@
         "claude/tests/"
       ],
       "effort": "medium",
-      "verify": "The decision log records, from a real Claude Code session, whether turn.complete usage covers a builder session or only its last call; bash scripts/e2e.sh exits 0 with mod tests proving a builder tokens line lands on its feature, orchestrator slices land on orchestration, parallel lanes count once, the model is recorded, and nothing is written outside a run"
+      "verify": "The decision log records, from a real Claude Code session, whether turn.complete usage covers a builder session or only its last call; bash scripts/e2e.sh exits 0 with mod tests proving a builder tokens line lands on its feature, orchestrator slices land on orchestration, parallel lanes count once, the model is recorded, and nothing is written outside a run",
+      "model": "medium"
     },
     {
       "id": "M32-003",
@@ -1269,7 +1272,8 @@
         "scripts/fixtures/codex/"
       ],
       "effort": "medium",
-      "verify": "A trimmed real Codex session file is committed under scripts/fixtures/codex/; bash scripts/e2e.sh exits 0 with test-usage-codex.sh proving per-feature, parallel-batch and orchestration totals from it, and test-second-opinion.sh proving an `<id>/second-opinion codex` line from summed turn.completed usage"
+      "verify": "A trimmed real Codex session file is committed under scripts/fixtures/codex/; bash scripts/e2e.sh exits 0 with test-usage-codex.sh proving per-feature, parallel-batch and orchestration totals from it, and test-second-opinion.sh proving an `<id>/second-opinion codex` line from summed turn.completed usage",
+      "model": "medium"
     },
     {
       "id": "M32-004",
@@ -1286,7 +1290,8 @@
         "scripts/fixtures/copilot/"
       ],
       "effort": "medium",
-      "verify": "A trimmed real Copilot CLI sample is committed under scripts/fixtures/copilot/ and the decision log says where Copilot keeps session totals; bash scripts/e2e.sh exits 0 with test-usage-copilot.sh proving per-feature and orchestration token totals and premium=<n> when present"
+      "verify": "A trimmed real Copilot CLI sample is committed under scripts/fixtures/copilot/ and the decision log says where Copilot keeps session totals; bash scripts/e2e.sh exits 0 with test-usage-copilot.sh proving per-feature and orchestration token totals and premium=<n> when present",
+      "model": "medium"
     },
     {
       "id": "M32-005",
@@ -1308,8 +1313,100 @@
         "scripts/e2e.sh",
         "AGENTS.md"
       ],
+      "effort": "low",
+      "verify": "bash scripts/e2e.sh exits 0 with version 3.10.0 checked; protocol 2.8 says the report carries tokens per feature where the CLI exposes them, with no CLI named; CHANGELOG 3.10.0 has an Upgrade block; sync-template.sh --check is clean against the mirror PR",
+      "model": "small"
+    },
+    {
+      "id": "M33-001",
+      "milestone": 33,
+      "title": "Optional model field (small|medium|large or a CLI alias) in protocol 1.4, FEATURES template, status.sh and harness-audit",
+      "status": "failing",
+      "depends_on": [
+        "M32-005"
+      ],
+      "paths": [
+        "skills/harness-initial-setup/templates/",
+        "skills/harness-status/",
+        "skills/harness-audit/",
+        "scripts/test-status.sh",
+        "scripts/test-audit.sh"
+      ],
+      "model": "small",
       "effort": "medium",
-      "verify": "bash scripts/e2e.sh exits 0 with version 3.10.0 checked; protocol 2.8 says the report carries tokens per feature where the CLI exposes them, with no CLI named; CHANGELOG 3.10.0 has an Upgrade block; sync-template.sh --check is clean against the mirror PR"
+      "verify": "bash scripts/e2e.sh exits 0 with test-status.sh proving a `model: <value>` line under NEXT when set and none when absent, test-audit.sh proving a WARN for a value that is neither a size nor an alias form, and the protocol neutrality check green with protocol 1.4 carrying the size table and floors"
+    },
+    {
+      "id": "M33-002",
+      "milestone": 33,
+      "title": "Claude Code edition routes by model size first, effort only sets effort; effort mapping kept as fallback",
+      "status": "failing",
+      "depends_on": [
+        "M33-001"
+      ],
+      "paths": [
+        "claude/hooks/",
+        "claude/tests/"
+      ],
+      "model": "medium",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with mod tests proving small/medium/large start haiku/sonnet/opus, a Claude alias is used as given, a feature without model falls back to the effort mapping, a retry steps up from the size, the evaluator and sensitive-path floors hold, effort no longer moves the model when model is set, and models.log names the source"
+    },
+    {
+      "id": "M33-003",
+      "milestone": 33,
+      "title": "Optional per-repo size map (docs/agents/model-sizes.json) and per-size builder agents from gen-agents.sh for each CLI that can set a model",
+      "status": "failing",
+      "depends_on": [
+        "M33-001"
+      ],
+      "paths": [
+        "scripts/gen-agents.sh",
+        "scripts/test-agents.sh",
+        "scripts/fixtures/model-sizes/"
+      ],
+      "model": "medium",
+      "effort": "medium",
+      "verify": "The decision log records, from real agent files on the owner machine, how Codex and Copilot agent files take a model; bash scripts/e2e.sh exits 0 with test-agents.sh proving harness-builder-small/medium/large per CLI from a fixture map with the mapped model lines, none for a CLI without a map, the Claude trio from aliases, and harness-builder unchanged"
+    },
+    {
+      "id": "M33-004",
+      "milestone": 33,
+      "title": "harness-run and harness-continuous dispatch the per-size builder and log the model on every CLI; retries step up a size",
+      "status": "failing",
+      "depends_on": [
+        "M33-002",
+        "M33-003"
+      ],
+      "paths": [
+        "skills/harness-run/",
+        "skills/harness-continuous/",
+        "scripts/test-run.sh"
+      ],
+      "model": "medium",
+      "effort": "medium",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving from fixtures that dispatch picks harness-builder-<size> when present else harness-builder, a retry picks the next size up, and each dispatch appends `<id> <model or size> <reason>` to .harness-run/models.log for a non-Claude CLI"
+    },
+    {
+      "id": "M33-005",
+      "milestone": 33,
+      "title": "README and CHANGELOG for model sizes; release 3.11.0 and template mirror sync",
+      "status": "failing",
+      "depends_on": [
+        "M33-004"
+      ],
+      "paths": [
+        "README.md",
+        "CHANGELOG.md",
+        "package.json",
+        ".claude-plugin/",
+        "claude/.claude-plugin/",
+        "scripts/e2e.sh",
+        "AGENTS.md"
+      ],
+      "model": "small",
+      "effort": "low",
+      "verify": "bash scripts/e2e.sh exits 0 with version 3.11.0 checked; README explains choosing a size and the size map; CHANGELOG 3.11.0 has an Upgrade block; sync-template.sh --check is clean against the mirror PR"
     }
   ]
 }

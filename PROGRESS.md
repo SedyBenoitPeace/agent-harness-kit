@@ -3,6 +3,14 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-15 — session 69 (M33 plan: model size separate from effort)
+
+- Branch: `m32-token-usage`.
+- Done: plan `docs/plans/active/2026-10-15-m33-model-sizes.md` and M33-001…005 as `failing`. M32 tasks re-marked with sizes (001 and 005 `small`, 005 also `effort: low`). No code yet.
+- Decisions: optional `model` field (small/medium/large, or a CLI alias for that CLI only), separate from `effort`; absent keeps today's effort mapping. Model names live only in an optional per-repo size map; Claude Code needs none. Haiku 5.5 checked against Anthropic's announcement and docs before sizing: a real coding subagent, weaker on long shell work, so `small` = narrow and pattern-following.
+- Gate: GREEN (bash scripts/e2e.sh, all suites).
+- Next: owner reviews both plans; then M32-001.
+
 ## 2026-10-15 — session 68 (M32 plan: token usage for every CLI)
 
 - Branch: `m32-token-usage`.

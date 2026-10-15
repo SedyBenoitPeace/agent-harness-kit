@@ -120,5 +120,8 @@ Dollars stay where they are (`cost.log`, `run-cost`, Claude Code only).
 - 2026-10-15: every CLI-specific format is confirmed on a real session and
   committed as a fixture before code depends on it; nothing is guessed
   from documentation alone.
-- 2026-10-15: all tasks `effort: medium` (Sonnet builders); none touches
+- 2026-10-15: sizes per task (M33's `model` field, owner-approved): M32-001
+  and M32-005 `small`, the rest `medium`; M32-005 also `effort: low`, so it
+  already starts on Haiku. The sizes take effect in the Claude edition once
+  M33-002 ships; until then routing follows `effort`. None touches
   security-sensitive paths.
