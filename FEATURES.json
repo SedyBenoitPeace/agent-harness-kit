@@ -1253,9 +1253,9 @@
         "claude/tests/"
       ],
       "effort": "medium",
-      "verify": "The decision log records, from a real Claude Code session, whether turn.complete usage covers a builder session or only its last call; bash scripts/e2e.sh exits 0 with mod tests proving a builder tokens line lands on its feature, orchestrator slices land on orchestration, parallel lanes count once, the model is recorded, and nothing is written outside a run",
+      "verify": "The decision log records whether turn.complete usage covers a builder session or only its last call; bash scripts/e2e.sh exits 0 with mod tests proving a builder tokens line lands on its feature, orchestrator slices land on orchestration, parallel lanes count once, the model is recorded, and nothing is written outside a run",
       "model": "medium",
-      "notes": "Unattended 2026-10-15: skipped — implementation is on branch lane/M32-002 (d6c511c, gate green, worktree ../harness-planning-skill-M32-002), but verify needs the decision log to record from a real Claude Code session whether turn.complete usage covers a builder's whole session or only its last call, and a lane cannot observe that. It also assumes main-loop usage excludes subagent tokens. Question for the human: on a real run, does turn.complete usage cover the whole builder session (sum of turns) or only its last call, and does the main loop's usage include subagent tokens?"
+      "notes": "Unattended 2026-10-15: skipped — implementation is on branch lane/M32-002 (d6c511c, gate green, worktree ../harness-planning-skill-M32-002), but verify needs the decision log to record from a real Claude Code session whether turn.complete usage covers a builder's whole session or only its last call, and a lane cannot observe that. It also assumes main-loop usage excludes subagent tokens. Answered by the owner 2026-10-15: see the plan's decision log."
     },
     {
       "id": "M32-003",

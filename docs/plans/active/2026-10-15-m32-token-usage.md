@@ -135,3 +135,14 @@ Dollars stay where they are (`cost.log`, `run-cost`, Claude Code only).
   already starts on Haiku. The sizes take effect in the Claude edition once
   M33-002 ships; until then routing follows `effort`. None touches
   security-sensitive paths.
+- 2026-10-15 (owner, from the 2.1.300 API types; answers M32-002's open
+  question in place of a live observation):
+  1. `turn.complete`'s `usage` sums every real request of that turn, not
+     only the last call; its `model` is the last request's.
+  2. A subagent's `turn.complete` (`agentId` set) covers that subagent's
+     run. A resumed run is another turn with the same `agentId`, so sum per
+     feature.
+  3. Main-loop usage counts only the main loop's requests; subagents'
+     tokens are not in it.
+  4. `$.session.usage().cost.usd` includes subagents (every priced
+     response; confirmed live in M30).
