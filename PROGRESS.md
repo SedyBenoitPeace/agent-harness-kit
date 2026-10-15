@@ -1343,3 +1343,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: Copied the ~8-line fingerprint function into `handoff.sh` instead of calling `harness-session/scripts/run-gate.sh`, so the handoff skill stays self-contained (rejected: cross-skill path coupling; cost: the recipe exists twice and must change together). `--skip-gate` keeps the WARNING prefix rather than the plain NOTE, since the old test and callers match on it; the text matches the NOTE. Assumed the fixture-tested green file path (`git rev-parse --git-path harness-gate-green`) is stable. Added a shellcheck SC2016 disable on the stub-gate printf (the literal `${GATE_LOG}` is intended).
 - Gate: green (`bash scripts/e2e.sh`, exit 0).
 - Next: M34-002 and M34-004 (other lanes), then M34-003.
+
+## 2026-10-15 — session 82 (M34-002 + M34-004 parallel lanes merged)
+
+- Branch: `m34-run` (lanes `lane/M34-002` 66ecf28, `lane/M34-004` 5b73d14, merged with M34-001; full gate green after the merge).
+- Done: M34-002 `run-start.sh` archives the previous run's ledger into `.harness-run/previous/<old start>/` and resets run state; harness-continuous Start calls it. M34-004 Claude edition hooks reset the run ledger when `.harness-run/start` changes, models.log lines carry a notes hash so step-up counts only starts with the same notes, supervisor off by default (`supervisor` option) and never judges a parallel lane.
+- Decisions: M34-002 — logs moved, not copied, keyed by the old start commit; nothing archived when `start` is missing. M34-004 — djb2 notes hash as a `notes:<hash>` suffix (existing readers match the prefix); lanes detected by prompt text ("as a parallel lane in"); the lane models.log test passed before the change, so the 2026-10-15 "unknown" model is not reproduced (usage.log model comes from usage data) — cause still open.
+- Gate: GREEN (run-gate.sh final, after merging all three lanes).
+- Next: M34-003.

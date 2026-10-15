@@ -1433,7 +1433,7 @@
       "id": "M34-002",
       "milestone": 34,
       "title": "run-start.sh gives each continuous run clean run state, archiving the previous run under .harness-run/previous/<start>",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-005"
       ],
@@ -1466,7 +1466,7 @@
       "id": "M34-004",
       "milestone": 34,
       "title": "Claude Code edition: run-scoped ledger, models.log for lane builders, no step-up after a notes change, supervisor off by default and never for lanes",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-005"
       ],
