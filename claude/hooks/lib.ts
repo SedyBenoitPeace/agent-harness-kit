@@ -190,7 +190,7 @@ export function tierOf(model: string | undefined) {
   return -1
 }
 
-type FeatureEntry = { id?: string; effort?: unknown; paths?: unknown; eval_attempts?: unknown }
+type FeatureEntry = { id?: string; model?: unknown; effort?: unknown; paths?: unknown; eval_attempts?: unknown }
 
 export function featureOf(featuresJson: string, id: string): FeatureEntry | undefined {
   try {
@@ -218,8 +218,12 @@ export function chooseModel(spawn: SpawnFacts, featuresJson: string, modelsLog: 
   const f = featureOf(featuresJson, id)
   if (!f) return undefined
   const effort = typeof f.effort === 'string' ? f.effort : 'none'
-  const reasons = [`effort ${effort}`]
-  let tier = effort === 'low' ? 0 : effort === 'high' || effort === 'max' ? 2 : 1
+  // M33-002: a size (or a Claude alias) picks the model; effort only when `model` is absent.
+  // Any other value (another CLI's alias) counts as medium.
+  const size = typeof f.model === 'string' ? f.model.toLowerCase() : ''
+  const sized = size ? { small: 0, medium: 1, large: 2 }[size] ?? (tierOf(size) < 0 ? 1 : Math.min(2, tierOf(size))) : undefined
+  const reasons = [sized !== undefined ? `model ${size}` : `effort ${effort}`]
+  let tier = sized ?? (effort === 'low' ? 0 : effort === 'high' || effort === 'max' ? 2 : 1)
   const starts = modelsLog.split('\n').filter(l => l.startsWith(`${id} `)).length
   const attempts = Number(f.eval_attempts) > 0 ? Number(f.eval_attempts) : 0
   if (starts + attempts > 0) {
