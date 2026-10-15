@@ -1262,3 +1262,12 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: rejected a time-window split (builder SESSION line attributes exactly); rejected summing token_count events (last total is cumulative). Assumed: a builder thread without a SESSION line counts as orchestration; second-opinion logs only when .harness-run exists, with model "-"; collector appends, so run once at End. Shortcut: .jsonl.zst skipped when zstd is missing, untested (no zst fixture). Rejected weakening the hygiene regex.
 - Gate: green.
 - Next: M33 features.
+
+## 2026-10-15 — session 74 (M32-005, blocked on the mirror)
+
+- Branch: `m32-m33-run`.
+- Done: M32-005 — protocol §2.7/§2.8 gains a token-usage bullet (tokens per feature where the CLI exposes them, nothing estimated, no CLI named); README run-report and upgrade step; CHANGELOG 3.10.0 entry with Upgrade block and the bash 3.2 / BWK awk gate fix; version 3.10.0 in package.json, both plugin manifests and marketplace.json; AGENTS.md state line. e2e.sh checks 3.10.0, the token line and the bash 3.2 changelog mention (red first, then green).
+- Decisions: the verify says "protocol 2.8", but the protocol has no numeric version; read it as §2.8 and put the token bullet in §2.7/§2.8 (the run report). Rejected a `PROTOCOL` version stamp (none exists, would be a new mechanism). Rejected estimating tokens for CLIs without usage. Assumed: the protocol copy change makes existing harness repos outdated, so the 3.10.0 Upgrade block says to run harness-upgrade-structure. Shortcut: the token phrase is checked by grep, not by rendering a run report.
+- Blocked: `sync-template.sh ../agent-harness-template --check` reports 9 stale files; the mirror PR is outside this repo and was not pushed or written. Status stays `failing` with the note in FEATURES.json.
+- Gate: green.
+- Next: owner opens the template mirror PR (sync-template.sh), then M32-005 flips to passing; M33 features.

@@ -278,6 +278,11 @@ of git):
   verifying, merging lanes, gates), counted once even with parallel lanes,
   in `.harness-run/run-cost`. The run report's Summary shows that split and
   the feature dollars per model, so a heavy `opus` share is easy to spot.
+- **Token usage** — where the CLI exposes token usage, the run report shows
+  tokens per feature (input, cached, output), the run's tokens split into
+  feature agents and orchestration, and tokens by model. Claude Code, Codex
+  and Copilot each log their own usage to `.harness-run/usage.log`; a CLI
+  with no usage shows no token lines.
 
 Upgrading from 3.2.0: the edition was briefly named `agent-harness-kit-mods`;
 run `/plugin uninstall agent-harness-kit-mods`, then install
@@ -403,7 +408,8 @@ What it does, so nothing surprises you:
 - **The report**, `docs/runs/<date>.md`, is built by `run-report.sh` from
   git and FEATURES.json (no model calls) and committed: done (with minutes
   per feature, and dollars and the model with the Claude Code edition, plus
-  the run's cost split into feature agents and orchestration, and by model), skipped (with each
+  the run's cost split into feature agents and orchestration, and by model;
+  tokens per feature and by model where the CLI exposes them), skipped (with each
   question), waiting on a human, not started and why, branches used.
 - **Watching it from a terminal.** In a second tab, run
   `bash <kit>/skills/harness-status/scripts/status.sh --watch` in the repo:

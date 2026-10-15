@@ -88,6 +88,9 @@ nothing stops it for a feature it cannot finish. The human invokes the
   its `Decisions:` line and its minutes (and its cost and model, where the agent
   logs them), the features waiting on a human, and any skipped work or
   budget stop the run recorded. The report is committed.
+- Token usage: the report carries tokens per feature where the CLI exposes
+  them (input, cached and output, with the orchestration share and the model
+  per line). A CLI that exposes no usage adds nothing; the report never estimates tokens.
 - The human then reads the report, answers each question in that
   feature's `notes`, recovers any stashed work with `git stash list`, and
   reviews the branch. A later run starts with an empty skip list and
