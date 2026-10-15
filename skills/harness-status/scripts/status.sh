@@ -41,7 +41,7 @@ if [ -n "$WATCH" ]; then
     [ -t 1 ] && printf '\033[H\033[2J'
     echo "harness-status --watch: every ${WATCH}s, $(date '+%H:%M:%S') (Ctrl-C to stop)"
     echo
-    bash "$self" "${args[@]}" "$TARGET" || true
+    bash "$self" ${args[@]+"${args[@]}"} "$TARGET" || true
     n=$((n + 1))
     [ "${HARNESS_WATCH_COUNT:-0}" -gt 0 ] && [ "$n" -ge "$HARNESS_WATCH_COUNT" ] && exit 0
     sleep "$WATCH"
