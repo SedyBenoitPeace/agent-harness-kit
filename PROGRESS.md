@@ -1351,3 +1351,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: M34-002 — logs moved, not copied, keyed by the old start commit; nothing archived when `start` is missing. M34-004 — djb2 notes hash as a `notes:<hash>` suffix (existing readers match the prefix); lanes detected by prompt text ("as a parallel lane in"); the lane models.log test passed before the change, so the 2026-10-15 "unknown" model is not reproduced (usage.log model comes from usage data) — cause still open.
 - Gate: GREEN (run-gate.sh final, after merging all three lanes).
 - Next: M34-003.
+
+## 2026-10-15 — session 83 (M34-003 + M34-005 parallel lanes merged)
+
+- Branch: `m34-run` (lanes `lane/M34-003` 5014ebf, `lane/M34-005` 2fbf145; full gate green after both merges).
+- Done: M34-003 run-report.sh takes a feature's Decisions from its own commit body, else the PROGRESS entry whose `Done:` line names it; planning entries never count. M34-005 protocol 1.4 requires repo-provable `verify` and a `## Before the run` plan section; harness-audit WARNs on owner/live-session words in a failing verify and on an active plan with neither `depends_on` nor `paths`.
+- Decisions: M34-003 — rejected scanning every entry that mentions the id (that is how planning text leaked); commit-body `Decisions:` starts at column 0, wraps indented. M34-005 — WARN, not FAIL (advice); lanes WARN only when no feature in the plan declares either field; word-list match may give false positives on words like "ask".
+- Gate: GREEN (run-gate.sh final).
+- Next: M34-006.

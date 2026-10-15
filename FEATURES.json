@@ -1450,7 +1450,7 @@
       "id": "M34-003",
       "milestone": 34,
       "title": "Run report takes each feature Decisions line from its own commit body or the PROGRESS entry that marks it done, never from a planning entry",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-005"
       ],
@@ -1482,7 +1482,7 @@
       "id": "M34-005",
       "milestone": 34,
       "title": "Protocol 1.4: verify provable from the repo alone, owner-only checks go in a plan Before the run section; harness-audit warns on both that and plans without depends_on/paths",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M33-005"
       ],
