@@ -61,6 +61,43 @@ sed -i.bak 's/^effort: max$/effort: turbo/' "$m/agents/src/harness-evaluator.md"
 bash "$m/scripts/gen-agents.sh" "$m/out" >/dev/null 2>&1 && fail "unknown effort level must be rejected"
 rm -rf "$m"
 
+# per-size builders (M33-003)
+# no map: Claude trio from aliases, none for Codex/Copilot, base builder unchanged
+for z in small:haiku medium:sonnet large:opus; do
+  f="$t/.claude/agents/harness-builder-${z%%:*}.md"
+  [ -f "$f" ] || fail "claude: missing harness-builder-${z%%:*}"
+  grep -qx "name: harness-builder-${z%%:*}" "$f" || fail "claude sized builder name wrong"
+  grep -qx "model: ${z##*:}" "$f" || fail "claude ${z%%:*} must be model: ${z##*:}"
+  grep -q '^effort:' "$f" && fail "sized builder must have no effort line"
+  grep -q '^tools:' "$f" && fail "sized builder must keep full tools"
+done
+ls "$t"/.github/agents/harness-builder-* "$t"/.codex/agents/harness-builder-* >/dev/null 2>&1 \
+  && fail "no size map: Codex/Copilot must get no sized builders"
+ls "$t"/.claude/agents/harness-evaluator-* >/dev/null 2>&1 && fail "only the builder gets sizes"
+# with a map: Codex and Copilot get the mapped model lines
+s2="$(mktemp -d)"; mkdir -p "$s2/docs/agents"
+cp scripts/fixtures/model-sizes/model-sizes.json "$s2/docs/agents/"
+bash scripts/gen-agents.sh "$s2" >/dev/null
+for z in small:S medium:M large:L; do
+  zz="${z%%:*}"; k="${z##*:}"; kl="$(echo "$k" | tr '[:upper:]' '[:lower:]')"
+  x="$s2/.codex/agents/harness-builder-$zz.toml"; g="$s2/.github/agents/harness-builder-$zz.agent.md"
+  grep -qx "model = \"fixture-codex-$kl\"" "$x" || fail "codex $zz model line"
+  grep -qx "name = \"harness-builder-$zz\"" "$x" || fail "codex $zz name"
+  grep -q "^developer_instructions = '''" "$x" || fail "codex $zz instructions"
+  grep -qx "model: Fixture Copilot $k" "$g" || fail "copilot $zz model line"
+  grep -qx "name: harness-builder-$zz" "$g" || fail "copilot $zz name"
+  grep -Eq '^(effort|model_reasoning_effort)' "$x" "$g" && fail "sized builder has effort"
+done
+cmp -s "$t/.codex/agents/harness-builder.toml" "$s2/.codex/agents/harness-builder.toml" || fail "base codex builder must be unchanged by a map"
+cmp -s "$t/.github/agents/harness-builder.agent.md" "$s2/.github/agents/harness-builder.agent.md" || fail "base copilot builder must be unchanged by a map"
+# removing the map removes the stale sized files
+rm "$s2/docs/agents/model-sizes.json"; bash scripts/gen-agents.sh "$s2" >/dev/null
+ls "$s2"/.github/agents/harness-builder-* "$s2"/.codex/agents/harness-builder-* >/dev/null 2>&1 && fail "stale sized builders left"
+# a partial map is rejected
+cp scripts/fixtures/model-sizes/partial.json "$s2/docs/agents/model-sizes.json"
+bash scripts/gen-agents.sh "$s2" >/dev/null 2>&1 && fail "partial size map must be rejected"
+rm -rf "$s2"
+
 # idempotent
 before="$(cd "$t" && find . -type f -exec cksum {} + | sort)"
 bash scripts/gen-agents.sh "$t" >/dev/null

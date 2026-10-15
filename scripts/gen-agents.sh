@@ -10,7 +10,28 @@ mkdir -p "$target/.claude/agents" "$target/.github/agents" "$target/.codex/agent
 
 field() { sed -n "2,/^---\$/{s/^$2: *//p;}" "$1"; }
 body()  { awk 'c>=2{print} /^---$/{c++}' "$1"; }
-# No model line: every CLI uses its own default model (M28-001).
+# No model line on the base agents: every CLI uses its own default model (M28-001).
+# Per-size builders (M33-003): harness-builder-small|medium|large. Claude Code
+# always gets them (aliases never go stale); Codex and Copilot only when the
+# target's docs/agents/model-sizes.json maps that CLI's three sizes.
+map="$target/docs/agents/model-sizes.json"
+# size_of <cli> <size>: the mapped model name, empty when absent
+size_of() {
+  [ -f "$map" ] || return 0
+  tr '\n' ' ' < "$map" | sed -n "s/.*\"$1\" *: *{\([^}]*\)}.*/\1/p" \
+    | sed -n "s/.*\"$2\" *: *\"\([^\"]*\)\".*/\1/p"
+}
+sizes="small medium large"
+for cli in codex copilot; do
+  n=0
+  for z in $sizes; do
+    v="$(size_of "$cli" "$z")"
+    case "$v" in *\\*) echo "gen-agents: $map: $cli.$z has a backslash" >&2; exit 1 ;; esac
+    [ -n "$v" ] && n=$((n+1))
+  done
+  [ "$n" -eq 0 ] || [ "$n" -eq 3 ] || { echo "gen-agents: $map: $cli needs small, medium and large (got $n)" >&2; exit 1; }
+  case $cli in codex) has_codex=$n ;; *) has_copilot=$n ;; esac
+done
 
 for src in "$here"/agents/src/*.md; do
   name="$(field "$src" name)"; desc="$(field "$src" description)"
@@ -60,5 +81,29 @@ for src in "$here"/agents/src/*.md; do
     body "$src"
     printf "'''\n"
   } > "$target/.codex/agents/$name.toml"
+
+  if [ "$name" = harness-builder ]; then
+    for z in $sizes; do
+      case $z in small) a=haiku ;; medium) a=sonnet ;; large) a=opus ;; esac
+      {
+        printf -- '---\nname: %s-%s\ndescription: %s\nmodel: %s\n---\n' "$name" "$z" "$desc" "$a"
+        body "$src"
+      } > "$target/.claude/agents/$name-$z.md"
+      if [ "$has_copilot" -eq 3 ]; then
+        {
+          printf -- '---\nname: %s-%s\ndescription: %s\nmodel: %s\n---\n' "$name" "$z" "$desc" "$(size_of copilot "$z")"
+          body "$src"
+        } > "$target/.github/agents/$name-$z.agent.md"
+      else rm -f "$target/.github/agents/$name-$z.agent.md"; fi
+      if [ "$has_codex" -eq 3 ]; then
+        {
+          printf 'name = "%s-%s"\ndescription = "%s"\nmodel = "%s"\n' "$name" "$z" "$desc" "$(size_of codex "$z")"
+          printf "developer_instructions = '''\n"
+          body "$src"
+          printf "'''\n"
+        } > "$target/.codex/agents/$name-$z.toml"
+      else rm -f "$target/.codex/agents/$name-$z.toml"; fi
+    done
+  fi
 done
 echo "gen-agents: wrote agents to $target"
