@@ -1246,3 +1246,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: M32-004: per-record timestamp filtering against the start commit time (rejected whole-session created_at; rejected session.shutdown totals: absent in crashed sessions, no per-feature split). jq required; repo match on workspace.yaml cwd/git_root only; env overrides COPILOT_HOME and HARNESS_USAGE_REPO for the fixture; premium cross-check not implemented.
 - Skipped: M32-002 (lane/M32-002 kept, d6c511c): verify needs an observation from a real Claude Code session; question in its notes. M32-003 (lane/M32-003, e4dcaf3) merged red on the gate's personal-path check (`$W/home/...` in test-usage-codex.sh matches `/home/[a-z]`); merge dropped, redone sequentially next.
 - Gate: green.
+
+## 2026-10-15 — session 73 (M32-003)
+
+- Branch: `m32-m33-run`.
+- Done: M32-003 — merged lane/M32-003 (e4dcaf3): `usage-codex.sh` collects Codex tokens per feature from SESSION lines (rest is orchestration, model per line); `second-opinion.sh` logs an `<id>/second-opinion codex` line from summed turn.completed usage. Fixed the red gate: test dir `$W/home` renamed `$W/codexhome` so it no longer matches the `/home/[a-z]` hygiene regex (check unchanged).
+- Decisions: rejected a time-window split (builder SESSION line attributes exactly); rejected summing token_count events (last total is cumulative). Assumed: a builder thread without a SESSION line counts as orchestration; second-opinion logs only when .harness-run exists, with model "-"; collector appends, so run once at End. Shortcut: .jsonl.zst skipped when zstd is missing, untested (no zst fixture). Rejected weakening the hygiene regex.
+- Gate: green.
+- Next: M33 features.

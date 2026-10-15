@@ -9,7 +9,7 @@ FIX="$PWD/scripts/fixtures/codex"
 fail() { echo "USAGE-CODEX TEST FAIL: $*" >&2; exit 1; }
 
 W="$(mktemp -d)"; trap 'rm -rf "$W"' EXIT
-mkdir -p "$W/repo" "$W/home/sessions/2026/01/05"
+mkdir -p "$W/repo" "$W/codexhome/sessions/2026/01/05"
 git -C "$W/repo" init -q -b main
 GIT_COMMITTER_DATE="2026-01-05T08:00:00Z" GIT_AUTHOR_DATE="2026-01-05T08:00:00Z" \
   git -C "$W/repo" -c user.email=t@t -c user.name=t commit -q --allow-empty -m start
@@ -18,13 +18,13 @@ REPO="$(cd "$W/repo" && pwd -P)"
 
 # The fixture's working directory is /repo: point it at the temp repo.
 for f in "$FIX"/*.jsonl; do
-  sed "s#\"/repo\"#\"$REPO\"#g" "$f" > "$W/home/sessions/2026/01/05/$(basename "$f")"
+  sed "s#\"/repo\"#\"$REPO\"#g" "$f" > "$W/codexhome/sessions/2026/01/05/$(basename "$f")"
 done
 # A thread of another repo, and one from before the start commit: both ignored.
-sed "s#\"/repo\"#\"/somewhere/else\"#g" "$FIX"/*05.jsonl > "$W/home/sessions/2026/01/05/rollout-x-other.jsonl"
-sed "s#\"/repo\"#\"$REPO\"#g; s#2026-01-05T09:50:00#2026-01-04T09:50:00#g" "$FIX"/*05.jsonl > "$W/home/sessions/2026/01/05/rollout-x-old.jsonl"
+sed "s#\"/repo\"#\"/somewhere/else\"#g" "$FIX"/*05.jsonl > "$W/codexhome/sessions/2026/01/05/rollout-x-other.jsonl"
+sed "s#\"/repo\"#\"$REPO\"#g; s#2026-01-05T09:50:00#2026-01-04T09:50:00#g" "$FIX"/*05.jsonl > "$W/codexhome/sessions/2026/01/05/rollout-x-old.jsonl"
 
-run() { (cd "$W/repo" && CODEX_HOME="$W/home" bash "$UC" "$@"); }
+run() { (cd "$W/repo" && CODEX_HOME="$W/codexhome" bash "$UC" "$@"); }
 
 run "$start" || fail "collector exited non-zero"
 log="$W/repo/.harness-run/usage.log"

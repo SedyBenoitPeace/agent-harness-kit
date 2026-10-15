@@ -1261,7 +1261,7 @@
       "id": "M32-003",
       "milestone": 32,
       "title": "Codex: usage-codex.sh collects tokens per feature from Codex session files via each builder SESSION line; second opinions log their tokens",
-      "status": "failing",
+      "status": "passing",
       "depends_on": [
         "M32-001"
       ],
