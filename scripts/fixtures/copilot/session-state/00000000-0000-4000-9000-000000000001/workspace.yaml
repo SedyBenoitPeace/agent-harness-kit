@@ -1,0 +1,12 @@
+id: 00000000-0000-4000-9000-000000000001
+cwd: /repo
+git_root: /repo
+repository: example/repo
+host_type: github
+branch: m1-run
+client_name: github/cli
+user_named: false
+summary_count: 0
+fork_count: 0
+created_at: 2026-10-13T14:00:00.000Z
+updated_at: 2026-10-13T14:05:12.000Z

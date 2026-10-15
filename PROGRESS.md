@@ -3,6 +3,14 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-15 — session 70 (M32 fixtures from real CLI sessions)
+
+- Branch: `m32-m33-run`.
+- Done: Codex and Copilot session formats confirmed on the owner's machine (Codex CLI 0.162.1, Copilot CLI 1.0.94). Fixtures in `scripts/fixtures/`, both synthetic in the confirmed formats (no real session data in this open-source repo): Codex shaped like a run with an orchestrator, four builders (one retry) and a guardian; Copilot with an orchestrator and two builders. `scripts/fixtures/README.md` holds the format facts and expected totals. M32 plan, M32-003 and M32-004 updated. No feature code yet.
+- Decisions: both CLIs tag subagents and builders end with their SESSION line, so Codex and Copilot tokens attribute to features exactly; time-window attribution and Copilot's status-line snapshot are dropped. Fixtures synthetic by owner decision: open-source repo, so no real session data, trimmed or not.
+- Gate: GREEN (bash scripts/e2e.sh, all suites).
+- Next: unattended run `harness-continuous through M33` from this branch.
+
 ## 2026-10-15 — session 69 (M33 plan: model size separate from effort)
 
 - Branch: `m32-token-usage`.
