@@ -175,7 +175,9 @@ Status reports list it as waiting on a human and hold every feature whose
 `depends_on` reaches it, so no session spends time finding the blocker.
 
 Last question per feature: **How much verification does this deserve?**
-Record the answer as `effort`, one of low, medium, high or max. Effort
+Record the answer as `effort`, one of low, medium, high or max. It is
+required on every feature that is not yet passing (harness-audit fails
+without it), so every agent knows how hard to check its work. Effort
 is spent mostly on verification and edge cases, so it pays where those
 matter:
 
@@ -186,8 +188,8 @@ matter:
 | Security, auth, payments, reviews of other work | `high` or `max` |
 
 The session reads it as how much checking to do beyond the `verify`
-check, and an orchestrator passes it to the agent it dispatches. Leaving
-it out is always safe: the agent uses its usual effort.
+check, and an orchestrator passes it to the agent it dispatches. When
+unsure, pick `medium`; never leave it out.
 
 Then ask: **Which size of model should build it?** Record `model`: `small`,
 `medium` or `large`; optional. Size is separate from effort: effort is how

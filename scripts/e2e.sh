@@ -39,6 +39,15 @@ jq -e '[ .features[]
   FEATURES.json >/dev/null \
   || fail "FEATURES.json: evaluate must be ui|none, bar a string, eval_attempts an integer"
 
+# effort (M36-001): required on every feature still to build or judge
+jq -e '[ .features[] | select(.status | IN("failing","review","deferred"))
+         | select((.effort // "") | IN("low","medium","high","max") | not) ] | length == 0' \
+  FEATURES.json >/dev/null \
+  || fail "FEATURES.json: failing/review/deferred features need effort low|medium|high|max"
+grep -q 'effort is required' skills/harness-audit/scripts/check.sh || fail "harness-audit: required-effort FAIL missing"
+grep -q 'effort is now required' skills/harness-upgrade-structure/scripts/upgrade.sh || fail "upgrade.sh: missing-effort TODO missing"
+grep -q 'effort is now required' skills/harness-upgrade-structure/SKILL.md || fail "harness-upgrade-structure SKILL.md: missing-effort TODO handling missing"
+
 # AGENTS.md stays a table of contents
 [ "$(wc -l < AGENTS.md)" -le 100 ] || fail "AGENTS.md exceeds 100 lines"
 
@@ -374,7 +383,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.12.0" ] || fail "plugin version must be 3.12.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.13.0" ] || fail "plugin version must be 3.13.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"

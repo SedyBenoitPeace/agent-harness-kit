@@ -27,7 +27,7 @@ cat > FEATURES.json <<'JSON'
   "features": [
     { "id": "M0-001", "milestone": 0, "title": "Gate runs", "status": "passing", "verify": "bash scripts/e2e.sh exits 0", "notes": "" },
     { "id": "M1-001", "milestone": 1, "title": "scripts/greet.sh NAME prints Hello, NAME!", "status": "failing", "effort": "low", "verify": "bash scripts/e2e.sh exits 0 with tests/test-greet.sh proving bash scripts/greet.sh Ada prints exactly 'Hello, Ada!'", "notes": "" },
-    { "id": "M1-002", "milestone": 1, "title": "scripts/greet.sh with no NAME prints usage to stderr and exits 2", "status": "failing", "verify": "bash scripts/e2e.sh exits 0 with a test proving bash scripts/greet.sh exits 2 and prints usage to stderr", "notes": "" }
+    { "id": "M1-002", "milestone": 1, "title": "scripts/greet.sh with no NAME prints usage to stderr and exits 2", "status": "failing", "effort": "low", "verify": "bash scripts/e2e.sh exits 0 with a test proving bash scripts/greet.sh exits 2 and prints usage to stderr", "notes": "" }
   ]
 }
 JSON

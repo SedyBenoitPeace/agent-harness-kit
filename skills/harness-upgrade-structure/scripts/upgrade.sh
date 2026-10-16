@@ -173,5 +173,14 @@ if jq -e '[.features[] | select(.status == "failing" and (.depends_on | type) !=
 else
   echo "OK: failing features declare depends_on"
 fi
+# effort is required (M36-001): open features without it fail harness-audit.
+# The script cannot judge a feature's effort, so it lists them for the agent
+# to propose a level each (protocol 1.4 table) and the human to approve.
+no_effort="$(jq -r '[.features[] | select((.status // "") | IN("failing","review","deferred")) | select(has("effort") | not) | .id] | join(" ")' FEATURES.json)"
+if [ -n "$no_effort" ]; then
+  echo "TODO: effort is now required — set effort (low|medium|high|max, protocol 1.4) on: $no_effort"
+else
+  echo "OK: open features declare effort"
+fi
 rm -rf "$gen"
 echo "NEXT: review git diff and every UPGRADE-NOTE line above, then commit the upgrade as its own commit."

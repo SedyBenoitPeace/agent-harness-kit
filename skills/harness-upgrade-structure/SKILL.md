@@ -37,7 +37,12 @@ commits it. It is **not** for new repos: that is harness-initial-setup.
      function from the initial-setup `templates/e2e.sh.tmpl`;
    - `depends_on` / `paths` → offer **harness-audit**, which proposes them
      for the human to approve (without declared `depends_on`, a skipped
-     feature stops a continuous run).
+     feature stops a continuous run);
+   - `effort is now required` → propose a level for each listed feature
+     from the protocol §1.4 table (`docs/agents/harness-protocol-planning.md`),
+     one line per feature with its reason; once the human approves, write
+     them into FEATURES.json in the upgrade commit. Never skip it: until
+     every open feature has one, harness-audit fails.
 6. Commit the upgrade as its own commit, explicit paths, message
    `chore: upgrade harness structure` — never mixed with feature work.
    Never push; the human decides.

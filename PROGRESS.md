@@ -1473,3 +1473,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: Docker over `act` (no extra install, same image and apt step as the workflow); apt on every run (~30s) rather than a baked image (ponytail note in the script). ubuntu-latest moves to Ubuntu 26 from 2026-10-19: update the image tag then.
 - Gate: GREEN (ci-local.sh, Docker).
 - Next: none; owner merges PR #37.
+
+## 2026-10-16 — session 94 (M36-001 effort required)
+
+- Branch: `effort-required`.
+- Done: M36-001. `effort` is required on every failing, review or deferred feature: harness-audit FAILs when it is missing or unknown (the unknown value was a WARN); passing and superseded features may lack it. upgrade.sh prints `TODO: effort is now required … on: <ids>` and the upgrade skill proposes a level per feature from the protocol 1.4 table for the human to approve. Template's first feature carries `effort`, protocol 1.4 says pick `medium` when unsure, README/ARCHITECTURE/session skill updated, the kit's own gate enforces it on FEATURES.json. Release 3.13.0.
+- Decisions: rejected requiring effort on passing/superseded features (history; an upgrade would have to back-fill levels nobody will use). Rejected having upgrade.sh fill a default `medium` silently: a guessed level hides the decision the field exists for, so the script lists and the skill proposes for approval.
+- Gate: GREEN (e2e.sh).
+- Next: none; owner merges the PR, then sync the template mirror.

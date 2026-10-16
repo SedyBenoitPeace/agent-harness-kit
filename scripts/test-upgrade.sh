@@ -62,6 +62,7 @@ done
 echo "$out" | grep -q '^TODO: .*scripts/e2e.sh' || fail "upgrade: unbounded gate must be a TODO"
 echo "$out" | grep -q "^UPGRADE-NOTE: $(jq -r .version .claude-plugin/plugin.json): " || fail "upgrade: no stamp yet, so every release's notes must print"
 echo "$out" | grep -q '^TODO: .*harness-audit' || fail "upgrade: depends_on/paths via harness-audit must be a TODO"
+echo "$out" | grep -q '^TODO: effort is now required.*on: M1-001$' || fail "upgrade: an open feature without effort must be a TODO naming it (M36-001)"
 [ "$(g rev-parse HEAD)" = "$before" ] || fail "upgrade: must not commit"
 [ -z "$(g diff --cached --name-only)" ] || fail "upgrade: must not stage anything"
 
@@ -119,6 +120,7 @@ for r in harness-builder harness-evaluator harness-brief-reviewer; do
 done
 echo "$out" | grep -q '^CHANGED: .claude/agents/harness-builder.md' || fail "stale agents: builder change not reported"
 if [ -d "$S/.codex" ] || [ -d "$S/.github" ]; then fail "stale agents: must not add CLIs the repo does not use"; fi
+echo "$out" | grep -q '^OK: open features declare effort' || fail "upgrade: a passing feature without effort needs no TODO (M36-001)"
 git -C "$S" -c user.email=t@t -c user.name=t add -A; git -C "$S" -c user.email=t@t -c user.name=t commit -qm up
 out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stale agents second run: expected exit 0"
 if echo "$out" | grep -q '^CHANGED: .claude/agents'; then fail "stale agents second run: nothing should change"; fi
