@@ -231,8 +231,10 @@ protocol so every agent follows them:
 
 ## Choosing a model size
 
-A feature can carry `"model": "small" | "medium" | "large"`: which size of
-model builds it. It is separate from `effort`, which only sets how hard the
+Every feature still to build carries `"model": "small" | "medium" |
+"large"`: which size of model builds it. Like `effort` it is required:
+`harness-audit` fails a failing, review or deferred feature without it, and
+`harness-upgrade-structure` lists the ones an older repo is missing. It is separate from `effort`, which only sets how hard the
 model checks its own work. Any size works with any effort.
 
 | Size | Use it for |
@@ -241,8 +243,8 @@ model checks its own work. Any size works with any effort.
 | `medium` | The default and the safe choice: new logic, several files, debugging |
 | `large` | Design calls others build on, security or isolation, cross-cutting refactors |
 
-Leave `model` out and nothing changes. The Claude Code edition still picks
-the builder from `effort`. Other CLIs use `medium`. The evaluator and
+In an older FEATURES.json without `model`, the Claude Code edition still
+picks the builder from `effort` and other CLIs use `medium`. The evaluator and
 features touching auth, payments, billing, migrations, secrets, credentials
 or personal data never build below `medium`. A retry or an evaluator
 rejection steps up one size.

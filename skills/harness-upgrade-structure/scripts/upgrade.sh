@@ -182,5 +182,12 @@ if [ -n "$no_effort" ]; then
 else
   echo "OK: open features declare effort"
 fi
+# model is required too (M36-002), proposed from the protocol 1.4 size table
+no_model="$(jq -r '[.features[] | select((.status // "") | IN("failing","review","deferred")) | select(has("model") | not) | .id] | join(" ")' FEATURES.json)"
+if [ -n "$no_model" ]; then
+  echo "TODO: model is now required — set model (small|medium|large, protocol 1.4) on: $no_model"
+else
+  echo "OK: open features declare model"
+fi
 rm -rf "$gen"
 echo "NEXT: review git diff and every UPGRADE-NOTE line above, then commit the upgrade as its own commit."

@@ -2,7 +2,7 @@
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
   "milestones": {
     "35": "M34 follow-ups: run-report decisions, README, template mirror",
-    "36": "Effort required on every open feature"
+    "36": "Effort and model size required on every open feature"
   },
   "features": [
     {
@@ -41,6 +41,25 @@
       "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a missing or unknown effort FAILs on failing/review/deferred features and passes on passing/superseded ones, and test-upgrade.sh proving the missing-effort TODO",
       "effort": "high",
       "depends_on": [],
+      "paths": [
+        "skills/harness-audit/",
+        "skills/harness-upgrade-structure/",
+        "skills/harness-initial-setup/templates/",
+        "scripts/"
+      ],
+      "model": "medium"
+    },
+    {
+      "id": "M36-002",
+      "milestone": 36,
+      "title": "model is required: harness-audit FAILs a failing/review/deferred feature without a valid model size, upgrade.sh lists the ones missing it",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a missing or malformed model FAILs on failing/review/deferred features and passes on passing/superseded ones, and test-upgrade.sh proving the missing-model TODO",
+      "effort": "high",
+      "model": "medium",
+      "depends_on": [
+        "M36-001"
+      ],
       "paths": [
         "skills/harness-audit/",
         "skills/harness-upgrade-structure/",

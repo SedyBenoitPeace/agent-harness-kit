@@ -1481,3 +1481,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: rejected requiring effort on passing/superseded features (history; an upgrade would have to back-fill levels nobody will use). Rejected having upgrade.sh fill a default `medium` silently: a guessed level hides the decision the field exists for, so the script lists and the skill proposes for approval.
 - Gate: GREEN (e2e.sh).
 - Next: none; owner merges the PR, then sync the template mirror.
+
+## 2026-10-16 — session 95 (M36-002 model required)
+
+- Branch: `model-required`.
+- Done: M36-002. `model` is required on every failing, review or deferred feature, same treatment as effort: harness-audit FAILs when it is missing or malformed (was a WARN), upgrade.sh prints `TODO: model is now required … on: <ids>`, the upgrade skill proposes a size per feature from the 1.4 size table. Template, protocol 1.4, README, ARCHITECTURE, eval scaffold and the kit's own gate updated. Release 3.14.0.
+- Decisions: kept the Claude Code edition's effort-to-size fallback for older FEATURES.json files rather than removing it; required on the same statuses as effort so the two rules read as one.
+- Gate: GREEN (e2e.sh, ci-local.sh).
+- Next: none; owner merges the PR, then sync the template mirror.
