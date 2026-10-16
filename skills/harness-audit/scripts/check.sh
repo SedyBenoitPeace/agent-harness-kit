@@ -150,11 +150,19 @@ if [ -z "$no_effort" ] && [ -z "$bad_effort" ] && jq -e . FEATURES.json >/dev/nu
   pass "every open feature has a valid effort"
 fi
 
-# Model size (WARN only, M33-001): small|medium|large or a CLI alias
-# (lowercase letters, digits, dot, dash, underscore)
+# Model size (FAIL, M36-002): required on the same open features as effort;
+# small|medium|large or a CLI alias (lowercase letters, digits, dot, dash,
+# underscore). A malformed value fails wherever it appears.
+no_model="$(jq -r '[.features[]? | select((.status? // "") | IN("failing","review","deferred")) | select(has("model") | not) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
 bad_model="$(jq -r '[.features[]? | select(has("model") and ((.model | type) != "string" or (.model | test("^[a-z][a-z0-9._-]*$") | not))) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
+if [ -n "$no_model" ]; then
+  failc "model is required (small, medium, large or a CLI alias; protocol 1.4) — missing on: $no_model"
+fi
 if [ -n "$bad_model" ]; then
-  warn "model must be small, medium, large or a lowercase CLI alias — unknown value on: $bad_model"
+  failc "model must be small, medium, large or a lowercase CLI alias — unknown value on: $bad_model"
+fi
+if [ -z "$no_model" ] && [ -z "$bad_model" ] && jq -e . FEATURES.json >/dev/null 2>&1; then
+  pass "every open feature has a valid model size"
 fi
 
 # Exclusive resource (WARN only, M34-006): optional non-empty string naming a

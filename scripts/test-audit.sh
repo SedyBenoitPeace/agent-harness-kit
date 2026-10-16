@@ -77,7 +77,7 @@ if echo "$out" | grep -q "^WARN.*not bounded"; then fail "template gate wrongly 
 # 2e. opted-in evaluator features without agent files: WARN, still exit 0;
 # generated agent files clear it
 make_fixture "$WORK/opt-in"
-jq '.features += [{"id":"M9-001","milestone":9,"title":"t","status":"failing","verify":"v","effort":"medium","evaluate":"ui"}]' \
+jq '.features += [{"id":"M9-001","milestone":9,"title":"t","status":"failing","verify":"v","effort":"medium","model":"medium","evaluate":"ui"}]' \
   "$WORK/opt-in/FEATURES.json" > "$WORK/opt-in/F.tmp" && mv "$WORK/opt-in/F.tmp" "$WORK/opt-in/FEATURES.json"
 out="$(bash "$CHECK" "$WORK/opt-in")" || fail "missing evaluator agent files must not fail the audit"
 echo "$out" | grep -q "^WARN.*harness-evaluator" || fail "opt-in without agent files: expected WARN line"
@@ -106,17 +106,27 @@ done
 jq -e '.features[0].effort | IN("low","medium","high","max")' <(sed 's/{{[A-Za-z0-9_]*}}/X/g' "$TMPL/FEATURES.json.tmpl") >/dev/null \
   || fail "FEATURES.json.tmpl: first feature must carry a valid effort"
 
-# 2f2. model size (M33-001): a size or a lowercase alias passes silently;
-# anything else is a WARN naming the feature
+# 2f2. model size (M33-001, required since M36-002): a size or a lowercase
+# alias passes; a malformed value, or none on an open feature, FAILs naming
+# the feature; passing and superseded features may lack it
 make_fixture "$WORK/msize"
 for v in small medium large haiku gpt-5.1; do
   jq --arg v "$v" '.features[0].model = $v' "$WORK/msize/FEATURES.json" > "$WORK/msize/F.tmp" && mv "$WORK/msize/F.tmp" "$WORK/msize/FEATURES.json"
   out="$(bash "$CHECK" "$WORK/msize")" || fail "valid model $v must not fail the audit"
-  echo "$out" | grep -q "^WARN.*model" && fail "valid model $v: no WARN expected"
+  echo "$out" | grep -q "^PASS.*model size" || fail "valid model $v: expected a PASS line"
 done
 jq '.features[0].model = "Big Model!"' "$WORK/msize/FEATURES.json" > "$WORK/msize/F.tmp" && mv "$WORK/msize/F.tmp" "$WORK/msize/FEATURES.json"
-out="$(bash "$CHECK" "$WORK/msize")" || fail "unknown model must not fail the audit"
-echo "$out" | grep -q "^WARN.*model.*M0-001" || fail "unknown model: expected WARN naming the feature"
+expect_fail "$WORK/msize" "model.*unknown value on: M0-001" "unknown model"
+for st in failing review deferred; do
+  jq --arg s "$st" '.features[0] |= (del(.model) | .status = $s)' "$WORK/msize/FEATURES.json" > "$WORK/msize/F.tmp" && mv "$WORK/msize/F.tmp" "$WORK/msize/FEATURES.json"
+  expect_fail "$WORK/msize" "model is required.*missing on: M0-001" "missing model on a $st feature"
+done
+for st in passing superseded; do
+  jq --arg s "$st" '.features[0] |= (del(.model) | .status = $s)' "$WORK/msize/FEATURES.json" > "$WORK/msize/F.tmp" && mv "$WORK/msize/F.tmp" "$WORK/msize/FEATURES.json"
+  out="$(bash "$CHECK" "$WORK/msize")" || fail "a $st feature without model must not fail the audit: $out"
+done
+jq -e '.features[0].model | IN("small","medium","large")' <(sed 's/{{[A-Za-z0-9_]*}}/X/g' "$TMPL/FEATURES.json.tmpl") >/dev/null \
+  || fail "FEATURES.json.tmpl: first feature must carry a model size"
 
 # exclusive (M34-006): a non-empty string passes; anything else is a WARN
 make_fixture "$WORK/excl"
@@ -181,7 +191,7 @@ expect_fail "$WORK/no-planning" "harness-protocol-planning.md missing" "missing 
 
 # M30-005: an active plan's task ids must be in FEATURES.json
 make_fixture "$WORK/plan-ok"
-jq '.features += [{"id": "M1-001", "milestone": 1, "title": "t", "status": "failing", "verify": "x", "effort": "low"}]' "$WORK/plan-ok/FEATURES.json" > "$WORK/plan-ok/f.json" && mv "$WORK/plan-ok/f.json" "$WORK/plan-ok/FEATURES.json"
+jq '.features += [{"id": "M1-001", "milestone": 1, "title": "t", "status": "failing", "verify": "x", "effort": "low", "model": "small"}]' "$WORK/plan-ok/FEATURES.json" > "$WORK/plan-ok/f.json" && mv "$WORK/plan-ok/f.json" "$WORK/plan-ok/FEATURES.json"
 printf '# Plan\n\n## M1-001 — first task\n\nDepends on nothing; see M9-999 in prose.\n' > "$WORK/plan-ok/docs/plans/active/p.md"
 out="$(bash "$CHECK" "$WORK/plan-ok")" || fail "plan with its tasks in FEATURES.json: audit should pass ($out)"
 make_fixture "$WORK/plan-missing"
@@ -192,8 +202,8 @@ expect_fail "$WORK/plan-missing" "names M1-002, which is not in FEATURES.json" "
 # feature); an active plan whose features declare neither depends_on nor
 # paths allows no lanes (WARN). Neither fails the audit.
 make_fixture "$WORK/prov"
-jq '.features += [{"id":"M1-001","milestone":1,"title":"t","status":"failing","verify":"bash scripts/e2e.sh exits 0 with the fixture","effort":"low"},
-                  {"id":"M1-002","milestone":1,"title":"t","status":"failing","verify":"a real session on the owner machine shows it","effort":"low","depends_on":[],"paths":["x/"]},
+jq '.features += [{"id":"M1-001","milestone":1,"title":"t","status":"failing","verify":"bash scripts/e2e.sh exits 0 with the fixture","effort":"low","model":"small"},
+                  {"id":"M1-002","milestone":1,"title":"t","status":"failing","verify":"a real session on the owner machine shows it","effort":"low","model":"small","depends_on":[],"paths":["x/"]},
                   {"id":"M1-003","milestone":1,"title":"t","status":"passing","verify":"pushed by a human","depends_on":[],"paths":["x/"]}]' \
   "$WORK/prov/FEATURES.json" > "$WORK/prov/F.tmp" && mv "$WORK/prov/F.tmp" "$WORK/prov/FEATURES.json"
 printf '# Plan\n\n## M1-001 — a\n\n## M1-002 — b\n' > "$WORK/prov/docs/plans/active/p.md"

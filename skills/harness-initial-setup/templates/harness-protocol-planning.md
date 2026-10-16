@@ -192,7 +192,8 @@ check, and an orchestrator passes it to the agent it dispatches. When
 unsure, pick `medium`; never leave it out.
 
 Then ask: **Which size of model should build it?** Record `model`: `small`,
-`medium` or `large`; optional. Size is separate from effort: effort is how
+`medium` or `large`; required on every feature not yet passing, like
+`effort` (harness-audit fails without it). Size is separate from effort: effort is how
 hard the checking goes, size is who builds. Any size goes with any effort.
 
 | Size | When | Examples |
@@ -205,8 +206,8 @@ A CLI's own model alias is accepted as an override and applies only on
 that CLI; every other CLI treats it as `medium`. Floors: the evaluator and
 any feature whose `paths` touch auth, payments, billing, migrations,
 secrets, credentials or personal data never build below `medium`. A retry
-or an evaluator rejection steps up one size. Leaving `model` out is always
-safe: the agent keeps its default.
+or an evaluator rejection steps up one size. When unsure, pick `medium`;
+never leave it out.
 
 ### 1.5 Write the first execution plan
 

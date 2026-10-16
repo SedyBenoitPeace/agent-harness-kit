@@ -10,6 +10,23 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.14.0 — 2026-10-16
+
+- `model` is required (M36-002), like `effort`: every failing, review or
+  deferred feature must carry a size (`small`, `medium`, `large`) or a CLI
+  alias. harness-audit FAILs without it and on a malformed value (was a
+  WARN); passing and superseded features may lack it.
+- harness-upgrade-structure prints a `TODO:` naming every open feature
+  without `model`; the skill proposes a size per feature from the protocol
+  1.4 size table, together with any missing effort.
+- FEATURES.json template's first feature carries `model`; protocol 1.4 says
+  to pick `medium` when unsure, never leave it out.
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`, then set
+  `model` on every feature its TODO names (protocol 1.4 size table); until
+  then harness-audit fails.
+
 ## 3.13.0 — 2026-10-16
 
 - `effort` is required (M36-001): every failing, review or deferred feature
