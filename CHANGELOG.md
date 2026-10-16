@@ -10,6 +10,23 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.13.0 — 2026-10-16
+
+- `effort` is required (M36-001): every failing, review or deferred feature
+  must carry `low`, `medium`, `high` or `max`, so every agent knows how much
+  checking a task deserves. harness-audit FAILs without it (and on an unknown
+  value, which was a WARN); passing and superseded features may lack it.
+- harness-upgrade-structure prints a `TODO:` naming every open feature
+  without effort; the skill proposes a level for each from the protocol 1.4
+  table for the human to approve.
+- FEATURES.json template: the first feature carries `effort`; protocol 1.4
+  says to pick `medium` when unsure, never leave it out.
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`, then set
+  `effort` on every feature its TODO names (protocol 1.4 table); until then
+  harness-audit fails.
+
 ## 3.12.0 — 2026-10-15
 
 - Run fixes (M34): handoff reuses the last green gate instead of running the

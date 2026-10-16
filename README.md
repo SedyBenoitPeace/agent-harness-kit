@@ -208,13 +208,16 @@ protocol so every agent follows them:
   turned down; written down, you (or the evaluator) can ask for the skipped
   option instead of rediscovering it. The evaluator reads the line as
   leads, never as evidence.
-- **Per-feature effort.** A feature can carry `"effort": "low" | "medium" |
-  "high" | "max"`: how much verification and edge-case testing it deserves.
+- **Per-feature effort.** Every feature still to build carries `"effort":
+  "low" | "medium" | "high" | "max"`: how much verification and edge-case
+  testing it deserves. It is required: `harness-audit` fails a failing,
+  review or deferred feature without it, and `harness-upgrade-structure`
+  lists the ones an older repo is missing.
   UI work rarely gains from high effort; APIs, data and security do.
   `harness-status` prints it under `NEXT:`, sessions scale their checking
   to it, and `harness-run` passes it to the agent it dispatches (as the
   CLI's own effort setting where there is one). The evaluator always runs
-  at high or above. Leave it out and nothing changes. The kit names no
+  at high or above. The kit names no
   models: every agent runs on its CLI's default. Pick your strongest model
   for hard features and reviews, a cheaper one for implementation.
 - **Rules that expire.** Start lean: add an AGENTS.md rule only for a

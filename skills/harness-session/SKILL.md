@@ -53,7 +53,9 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 7. If `NEXT:` carries an `effort:` line (protocol §1.4), it sets how much
    verification and edge-case testing to do beyond the `verify` check:
    `low` = the verify check and the gate; `high` or `max` = also the edge
-   cases and failure paths the feature touches. No line, usual judgment.
+   cases and failure paths the feature touches. Effort is required, so a
+   missing line means an older FEATURES.json: use usual judgment and
+   suggest harness-upgrade-structure.
    A `paths:` line names where the feature works: start reading there.
 8. Propose the execution mode in one line — **inline** (default) or
    **delegated** to the agent's own built-in subagents when the feature

@@ -123,7 +123,7 @@ jq -r "$HELD_DEF"'
 
 echo
 echo "== Next feature (lowest milestone, then lowest id, among failing) =="
-# Optional effort hint (low|medium|high|max) and model size (M33-001): one indented line each under NEXT.
+# Effort (low|medium|high|max; required since M36-001) and optional model size (M33-001): one indented line each under NEXT.
 # paths (M29-003): where the feature works, so a builder starts reading there.
 EFFORT_DEF='def effort_line: (if (.effort | type) == "string" and .effort != "" then "\n  effort: \(.effort)" else "" end)
   + (if (.model | type) == "string" and .model != "" then "\n  model: \(.model)" else "" end)

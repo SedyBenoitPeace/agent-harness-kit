@@ -1,7 +1,8 @@
 {
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
   "milestones": {
-    "35": "M34 follow-ups: run-report decisions, README, template mirror"
+    "35": "M34 follow-ups: run-report decisions, README, template mirror",
+    "36": "Effort required on every open feature"
   },
   "features": [
     {
@@ -30,6 +31,21 @@
       "paths": [
         "README.md",
         "CHANGELOG.md"
+      ]
+    },
+    {
+      "id": "M36-001",
+      "milestone": 36,
+      "title": "effort is required: harness-audit FAILs a failing/review/deferred feature without a valid effort, upgrade.sh lists the ones missing it",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a missing or unknown effort FAILs on failing/review/deferred features and passes on passing/superseded ones, and test-upgrade.sh proving the missing-effort TODO",
+      "effort": "high",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-audit/",
+        "skills/harness-upgrade-structure/",
+        "skills/harness-initial-setup/templates/",
+        "scripts/"
       ]
     }
   ]

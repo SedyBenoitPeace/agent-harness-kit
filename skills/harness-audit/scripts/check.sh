@@ -134,11 +134,20 @@ if jq -e '[.features[]? | select(.evaluate? == "ui")] | length > 0' FEATURES.jso
   fi
 fi
 
-# Effort hint (WARN only, M23-002): optional; an unknown value is ignored by
-# sessions, so it is advice to fix, never a broken harness
+# Effort (FAIL, M36-001): required on every feature still to build or judge
+# (failing, review, deferred) so every agent knows how much checking it
+# deserves; passing and superseded ones are history and may lack it. A value
+# outside low|medium|high|max fails wherever it appears.
+no_effort="$(jq -r '[.features[]? | select((.status? // "") | IN("failing","review","deferred")) | select(has("effort") | not) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
 bad_effort="$(jq -r '[.features[]? | select(has("effort") and (.effort | IN("low","medium","high","max") | not)) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
+if [ -n "$no_effort" ]; then
+  failc "effort is required (low, medium, high or max; protocol 1.4) — missing on: $no_effort"
+fi
 if [ -n "$bad_effort" ]; then
-  warn "effort must be low, medium, high or max — unknown value on: $bad_effort"
+  failc "effort must be low, medium, high or max — unknown value on: $bad_effort"
+fi
+if [ -z "$no_effort" ] && [ -z "$bad_effort" ] && jq -e . FEATURES.json >/dev/null 2>&1; then
+  pass "every open feature has a valid effort"
 fi
 
 # Model size (WARN only, M33-001): small|medium|large or a CLI alias
