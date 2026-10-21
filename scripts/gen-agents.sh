@@ -2,6 +2,9 @@
 # Usage: gen-agents.sh <target-repo>
 # Emits harness-builder / harness-evaluator for Claude Code, Copilot CLI and
 # Codex CLI from the neutral sources in agents/src. Idempotent.
+# Every Copilot agent sets deferred-tool-loading: true, so it uses tool search
+# instead of loading every tool definition on each call (the main agent defers
+# by default; a custom agent only with this line).
 set -euo pipefail
 here="$(cd "$(dirname "$0")/.." && pwd)"
 target="${1:?usage: gen-agents.sh <target-repo>}"
@@ -69,6 +72,7 @@ for src in "$here"/agents/src/*.md; do
   {
     printf -- '---\nname: %s\ndescription: %s\n' "$name" "$desc"
     [ -n "$g_tools" ] && printf '%s\n' "$g_tools"
+    printf 'deferred-tool-loading: true\n'
     printf -- '---\n'
     body "$src"
   } > "$target/.github/agents/$name.agent.md"
@@ -91,7 +95,7 @@ for src in "$here"/agents/src/*.md; do
       } > "$target/.claude/agents/$name-$z.md"
       if [ "$has_copilot" -eq 3 ]; then
         {
-          printf -- '---\nname: %s-%s\ndescription: %s\nmodel: %s\n---\n' "$name" "$z" "$desc" "$(size_of copilot "$z")"
+          printf -- '---\nname: %s-%s\ndescription: %s\nmodel: %s\ndeferred-tool-loading: true\n---\n' "$name" "$z" "$desc" "$(size_of copilot "$z")"
           body "$src"
         } > "$target/.github/agents/$name-$z.agent.md"
       else rm -f "$target/.github/agents/$name-$z.agent.md"; fi

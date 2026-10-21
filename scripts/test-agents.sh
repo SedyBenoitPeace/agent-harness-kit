@@ -102,6 +102,22 @@ cp scripts/fixtures/model-sizes/partial.json "$s2/docs/agents/model-sizes.json"
 bash scripts/gen-agents.sh "$s2" >/dev/null 2>&1 && fail "partial size map must be rejected"
 rm -rf "$s2"
 
+# deferred tool loading: every generated Copilot agent (all access levels,
+# base and sized) uses Copilot CLI tool search; Claude and Codex get no such line
+s3="$(mktemp -d)"; mkdir -p "$s3/docs/agents"
+cp scripts/fixtures/model-sizes/model-sizes.json "$s3/docs/agents/"
+bash scripts/gen-agents.sh "$s3" >/dev/null
+n=0
+for g in "$t"/.github/agents/*.agent.md "$s3"/.github/agents/*.agent.md; do
+  awk 'NR==1 && /^---$/ {f=1; next} f && /^---$/ {exit} f' "$g" \
+    | grep -qx 'deferred-tool-loading: true' || fail "$g: copilot agent needs deferred-tool-loading: true in its frontmatter"
+  n=$((n+1))
+done
+[ "$n" -ge 6 ] || fail "deferred-tool-loading check saw only $n copilot agents"
+grep -rq 'deferred-tool-loading' "$t/.claude" "$t/.codex" "$s3/.claude" "$s3/.codex" \
+  && fail "deferred-tool-loading is Copilot-only"
+rm -rf "$s3"
+
 # idempotent
 before="$(cd "$t" && find . -type f -exec cksum {} + | sort)"
 bash scripts/gen-agents.sh "$t" >/dev/null

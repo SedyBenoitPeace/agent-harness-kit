@@ -24,7 +24,9 @@ commits it. It is **not** for new repos: that is harness-initial-setup.
 2. Read the `CHANGED:` / `OK:` / `TODO:` lines and tell the human what
    changed in two or three lines: the protocol copy recopied, the
    harness-run line added to AGENTS.md, agent files regenerated (restart
-   Copilot CLI to see them), the kit version recorded in
+   Copilot CLI to see them; since 3.14.1 every Copilot agent carries
+   `deferred-tool-loading: true`, so it uses tool search instead of loading
+   every tool definition per call), the kit version recorded in
    `docs/agents/harness-kit-version`.
 3. Relay every `UPGRADE-NOTE: <version>: <note>` line: these are the
    release notes' Upgrade steps for each release since this repo's last
