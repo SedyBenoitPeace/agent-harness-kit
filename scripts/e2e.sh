@@ -285,13 +285,14 @@ bash scripts/test-audit.sh
 
 STATUS_SKILL="skills/harness-status"
 [ -f "$STATUS_SKILL/scripts/status.sh" ] || fail "harness-status status.sh missing"
-shellcheck "$STATUS_SKILL/scripts/status.sh" "$STATUS_SKILL/scripts/archive-features.sh"
+shellcheck "$STATUS_SKILL/scripts/status.sh" "$STATUS_SKILL/scripts/archive-features.sh" "$STATUS_SKILL/scripts/copilot-statusline.sh"
 [ -f "$STATUS_SKILL/SKILL.md" ] || fail "harness-status SKILL.md missing"
 [ "$(head -1 "$STATUS_SKILL/SKILL.md")" = "---" ] || fail "harness-status SKILL.md: missing frontmatter"
 grep -q '^name: harness-status$' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: frontmatter name wrong"
 grep -q '^description: ' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: description missing"
 grep -q 'show-me' "$STATUS_SKILL/SKILL.md" || fail "harness-status SKILL.md: show-me relay step missing"
 bash scripts/test-status.sh
+bash scripts/test-copilot-statusline.sh
 
 # --- harness-handoff skill ----------------------------------------------------
 

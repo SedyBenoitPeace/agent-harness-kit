@@ -3,6 +3,18 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-21 -- session 75 (M37-001 Copilot status line)
+
+- Branch: `copilot-statusline`.
+- Done: M37-001. `skills/harness-status/scripts/copilot-statusline.sh` puts
+  the harness line after the user's own Copilot CLI status line; `--install`
+  keeps their statusLine in `$COPILOT_HOME/agent-harness-kit/original.json`,
+  `--uninstall` restores it. Plan: `docs/plans/completed/2026-10-21-m37-copilot-statusline.md`.
+- Decisions: Codex left out (its footer takes built-in items only). Not in
+  README or CHANGELOG yet: the owner tests it on Copilot CLI first.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner tests on Copilot CLI; then README + CHANGELOG with the next release.
+
 ## 2026-10-15 -- session 74 (M34-010 features archive)
 
 - Branch: `m34-run`.
