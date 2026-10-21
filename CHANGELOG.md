@@ -10,6 +10,19 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.14.1 — 2026-10-21
+
+- Generated Copilot custom agents (builder, evaluator, brief reviewer and the
+  sized builders) set `deferred-tool-loading: true`, so they use Copilot CLI
+  tool search instead of loading every tool definition on each call. A
+  harness-builder subagent was sending ~100-145k tokens of tool definitions
+  per call. Claude Code and Codex agents are unchanged.
+
+Upgrade:
+- Harness repos with `.github/agents/`: run
+  `/agent-harness-kit:harness-upgrade-structure`; it regenerates the Copilot
+  agents with `deferred-tool-loading: true`. Commit them and restart Copilot CLI.
+
 ## 3.14.0 — 2026-10-16
 
 - `model` is required (M36-002), like `effort`: every failing, review or
