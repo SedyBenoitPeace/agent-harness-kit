@@ -31,6 +31,11 @@ parsing lives in `scripts/status.sh` — run it, never re-derive it by hand.
    work, start a coding session (protocol §2). `scripts/archive-features.sh`
    is not part of status: harness-continuous End runs it to move fully
    done milestones to `docs/features-archive.json` (the `Archived:` line).
+6. Copilot CLI status line (experimental), only when the human asks for
+   it: `bash scripts/copilot-statusline.sh --install` adds the harness line
+   after their own Copilot status line (it keeps theirs and turns on
+   Copilot's `STATUS_LINE` flag); `--uninstall` puts settings.json back.
+   It edits `~/.copilot/settings.json`, so ask first.
 
 ## Red flags
 
