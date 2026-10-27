@@ -27,6 +27,32 @@ Upgrade:
   `.claude/agents/`: run `/agent-harness-kit:harness-upgrade-structure`,
   commit the generated agent files, and restart Copilot CLI.
 
+## 3.15.0 — 2026-10-27
+
+Leaner worker reads (M38), from a 30-day file-read cost review: on Codex and
+Copilot, reading files and agent docs was 47% and 65% of all carried tool
+output, much of it workers re-loading the kit's docs and reading whole files.
+
+- `context.sh --brief` (M38-001): for a builder dispatched with a brief it
+  prints a `== Session protocol ==` section, the new protocol §2.9 card plus
+  the repo's AGENTS.md Rules and Needs a human sections, and skips the plan
+  section the brief already holds. The generated builder agents (Claude Code,
+  Codex, Copilot) and harness-session tell a briefed builder not to cat
+  SKILL.md, AGENTS.md, `docs/agents/`, FEATURES.json or the plan.
+- `skills/harness-run/scripts/feature.sh <id>` (M38-002) prints one
+  FEATURES.json entry and its plan section. harness-run (and so
+  harness-continuous) pastes it into every builder's prompt instead of the
+  plan's path. The prompt now says "Run one harness session for <id>"; the
+  Claude Code edition's model hook reads both that and the old wording.
+- Read rule (M38-003), in protocol §2.1, §2.9, the AGENTS.md template and the
+  builder agents: "`grep -n` first, then `sed -n` ≤80 lines; never `cat` a
+  source file over 200 lines." harness-upgrade-structure adds it under
+  `## Rules` in an existing AGENTS.md.
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`; it recopies the protocol (§2.1 read rule, §2.9 card), adds the read rule to AGENTS.md and regenerates any builder agents. Commit them; restart Copilot CLI if it has `.github/agents/`.
+- Claude Code edition: update the plugin (`claude plugin update`) so its model hook recognizes the new builder prompt.
+
 ## 3.14.1 — 2026-10-21
 
 - Generated Copilot custom agents (builder, evaluator, brief reviewer and the

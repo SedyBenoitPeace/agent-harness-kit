@@ -41,6 +41,7 @@ plugin skill: one fresh subagent per feature (protocol §2.7).
 
 ## Rules
 
+- Read rule: `grep -n` first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines.
 - The repo is the only interface: if it's not committed here, it doesn't
   exist for the next session.
 - Never delete or renumber FEATURES.json entries; append only.

@@ -10,7 +10,7 @@ This file is what every coding session reads. The rest of the protocol is
 read only when needed, from this folder:
 
 - `harness-protocol-planning.md`: section 1, planning a project or feature set.
-- `harness-protocol-runs.md`: §2.7 and §2.8, orchestrated and continuous runs.
+- `harness-protocol-runs.md`: §2.7–§2.9, orchestrated runs and the dispatched-session card.
 - `harness-protocol-maintenance.md`: section 3, maintenance passes.
 
 ## 2. Coding-session protocol
@@ -24,8 +24,9 @@ is what keeps every session recoverable and every commit reviewable.
 Start from the session brief (`context.sh`: current milestone, NEXT, its
 plan section, newest PROGRESS entry, recent commits). `FEATURES.json`,
 `PROGRESS.md`, `ARCHITECTURE.md`, `PRODUCT.md` and plans are read on demand
-with `grep` or `sed -n` ranges, never whole. Without the script: `git log -20`,
-the newest `PROGRESS.md` entry, then the NEXT entry in `FEATURES.json`.
+with `grep` or `sed -n` ranges, never whole.
+Without the script: `git log -20`, the newest `PROGRESS.md` entry, then the NEXT entry in `FEATURES.json`.
+**Read rule:** `grep -n` first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines.
 
 Trust the repo over your assumptions. If PROGRESS.md and the git log
 disagree, the git log wins; note the discrepancy in your session entry.
@@ -143,7 +144,6 @@ resume point in PROGRESS.md, end `SESSION: <id> · blocked · gate <green|red> �
 - Stage explicit paths; avoid `git add -A` (it picks up stray build output).
 
 Copy-paste session prompt:
-
 ```
 Read AGENTS.md, then docs/agents/harness-protocol.md section 2, and
 perform exactly one coding session.

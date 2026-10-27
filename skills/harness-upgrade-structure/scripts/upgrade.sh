@@ -70,6 +70,28 @@ else
   [ "$lines" -le 100 ] || echo "TODO: AGENTS.md is now $lines lines (limit 100) — trim it"
 fi
 
+# read rule in AGENTS.md (M38-003): the template's Rules line, inserted
+# right under "## Rules" (appended when the section was renamed).
+# shellcheck disable=SC2016 # the backticks are literal markdown
+if [ -f AGENTS.md ]; then
+  rule="$(grep -m1 '^- Read rule:' "$TEMPLATES/AGENTS.md.tmpl")"
+  [ -n "$rule" ] || { echo "upgrade: read rule not found in AGENTS.md.tmpl" >&2; exit 2; }
+  if grep -qF 'never `cat` a source file over 200 lines' AGENTS.md; then
+    echo "OK: AGENTS.md has the read rule"
+  else
+    tmp="$(mktemp)"
+    if grep -qx '## Rules' AGENTS.md; then
+      awk -v r="$rule" '$0 == "## Rules" { print; if ((getline l) > 0) { if (l == "") print l; print r; if (l != "") print l } else print r; next } { print }' AGENTS.md > "$tmp"
+    else
+      cat AGENTS.md > "$tmp"; printf '\n%s\n' "$rule" >> "$tmp"
+    fi
+    cat "$tmp" > AGENTS.md; rm -f "$tmp"
+    echo "CHANGED: AGENTS.md (added the read rule: grep -n first, then sed -n ≤80 lines)"
+    lines="$(wc -l < AGENTS.md | tr -d ' ')"
+    [ "$lines" -le 100 ] || echo "TODO: AGENTS.md is now $lines lines (limit 100) — trim it"
+  fi
+fi
+
 # "Needs a human" line in AGENTS.md (M29-002): a blocked session defers its
 # own feature. Replaced only when it is still the template's old wording.
 # shellcheck disable=SC2016 # the backticks are literal markdown

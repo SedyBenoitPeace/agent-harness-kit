@@ -123,4 +123,13 @@ before="$(cd "$t" && find . -type f -exec cksum {} + | sort)"
 bash scripts/gen-agents.sh "$t" >/dev/null
 [ "$before" = "$(cd "$t" && find . -type f -exec cksum {} + | sort)" ] || fail "second run changed output"
 
+# lean reads (M38): every CLI's builder starts briefed sessions from
+# context.sh --brief and carries the read rule
+for f in "$t/.claude/agents/harness-builder.md" "$t/.github/agents/harness-builder.agent.md" "$t/.codex/agents/harness-builder.toml" \
+         "$t/.claude/agents/harness-builder-medium.md"; do
+  grep -qF 'context.sh --brief' "$f" || fail "$f: briefed builder must start from context.sh --brief"
+  grep -qF 'do not cat SKILL.md, AGENTS.md' "$f" || fail "$f: briefed builder must not cat SKILL.md/AGENTS.md"
+  grep -qF 'grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines' "$f" || fail "$f: read rule missing"
+done
+
 echo "AGENTS TESTS GREEN"

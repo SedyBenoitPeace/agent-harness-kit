@@ -172,8 +172,8 @@ done
 # each part holds exactly its sections
 [ "$(grep -E '^##+ [0-9]' "$CORE" | sed -E 's/^##+ ([0-9.]+).*/\1/' | tr '\n' ' ')" = "2. 2.1 2.2 2.3 2.4 2.5 2.6 " ] \
   || fail "harness-protocol.md must hold exactly section 2.1-2.6 (the session core)"
-[ "$(grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-runs.md" | sed -E 's/^##+ ([0-9.]+).*/\1/' | tr '\n' ' ')" = "2.7 2.8 " ] \
-  || fail "harness-protocol-runs.md must hold exactly 2.7 and 2.8"
+[ "$(grep -E '^##+ [0-9]' "$TMPL_DIR/harness-protocol-runs.md" | sed -E 's/^##+ ([0-9.]+).*/\1/' | tr '\n' ' ')" = "2.7 2.8 2.9 " ] \
+  || fail "harness-protocol-runs.md must hold exactly 2.7, 2.8 and 2.9 (M38-001)"
 # token usage in the run report (M32-005): the protocol names no CLI for it
 grep -q 'tokens per feature' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7/2.8: run report must carry tokens per feature"
 grep -q 'where the CLI exposes' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7/2.8: tokens only where the CLI exposes them"
@@ -405,7 +405,7 @@ for w in 'handoff' 'run-start.sh' 'exclusive' 'quiet.sh' 'supervisor' 'session b
 done
 grep -q '^### 2\.8 Continuous runs' "$PROTO" || fail "protocol: continuous-runs section (2.8) missing"
 for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.harness-run/STOP' 'status.sh --skip' 'docs/runs/' 'run-report.sh' 'depends_on'; do
-  sed -n '/^### 2\.8 Continuous runs/,/^## 3\./p' "$PROTO" | grep -qF -- "$w" || fail "protocol 2.8: '$w' missing"
+  grep -qF -- "$w" <<< "$(sed -n '/^### 2\.8 Continuous runs/,/^### 2\.9/p' "$PROTO")" || fail "protocol 2.8: '$w' missing"
 done
 grep -q 'do not wait for the PR to merge' "$PROTO" || fail "protocol 2.5: plan must move to completed/ in the last feature's commit"
 grep -q 'harness-continuous' README.md || fail "README: harness-continuous missing from the skills"
@@ -496,6 +496,16 @@ for f in "$CORE" skills/harness-session/SKILL.md; do
   grep -qF 'grep or sed -n ranges, never whole' <<< "$flat" \
     || fail "$f: must say read with grep or sed -n ranges, never whole (M34-009)"
 done
+
+# lean reads (M38): one read rule everywhere a session looks, and the
+# dispatched-session card that context.sh --brief prints
+for f in "$CORE" "$TMPL_DIR/AGENTS.md.tmpl" AGENTS.md "$TMPL_DIR/harness-protocol-runs.md" skills/harness-session/SKILL.md; do
+  grep -qF 'grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines' <<< "$(tr -d '`' < "$f" | tr '\n' ' ' | tr -s ' ')" \
+    || fail "$f: read rule missing (M38-003)"
+done
+grep -q '^### 2\.9 Dispatched-session card' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.9: dispatched-session card missing (M38-001)"
+grep -qF 'feature.sh' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7: the brief must paste feature.sh output (M38-002)"
+shellcheck skills/harness-run/scripts/feature.sh
 
 # --- size limits (M28-003): what every session reads stays lean ----------------
 # Raising a limit is a decision for the owner, not a session: cut first.
