@@ -3,6 +3,24 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-27 -- session 78 (M40-001 session loop for feature work only)
+
+- Branch: `scope-protocol-feature-work`.
+- Done: M40-001. AGENTS.md.tmpl opens its Session loop with a feature-work
+  scope (FEATURES/plan entry, product behaviour change, or agent-instruction
+  edit; anything else is a small task: do it, check it, stop); "every
+  session" became "feature session" in AGENTS.md.tmpl, protocol §2 and
+  e2e.sh.tmpl. upgrade.sh inserts the paragraph under `## Session loop` and
+  rewords the two unedited lines. Release 3.16.0. Plan:
+  `docs/plans/completed/2026-10-27-m40-feature-work-scope.md`.
+- Decisions: classify by what a change touches, not by its label (a move
+  can break links, a doc edit to AGENTS.md changes behaviour); config tweaks
+  run the gate once rather than the loop; no red-gate line for small tasks
+  (they never reach §2.3); "Depth means better evidence" not added verbatim
+  (AGENTS.md.tmpl is at its 70-line cap).
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR; sync agent-harness-template to 3.16.0.
+
 ## 2026-10-27 -- session 77 (M39-001 builder agents, never a stand-in)
 
 - Branch: `copilot-builder-agents`.

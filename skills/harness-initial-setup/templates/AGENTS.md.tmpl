@@ -4,7 +4,7 @@
 
 This repository is operated with the long-running-agent harness. The full
 operating manual is `docs/agents/harness-protocol.md` — read it before your
-first session. This file is only the map.
+first feature session. This file is only the map.
 
 ## Map
 
@@ -19,6 +19,12 @@ first session. This file is only the map.
 
 ## Session loop (summary — full version in the protocol doc)
 
+Feature work only: a FEATURES.json entry or plan task (or work needing one), a
+change to what the product does, or an edit to agent instructions (this file,
+`docs/agents/`, FEATURES.json, skills, prompts). Anything else is a small task:
+do it, check that one result (grep a moved path; run the gate once if code,
+tests, scripts or CI/build config change), stop. If it proves to be feature
+work, stop and say so. Rules and Needs a human always apply.
 1. Read `git log -20`, `PROGRESS.md`, and `FEATURES.json`.
 2. Pick the feature to work on: lowest milestone, then lowest id, among
    `status: "failing"` (skip `deferred` and `superseded`).
@@ -45,7 +51,7 @@ plugin skill: one fresh subagent per feature (protocol §2.7).
 - The repo is the only interface: if it's not committed here, it doesn't
   exist for the next session.
 - Never delete or renumber FEATURES.json entries; append only.
-- Every session starts and ends green (`scripts/e2e.sh`).
+- Every feature session starts and ends green (`scripts/e2e.sh`).
 - Branch off `{{DEFAULT_BRANCH}}`; one branch per milestone-chunk of work;
   integrate via pull request, not local fast-forward.
 - Keep this file ≤100 lines; anything deeper goes in `docs/`.

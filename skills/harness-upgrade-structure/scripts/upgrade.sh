@@ -110,6 +110,39 @@ if [ -f AGENTS.md ]; then
   fi
 fi
 
+# feature-work scope in AGENTS.md (M40-001): the session loop is for feature
+# work only; small tasks (move a file, edit a doc) do the task, check it, stop.
+# The paragraph goes right under the "## Session loop" heading; the template's
+# two "every session" lines are reworded only when still unedited.
+if [ -f AGENTS.md ]; then
+  para="$(awk '/^Feature work only:/{p=1} p{print} p&&/always apply\.$/{exit}' "$TEMPLATES/AGENTS.md.tmpl")"
+  [ -n "$para" ] || { echo "upgrade: feature-work paragraph not found in AGENTS.md.tmpl" >&2; exit 2; }
+  if grep -q '^Feature work only:' AGENTS.md; then
+    echo "OK: AGENTS.md scopes the session loop to feature work"
+  elif grep -q '^## Session loop' AGENTS.md; then
+    tmp="$(mktemp)"
+    # ENVIRON, not -v: the paragraph spans lines (BSD awk rejects that in -v)
+    PARA="$para" awk '/^## Session loop/ { p = ENVIRON["PARA"]; print; if ((getline l) > 0) { if (l == "") print l; print p; if (l != "") print l } else print p; next } { print }' AGENTS.md > "$tmp"
+    cat "$tmp" > AGENTS.md; rm -f "$tmp"
+    echo "CHANGED: AGENTS.md (session loop scoped to feature work; small tasks skip it)"
+    lines="$(wc -l < AGENTS.md | tr -d ' ')"
+    [ "$lines" -le 100 ] || echo "TODO: AGENTS.md is now $lines lines (limit 100) — trim it"
+  else
+    echo "TODO: AGENTS.md has no \"## Session loop\" section — add this above your session steps: $para"
+  fi
+  # shellcheck disable=SC2016 # the backticks are literal markdown
+  for pair in 'first session. This file is only the map.|first feature session. This file is only the map.' \
+              '- Every session starts and ends green (`scripts/e2e.sh`).|- Every feature session starts and ends green (`scripts/e2e.sh`).'; do
+    old="${pair%%|*}"; new="${pair#*|}"
+    if grep -qxF -- "$old" AGENTS.md; then
+      tmp="$(mktemp)"
+      awk -v old="$old" -v new="$new" '$0 == old { print new; next } { print }' AGENTS.md > "$tmp" && cat "$tmp" > AGENTS.md
+      rm -f "$tmp"
+      echo "CHANGED: AGENTS.md (\"$old\" now says feature session)"
+    fi
+  done
+fi
+
 # generated agent files (M27-001): a repo that has any harness agent file
 # gets every role regenerated for each CLI folder it already uses, so new
 # instructions (Decisions:, untrusted text, effort) reach builder, evaluator

@@ -10,6 +10,23 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.16.0 — 2026-10-27
+
+- The session loop is for feature work only (M40-001). A Codex session asked
+  to move an HTML guide ran context recovery, the gate and the feature
+  workflow, because AGENTS.md and the protocol said "every session". AGENTS.md
+  now opens its Session loop with the scope: feature work is a FEATURES.json
+  entry or plan task, a change to what the product does, or an edit to agent
+  instructions; anything else is a small task (do it, check that one result,
+  run the gate once if code, tests, scripts or CI/build config change, stop).
+  Rules and Needs a human still apply to everything. Protocol §2 and the
+  e2e.sh template say "feature session".
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`; it
+  recopies the protocol and adds the feature-work paragraph under AGENTS.md's
+  `## Session loop` (a TODO if that heading is missing). Commit both.
+
 ## 3.15.1 — 2026-10-27
 
 - harness-run and harness-continuous dispatch only the kit's named builder

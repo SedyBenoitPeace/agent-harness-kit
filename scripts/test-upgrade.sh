@@ -185,6 +185,38 @@ out="$(bash "$UPGRADE" "$RR" 2>&1)" || fail "read rule second run: expected exit
 echo "$out" | grep -q '^OK: AGENTS.md has the read rule' || fail "read rule: second run should be OK"
 [ "$(grep -c 'Read rule:' "$RR/AGENTS.md")" -eq 1 ] || fail "read rule: inserted twice"
 
+# 4d. feature-work scope (M40-001): paragraph right under "## Session loop",
+#     the two unedited "every session" lines reworded, once; no heading → TODO
+FW="$WORK/featurework"; mkdir -p "$FW"
+git -C "$FW" init -q -b main
+printf '{ "milestones": {"1":"C"}, "features": [] }\n' > "$FW/FEATURES.json"
+printf '# PROGRESS\n' > "$FW/PROGRESS.md"
+# shellcheck disable=SC2016 # literal backticks
+printf '# A\n\nManual: read it before your\nfirst session. This file is only the map.\n\n## Session loop (summary — full version in the protocol doc)\n\n1. Read `git log -20`.\n\nharness-run\n\n## Rules\n\n- Every session starts and ends green (`scripts/e2e.sh`).\n' > "$FW/AGENTS.md"
+git -C "$FW" -c user.email=t@t -c user.name=t add -A; git -C "$FW" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$UPGRADE" "$FW" 2>&1)" || fail "feature work: expected exit 0 (got: $out)"
+echo "$out" | grep -q '^CHANGED: AGENTS.md (session loop scoped to feature work' || fail "feature work: change not reported"
+[ "$(sed -n '/^## Session loop/{n;n;p;}' "$FW/AGENTS.md")" = "$(grep -m1 '^Feature work only:' skills/harness-initial-setup/templates/AGENTS.md.tmpl)" ] \
+  || fail "feature work: paragraph must sit right under the ## Session loop heading"
+# shellcheck disable=SC2016 # literal backticks
+[ "$(grep -A1 'always apply\.$' "$FW/AGENTS.md" | tail -1)" = '1. Read `git log -20`.' ] || fail "feature work: session steps must follow the paragraph"
+grep -qxF 'first feature session. This file is only the map.' "$FW/AGENTS.md" || fail "feature work: 'first session' line not reworded"
+# shellcheck disable=SC2016 # literal backticks
+grep -qxF -- '- Every feature session starts and ends green (`scripts/e2e.sh`).' "$FW/AGENTS.md" || fail "feature work: gate rule not reworded"
+git -C "$FW" -c user.email=t@t -c user.name=t add -A; git -C "$FW" -c user.email=t@t -c user.name=t commit -qm up
+out="$(bash "$UPGRADE" "$FW" 2>&1)" || fail "feature work second run: expected exit 0"
+echo "$out" | grep -q '^OK: AGENTS.md scopes the session loop to feature work' || fail "feature work: second run should be OK"
+[ "$(grep -c '^Feature work only:' "$FW/AGENTS.md")" -eq 1 ] || fail "feature work: inserted twice"
+NH="$WORK/noloop"; mkdir -p "$NH"
+git -C "$NH" init -q -b main
+printf '{ "milestones": {"1":"C"}, "features": [] }\n' > "$NH/FEATURES.json"
+printf '# PROGRESS\n' > "$NH/PROGRESS.md"
+printf '# A\nharness-run\n' > "$NH/AGENTS.md"
+git -C "$NH" -c user.email=t@t -c user.name=t add -A; git -C "$NH" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$UPGRADE" "$NH" 2>&1)" || fail "feature work no loop: expected exit 0"
+echo "$out" | grep -q '^TODO: AGENTS.md has no "## Session loop" section' || fail "feature work: missing heading needs a TODO"
+! grep -q '^Feature work only:' "$NH/AGENTS.md" || fail "feature work: must not guess where to insert without a heading"
+
 sess="skills/harness-session/SKILL.md"
 grep -q 'harness-upgrade-structure' "$sess" || fail "harness-session SKILL.md: UPGRADE: offer must point at harness-upgrade-structure"
 ! grep -q 'recopy the shipped' "$sess" || fail "harness-session SKILL.md: upgrade steps must not be duplicated inline"

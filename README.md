@@ -38,7 +38,9 @@ English:
 - **harness-session** — run one coding session with bounded, non-mutating
   context recovery and a concise gate report. `/agent-harness-kit:harness-session`,
   _"Implement M1-004 following the harness."_, or _"Continue the current
-  harness feature."_ The session starts from a short brief (`context.sh`:
+  harness feature."_ Only feature work runs the session: moving a file,
+  formatting or an ordinary doc edit is a small task the agent does,
+  checks once and stops (AGENTS.md says what counts). The session starts from a short brief (`context.sh`:
   the current milestone, the next feature's full entry and plan section,
   the newest PROGRESS entry, under 80 lines); FEATURES.json, PROGRESS.md,
   plans and docs are then read on demand with `grep` or `sed -n`, never
