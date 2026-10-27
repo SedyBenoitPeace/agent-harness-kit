@@ -3,6 +3,19 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-27 -- session 76 (M39-001 builder agents, never a stand-in)
+
+- Branch: `copilot-builder-agents`.
+- Done: M39-001. `dispatch.sh` prints `AGENT: missing` and exits 3 when the
+  CLI has no builder agent file; harness-run generates, commits and stops for
+  a CLI restart (harness-continuous Ends), never a general-purpose subagent
+  told to act as the builder. Setup and upgrade generate the agent files for
+  every repo. Release 3.15.1. Plan: `docs/plans/completed/2026-10-27-m39-copilot-builder-agents.md`.
+- Decisions: stop rather than continue after generating (CLIs read agent
+  files only at start); agent prompts unchanged.
+- Gate: GREEN (bash scripts/ci-local.sh).
+- Next: M38 (lean worker reads) on its own branch.
+
 ## 2026-10-21 -- session 75 (M37-001 Copilot status line)
 
 - Branch: `copilot-statusline`.

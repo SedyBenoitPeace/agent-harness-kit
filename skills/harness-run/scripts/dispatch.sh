@@ -8,6 +8,9 @@
 # Prints `AGENT: <name>` and `SIZE: <size>`; appends `<id> <size> model <size>[, +n]`
 # to <target>/.harness-run/models.log (not on claude: its hook logs the model).
 # Each retry steps up one size, capped at large. Exit 2 = usage error.
+# Exit 3 = no builder agent file for this CLI (prints `AGENT: missing`): the
+# orchestrator generates them with gen-agents.sh and stops for a CLI restart,
+# never a built-in subagent told to act as the builder (M39-001).
 set -euo pipefail
 target="${1:-}" cli="${2:-}" id="${3:-}" retries="${4:-0}"
 [ -n "$id" ] || { echo "usage: dispatch.sh <target> <claude|codex|copilot> <id> [retries]" >&2; exit 2; }
@@ -15,6 +18,19 @@ case "$cli" in claude | codex | copilot) ;; *) echo "dispatch: unknown cli $cli"
 case "$retries" in '' | *[!0-9]*) echo "dispatch: retries must be a number" >&2; exit 2 ;; esac
 command -v jq >/dev/null || { echo "ERROR: jq is required" >&2; exit 2; }
 m="$(jq -r --arg i "$id" '[.features[] | select(.id == $i)][0].model // ""' "$target/FEATURES.json")"
+# agent_file <name>: where this CLI reads that agent from
+agent_file() {
+  case "$cli" in
+    claude) echo "$target/.claude/agents/$1.md" ;;
+    copilot) echo "$target/.github/agents/$1.agent.md" ;;
+    codex) echo "$target/.codex/agents/$1.toml" ;;
+  esac
+}
+[ -f "$(agent_file harness-builder)" ] || {
+  echo "AGENT: missing"
+  echo "dispatch: no $(agent_file harness-builder): run gen-agents.sh $target, commit the agent files, restart the CLI" >&2
+  exit 3
+}
 case "$m" in
   small) n=0 ;; medium) n=1 ;; large) n=2 ;;
   *) if [ "$cli" = claude ]; then echo "AGENT: harness-builder"; echo "SIZE: -"; exit 0; fi
@@ -24,12 +40,7 @@ base=$m
 n=$((n + retries)); [ "$n" -le 2 ] || n=2
 size=$(echo small medium large | cut -d' ' -f$((n + 1)))
 agent=harness-builder-$size
-case "$cli" in
-  claude) f=$target/.claude/agents/$agent.md ;;
-  copilot) f=$target/.github/agents/$agent.agent.md ;;
-  codex) f=$target/.codex/agents/$agent.toml ;;
-esac
-[ -f "$f" ] || agent=harness-builder
+[ -f "$(agent_file "$agent")" ] || agent=harness-builder
 echo "AGENT: $agent"
 echo "SIZE: $size"
 [ "$cli" = claude ] && exit 0

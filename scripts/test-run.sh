@@ -273,6 +273,14 @@ cat > "$D/FEATURES.json" <<'JSON'
 JSON
 for z in small medium large; do : > "$D/.codex/agents/harness-builder-$z.toml"; : > "$D/.claude/agents/harness-builder-$z.md"; done
 disp() { bash "$DISPATCH" "$D" "$@" | tr '\n' ' '; }
+# M39-001: no builder agent file for the CLI → AGENT: missing, exit 3, no log line
+for c in codex copilot claude; do
+  rc=0; out="$(bash "$DISPATCH" "$D" "$c" S-1 2>/dev/null)" || rc=$?
+  [ "$rc" -eq 3 ] && [ "$out" = "AGENT: missing" ] || fail "dispatch: $c without harness-builder must print AGENT: missing and exit 3 (got $rc: $out)"
+done
+[ -f "$D/.harness-run/models.log" ] && fail "dispatch: a missing agent must not log a model"
+mkdir -p "$D/.github/agents"
+: > "$D/.codex/agents/harness-builder.toml"; : > "$D/.claude/agents/harness-builder.md"; : > "$D/.github/agents/harness-builder.agent.md"
 [ "$(disp codex S-1)" = "AGENT: harness-builder-small SIZE: small " ] || fail "dispatch: small -> harness-builder-small"
 [ "$(disp codex S-1 1)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: retry steps small up to medium"
 [ "$(disp codex S-2 1)" = "AGENT: harness-builder-large SIZE: large " ] || fail "dispatch: retry caps at large"

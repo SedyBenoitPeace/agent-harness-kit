@@ -1,7 +1,7 @@
 {
   "name": "agent-harness-kit-claude",
   "description": "Claude Code edition of the agent harness: adds Claude Code-only features (agent effort, mods, eval suites) on top of agent-harness-kit.",
-  "version": "3.14.1",
+  "version": "3.15.1",
   "author": {
     "name": "Stefano Rifici"
   },

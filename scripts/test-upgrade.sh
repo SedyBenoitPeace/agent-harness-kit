@@ -79,6 +79,10 @@ for c in AGENTS.md edited.md; do
   cp "$N/$c" "$M/AGENTS.md"; printf 'harness-run\n' >> "$M/AGENTS.md"
   git -C "$M" -c user.email=t@t -c user.name=t add -A; git -C "$M" -c user.email=t@t -c user.name=t commit -qm seed
   out="$(bash "$UPGRADE" "$M" 2>&1)" || fail "needs-a-human $c: expected exit 0"
+  # M39-001: no agent files and no evaluation opt-in still gets the builder for every CLI
+  for f in .claude/agents/harness-builder.md .github/agents/harness-builder.agent.md .codex/agents/harness-builder.toml; do
+    [ -f "$M/$f" ] || fail "upgrade: a repo without agent files must get $f"
+  done
   if [ "$c" = AGENTS.md ]; then
     grep -q '^CHANGED: AGENTS.md (Needs a human' <<< "$out" || fail "needs-a-human: old line not replaced"
     # shellcheck disable=SC2016 # literal markdown
