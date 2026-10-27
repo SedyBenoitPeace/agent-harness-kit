@@ -5,7 +5,8 @@
     "36": "Effort and model size required on every open feature",
     "37": "Harness line on Copilot CLI status line",
     "38": "Lean worker reads: protocol card, feature brief, read rule",
-    "39": "Dispatch the kit's builder agents, never a stand-in"
+    "39": "Dispatch the kit's builder agents, never a stand-in",
+    "40": "Session loop for feature work only"
   },
   "features": [
     {
@@ -147,6 +148,21 @@
         "skills/harness-run/",
         "skills/harness-continuous/",
         "skills/harness-initial-setup/SKILL.md",
+        "skills/harness-upgrade-structure/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M40-001",
+      "milestone": 40,
+      "title": "AGENTS.md.tmpl scopes the session loop to feature work (small tasks: do it, check it, stop); protocol §2 and e2e.sh.tmpl say feature session; upgrade.sh adds the paragraph to existing repos",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with the M40-001 asserts on AGENTS.md.tmpl and the protocol core, and test-upgrade.sh proving the paragraph lands right under ## Session loop once, the two unedited 'every session' lines are reworded, and a repo without the heading gets a TODO",
+      "effort": "low",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-initial-setup/templates/",
         "skills/harness-upgrade-structure/",
         "scripts/"
       ]

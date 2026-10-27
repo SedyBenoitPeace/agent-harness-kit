@@ -210,6 +210,12 @@ grep -q 'one harness coding session' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.
 grep -q '^## 2\. Coding-session protocol' "$PROTO" || fail "protocol: coding-session section missing"
 grep -q 'git log -20' "$PROTO" || fail "protocol: session loop must start from git log -20"
 grep -q 'ONE feature' "$PROTO" || fail "protocol: one-feature-per-session rule missing"
+# feature-work scope (M40-001): a file move or doc edit is a small task, not a session
+grep -q '^Feature work only:' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: session loop must be scoped to feature work (M40-001)"
+grep -qF 'Rules and Needs a human always apply.' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: small tasks must still follow Rules and Needs a human (M40-001)"
+grep -qF 'Run this for feature work' "$CORE" || fail "protocol §2: must say it runs for feature work only (M40-001)"
+! grep -qE 'every (coding|working) session' "$CORE" "$TMPL_DIR/AGENTS.md.tmpl" || fail "protocol/AGENTS.md.tmpl: 'every session' wording is back (M40-001)"
+grep -q 'session loop scoped to feature work' skills/harness-upgrade-structure/scripts/upgrade.sh || fail "upgrade.sh: feature-work paragraph block missing (M40-001)"
 grep -q 'CONTINUING INTERRUPTED FEATURE' "$PROTO" || fail "protocol: interrupted-feature continuation rule missing"
 grep -q 'scripts/preflight.sh' "$PROTO" || fail "protocol: optional target preflight rule missing"
 grep -q 'tracked by another failing or deferred feature' "$PROTO" || fail "protocol: out-of-scope-warning rule missing"
@@ -391,7 +397,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.15.1" ] || fail "plugin version must be 3.15.1"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.16.0" ] || fail "plugin version must be 3.16.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"

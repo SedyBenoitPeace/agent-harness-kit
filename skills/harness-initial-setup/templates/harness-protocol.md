@@ -6,7 +6,7 @@ sessions, for any agent. One rule at its core:
 > **The repo is the only interface. If it's not in the repo, it doesn't
 > exist.** A fresh session, any vendor, recovers full context from the repo.
 
-This file is what every coding session reads. The rest of the protocol is
+This file is what every feature session reads. The rest of the protocol is
 read only when needed, from this folder:
 
 - `harness-protocol-planning.md`: section 1, planning a project or feature set.
@@ -15,9 +15,9 @@ read only when needed, from this folder:
 
 ## 2. Coding-session protocol
 
-Run this every working session. A session delivers exactly **ONE feature**,
-proven and committed. Resist the urge to batch — the one-feature discipline
-is what keeps every session recoverable and every commit reviewable.
+Run this for feature work (AGENTS.md says what counts; small tasks skip it).
+A session delivers exactly **ONE feature**, proven and committed. The
+one-feature discipline keeps every session recoverable and reviewable.
 
 ### 2.1 Recover context
 
