@@ -62,6 +62,8 @@ done
 echo "$out" | grep -q '^TODO: .*scripts/e2e.sh' || fail "upgrade: unbounded gate must be a TODO"
 echo "$out" | grep -q "^UPGRADE-NOTE: $(jq -r .version .claude-plugin/plugin.json): " || fail "upgrade: no stamp yet, so every release's notes must print"
 echo "$out" | grep -q '^TODO: .*harness-audit' || fail "upgrade: depends_on/paths via harness-audit must be a TODO"
+grep -qF 'a source file over 200 lines' "$R/AGENTS.md" || fail "upgrade: AGENTS.md without Rules must get the read rule appended (M38-003)"
+echo "$out" | grep -q '^CHANGED: AGENTS.md (added the read rule' || fail "upgrade: read rule change not reported"
 echo "$out" | grep -q '^TODO: effort is now required.*on: M1-001$' || fail "upgrade: an open feature without effort must be a TODO naming it (M36-001)"
 echo "$out" | grep -q '^TODO: model is now required.*on: M1-001$' || fail "upgrade: an open feature without model must be a TODO naming it (M36-002)"
 [ "$(g rev-parse HEAD)" = "$before" ] || fail "upgrade: must not commit"
@@ -162,6 +164,23 @@ grep -q 'harness-audit' "$md" || fail "SKILL.md: must offer harness-audit for de
 grep -qi 'own commit' "$md" || fail "SKILL.md: upgrade must be committed as its own commit"
 grep -q 'harness-run line' "$md" || fail "SKILL.md: must mention the harness-run line in AGENTS.md"
 grep -qi 'never push' "$md" || fail "SKILL.md: never-push rule missing"
+# 4c. read rule (M38-003): inserted right under "## Rules", once
+RR="$WORK/readrule"; mkdir -p "$RR"
+git -C "$RR" init -q -b main
+printf '{ "milestones": {"1":"C"}, "features": [] }\n' > "$RR/FEATURES.json"
+printf '# PROGRESS\n' > "$RR/PROGRESS.md"
+# shellcheck disable=SC2016 # literal backticks
+printf '# A\nharness-run\n\n## Rules\n\n- FIRST rule.\n\n## Needs a human\n\nNever act; stop as `blocked`, set your feature to `deferred` with notes `Needs a human: <question>`, before:\n' > "$RR/AGENTS.md"
+git -C "$RR" -c user.email=t@t -c user.name=t add -A; git -C "$RR" -c user.email=t@t -c user.name=t commit -qm seed
+bash "$UPGRADE" "$RR" >/dev/null 2>&1 || fail "read rule: expected exit 0"
+[ "$(sed -n '/^## Rules$/{n;n;p;}' "$RR/AGENTS.md")" = "$(grep -m1 '^- Read rule:' skills/harness-initial-setup/templates/AGENTS.md.tmpl)" ] \
+  || fail "read rule: must be the first bullet under ## Rules"
+grep -qx -- '- FIRST rule.' "$RR/AGENTS.md" || fail "read rule: existing rules must stay"
+git -C "$RR" -c user.email=t@t -c user.name=t add -A; git -C "$RR" -c user.email=t@t -c user.name=t commit -qm up
+out="$(bash "$UPGRADE" "$RR" 2>&1)" || fail "read rule second run: expected exit 0"
+echo "$out" | grep -q '^OK: AGENTS.md has the read rule' || fail "read rule: second run should be OK"
+[ "$(grep -c 'Read rule:' "$RR/AGENTS.md")" -eq 1 ] || fail "read rule: inserted twice"
+
 sess="skills/harness-session/SKILL.md"
 grep -q 'harness-upgrade-structure' "$sess" || fail "harness-session SKILL.md: UPGRADE: offer must point at harness-upgrade-structure"
 ! grep -q 'recopy the shipped' "$sess" || fail "harness-session SKILL.md: upgrade steps must not be duplicated inline"

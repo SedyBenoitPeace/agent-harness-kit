@@ -339,4 +339,18 @@ for w in VERIFYTEXT NOTETEXT 'paths: src/a/' PLANSECTION NEWEST; do
 done
 if echo "$out" | grep -qE 'OTHERSECTION|OLDER'; then fail "brief: leaked another plan section or older PROGRESS entry"; fi
 
+# 11. --brief (M38-001): a dispatched session gets the protocol 2.9 card and
+#     the repo's AGENTS.md Rules / Needs a human, and no repeated plan section
+if echo "$out" | grep -q '== Session protocol =='; then fail "brief: protocol card must print only with --brief"; fi
+printf '# AGENTS\n\n## Map\n- MAPTEXT\n\n## Rules\n\n- RULETEXT\n\n## Needs a human\n\nNever act: HUMANTEXT\n' > "$WORK/brief/AGENTS.md"
+out="$(bash "$CONTEXT" --brief "$WORK/brief")" || fail "--brief: expected exit 0"
+for w in '== Session protocol ==' "SCRIPTS: $(cd skills/harness-session/scripts && pwd)" 'Read rule: ' \
+  'run-gate.sh baseline' 'quiet.sh' 'Decisions:' '.harness-run/results/<id>.txt' 'SESSION: <id> ·' \
+  'PLAN: docs/plans/active/p.md' 'PLAN_SECTION: in your brief' '## Rules' RULETEXT '## Needs a human' HUMANTEXT VERIFYTEXT; do
+  echo "$out" | grep -qF -- "$w" || fail "--brief: missing $w"
+done
+if echo "$out" | grep -qE 'PLANSECTION|MAPTEXT|Printed by'; then fail "--brief: repeated the plan section, the AGENTS.md map or the card intro"; fi
+out="$(bash "$CONTEXT" --skip /dev/null --brief "$WORK/brief")" || fail "--skip with --brief: expected exit 0"
+echo "$out" | grep -q '== Session protocol ==' || fail "--skip with --brief: card missing"
+
 echo "SESSION TESTS GREEN"

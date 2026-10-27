@@ -42,7 +42,8 @@ English:
   the current milestone, the next feature's full entry and plan section,
   the newest PROGRESS entry, under 80 lines); FEATURES.json, PROGRESS.md,
   plans and docs are then read on demand with `grep` or `sed -n`, never
-  whole. Builds, simulators and tests run through `quiet.sh <name> --
+  whole. One read rule for every file: `grep -n` first, then `sed -n` ≤80
+  lines; never `cat` a source file over 200 lines. Builds, simulators and tests run through `quiet.sh <name> --
   <command>`, which keeps the full log in `.harness-run/logs/` and prints
   only the exit code, the log path, up to 40 error/fail/warning lines and
   the last 20 lines; `run-gate.sh` prints the same shape. A session that
@@ -469,6 +470,12 @@ What it does, so nothing surprises you:
   or `wait-result.sh <id>`), never polls or steers a running builder, and
   reads only script output, never whole skills, plans, PROGRESS.md or
   FEATURES.json.
+- **Briefed builders.** The orchestrator pastes `feature.sh <id>` (the
+  feature entry and its plan section) into each builder's prompt instead of
+  the plan's path, and the builder starts from `context.sh --brief`, which
+  adds the protocol card (§2.9) and the repo's AGENTS.md Rules and Needs a
+  human sections. A briefed builder never reads SKILL.md, AGENTS.md, the
+  protocol files, FEATURES.json or the plan.
 - **Session budget.** A builder that stops on its session budget is
   retried once in a fresh session at the same size; a second budget stop
   is a skip.
@@ -699,12 +706,13 @@ skills/
 ├── harness-session/
 │   ├── SKILL.md        session orchestration: bounded recovery + gate
 │   └── scripts/
-│       ├── context.sh             short session brief + PARALLEL lanes
+│       ├── context.sh             short session brief + PARALLEL lanes (--brief: protocol card)
 │       ├── run-gate.sh            concise gate wrapper, full log retained
 │       └── quiet.sh               any build/test command: log on disk, capped summary
 ├── harness-run/
 │   ├── SKILL.md        multi-feature orchestrator: one subagent per feature
 │   └── scripts/
+│       ├── feature.sh             one feature's entry + plan section, pasted into the brief
 │       ├── run-report.sh          end-of-run report from git + FEATURES.json
 │       ├── run-start.sh           fresh run state, previous run archived
 │       └── wait-result.sh         one blocking wait for a builder's result

@@ -38,9 +38,14 @@ stays interactive and stops at the first problem.
    subagent) and appends `<id> <size> <reason>` to `.harness-run/models.log`
    on every CLI but Claude Code, whose hook logs its own. A retry (a feature
    rebuilt after an evaluator NEEDS_WORK) dispatches the next size up.
-   Dispatch that agent with exactly:
-   "Use harness-session for <id>, inline. End with its SESSION line."
-   Own tools only — never load an external workflow skill.
+   Dispatch that agent with a brief, never the plan's path:
+   "Run one harness session for <id>, inline. Start with
+   `bash <this skill's folder>/../harness-session/scripts/context.sh --brief`
+   and follow its Session protocol; do not cat SKILL.md, AGENTS.md,
+   docs/agents/, FEATURES.json or the plan. End with the SESSION line."
+   followed by the output of `bash scripts/feature.sh <id> <target>` (path
+   relative to this skill: the feature entry and its plan section), pasted
+   as is. Own tools only — never load an external workflow skill.
    When status.sh printed an `effort: <level>` line under `NEXT:`, the
    feature asks for that effort (protocol §1.4): set it as the dispatch
    tool's own effort setting if it has one, otherwise add the line
@@ -119,9 +124,9 @@ Workflow steps 3–5, for that batch:
 
 1. For each id, create a lane from the current branch:
    `git worktree add ../<repo>-<id> -b lane/<id>`.
-2. Dispatch one subagent per lane, in parallel, with exactly:
-   "Use harness-session for <id>, inline, as a parallel lane in
-   ../<repo>-<id>. End with its SESSION line."
+2. Dispatch one subagent per lane, in parallel, with the Workflow step 3
+   brief, its first sentence ending "inline, as a parallel lane in
+   ../<repo>-<id>." (`context.sh --brief` runs in that worktree).
    Wait for each lane as in Workflow step 4. Lanes implement, run their own verify, commit, and never touch FEATURES.json or PROGRESS.md;
    each puts its `Decisions:` line in its commit message body.
 3. Merge each `passing` lane into the current branch (`git merge --no-ff
@@ -149,6 +154,7 @@ details stay in its subagent, its commit, and `PROGRESS.md`.
 |---|---|
 | "The subagent said passing, next one" | Verify with status.sh + clean tree first. |
 | "Let me look at the diff to be sure" | Never. The commit and the gate are the proof. |
+| "I'll pass the plan path, the builder can read it" | Paste `feature.sh <id>`; the builder never reads the plan. |
 | "Blocked — I'll just fix it here" | Relay the blocker and stop; the human decides. |
 | "Next milestone is ready too, keep going" | Stop at the milestone boundary. |
 | "No subagents here, I'll run them all in this chat" | One session, then stop. That is the whole point. |

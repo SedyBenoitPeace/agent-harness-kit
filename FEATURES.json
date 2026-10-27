@@ -3,7 +3,8 @@
   "milestones": {
     "35": "M34 follow-ups: run-report decisions, README, template mirror",
     "36": "Effort and model size required on every open feature",
-    "37": "Harness line on Copilot CLI status line"
+    "37": "Harness line on Copilot CLI status line",
+    "38": "Lean worker reads: protocol card, feature brief, read rule"
   },
   "features": [
     {
@@ -79,6 +80,56 @@
       "depends_on": [],
       "paths": [
         "skills/harness-status/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M38-001",
+      "milestone": 38,
+      "title": "context.sh --brief prints the protocol 2.9 card and the repo's AGENTS.md Rules/Needs a human; briefed builders never cat SKILL.md or AGENTS.md",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving --brief prints the card, SCRIPTS, the AGENTS.md sections and no plan section, and test-agents.sh proving every CLI's builder tells a briefed session not to cat SKILL.md/AGENTS.md",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/",
+        "skills/harness-initial-setup/templates/harness-protocol-runs.md",
+        "agents/src/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M38-002",
+      "milestone": 38,
+      "title": "feature.sh <id> prints one FEATURES.json entry and its plan section; harness-run pastes it into each builder brief instead of the plan path",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving feature.sh prints only that entry and section (80-line cap, exit 2 on an unknown id) and the harness-run brief contract; claude plugin test passes with the new prompt test",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [
+        "M38-001"
+      ],
+      "paths": [
+        "skills/harness-run/",
+        "claude/hooks/",
+        "claude/tests/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M38-003",
+      "milestone": 38,
+      "title": "Read rule (grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines) in protocol, AGENTS.md and its template, builder agents; upgrade.sh adds it to existing AGENTS.md",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with e2e checking the rule in each file and test-upgrade.sh proving it lands once under ## Rules",
+      "effort": "low",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-initial-setup/templates/",
+        "skills/harness-upgrade-structure/",
+        "AGENTS.md",
         "scripts/"
       ]
     }

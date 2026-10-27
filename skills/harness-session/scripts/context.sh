@@ -2,17 +2,28 @@
 # harness-session: bounded, read-only "what do I need to start?" report.
 # Bundles harness-status's report with the git/plan facts a coding session
 # also needs, so an agent can start from one call instead of several.
-# Usage: context.sh [--skip FILE] [TARGET_DIR]    (default: current directory)
+# Usage: context.sh [--skip FILE] [--brief] [TARGET_DIR]    (default: current directory)
 # --skip FILE is passed to harness-status (see status.sh) so NEXT, PLAN and
 # PARALLEL all follow the first feature that is not skipped.
+# --brief is for a session dispatched with a brief (harness-run pasted the
+# feature entry and plan section): the plan section is not repeated, and a
+# == Session protocol == section prints the protocol 2.9 card plus the repo's
+# AGENTS.md Rules and Needs-a-human sections, so the session never reads
+# SKILL.md, AGENTS.md or the protocol files.
 # Exit codes: delegated from harness-status — 0 report printed; 2 harness
 # file broken; 3 harness not initialized.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STATUS="$SCRIPT_DIR/../../harness-status/scripts/status.sh"
-SKIP=()
-if [ "${1:-}" = "--skip" ]; then SKIP=(--skip "${2:?--skip needs a file}"); shift 2; fi
+SKIP=(); BRIEF=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --skip) SKIP=(--skip "${2:?--skip needs a file}"); shift 2 ;;
+    --brief) BRIEF=1; shift ;;
+    *) break ;;
+  esac
+done
 TARGET="${1:-.}"
 
 # Brief, not history (M34-009): completed milestones collapse to one line.
@@ -66,10 +77,14 @@ if [ -n "$next_id" ]; then
   matches="$(grep -ril --include='*.md' "$next_id" docs/plans/active 2>/dev/null || true)"
   if [ -n "$matches" ]; then
     printf '%s\n' "$matches" | sed 's/^/PLAN: /'
-    # the feature's own plan section (heading naming its id), capped at 30 lines
-    printf '%s\n' "$matches" | while IFS= read -r pf; do
-      awk -v id="$next_id" '/^## /{ on = (index($0, id) > 0) } on' "$pf" | head -30
-    done
+    if [ "$BRIEF" -eq 1 ]; then
+      echo 'PLAN_SECTION: in your brief'
+    else
+      # the feature's own plan section (heading naming its id), capped at 30 lines
+      printf '%s\n' "$matches" | while IFS= read -r pf; do
+        awk -v id="$next_id" '/^## /{ on = (index($0, id) > 0) } on' "$pf" | head -30
+      done
+    fi
   else
     echo "PLAN: none mentioning $next_id"
   fi
@@ -145,4 +160,22 @@ if [ "$upgrade" -eq 1 ]; then
   echo 'UPGRADE: offer — tell the human once; apply only if they say so, as its own commit before the feature'
 else
   echo 'UPGRADE: none'
+fi
+
+# Briefed sessions (M38-001): the protocol lines a dispatched session needs,
+# so it never cats SKILL.md, AGENTS.md or docs/agents/. The card is the
+# shipped protocol 2.9; the repo's own rules come from its AGENTS.md.
+if [ "$BRIEF" -eq 1 ]; then
+  echo
+  echo "== Session protocol =="
+  echo "SCRIPTS: $SCRIPT_DIR"
+  RUNS="$SCRIPT_DIR/../../harness-initial-setup/templates/harness-protocol-runs.md"
+  # the card's bullets only (its intro is for readers of the protocol file)
+  awk '/^### 2\.9 /{ on = 1; next } on && /^#/{ exit } on && /^- /{ b = 1 } b' "$RUNS"
+  if [ -f AGENTS.md ]; then
+    for sec in Rules 'Needs a human'; do
+      part="$(awk -v h="## $sec" '$0 == h { on = 1; print; next } on && /^## /{ exit } on' AGENTS.md | head -40)"
+      if [ -n "$part" ]; then printf '\n%s\n' "$part"; fi
+    done
+  fi
 fi

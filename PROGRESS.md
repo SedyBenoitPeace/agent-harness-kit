@@ -3,6 +3,25 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-27 -- session 76 (M38 lean worker reads)
+
+- Branch: `lean-worker-reads`.
+- Done: M38-001, M38-002, M38-003. `context.sh --brief` prints the new
+  protocol §2.9 card plus the repo's AGENTS.md Rules and Needs a human;
+  `skills/harness-run/scripts/feature.sh <id>` prints one feature entry and
+  its plan section, which harness-run pastes into every builder brief; the
+  read rule (`grep -n` first, then `sed -n` ≤80 lines; never `cat` a source
+  file over 200 lines) is in the protocol, AGENTS.md and its template, and
+  the builder agents, and upgrade.sh adds it to existing repos. Release
+  3.15.0. Plan: `docs/plans/completed/2026-10-27-m38-lean-worker-reads.md`.
+- Decisions: card in harness-protocol-runs.md (core at its 150-line cap);
+  `--brief` opt-in so the orchestrator's per-loop context.sh stays short;
+  dispatch prompt no longer says "Use harness-session" (it loads SKILL.md on
+  Claude Code), and the edition's hook regex accepts both wordings. Template
+  mirror (sync-template.sh) not run: that repo is not in this session.
+- Gate: GREEN (bash scripts/ci-local.sh; claude plugin test 56 pass).
+- Next: owner reviews the PR; sync agent-harness-template to 3.15.0.
+
 ## 2026-10-21 -- session 75 (M37-001 Copilot status line)
 
 - Branch: `copilot-statusline`.
