@@ -276,7 +276,9 @@ disp() { bash "$DISPATCH" "$D" "$@" | tr '\n' ' '; }
 # M39-001: no builder agent file for the CLI → AGENT: missing, exit 3, no log line
 for c in codex copilot claude; do
   rc=0; out="$(bash "$DISPATCH" "$D" "$c" S-1 2>/dev/null)" || rc=$?
-  [ "$rc" -eq 3 ] && [ "$out" = "AGENT: missing" ] || fail "dispatch: $c without harness-builder must print AGENT: missing and exit 3 (got $rc: $out)"
+  if [ "$rc" -ne 3 ] || [ "$out" != "AGENT: missing" ]; then
+    fail "dispatch: $c without harness-builder must print AGENT: missing and exit 3 (got $rc: $out)"
+  fi
 done
 [ -f "$D/.harness-run/models.log" ] && fail "dispatch: a missing agent must not log a model"
 mkdir -p "$D/.github/agents"
