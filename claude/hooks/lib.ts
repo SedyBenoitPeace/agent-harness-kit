@@ -179,7 +179,9 @@ export function runCostText(s: RunSpend) {
 
 export const TIERS = ['haiku', 'sonnet', 'opus'] as const
 const SENSITIVE = /auth|payment|billing|migration|secret|credential|personal/i
-export const BUILDER_PROMPT = /harness-session for (M\d+-\d{3})/
+// M38-002: harness-run's brief says "harness session for <id>" (no skill load);
+// older orchestrators say "Use harness-session for <id>".
+export const BUILDER_PROMPT = /harness[- ]session for (M\d+-\d{3})/
 export const PARALLEL_LANE = /as a parallel lane in /
 
 // A model name's tier: haiku 0, sonnet 1, opus 2, above opus 3; -1 unknown.

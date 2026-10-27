@@ -11,6 +11,11 @@ status + `git log` + `git status` + plan-grep sequence with one call.
 
 **Announce at start:** "Using harness-session to run one coding session."
 
+**Dispatched with a brief** (harness-run pasted your feature entry and plan
+section): run `scripts/context.sh --brief` instead; its Session protocol
+section carries this workflow. Do not cat this file, AGENTS.md,
+`docs/agents/`, FEATURES.json or the plan.
+
 ## Workflow
 
 1. Run `bash scripts/context.sh` (path relative to this skill) from the
@@ -20,7 +25,8 @@ status + `git log` + `git status` + plan-grep sequence with one call.
    The report is the whole start: current milestone, `NEXT` in full, its
    plan section, the newest `PROGRESS.md` entry. Read FEATURES.json,
    PROGRESS.md, ARCHITECTURE.md, PRODUCT.md and plans on demand with `grep`
-   or `sed -n` ranges, never whole.
+   or `sed -n` ranges, never whole. Read rule, for source files too: `grep -n`
+   first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines.
    - Exit 3 / 2 → relayed from harness-status: not initialized or broken.
      Offer harness-initial-setup / harness-audit, STOP.
 2. If the report ends with `UPGRADE: offer`, the repo was scaffolded by

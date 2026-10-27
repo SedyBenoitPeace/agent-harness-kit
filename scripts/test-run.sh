@@ -340,4 +340,33 @@ if (cd "$W" && bash "$OLDPWD/$WAIT" X-2 --timeout 2 >"$W/o" 2>/dev/null); then f
 [ ! -s "$W/o" ] || fail "wait-result: no stdout on timeout"
 rm -rf "$W"
 
+# feature.sh (M38-002): one feature entry and its plan section, for the brief
+FEAT="skills/harness-run/scripts/feature.sh"
+W="$(mktemp -d)"
+mkdir -p "$W/docs/plans/active"
+printf '{"milestones":{"1":"A"},"features":[{"id":"M1-001","milestone":1,"title":"one","status":"passing","verify":"V1"},{"id":"M1-002","milestone":1,"title":"two","status":"failing","verify":"V2","depends_on":["M1-001"]}]}\n' > "$W/FEATURES.json"
+{ printf '# Plan\n\nINTRO\n\n## M1-001 one\n- SECTION1\n\n## M1-002 two\n- SECTION2\n'; } > "$W/docs/plans/active/m1.md"
+out="$(bash "$FEAT" M1-002 "$W")" || fail "feature.sh: expected exit 0"
+for w in '== Feature M1-002 ==' '"verify": "V2"' '"M1-001"' 'PLAN: docs/plans/active/m1.md' '## M1-002 two' SECTION2; do
+  echo "$out" | grep -qF -- "$w" || fail "feature.sh: missing $w"
+done
+if echo "$out" | grep -qE 'SECTION1|INTRO|V1'; then fail "feature.sh: leaked another feature or plan section"; fi
+rc=0; bash "$FEAT" M9-999 "$W" >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 2 ] || fail "feature.sh: unknown id must exit 2"
+rc=0; bash "$FEAT" >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 2 ] || fail "feature.sh: no id must exit 2"
+rm "$W/docs/plans/active/m1.md"
+bash "$FEAT" M1-002 "$W" | grep -q '^PLAN: no section naming M1-002' || fail "feature.sh: missing plan must say so"
+{ printf '## M1-002 long\n'; seq 1 120; } > "$W/docs/plans/active/long.md"
+out="$(bash "$FEAT" M1-002 "$W")"
+echo "$out" | grep -q 'section cut at 80 of 121 lines' || fail "feature.sh: long section must be cut at 80 with a note"
+if echo "$out" | grep -qx 100; then fail "feature.sh: printed past the 80-line cap"; fi
+rm -rf "$W"
+# the brief replaces the plan path and the skill/AGENTS.md reads
+grep -qF 'bash scripts/feature.sh <id> <target>' "$run" || fail "harness-run SKILL.md: brief must paste feature.sh output"
+grep -qF 'context.sh --brief' "$run" || fail "harness-run SKILL.md: brief must start the builder with context.sh --brief"
+grep -qF "never the plan's path" "$run" || fail "harness-run SKILL.md: brief must not pass the plan path"
+grep -qF 'do not cat SKILL.md, AGENTS.md' "$run" || fail "harness-run SKILL.md: brief must tell the builder not to cat SKILL.md/AGENTS.md"
+grep -qF 'harness session for <id>' "$run" || fail "harness-run SKILL.md: brief must keep 'harness session for <id>' (Claude edition hook parses it)"
+
 echo "RUN TESTS GREEN"

@@ -15,6 +15,14 @@ describe('model choice (M30-001)', () => {
     expect(w.files['.harness-run/models.log']).toContain('M1-001 haiku effort low')
   })
 
+  test('the M38 brief prompt names its feature, not the depends_on ids pasted below it', async ($, on) => {
+    const w = world(on, { 'FEATURES.json': featuresOf(feature('M1-001', { effort: 'high' }), feature('M1-002', { effort: 'low', depends_on: ['M1-001'] })) })
+    await $.session.start(START)
+    const brief = 'Run one harness session for M1-002, inline. Start with `bash ../harness-session/scripts/context.sh --brief`. End with the SESSION line.\n== Feature M1-002 ==\n{ "id": "M1-002", "depends_on": ["M1-001"] }'
+    await $.agent.spawn({ prompt: brief, subagentType: 'general-purpose' })
+    expect(w.spawns[0]!.model).toBe('haiku')
+  })
+
   test('a feature with no effort starts on sonnet', async ($, on) => {
     const w = world(on, { 'FEATURES.json': featuresOf(feature('M1-001')) })
     await $.session.start(START)
