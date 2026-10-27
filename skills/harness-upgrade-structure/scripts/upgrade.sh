@@ -113,8 +113,8 @@ fi
 # generated agent files (M27-001): a repo that has any harness agent file
 # gets every role regenerated for each CLI folder it already uses, so new
 # instructions (Decisions:, untrusted text, effort) reach builder, evaluator
-# and brief reviewer alike. A repo with none gets them only when a feature
-# opts in to evaluation (as before).
+# and brief reviewer alike. A repo with none gets every role for every CLI:
+# harness-run dispatches the builder by name (M39-001; was evaluation only).
 gen="$(mktemp -d)"
 bash "$GEN_AGENTS" "$gen" >/dev/null
 agents_changed=0; copilot_changed=0
@@ -135,9 +135,9 @@ have=0
 for f in .claude/agents/harness-*.md .github/agents/harness-*.agent.md .codex/agents/harness-*.toml; do
   if [ -f "$f" ]; then have=1; fi
 done
-if [ "$have" -eq 0 ] && jq -e '[.features[] | select(.evaluate == "ui" or has("second_opinion"))] | length > 0' FEATURES.json >/dev/null; then
+if [ "$have" -eq 0 ]; then
   bash "$GEN_AGENTS" "$PWD" >/dev/null
-  echo "CHANGED: .claude/agents/ .github/agents/ .codex/agents/ (agent files generated for evaluation; restart Copilot CLI to see them)"
+  echo "CHANGED: .claude/agents/ .github/agents/ .codex/agents/ (builder and evaluator agent files generated; restart Copilot CLI to see them)"
 elif [ "$agents_changed" -eq 0 ]; then
   echo "OK: generated agent files are current (or not needed)"
 fi

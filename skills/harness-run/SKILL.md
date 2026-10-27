@@ -34,11 +34,16 @@ stays interactive and stops at the first problem.
    to this skill; `retries` = the feature's `eval_attempts`, 0 for a first
    build). It prints the agent to dispatch (`harness-builder-<size>` when
    that agent exists for the CLI, else `harness-builder`, both generated per
-   CLI by `../../scripts/gen-agents.sh`; if absent, the agent's own built-in
-   subagent) and appends `<id> <size> <reason>` to `.harness-run/models.log`
+   CLI by `../../scripts/gen-agents.sh`) and appends `<id> <size> <reason>` to `.harness-run/models.log`
    on every CLI but Claude Code, whose hook logs its own. A retry (a feature
    rebuilt after an evaluator NEEDS_WORK) dispatches the next size up.
-   Dispatch that agent with a brief, never the plan's path:
+   Exit 3 (`AGENT: missing`): the repo has no builder agent for this CLI.
+   Run `../../scripts/gen-agents.sh <target>`, commit the agent files
+   (explicit paths), tell the human to restart the CLI (it reads agents
+   only at start) and invoke harness-run again, then STOP. Never brief a
+   general-purpose or built-in subagent to act as the builder.
+   Dispatch the named agent itself (Copilot CLI: the task tool's
+   `agent_type` set to that name) with a brief, never the plan's path:
    "Run one harness session for <id>, inline. Start with
    `bash <this skill's folder>/../harness-session/scripts/context.sh --brief`
    and follow its Session protocol; do not cat SKILL.md, AGENTS.md,
@@ -91,7 +96,8 @@ set; absent means no evaluation and today's flow):
    `bar`, whether `evaluate` is `ui` (QA mode), and — when any `paths`
    entry touches auth, payments, personal data or migrations — the
    security checklist. Never pass the builder's transcript. If the agent
-   is missing, run `../../scripts/gen-agents.sh <target>` first, or STOP and tell the human.
+   is missing, run `../../scripts/gen-agents.sh <target>`, commit the agent
+   files, tell the human to restart the CLI, and STOP; never a stand-in subagent.
 2. Integrity check: `git status --short` must be empty and HEAD unchanged.
    Anything else rejects the verdict (the evaluator is read-only, but a
    parent's elevated permissions can reach child agents): discard its
@@ -158,3 +164,4 @@ details stay in its subagent, its commit, and `PROGRESS.md`.
 | "Blocked — I'll just fix it here" | Relay the blocker and stop; the human decides. |
 | "Next milestone is ready too, keep going" | Stop at the milestone boundary. |
 | "No subagents here, I'll run them all in this chat" | One session, then stop. That is the whole point. |
+| "No builder agent, a general-purpose one can act as it" | `AGENT: missing`: generate the agents, commit, restart, re-invoke. |

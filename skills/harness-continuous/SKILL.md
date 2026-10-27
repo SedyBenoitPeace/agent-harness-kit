@@ -58,6 +58,9 @@ permissions only — never a skip-all-permissions flag.
    script output only, a fresh conversation on resume), then `status.sh --skip
    .harness-run/skip` and `git status --short` as proof), including its
    Evaluator step and Parallel lanes. A blocked parallel lane becomes a skip.
+   `dispatch.sh` exit 3 (`AGENT: missing`) is not a skip: generate and
+   commit the agent files as harness-run says, then End with the reason
+   "restart the CLI to load the builder agents" (never a stand-in subagent).
 4. Verified (`NEXT` no longer names the id, tree clean) → print
    `<id> passing · <commit>`, loop.
 5. A `blocked` line with the reason `session budget` is retried

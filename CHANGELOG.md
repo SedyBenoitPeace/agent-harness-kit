@@ -10,6 +10,23 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.15.1 — 2026-10-27
+
+- harness-run and harness-continuous dispatch only the kit's named builder
+  agents (M39-001). A Copilot run in a repo without `.github/agents/` used
+  to brief `general-purpose` subagents to "act as harness-builder", which
+  rebuilt their context from scratch on every feature. `dispatch.sh` now
+  prints `AGENT: missing` and exits 3 when the CLI has no builder agent
+  file; the orchestrator generates the agents, commits them and stops for
+  a CLI restart.
+- harness-initial-setup and harness-upgrade-structure generate the agent
+  files for every repo, not only when a feature opts in to evaluation.
+
+Upgrade:
+- Harness repos without `.github/agents/`, `.codex/agents/` or
+  `.claude/agents/`: run `/agent-harness-kit:harness-upgrade-structure`,
+  commit the generated agent files, and restart Copilot CLI.
+
 ## 3.15.0 — 2026-10-27
 
 Leaner worker reads (M38), from a 30-day file-read cost review: on Codex and

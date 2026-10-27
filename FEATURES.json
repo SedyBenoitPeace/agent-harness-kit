@@ -4,7 +4,8 @@
     "35": "M34 follow-ups: run-report decisions, README, template mirror",
     "36": "Effort and model size required on every open feature",
     "37": "Harness line on Copilot CLI status line",
-    "38": "Lean worker reads: protocol card, feature brief, read rule"
+    "38": "Lean worker reads: protocol card, feature brief, read rule",
+    "39": "Dispatch the kit's builder agents, never a stand-in"
   },
   "features": [
     {
@@ -130,6 +131,23 @@
         "skills/harness-initial-setup/templates/",
         "skills/harness-upgrade-structure/",
         "AGENTS.md",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M39-001",
+      "milestone": 39,
+      "title": "dispatch.sh exits 3 (AGENT: missing) without a builder agent file; harness-run/continuous generate, commit and stop instead of a stand-in subagent; setup and upgrade always generate the agent files",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving AGENT: missing + exit 3 + no models.log line on claude, codex and copilot, and test-upgrade.sh proving a repo without agent files or evaluation opt-in gets the builder for every CLI",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/",
+        "skills/harness-continuous/",
+        "skills/harness-initial-setup/SKILL.md",
+        "skills/harness-upgrade-structure/",
         "scripts/"
       ]
     }

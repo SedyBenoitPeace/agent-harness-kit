@@ -71,7 +71,8 @@ English:
   `PASS` or `NEEDS_WORK` with evidence before the feature can become
   `passing`, and records `docs/verification/<id>.md`. The builder and
   evaluator agents are generated for Claude Code, Copilot CLI and Codex CLI
-  by `scripts/gen-agents.sh` from one source in `agents/`.
+  by `scripts/gen-agents.sh` from one source in `agents/`, at setup and by
+  the upgrade; harness-run dispatches the builder by name, never a stand-in.
 - **harness-status** — where the project stands: progress per milestone,
   last session, exact next feature. `/agent-harness-kit:harness-status` or
   _"what's the harness status?"_.
@@ -527,9 +528,9 @@ Do the steps in order. The upgrade is once per repo.
 3. Run `/agent-harness-kit:harness-audit` and approve its `depends_on` and
    `paths` proposals. This step is essential: without declared `depends_on`,
    a skipped feature stops the run instead of letting it continue.
-4. Only if you use the independent evaluator: the upgrade already
-   generated the agent files (`scripts/gen-agents.sh <repo>` regenerates
-   them); restart Copilot CLI afterwards if you use it.
+4. The upgrade already generated the builder and evaluator agent files
+   (`scripts/gen-agents.sh <repo>` regenerates them); restart Copilot CLI
+   afterwards if you use it, so it loads them.
 
 **Run**
 
