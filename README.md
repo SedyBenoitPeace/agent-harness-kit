@@ -615,6 +615,13 @@ protocol for this repository. Interview me before writing anything.
 The protocol is plain markdown with zero vendor-specific instructions — it
 works as a Codex/Cursor rules file or pasted straight into a chat model.
 
+A harnessed repo declares itself, so agents without the plugin (an ADE
+built on Claude Code, Gemini CLI, Cursor) follow it unprompted: `AGENTS.md`
+says the harness applies plugin or not, and `CLAUDE.md` / `GEMINI.md` import
+it with `@AGENTS.md` (a link in words is not loaded). The plugin only makes
+the same steps faster. To skip the harness for one change, say "just build
+it": no brief or plan, but FEATURES.json is still updated.
+
 ## Start a repo from scratch — just chat
 
 You don't need a requirements file to get a clean harness. Describe the

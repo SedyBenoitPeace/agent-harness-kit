@@ -199,7 +199,8 @@ echo "$out" | grep -q '^CHANGED: AGENTS.md (session loop scoped to feature work'
 [ "$(sed -n '/^## Session loop/{n;n;p;}' "$FW/AGENTS.md")" = "$(grep -m1 '^Feature work only:' skills/harness-initial-setup/templates/AGENTS.md.tmpl)" ] \
   || fail "feature work: paragraph must sit right under the ## Session loop heading"
 # shellcheck disable=SC2016 # literal backticks
-[ "$(grep -A1 'always apply\.$' "$FW/AGENTS.md" | tail -1)" = '1. Read `git log -20`.' ] || fail "feature work: session steps must follow the paragraph"
+# (the M41-001 skip line, 3 lines, now sits between them)
+[ "$(grep -A4 'always apply\.$' "$FW/AGENTS.md" | tail -1)" = '1. Read `git log -20`.' ] || fail "feature work: session steps must follow the paragraph"
 grep -qxF 'first feature session. This file is only the map.' "$FW/AGENTS.md" || fail "feature work: 'first session' line not reworded"
 # shellcheck disable=SC2016 # literal backticks
 grep -qxF -- '- Every feature session starts and ends green (`scripts/e2e.sh`).' "$FW/AGENTS.md" || fail "feature work: gate rule not reworded"
@@ -216,6 +217,53 @@ git -C "$NH" -c user.email=t@t -c user.name=t add -A; git -C "$NH" -c user.email
 out="$(bash "$UPGRADE" "$NH" 2>&1)" || fail "feature work no loop: expected exit 0"
 echo "$out" | grep -q '^TODO: AGENTS.md has no "## Session loop" section' || fail "feature work: missing heading needs a TODO"
 ! grep -q '^Feature work only:' "$NH/AGENTS.md" || fail "feature work: must not guess where to insert without a heading"
+
+# 4e. plugin-less agents (M41-001): the kit's one-line CLAUDE.md pointer becomes
+#     the @AGENTS.md import; a custom CLAUDE.md keeps its text under the import;
+#     AGENTS.md gets the declaration, the skip line and the plugin rewording, once
+TPL="skills/harness-initial-setup/templates"
+PL="$WORK/pluginless"; mkdir -p "$PL"
+git -C "$PL" init -q -b main
+printf '{ "milestones": {"1":"C"}, "features": [] }\n' > "$PL/FEATURES.json"
+printf '# PROGRESS\n' > "$PL/PROGRESS.md"
+printf 'See [AGENTS.md](AGENTS.md) — the single agent entry point for this repository.\n' > "$PL/CLAUDE.md"
+printf '# GEMINI.md\n\nSee AGENTS.md for everything.\n' > "$PL/GEMINI.md"
+# a 3.16.0 AGENTS.md: the template with the old declaration and plugin paragraph
+cp scripts/fixtures/agents-3.16.0.md "$PL/AGENTS.md"
+git -C "$PL" -c user.email=t@t -c user.name=t add -A; git -C "$PL" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$UPGRADE" "$PL" 2>&1)" || fail "plugin-less: expected exit 0 (got: $out)"
+cmp -s "$TPL/pointer.md.tmpl" "$PL/CLAUDE.md" || fail "plugin-less: kit pointer CLAUDE.md must become the template import"
+[ "$(head -1 "$PL/GEMINI.md")" = '@AGENTS.md' ] || fail "plugin-less: custom GEMINI.md must start with @AGENTS.md"
+grep -qxF 'See AGENTS.md for everything.' "$PL/GEMINI.md" || fail "plugin-less: custom GEMINI.md text must be kept"
+grep -qF 'long-running-agent harness, plugin or' "$PL/AGENTS.md" || fail "plugin-less: declaration not reworded"
+! grep -qxF 'This repository is operated with the long-running-agent harness. The full' "$PL/AGENTS.md" || fail "plugin-less: old declaration left behind"
+grep -qF 'just build it' "$PL/AGENTS.md" || fail "plugin-less: skip line missing"
+[ "$(grep -A1 'always apply\.$' "$PL/AGENTS.md" | tail -1)" = "$(grep '^If the human says to skip the harness' "$TPL/AGENTS.md.tmpl")" ] || fail "plugin-less: skip line must follow the feature-work paragraph"
+grep -qF 'These steps are the protocol, plugin or not.' "$PL/AGENTS.md" || fail "plugin-less: plugin paragraph not reworded"
+! grep -qF 'fallback when it is not installed' "$PL/AGENTS.md" || fail "plugin-less: old fallback wording left behind"
+# an upgraded template-shaped AGENTS.md matches the new template
+sed -e 's/{{[A-Z_]*}}//g' "$TPL/AGENTS.md.tmpl" > "$WORK/want.md"; sed -e 's/{{[A-Z_]*}}//g' "$PL/AGENTS.md" > "$WORK/got.md"
+cmp -s "$WORK/want.md" "$WORK/got.md" || fail "plugin-less: upgraded 3.16.0 AGENTS.md must equal the current template ($(diff "$WORK/want.md" "$WORK/got.md" | head -5))"
+git -C "$PL" -c user.email=t@t -c user.name=t add -A; git -C "$PL" -c user.email=t@t -c user.name=t commit -qm up
+out="$(bash "$UPGRADE" "$PL" 2>&1)" || fail "plugin-less second run: expected exit 0"
+for w in 'OK: CLAUDE.md imports AGENTS.md' 'OK: GEMINI.md imports AGENTS.md' 'OK: AGENTS.md declares the harness, plugin or not' 'OK: AGENTS.md says how to skip the harness' 'OK: AGENTS.md treats the plugin as an accelerator'; do
+  echo "$out" | grep -qF "$w" || fail "plugin-less second run: '$w' missing"
+done
+[ -z "$(git -C "$PL" status --short)" ] || fail "plugin-less: second run must change nothing"
+# a hand-written AGENTS.md (no declaration, no template lines): declaration under the title
+HW="$WORK/handwritten"; mkdir -p "$HW"
+git -C "$HW" init -q -b main
+printf '{ "milestones": {"1":"C"}, "features": [] }\n' > "$HW/FEATURES.json"
+printf '# PROGRESS\n' > "$HW/PROGRESS.md"
+printf '# AGENTS.md — App\n\nContext for agents.\n\n## Session loop\nFeature work only: x. Rules and Needs a human always apply.\n**Start:**\n\nharness-run\n' > "$HW/AGENTS.md"
+git -C "$HW" -c user.email=t@t -c user.name=t add -A; git -C "$HW" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$UPGRADE" "$HW" 2>&1)" || fail "hand-written: expected exit 0 (got: $out)"
+[ "$(sed -n 3p "$HW/AGENTS.md")" = "$(grep -m1 'long-running-agent harness, plugin or' "$TPL/AGENTS.md.tmpl")" ] || fail "hand-written: declaration must sit under the title"
+! grep -qF 'only the map' "$HW/AGENTS.md" || fail "hand-written: a custom AGENTS.md is not 'only the map'"
+grep -qF 'Context for agents.' "$HW/AGENTS.md" || fail "hand-written: text must be kept"
+grep -qF 'just build it' "$HW/AGENTS.md" || fail "hand-written: skip line missing"
+[ "$(head -1 "$HW/CLAUDE.md")" = '@AGENTS.md' ] || fail "hand-written: missing CLAUDE.md must be created as the import"
+[ ! -e "$HW/GEMINI.md" ] || fail "hand-written: GEMINI.md must not be created"
 
 sess="skills/harness-session/SKILL.md"
 grep -q 'harness-upgrade-structure' "$sess" || fail "harness-session SKILL.md: UPGRADE: offer must point at harness-upgrade-structure"

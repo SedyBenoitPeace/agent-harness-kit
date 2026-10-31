@@ -77,7 +77,8 @@ directories (the first plan from step 2 goes in `active/`).
 ### 4. Retrofit rules (existing codebases)
 
 - Existing `AGENTS.md` / `CLAUDE.md` content is **preserved and linked**,
-  never clobbered. Merge the harness map into what's there; move displaced
+  never clobbered. An existing `CLAUDE.md` / `GEMINI.md` gets `@AGENTS.md` as
+  its first line (an import, not a link: Claude Code does not load linked files). Merge the harness map into what's there; move displaced
   depth into `docs/`.
 - Existing tests become the initial gate: wire `scripts/e2e.sh` to run them
   through the template's `step` wrapper so the output stays bounded (§1.6).

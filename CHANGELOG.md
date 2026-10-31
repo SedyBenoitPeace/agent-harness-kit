@@ -10,6 +10,24 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.17.0 — 2026-10-31
+
+- Harnessed repos work without the kit plugin (M41-001). An ADE built on
+  Claude Code, with no kit plugin, did not know a repo was harnessed until
+  told: the kit's `CLAUDE.md` only linked AGENTS.md, Claude Code does not
+  load linked files, and a `CLAUDE.md` stops it reading AGENTS.md by itself.
+  `CLAUDE.md` and `GEMINI.md` now import it with `@AGENTS.md`, which also
+  puts AGENTS.md in context for plugin users. AGENTS.md says the harness
+  applies plugin or not, calls the six steps the protocol (the plugin only
+  speeds them up), and says how to skip the harness: "just build it" drops
+  the brief and plan, but FEATURES.json and its archive are still updated.
+  harness-audit warns when a pointer file does not import AGENTS.md.
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`; it turns
+  CLAUDE.md/GEMINI.md into `@AGENTS.md` imports (a custom file keeps its text
+  under the import) and adds the plugin-or-not and skip lines to AGENTS.md.
+
 ## 3.16.0 — 2026-10-27
 
 - The session loop is for feature work only (M40-001). A Codex session asked

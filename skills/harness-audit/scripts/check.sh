@@ -247,8 +247,18 @@ else
   warn "ARCHITECTURE.md missing — offer to derive it from the code or interview the human"
 fi
 
-# Pointer file (WARN only: non-vendor repos may use a different entry file)
-if [ -f CLAUDE.md ]; then pass "CLAUDE.md pointer exists"; else warn "CLAUDE.md pointer missing"; fi
+# Pointer files (WARN only: non-vendor repos may use a different entry file).
+# They must import AGENTS.md (M41-001): Claude Code does not load a linked file,
+# and a CLAUDE.md stops it reading AGENTS.md by itself, so a plugin-less agent
+# would never see the harness.
+for f in CLAUDE.md GEMINI.md; do
+  [ -e "$f" ] || { [ "$f" = GEMINI.md ] || warn "CLAUDE.md pointer missing"; continue; }
+  if [ -L "$f" ] || grep -qE '^@(\./)?AGENTS\.md[[:space:]]*$' "$f"; then
+    pass "$f imports AGENTS.md"
+  else
+    warn "$f does not import AGENTS.md — put @AGENTS.md on its first line (harness-upgrade-structure does it)"
+  fi
+done
 
 # Optionally run the gate itself
 if [ "$RUN_GATE" -eq 1 ]; then
