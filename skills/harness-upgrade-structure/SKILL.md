@@ -25,7 +25,9 @@ commits it. It is **not** for new repos: that is harness-initial-setup.
    changed in two or three lines: the protocol copy recopied, the
    harness-run line and the read rule (`grep -n` first, then `sed -n` ≤80
    lines; since 3.15.0) and the feature-work scope of the session loop
-   (since 3.16.0: small tasks skip it) added to AGENTS.md, agent files regenerated (restart
+   (since 3.16.0: small tasks skip it) added to AGENTS.md, the vendor pointer
+   files importing AGENTS.md with `@AGENTS.md` and AGENTS.md saying the harness
+   applies with or without the plugin (since 3.17.0), agent files regenerated (restart
    Copilot CLI to see them; since 3.14.1 every Copilot agent carries
    `deferred-tool-loading: true`, so it uses tool search instead of loading
    every tool definition per call; since 3.15.0 a builder dispatched with a

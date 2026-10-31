@@ -74,3 +74,8 @@ Expected:
 | M1-002 | claude-sonnet-5 | 153000 | 91600 | 60900 | 2700 | 850 |
 
 Premium requests for the session: 1.
+
+## agents-3.16.0.md
+
+The AGENTS.md template as shipped in 3.16.0, before M41-001. test-upgrade.sh
+upgrades it and checks the result equals the current template.

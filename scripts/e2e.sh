@@ -216,6 +216,14 @@ grep -qF 'Rules and Needs a human always apply.' "$TMPL_DIR/AGENTS.md.tmpl" || f
 grep -qF 'Run this for feature work' "$CORE" || fail "protocol §2: must say it runs for feature work only (M40-001)"
 ! grep -qE 'every (coding|working) session' "$CORE" "$TMPL_DIR/AGENTS.md.tmpl" || fail "protocol/AGENTS.md.tmpl: 'every session' wording is back (M40-001)"
 grep -q 'session loop scoped to feature work' skills/harness-upgrade-structure/scripts/upgrade.sh || fail "upgrade.sh: feature-work paragraph block missing (M40-001)"
+# plugin-less agents (M41-001): the repo declares the harness on its own
+grep -qx '@AGENTS.md' "$TMPL_DIR/pointer.md.tmpl" || fail "pointer.md.tmpl: must import AGENTS.md with @AGENTS.md, not link it (M41-001)"
+grep -qF 'long-running-agent harness, plugin or' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: must declare the harness applies plugin or not (M41-001)"
+grep -qF 'These steps are the protocol, plugin or not.' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: manual steps must be the protocol, not a fallback (M41-001)"
+grep -qF '("just build it"): no brief or plan, but' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: skip line missing (M41-001)"
+grep -qF 'FEATURES.json and its archive stay the source of truth' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: skipping the harness must still update FEATURES.json (M41-001)"
+grep -qF 'plugin-less agents (M41-001)' skills/harness-upgrade-structure/scripts/upgrade.sh || fail "upgrade.sh: plugin-less block missing (M41-001)"
+grep -qF 'does not import AGENTS.md' skills/harness-audit/scripts/check.sh || fail "harness-audit: pointer import WARN missing (M41-001)"
 grep -q 'CONTINUING INTERRUPTED FEATURE' "$PROTO" || fail "protocol: interrupted-feature continuation rule missing"
 grep -q 'scripts/preflight.sh' "$PROTO" || fail "protocol: optional target preflight rule missing"
 grep -q 'tracked by another failing or deferred feature' "$PROTO" || fail "protocol: out-of-scope-warning rule missing"
@@ -397,7 +405,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.16.0" ] || fail "plugin version must be 3.16.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.17.0" ] || fail "plugin version must be 3.17.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"

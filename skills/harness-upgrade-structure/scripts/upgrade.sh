@@ -143,6 +143,83 @@ if [ -f AGENTS.md ]; then
   done
 fi
 
+# plugin-less agents (M41-001): the repo declares the harness on its own, so an
+# agent with no kit plugin (an ADE built on Claude Code, Gemini CLI) still sees it.
+# CLAUDE.md/GEMINI.md import AGENTS.md with @AGENTS.md: a link in words is not
+# loaded, and a CLAUDE.md stops Claude Code reading AGENTS.md by itself.
+# AGENTS.md says the harness applies plugin or not, and how to skip it.
+# blk_replace FILE: replace the first exact $OLD block with $NEW (multi-line)
+blk_replace() {
+  local tmp; tmp="$(mktemp)"
+  awk '{ s = s $0 "\n" } END { o = ENVIRON["OLD"]; i = index(s, o); if (i) s = substr(s, 1, i - 1) ENVIRON["NEW"] substr(s, i + length(o)); printf "%s", s }' "$1" > "$tmp"
+  cat "$tmp" > "$1"; rm -f "$tmp"
+}
+old_pointer='See [AGENTS.md](AGENTS.md) — the single agent entry point for this repository.'
+for f in CLAUDE.md GEMINI.md; do
+  if [ ! -e "$f" ]; then
+    if [ "$f" = CLAUDE.md ]; then cp "$TEMPLATES/pointer.md.tmpl" "$f"; echo "CHANGED: $f (was missing; imports AGENTS.md)"; fi
+  elif [ -L "$f" ] || grep -qE '^@(\./)?AGENTS\.md[[:space:]]*$' "$f"; then
+    echo "OK: $f imports AGENTS.md"
+  elif [ "$(cat "$f")" = "$old_pointer" ]; then
+    cp "$TEMPLATES/pointer.md.tmpl" "$f"
+    echo "CHANGED: $f (imports AGENTS.md with @AGENTS.md instead of linking it)"
+  else
+    tmp="$(mktemp)"; { printf '@AGENTS.md\n\n'; cat "$f"; } > "$tmp"; cat "$tmp" > "$f"; rm -f "$tmp"
+    echo "CHANGED: $f (added @AGENTS.md at the top; your text is kept below it)"
+  fi
+done
+if [ -f AGENTS.md ]; then
+  decl="$(awk '/^This repository is operated with the long-running-agent harness, plugin or$/{p=1} p{print} p&&/only the map\.$/{exit}' "$TEMPLATES/AGENTS.md.tmpl")"
+  skip="$(awk '/^If the human says to skip the harness/{p=1} p{print} p&&/commit\.$/{exit}' "$TEMPLATES/AGENTS.md.tmpl")"
+  steps="$(awk '/^These steps are the protocol, plugin or not\./{p=1} p{print} p&&/another workflow\.$/{exit}' "$TEMPLATES/AGENTS.md.tmpl")"
+  { [ -n "$decl" ] && [ -n "$skip" ] && [ -n "$steps" ]; } || { echo "upgrade: plugin-less lines not found in AGENTS.md.tmpl" >&2; exit 2; }
+  # shellcheck disable=SC2016 # the backticks are literal markdown
+  old_decl='This repository is operated with the long-running-agent harness. The full
+operating manual is `docs/agents/harness-protocol.md` — read it before your
+first feature session. This file is only the map.'
+  if grep -qF 'long-running-agent harness, plugin or' AGENTS.md; then
+    echo "OK: AGENTS.md declares the harness, plugin or not"
+  elif grep -qF "$(printf '%s' "$old_decl" | head -1)" AGENTS.md && OLD="$old_decl" NEW="$decl" blk_replace AGENTS.md && grep -qF 'long-running-agent harness, plugin or' AGENTS.md; then
+    echo "CHANGED: AGENTS.md (the harness applies with or without the kit plugin)"
+  else
+    tmp="$(mktemp)"
+    # after the H1 title (or at the top), without the "only the map" sentence
+    DECL="${decl% This file is only the map.}" awk 'BEGIN { d = ENVIRON["DECL"] } !done && /^# / { print; print ""; print d; done = 1; next } { print } END { if (!done) print d }' AGENTS.md > "$tmp"
+    if ! grep -q '^# ' AGENTS.md; then { printf '%s\n\n' "${decl% This file is only the map.}"; cat AGENTS.md; } > "$tmp"; fi
+    cat "$tmp" > AGENTS.md; rm -f "$tmp"
+    echo "CHANGED: AGENTS.md (added the harness declaration under the title: the harness applies with or without the kit plugin)"
+  fi
+  if grep -qF 'just build it' AGENTS.md; then
+    echo "OK: AGENTS.md says how to skip the harness"
+  elif grep -q 'always apply\.$' AGENTS.md; then
+    tmp="$(mktemp)"
+    SKIP="$skip" awk '{ print } !done && /always apply\.$/ { print ENVIRON["SKIP"]; done = 1 }' AGENTS.md > "$tmp"
+    cat "$tmp" > AGENTS.md; rm -f "$tmp"
+    echo "CHANGED: AGENTS.md (skipping the harness: no brief or plan, FEATURES.json still updated)"
+  else
+    echo "TODO: AGENTS.md has no feature-work paragraph — add this under it: $skip"
+  fi
+  # shellcheck disable=SC2016 # the backticks are literal markdown
+  old_steps='If the harness-session plugin skill is installed, **use it** — it is the
+session entry point: it bundles steps 1 and 3 into one non-mutating call
+and compresses the gate output while retaining the full log. The six
+manual steps above are the fallback when it is not installed. Executing
+a plan means running its tasks as one harness coding session each; a
+plan is never a reason to load a different workflow.'
+  if grep -qF 'These steps are the protocol, plugin or not.' AGENTS.md; then
+    echo "OK: AGENTS.md treats the plugin as an accelerator"
+  elif grep -qxF 'If the harness-session plugin skill is installed, **use it** — it is the' AGENTS.md; then
+    OLD="$old_steps" NEW="$steps" blk_replace AGENTS.md
+    if grep -qF 'These steps are the protocol, plugin or not.' AGENTS.md; then
+      echo "CHANGED: AGENTS.md (the manual steps are the protocol; the plugin only speeds them up)"
+    else
+      echo "TODO: AGENTS.md plugin paragraph was edited — replace it with: $steps"
+    fi
+  fi
+  lines="$(wc -l < AGENTS.md | tr -d ' ')"
+  [ "$lines" -le 100 ] || echo "TODO: AGENTS.md is now $lines lines (limit 100) — trim it"
+fi
+
 # generated agent files (M27-001): a repo that has any harness agent file
 # gets every role regenerated for each CLI folder it already uses, so new
 # instructions (Decisions:, untrusted text, effort) reach builder, evaluator

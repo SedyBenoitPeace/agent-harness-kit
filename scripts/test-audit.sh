@@ -28,8 +28,10 @@ expect_fail() {  # $1 = fixture dir, $2 = expected FAIL pattern, $3 = label
   if out="$(bash "$CHECK" "$1")"; then
     fail "$3: checker exited 0, expected failure"
   fi
-  echo "$out" | grep -q "^FAIL.*$2" || fail "$3: missing expected FAIL line ($2)"
-  echo "$out" | grep -q "NOT HARNESS READY" || fail "$3: missing NOT HARNESS READY verdict"
+  # here-strings, not echo | grep -q: under pipefail an early grep exit can
+  # SIGPIPE the echo on long output and fail the check spuriously
+  grep -q "^FAIL.*$2" <<< "$out" || fail "$3: missing expected FAIL line ($2)"
+  grep -q "NOT HARNESS READY" <<< "$out" || fail "$3: missing NOT HARNESS READY verdict"
 }
 
 WORK="$(mktemp -d)"
@@ -40,6 +42,16 @@ make_fixture "$WORK/good"
 out="$(bash "$CHECK" "$WORK/good")" || fail "good fixture: checker exited non-zero"
 echo "$out" | grep -q "HARNESS READY" || fail "good fixture: no HARNESS READY verdict"
 if echo "$out" | grep -q "^FAIL"; then fail "good fixture: unexpected FAIL line"; fi
+
+# 1b. pointer files (M41-001): the template CLAUDE.md imports AGENTS.md; a
+#     link-only CLAUDE.md or GEMINI.md gets a WARN naming the import
+echo "$out" | grep -q "^PASS.*CLAUDE.md imports AGENTS.md" || fail "template pointer: expected PASS for the import"
+make_fixture "$WORK/linkonly"
+printf 'See [AGENTS.md](AGENTS.md) — the single agent entry point for this repository.\n' > "$WORK/linkonly/CLAUDE.md"
+printf 'See AGENTS.md\n' > "$WORK/linkonly/GEMINI.md"
+out="$(bash "$CHECK" "$WORK/linkonly")" || fail "link-only pointer: checker must still exit 0"
+echo "$out" | grep -q "^WARN.*CLAUDE.md does not import AGENTS.md" || fail "link-only CLAUDE.md: expected WARN"
+echo "$out" | grep -q "^WARN.*GEMINI.md does not import AGENTS.md" || fail "link-only GEMINI.md: expected WARN"
 
 # 2. drifted protocol doc: WARN, still exit 0
 make_fixture "$WORK/drift"

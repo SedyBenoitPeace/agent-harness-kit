@@ -2,9 +2,9 @@
 
 {{ONE_PARAGRAPH_PROJECT_SUMMARY}}
 
-This repository is operated with the long-running-agent harness. The full
-operating manual is `docs/agents/harness-protocol.md` — read it before your
-first feature session. This file is only the map.
+This repository is operated with the long-running-agent harness, plugin or
+not: the full manual is `docs/agents/harness-protocol.md` — read it before
+your first feature session. This file is only the map.
 
 ## Map
 
@@ -25,6 +25,9 @@ change to what the product does, or an edit to agent instructions (this file,
 do it, check that one result (grep a moved path; run the gate once if code,
 tests, scripts or CI/build config change), stop. If it proves to be feature
 work, stop and say so. Rules and Needs a human always apply.
+If the human says to skip the harness ("just build it"): no brief or plan, but
+FEATURES.json and its archive stay the source of truth: append an entry with
+the next free id, build it, run the gate, flip it to `passing`, commit.
 1. Read `git log -20`, `PROGRESS.md`, and `FEATURES.json`.
 2. Pick the feature to work on: lowest milestone, then lowest id, among
    `status: "failing"` (skip `deferred` and `superseded`).
@@ -36,12 +39,9 @@ work, stop and say so. Rules and Needs a human always apply.
    `verify` criterion proves it — never touch other entries.
 6. Commit, then append an entry to `PROGRESS.md`.
 
-If the harness-session plugin skill is installed, **use it** — it is the
-session entry point: it bundles steps 1 and 3 into one non-mutating call
-and compresses the gate output while retaining the full log. The six
-manual steps above are the fallback when it is not installed. Executing
-a plan means running its tasks as one harness coding session each; a
-plan is never a reason to load a different workflow.
+These steps are the protocol, plugin or not. If the harness-session plugin
+skill is installed, use it: steps 1 and 3 in one call, compressed gate output.
+A plan runs as one harness coding session per task, never another workflow.
 To work through several features in one conversation, use the harness-run
 plugin skill: one fresh subagent per feature (protocol §2.7).
 

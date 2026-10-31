@@ -6,7 +6,8 @@
     "37": "Harness line on Copilot CLI status line",
     "38": "Lean worker reads: protocol card, feature brief, read rule",
     "39": "Dispatch the kit's builder agents, never a stand-in",
-    "40": "Session loop for feature work only"
+    "40": "Session loop for feature work only",
+    "41": "Harnessed repos work without the kit plugin"
   },
   "features": [
     {
@@ -164,6 +165,22 @@
       "paths": [
         "skills/harness-initial-setup/templates/",
         "skills/harness-upgrade-structure/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M41-001",
+      "milestone": 41,
+      "title": "CLAUDE.md/GEMINI.md import AGENTS.md (@AGENTS.md) instead of linking it; AGENTS.md.tmpl declares the harness applies plugin or not, makes the six steps the protocol and adds the 'just build it' skip line (FEATURES.json still updated); upgrade.sh applies all of it to existing repos; harness-audit warns on a link-only pointer",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with the M41-001 asserts, test-upgrade.sh case 4e proving a 3.16.0 AGENTS.md upgrades to exactly the current template, the kit pointer becomes the import, a custom GEMINI.md keeps its text under @AGENTS.md, a hand-written AGENTS.md gets the declaration under its title, and a second run changes nothing; test-audit.sh proving the link-only WARN",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-initial-setup/",
+        "skills/harness-upgrade-structure/",
+        "skills/harness-audit/",
         "scripts/"
       ]
     }

@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-31 -- session 79 (M41-001 harnessed repos work without the plugin)
+
+- Branch: `plugin-less-agents`.
+- Done: M41-001. pointer.md.tmpl imports AGENTS.md with `@AGENTS.md` (Claude
+  Code does not load a linked file, and a CLAUDE.md stops it reading
+  AGENTS.md); AGENTS.md.tmpl says the harness applies plugin or not, the six
+  steps are the protocol, and "just build it" skips brief and plan but still
+  updates FEATURES.json. upgrade.sh applies it to existing repos (custom
+  pointers keep their text); harness-audit warns on a link-only pointer.
+  Release 3.17.0. Plan: `docs/plans/completed/2026-10-31-m41-plugin-less-agents.md`.
+- Decisions: import rather than delete CLAUDE.md (older Claude Code, pinned
+  ADE versions); prepend to custom pointers instead of a TODO; in-repo
+  scripts/skills not shipped (duplication, plugin clashes).
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR; sync agent-harness-template to 3.17.0.
+
 ## 2026-10-27 -- session 78 (M40-001 session loop for feature work only)
 
 - Branch: `scope-protocol-feature-work`.
