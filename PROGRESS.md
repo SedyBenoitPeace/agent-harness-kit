@@ -3,6 +3,20 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-10-31 -- session 80 (M42-001 brief review stops after 2 rounds)
+
+- Branch: `brief-review-cap`.
+- Done: M42-001. `review-round.sh` counts review rounds on line 2 of the
+  brief and prints STOP before round 3; check-brief.sh FAILs at the cap
+  (not once READY) and allows reviewer `- NOTE: ` lines in Open questions.
+  The brief reviewer returns GAPS only for BLOCKING findings, at most 5,
+  and from round 2 re-checks the previous gap list. SKILL.md step 6 wires
+  it. Release 3.18.0. Plan: `docs/plans/completed/2026-10-31-m42-brief-review-cap.md`.
+- Decisions: counter in the brief, not a sidecar; NOTE lines are the only
+  thing Open questions may hold.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR; sync agent-harness-template to 3.18.0.
+
 ## 2026-10-31 -- session 79 (M41-001 harnessed repos work without the plugin)
 
 - Branch: `plugin-less-agents`.

@@ -391,7 +391,7 @@ grep -q 'gen-agents.sh' skills/harness-initial-setup/SKILL.md || fail "harness-i
 # --- harness-brief skill (M19) ---------------------------------------------
 
 BRIEF_SKILL="skills/harness-brief"
-shellcheck "$BRIEF_SKILL/scripts/check-brief.sh"
+shellcheck "$BRIEF_SKILL/scripts/check-brief.sh" "$BRIEF_SKILL/scripts/review-round.sh"
 bash scripts/test-brief.sh
 
 # planning consumes briefs; needs-a-human boundary (M19)
@@ -405,7 +405,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.17.0" ] || fail "plugin version must be 3.17.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.18.0" ] || fail "plugin version must be 3.18.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"

@@ -10,6 +10,24 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.18.0 — 2026-10-31
+
+- Brief review stops after 2 rounds (M42-001). One brief went through 13
+  review rounds, all `GAPS`, growing from about 7 KB to 18.5 KB: the
+  reviewer ran as a separate CLI process each time, so nothing counted
+  rounds, and it called any finding a gap. `review-round.sh` now counts
+  rounds in the brief and prints `STOP` before a third; `check-brief.sh`
+  fails at the cap too. The reviewer returns `GAPS` only for BLOCKING
+  findings (builders would differ, the brief contradicts itself, a
+  Done-when cannot be run or observed, a Needs-a-human item is missing), at
+  most 5, most severe first; the rest are `NOTE:` lines that go into Open
+  questions. From round 2 it re-checks the previous gaps instead of a fresh
+  audit.
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to
+  regenerate the brief reviewer agent for every CLI; restart the CLI after.
+
 ## 3.17.0 — 2026-10-31
 
 - Harnessed repos work without the kit plugin (M41-001). An ADE built on

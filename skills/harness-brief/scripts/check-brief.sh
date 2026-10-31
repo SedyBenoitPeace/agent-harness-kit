@@ -29,10 +29,19 @@ done
 
 if ! grep -qx '## Open questions' "$brief"; then
   failc "section missing: Open questions"
-elif [ -n "$(section 'Open questions')" ]; then
-  failc "Open questions must be empty: resolve them with the human first"
+elif section 'Open questions' | grep -qv '^- NOTE: '; then
+  failc "Open questions must be empty (reviewer '- NOTE: ' lines allowed): resolve them with the human first"
 else
-  pass "Open questions empty"
+  pass "Open questions empty (NOTEs allowed)"
+fi
+
+# review round cap (M42-001): this check runs before every review round, so
+# it refuses a third one even when the reviewer runs in a separate process
+rounds="$(sed -n 's/^<!-- Review rounds: \([0-9][0-9]*\) -->$/\1/p' "$brief" | head -1)"
+if [ -n "$rounds" ] && [ "$rounds" -ge 2 ]; then
+  failc "STOP: round cap reached, show remaining gaps to the human ($rounds review rounds done)"
+else
+  pass "review rounds: ${rounds:-0} of 2"
 fi
 
 # Stage (M26-002): prototype or production decides effort and the quality bar

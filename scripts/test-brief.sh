@@ -115,6 +115,7 @@ bash "$ROUND" --ready "$t/rounds.md" >/dev/null || fail "review-round --ready mu
 [ "$(sed -n 2p "$t/rounds.md")" = '<!-- Review rounds: 2, READY -->' ] || fail "review-round: counter must be line 2 (got: $(sed -n 2p "$t/rounds.md"))"
 
 # NOTEs (non-blocking findings) may sit in Open questions; questions may not
+# shellcheck disable=SC2016 # backticks are literal in the sed expression
 sed 's/^## Open questions$/&\n- NOTE: `cd app` leaves the shell in app\//' "$t/good.md" > "$t/notes.md"
 "$CHECK" "$t/notes.md" >/dev/null || fail "check-brief: NOTE lines in Open questions must pass"
 expect_fail note-and-question 's/^## Open questions$/&\n- NOTE: nit\nWho hosts it?/' 'Open questions'
