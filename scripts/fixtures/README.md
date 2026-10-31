@@ -79,3 +79,9 @@ Premium requests for the session: 1.
 
 The AGENTS.md template as shipped in 3.16.0, before M41-001. test-upgrade.sh
 upgrades it and checks the result equals the current template.
+
+## brief/ — synthetic brief for the reviewer contract (M42-001)
+
+`nits-only.md` is complete and unambiguous; its only flaws are nits (the
+`cd app &&` leaves the shell in `app/`; `grep -c` counts lines, not notes).
+Under the reviewer's BLOCKING bar it must get `READY` plus NOTEs, never `GAPS`.

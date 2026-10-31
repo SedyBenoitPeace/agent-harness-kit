@@ -7,7 +7,8 @@
     "38": "Lean worker reads: protocol card, feature brief, read rule",
     "39": "Dispatch the kit's builder agents, never a stand-in",
     "40": "Session loop for feature work only",
-    "41": "Harnessed repos work without the kit plugin"
+    "41": "Harnessed repos work without the kit plugin",
+    "42": "Brief review converges"
   },
   "features": [
     {
@@ -181,6 +182,21 @@
         "skills/harness-initial-setup/",
         "skills/harness-upgrade-structure/",
         "skills/harness-audit/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M42-001",
+      "milestone": 42,
+      "title": "Brief review stops: review-round.sh counts rounds in the brief and STOPs past 2, check-brief.sh FAILs at the cap; the reviewer returns GAPS only for BLOCKING findings (at most 5, the rest are NOTEs), round 2 re-checks the previous gaps instead of a fresh audit; SKILL.md step 6 wires it; every CLI's generated reviewer carries the rules",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-brief.sh proving a third review-round.sh call exits non-zero with the STOP line, check-brief.sh FAILs a brief at the cap and passes one marked READY or carrying only NOTE lines in Open questions, and the nits-only fixture passes check-brief; test-agents.sh proving the Claude, Copilot and Codex reviewers carry the BLOCKING list, the 5-gap limit, the NOTE rule and the re-check rule; SKILL.md step 6 runs review-round.sh",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-brief/",
+        "agents/src/",
         "scripts/"
       ]
     }

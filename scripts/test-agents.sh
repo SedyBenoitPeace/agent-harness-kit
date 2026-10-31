@@ -41,6 +41,21 @@ grep -qF 'exactly `PASS` or `NEEDS_WORK`' "$t/.claude/agents/harness-evaluator.m
 grep -qF 'exactly `READY` or `GAPS`' "$t/.claude/agents/harness-brief-reviewer.md" || fail "reviewer verdict contract missing"
 grep -qi 'never the conversation' "$t/.claude/agents/harness-brief-reviewer.md" || fail "reviewer must ignore the conversation"
 
+# brief reviewer severity bar and re-check (M42-001), in every CLI's file
+for f in "$t/.claude/agents/harness-brief-reviewer.md" "$t/.github/agents/harness-brief-reviewer.agent.md" "$t/.codex/agents/harness-brief-reviewer.toml"; do
+  grep -qF 'BLOCKING' "$f" || fail "$f: BLOCKING bar missing"
+  for b in 'two builders would build different things' 'the brief contradicts itself' 'cannot be run or observed' 'Needs-a-human item is missing'; do
+    grep -qF "$b" "$f" || fail "$f: BLOCKING case '$b' missing"
+  done
+  grep -qF 'at most 5 gaps' "$f" || fail "$f: 5-gap limit missing"
+  grep -qF 'most severe first' "$f" || fail "$f: severity order missing"
+  # shellcheck disable=SC2016 # literal backticks
+  grep -qF 'does not prevent `READY`' "$f" || fail "$f: NOTEs must not prevent READY"
+  grep -qi 'previous gap list' "$f" || fail "$f: re-check input missing"
+  grep -qi 'changed line' "$f" || fail "$f: re-check must only raise gaps from changed lines"
+  grep -qF 'Review rounds' "$f" || fail "$f: must ignore the Review rounds counter"
+done
+
 # effort (M24-002): a source effort: becomes effort: for Claude Code and
 # model_reasoning_effort for Codex (max maps to high there); Copilot gets
 # none; a source without effort gets no effort line anywhere
