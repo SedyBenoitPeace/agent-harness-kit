@@ -38,7 +38,7 @@
 | `skills/harness-run/` | Orchestrator (SKILL.md): one fresh subagent per feature, verified via status.sh; `scripts/second-opinion.sh` re-judges a feature with another vendor's CLI, read-only, and voids a verdict that changed the repo |
 | `skills/harness-continuous/` | Unattended-run command (SKILL.md only): reuses harness-run, skips instead of stopping; state in `.harness-run/`, report via `skills/harness-run/scripts/run-report.sh` |
 | `skills/harness-upgrade-structure/` | Upgrade of an already-harnessed repo: `scripts/upgrade.sh` (idempotent, commits nothing; recopies the protocol, regenerates agent files, stamps `docs/agents/harness-kit-version`, prints CHANGELOG Upgrade notes since the stamp) + SKILL.md that explains and commits it |
-| `skills/harness-brief/` | Rough prompt → `docs/briefs/` brief; check-brief.sh plus an independent read-only reviewer agent |
+| `skills/harness-brief/` | Rough prompt → `docs/briefs/` brief; check-brief.sh plus an independent read-only reviewer agent (BLOCKING gaps only), capped at 2 rounds by `review-round.sh` |
 | `claude/` | Second plugin `agent-harness-kit-claude` (Claude Code only): depends on the core plugin; holds evals and mods, never protocol or templates |
 | `claude/hooks/` | Mods (function hooks): `register.tsx` holds every hook (plus the band's JSX) (the engine follows `$` only within one file); `lib.ts` holds pure logic; tests in `claude/tests/` run with `claude plugin test`; `$.state` contract in `claude/types/index.d.ts` |
 | `claude/evals/` | `claude plugin eval` suite for the core skills: each case seeds a repo (scaffold.sh), loads the core plugin (`plugins: ["../../.."]`), grades files left behind; run with `--eval-dir claude/evals` from the repo root |

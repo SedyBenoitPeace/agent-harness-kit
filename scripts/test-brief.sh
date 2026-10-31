@@ -92,4 +92,44 @@ grep -q 'GAPS' "$md" || fail "SKILL.md: GAPS verdict missing"
 grep -qi 'only the brief' "$md" || fail "SKILL.md: reviewer must receive only the brief"
 grep -qi '2 review rounds' "$md" || fail "SKILL.md: 2-round stop missing"
 
+# review round cap (M42-001): mechanical, so it holds when the reviewer runs
+# as a separate CLI process that forgets the count
+ROUND="$SKILL/scripts/review-round.sh"
+[ -f "$ROUND" ] || fail "review-round.sh missing"
+cp "$t/good.md" "$t/rounds.md"
+bash "$ROUND" "$t/rounds.md" >/dev/null || fail "review-round: round 1 must pass"
+"$CHECK" "$t/rounds.md" >/dev/null || fail "check-brief: round 1 recorded must still pass"
+bash "$ROUND" "$t/rounds.md" >/dev/null || fail "review-round: round 2 must pass"
+grep -q 'Review rounds: 2' "$t/rounds.md" || fail "review-round: brief must record Review rounds: 2"
+if out="$(bash "$ROUND" "$t/rounds.md" 2>&1)"; then fail "review-round: round 3 must exit non-zero"; fi
+grep -qxF 'STOP: round cap reached, show remaining gaps to the human' <<< "$out" || fail "review-round: STOP line missing (got: $out)"
+grep -q 'Review rounds: 2' "$t/rounds.md" || fail "review-round: a refused round must not be counted"
+# check-brief, which runs before every round, refuses a third one too
+if out="$("$CHECK" "$t/rounds.md" 2>&1)"; then fail "check-brief: must FAIL at the round cap"; fi
+grep -q '^FAIL.*STOP: round cap reached' <<< "$out" || fail "check-brief: no STOP FAIL line (got: $out)"
+[ "$(grep -c '^FAIL' <<< "$out")" -eq 1 ] || fail "check-brief: the cap must be its only FAIL"
+# a READY verdict closes the review: the brief checks clean again
+bash "$ROUND" --ready "$t/rounds.md" >/dev/null || fail "review-round --ready must pass"
+"$CHECK" "$t/rounds.md" >/dev/null || fail "check-brief: a READY brief must pass at the cap"
+# the counter sits above the first section, so it never lands in Open questions
+[ "$(sed -n 2p "$t/rounds.md")" = '<!-- Review rounds: 2, READY -->' ] || fail "review-round: counter must be line 2 (got: $(sed -n 2p "$t/rounds.md"))"
+
+# NOTEs (non-blocking findings) may sit in Open questions; questions may not
+# shellcheck disable=SC2016 # backticks are literal in the sed expression
+sed 's/^## Open questions$/&\n- NOTE: `cd app` leaves the shell in app\//' "$t/good.md" > "$t/notes.md"
+"$CHECK" "$t/notes.md" >/dev/null || fail "check-brief: NOTE lines in Open questions must pass"
+expect_fail note-and-question 's/^## Open questions$/&\n- NOTE: nit\nWho hosts it?/' 'Open questions'
+
+# the nits-only fixture is mechanically clean (its flaws are for the reviewer)
+"$CHECK" scripts/fixtures/brief/nits-only.md >/dev/null || fail "fixtures/brief/nits-only.md must pass check-brief"
+
+# step 6 wires the cap, the re-check and where NOTEs go
+step6="$(sed -n '/^6\. /,/^7\. /p' "$md")"
+grep -qF 'review-round.sh' <<< "$step6" || fail "SKILL.md step 6: must run review-round.sh before every dispatch"
+grep -qF 'STOP' <<< "$step6" || fail "SKILL.md step 6: must stop on the STOP line"
+grep -qi 'previous gap list' <<< "$step6" || fail "SKILL.md step 6: round 2 must pass the previous gap list"
+grep -qF 'NOTE' <<< "$step6" || fail "SKILL.md step 6: NOTEs missing"
+grep -qi 'Open questions, not' <<< "$step6" || fail "SKILL.md step 6: NOTEs go into Open questions, not another round"
+grep -qF -- '--ready' <<< "$step6" || fail "SKILL.md step 6: READY must be recorded with --ready"
+
 echo "BRIEF TESTS GREEN"

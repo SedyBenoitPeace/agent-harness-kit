@@ -28,20 +28,29 @@ runs in the main conversation because it must ask the human questions.
    Done when (each line a backticked command plus its expected result) ·
    Quality bar (a fetchable reference, or "gate is sufficient") ·
    Needs a human (actions the run must stop for) · Budget and stop
-   condition · Open questions (must end up empty).
+   condition · Open questions (must end up empty; only the
+   reviewer's `- NOTE: ` lines may stay).
 4. **Stranger test, before saving:** could someone build this without
    asking anything? If not, ask the human instead of saving — that is a
    gap, not an Open question to leave behind.
 5. Save to `docs/briefs/<YYYY-MM-DD>-<slug>.md`, then run
    `bash scripts/check-brief.sh <brief>` (path relative to this skill).
    Any FAIL line: fix the brief (or ask the human) and re-run.
-6. **Independent review:** dispatch the `harness-brief-reviewer` agent
-   (generate it with `../../scripts/gen-agents.sh <target-repo>` if the
-   repo lacks it) giving it only the brief path — never your
-   conversation. Its first line is exactly `READY` or `GAPS`. On `GAPS`,
-   ask the human about the numbered gaps, revise, re-run check-brief.sh
-   and review again. After 2 review rounds, stop: show the human the
-   remaining gaps instead of looping. No subagent support: apply the same
+6. **Independent review, at most 2 rounds:** before every dispatch run
+   `bash scripts/check-brief.sh <brief>` then `bash scripts/review-round.sh
+   <brief>` (it counts rounds in the brief); on a `STOP` line from either,
+   do not dispatch: show the human the remaining gaps. The cap holds
+   however the reviewer runs (a subagent or a separate CLI process). Dispatch
+   the `harness-brief-reviewer` agent (generate it with
+   `../../scripts/gen-agents.sh <target-repo>` if the repo lacks it) giving
+   it only the brief path — never your conversation — and, from round 2,
+   the previous gap list, so round 2 re-checks those gaps instead of a fresh
+   audit. Its first line is exactly `READY` or `GAPS`; only BLOCKING
+   findings are gaps. On `GAPS`, ask the human about the numbered gaps,
+   revise and go round again. On `READY`, run `review-round.sh --ready
+   <brief>`. NOTE lines never start another round: copy them into the
+   brief's Open questions, not into another round, as `- NOTE: ` lines.
+   After 2 review rounds, stop. No subagent support: apply the same
    checklist yourself, reading only the saved file.
 7. Show the human the saved path and hand off to planning
    (harness-initial-setup) — do not start building.
