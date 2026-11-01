@@ -220,6 +220,40 @@ plan is never a reason to load a different workflow.'
   [ "$lines" -le 100 ] || echo "TODO: AGENTS.md is now $lines lines (limit 100) — trim it"
 fi
 
+# approved outline (M43-001): a task that points to a plan or outline approved
+# in another workflow skips harness-brief and goes to FEATURES.json + a plan
+# section, then harness-run. The line goes under the "just build it" line (or
+# the feature-work paragraph). Two unedited template lines are shortened to
+# keep AGENTS.md.tmpl within its 70-line limit.
+if [ -f AGENTS.md ]; then
+  outline="$(awk '/^An approved plan or outline/{p=1} p{print} p&&/harness-run\.$/{exit}' "$TEMPLATES/AGENTS.md.tmpl")"
+  [ -n "$outline" ] || { echo "upgrade: approved-outline line not found in AGENTS.md.tmpl" >&2; exit 2; }
+  if grep -qF 'approved plan or outline' AGENTS.md; then
+    echo "OK: AGENTS.md says an approved outline skips the brief"
+  else
+    after=''
+    # shellcheck disable=SC2016 # the backticks are literal markdown
+    if grep -q 'flip it to `passing`, commit\.$' AGENTS.md; then after='flip it to `passing`, commit\.$'
+    elif grep -q 'always apply\.$' AGENTS.md; then after='always apply\.$'; fi
+    if [ -n "$after" ]; then
+      tmp="$(mktemp)"
+      OUT="$outline" awk -v re="$after" '{ print } !done && $0 ~ re { print ENVIRON["OUT"]; done = 1 }' AGENTS.md > "$tmp"
+      cat "$tmp" > AGENTS.md; rm -f "$tmp"
+      echo "CHANGED: AGENTS.md (an approved plan or outline skips harness-brief)"
+    else
+      echo "TODO: AGENTS.md has no session-loop paragraph to extend — add this to it: $outline"
+    fi
+  fi
+  # shellcheck disable=SC2016 # the backticks are literal markdown
+  OLD='4. Implement that ONE feature, test-first — inline, or delegated to your
+   own built-in subagents when it has independent parts (protocol §2.4).
+   Own tools only; never load an external workflow plugin.' \
+  NEW="$(grep -A1 '^4\. Implement that ONE feature' "$TEMPLATES/AGENTS.md.tmpl")" blk_replace AGENTS.md
+  OLD="- The repo is the only interface: if it's not committed here, it doesn't
+  exist for the next session." \
+  NEW="$(grep '^- The repo is the only interface' "$TEMPLATES/AGENTS.md.tmpl")" blk_replace AGENTS.md
+fi
+
 # generated agent files (M27-001): a repo that has any harness agent file
 # gets every role regenerated for each CLI folder it already uses, so new
 # instructions (Decisions:, untrusted text, effort) reach builder, evaluator

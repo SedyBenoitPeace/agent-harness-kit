@@ -11,6 +11,10 @@ runs in the main conversation because it must ask the human questions.
 
 **Announce at start:** "Using harness-brief to write a brief."
 
+**Skip it** when the task points to an approved plan or outline from
+another workflow: that is the brief already. Turn it into FEATURES.json
+entries plus a plan section (protocol 1.1), then go to harness-run.
+
 ## Workflow
 
 1. Read the rough prompt and, if a repo exists, skim `README.md`,

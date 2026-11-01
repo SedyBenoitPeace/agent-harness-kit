@@ -21,7 +21,9 @@ section carries this workflow. Do not cat this file, AGENTS.md,
 1. Run `bash scripts/context.sh` (path relative to this skill) from the
    target repo root. If you were handed a plan file, this still applies:
    the plan's tasks are executed one per session, and `context.sh`
-   selects which one.
+   selects which one. If the task points to an approved plan or outline
+   from another workflow, add `--outline <path>`: a `SKIP_BRIEF` line means
+   do not brief or re-plan it (protocol 1.1).
    The report is the whole start: current milestone, `NEXT` in full, its
    plan section, the newest `PROGRESS.md` entry. Read FEATURES.json,
    PROGRESS.md, ARCHITECTURE.md, PRODUCT.md and plans on demand with `grep`

@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-01 -- session 81 (M43-001 approved outlines skip the brief)
+
+- Branch: `approved-outline-skip-brief`.
+- Done: M43-001. An approved plan or outline from another workflow skips
+  harness-brief: protocol 1.1, AGENTS.md.tmpl, harness-brief and
+  harness-session SKILL.md say turn it into FEATURES.json entries plus a
+  plan section, then harness-run. `context.sh --outline FILE` prints
+  `SKIP_BRIEF` (not for a missing file). upgrade.sh adds the AGENTS.md line
+  and shortens two unedited template lines. Release 3.18.1.
+  Plan: `docs/plans/completed/2026-11-01-m43-approved-outline.md`.
+- Decisions: the rule lives in planning protocol 1.1 (core is at its
+  150-line cap); AGENTS.md.tmpl stays at 70 by shortening step 4 and the
+  "only interface" rule.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR; sync agent-harness-template to 3.18.1.
+
 ## 2026-10-31 -- session 80 (M42-001 brief review stops after 2 rounds)
 
 - Branch: `brief-review-cap`.

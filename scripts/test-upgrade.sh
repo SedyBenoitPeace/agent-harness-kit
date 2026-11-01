@@ -199,8 +199,8 @@ echo "$out" | grep -q '^CHANGED: AGENTS.md (session loop scoped to feature work'
 [ "$(sed -n '/^## Session loop/{n;n;p;}' "$FW/AGENTS.md")" = "$(grep -m1 '^Feature work only:' skills/harness-initial-setup/templates/AGENTS.md.tmpl)" ] \
   || fail "feature work: paragraph must sit right under the ## Session loop heading"
 # shellcheck disable=SC2016 # literal backticks
-# (the M41-001 skip line, 3 lines, now sits between them)
-[ "$(grep -A4 'always apply\.$' "$FW/AGENTS.md" | tail -1)" = '1. Read `git log -20`.' ] || fail "feature work: session steps must follow the paragraph"
+# (the M41-001 skip line, 3 lines, and the M43-001 outline line, 2, now sit between them)
+[ "$(grep -A6 'always apply\.$' "$FW/AGENTS.md" | tail -1)" = '1. Read `git log -20`.' ] || fail "feature work: session steps must follow the paragraph"
 grep -qxF 'first feature session. This file is only the map.' "$FW/AGENTS.md" || fail "feature work: 'first session' line not reworded"
 # shellcheck disable=SC2016 # literal backticks
 grep -qxF -- '- Every feature session starts and ends green (`scripts/e2e.sh`).' "$FW/AGENTS.md" || fail "feature work: gate rule not reworded"
@@ -245,6 +245,7 @@ grep -qF 'These steps are the protocol, plugin or not.' "$PL/AGENTS.md" || fail 
 sed -e 's/{{[A-Z_]*}}//g' "$TPL/AGENTS.md.tmpl" > "$WORK/want.md"; sed -e 's/{{[A-Z_]*}}//g' "$PL/AGENTS.md" > "$WORK/got.md"
 cmp -s "$WORK/want.md" "$WORK/got.md" || fail "plugin-less: upgraded 3.16.0 AGENTS.md must equal the current template ($(diff "$WORK/want.md" "$WORK/got.md" | head -5))"
 # approved outline (M43-001): the outline line follows the skip line, once
+# shellcheck disable=SC2016 # literal backticks
 [ "$(grep -A1 'flip it to `passing`, commit\.$' "$PL/AGENTS.md" | tail -1)" = "$(grep '^An approved plan or outline' "$TPL/AGENTS.md.tmpl")" ] || fail "outline: line must follow the skip line"
 echo "$out" | grep -qF 'CHANGED: AGENTS.md (an approved plan or outline skips harness-brief)' || fail "outline: CHANGED line missing"
 git -C "$PL" -c user.email=t@t -c user.name=t add -A; git -C "$PL" -c user.email=t@t -c user.name=t commit -qm up
