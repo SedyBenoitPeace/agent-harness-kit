@@ -244,9 +244,13 @@ grep -qF 'These steps are the protocol, plugin or not.' "$PL/AGENTS.md" || fail 
 # an upgraded template-shaped AGENTS.md matches the new template
 sed -e 's/{{[A-Z_]*}}//g' "$TPL/AGENTS.md.tmpl" > "$WORK/want.md"; sed -e 's/{{[A-Z_]*}}//g' "$PL/AGENTS.md" > "$WORK/got.md"
 cmp -s "$WORK/want.md" "$WORK/got.md" || fail "plugin-less: upgraded 3.16.0 AGENTS.md must equal the current template ($(diff "$WORK/want.md" "$WORK/got.md" | head -5))"
+# approved outline (M43-001): the outline line follows the skip line, once
+[ "$(grep -A1 'flip it to `passing`, commit\.$' "$PL/AGENTS.md" | tail -1)" = "$(grep '^An approved plan or outline' "$TPL/AGENTS.md.tmpl")" ] || fail "outline: line must follow the skip line"
+echo "$out" | grep -qF 'CHANGED: AGENTS.md (an approved plan or outline skips harness-brief)' || fail "outline: CHANGED line missing"
 git -C "$PL" -c user.email=t@t -c user.name=t add -A; git -C "$PL" -c user.email=t@t -c user.name=t commit -qm up
 out="$(bash "$UPGRADE" "$PL" 2>&1)" || fail "plugin-less second run: expected exit 0"
-for w in 'OK: CLAUDE.md imports AGENTS.md' 'OK: GEMINI.md imports AGENTS.md' 'OK: AGENTS.md declares the harness, plugin or not' 'OK: AGENTS.md says how to skip the harness' 'OK: AGENTS.md treats the plugin as an accelerator'; do
+[ "$(grep -c '^An approved plan or outline' "$PL/AGENTS.md")" -eq 1 ] || fail "outline: inserted twice"
+for w in 'OK: CLAUDE.md imports AGENTS.md' 'OK: GEMINI.md imports AGENTS.md' 'OK: AGENTS.md declares the harness, plugin or not' 'OK: AGENTS.md says how to skip the harness' 'OK: AGENTS.md treats the plugin as an accelerator' 'OK: AGENTS.md says an approved outline skips the brief'; do
   echo "$out" | grep -qF "$w" || fail "plugin-less second run: '$w' missing"
 done
 [ -z "$(git -C "$PL" status --short)" ] || fail "plugin-less: second run must change nothing"
@@ -262,6 +266,7 @@ out="$(bash "$UPGRADE" "$HW" 2>&1)" || fail "hand-written: expected exit 0 (got:
 ! grep -qF 'only the map' "$HW/AGENTS.md" || fail "hand-written: a custom AGENTS.md is not 'only the map'"
 grep -qF 'Context for agents.' "$HW/AGENTS.md" || fail "hand-written: text must be kept"
 grep -qF 'just build it' "$HW/AGENTS.md" || fail "hand-written: skip line missing"
+grep -qF 'approved plan or outline' "$HW/AGENTS.md" || fail "hand-written: outline line missing"
 [ "$(head -1 "$HW/CLAUDE.md")" = '@AGENTS.md' ] || fail "hand-written: missing CLAUDE.md must be created as the import"
 [ ! -e "$HW/GEMINI.md" ] || fail "hand-written: GEMINI.md must not be created"
 

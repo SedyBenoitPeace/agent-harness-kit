@@ -8,7 +8,8 @@
     "39": "Dispatch the kit's builder agents, never a stand-in",
     "40": "Session loop for feature work only",
     "41": "Harnessed repos work without the kit plugin",
-    "42": "Brief review converges"
+    "42": "Brief review converges",
+    "43": "Approved outlines skip the brief"
   },
   "features": [
     {
@@ -197,6 +198,23 @@
       "paths": [
         "skills/harness-brief/",
         "agents/src/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M43-001",
+      "milestone": 43,
+      "title": "An approved plan or outline from another workflow skips harness-brief: the planning protocol (1.1), AGENTS.md.tmpl and harness-brief SKILL.md say turn it into FEATURES.json entries plus a plan section and go to harness-run; context.sh --outline FILE prints the skip hint; upgrade.sh adds the AGENTS.md line to existing repos",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving context.sh --outline on an existing file prints OUTLINE and a SKIP_BRIEF line naming harness-brief, FEATURES.json, plan section and harness-run, a missing file prints OUTLINE: not found and no SKIP_BRIEF, and no --outline prints neither; test-upgrade.sh proving upgrade.sh adds the outline line after the skip line once and a second run reports OK; e2e asserting the rule in the planning protocol, AGENTS.md.tmpl (still at most 70 lines) and harness-brief SKILL.md",
+      "effort": "low",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/",
+        "skills/harness-initial-setup/",
+        "skills/harness-brief/",
+        "skills/harness-upgrade-structure/",
         "scripts/"
       ]
     }

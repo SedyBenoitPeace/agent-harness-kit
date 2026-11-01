@@ -353,4 +353,24 @@ if echo "$out" | grep -qE 'PLANSECTION|MAPTEXT|Printed by'; then fail "--brief: 
 out="$(bash "$CONTEXT" --skip /dev/null --brief "$WORK/brief")" || fail "--skip with --brief: expected exit 0"
 echo "$out" | grep -q '== Session protocol ==' || fail "--skip with --brief: card missing"
 
+# 12. --outline FILE (M43-001): an approved plan or outline from another
+#     workflow skips harness-brief; a missing file never prints the skip hint
+printf '# Outline\n## Phase 1\n- OUTLINEBODY\n' > "$WORK/outline.md"
+out="$(bash "$CONTEXT" --outline "$WORK/outline.md" "$WORK/brief")" || fail "--outline: expected exit 0"
+echo "$out" | grep -q '^== Approved outline ==' || fail "--outline: section missing"
+echo "$out" | grep -qF "OUTLINE: $WORK/outline.md" || fail "--outline: OUTLINE line missing"
+hint="$(echo "$out" | grep '^SKIP_BRIEF: ')" || fail "--outline: SKIP_BRIEF hint missing"
+for w in 'harness-brief' 'FEATURES.json' 'plan section' 'harness-run'; do
+  echo "$hint" | grep -qF "$w" || fail "--outline: hint must name $w"
+done
+if echo "$out" | grep -q 'OUTLINEBODY'; then fail "--outline: must point at the outline, not print it"; fi
+out="$(bash "$CONTEXT" --outline "$WORK/no-such-outline.md" "$WORK/brief")" || fail "--outline missing file: expected exit 0"
+echo "$out" | grep -qF "OUTLINE: not found — $WORK/no-such-outline.md" || fail "--outline missing file: must say not found"
+if echo "$out" | grep -q '^SKIP_BRIEF'; then fail "--outline missing file: must not print the skip hint"; fi
+out="$(bash "$CONTEXT" "$WORK/brief")" || fail "no --outline: expected exit 0"
+if echo "$out" | grep -qE '^(SKIP_BRIEF|OUTLINE|== Approved outline)'; then fail "no --outline: must print no outline section"; fi
+out="$(bash "$CONTEXT" --brief --outline "$WORK/outline.md" --skip /dev/null "$WORK/brief")" || fail "--outline with --brief --skip: expected exit 0"
+echo "$out" | grep -q '^SKIP_BRIEF: ' || fail "--outline with --brief --skip: hint missing"
+echo "$out" | grep -q '== Session protocol ==' || fail "--outline with --brief --skip: card missing"
+
 echo "SESSION TESTS GREEN"
