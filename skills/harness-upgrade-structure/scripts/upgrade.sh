@@ -76,7 +76,16 @@ fi
 if [ -f AGENTS.md ]; then
   rule="$(grep -m1 '^- Read rule:' "$TEMPLATES/AGENTS.md.tmpl")"
   [ -n "$rule" ] || { echo "upgrade: read rule not found in AGENTS.md.tmpl" >&2; exit 2; }
-  if grep -qF 'never `cat` a source file over 200 lines' AGENTS.md; then
+  old_rule='- Read rule: `grep -n` first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines.'
+  if grep -qxF -- "$rule" AGENTS.md; then
+    echo "OK: AGENTS.md has the read rule"
+  elif grep -qxF -- "$old_rule" AGENTS.md; then
+    # M44-001: the 3.15 wording gains "one read per command"; an edited line is kept
+    tmp="$(mktemp)"
+    awk -v o="$old_rule" -v r="$rule" '$0 == o { print r; next } { print }' AGENTS.md > "$tmp"
+    cat "$tmp" > AGENTS.md; rm -f "$tmp"
+    echo "CHANGED: AGENTS.md (read rule: one read per command, never chained)"
+  elif grep -qF 'never `cat` a source file over 200 lines' AGENTS.md; then
     echo "OK: AGENTS.md has the read rule"
   else
     tmp="$(mktemp)"

@@ -184,6 +184,25 @@ git -C "$RR" -c user.email=t@t -c user.name=t add -A; git -C "$RR" -c user.email
 out="$(bash "$UPGRADE" "$RR" 2>&1)" || fail "read rule second run: expected exit 0"
 echo "$out" | grep -q '^OK: AGENTS.md has the read rule' || fail "read rule: second run should be OK"
 [ "$(grep -c 'Read rule:' "$RR/AGENTS.md")" -eq 1 ] || fail "read rule: inserted twice"
+# M44-001: the 3.15 wording is replaced by the current one; an edited line stays
+# shellcheck disable=SC2016 # literal backticks
+old_rule='- Read rule: `grep -n` first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines.'
+new_rule="$(grep -m1 '^- Read rule:' skills/harness-initial-setup/templates/AGENTS.md.tmpl)"
+awk -v o="$old_rule" -v r="$new_rule" '$0 == r { print o; next } { print }' "$RR/AGENTS.md" > "$WORK/rr.tmp" && cat "$WORK/rr.tmp" > "$RR/AGENTS.md"
+grep -qxF -- "$old_rule" "$RR/AGENTS.md" || fail "read rule: fixture should hold the 3.15 wording"
+git -C "$RR" -c user.email=t@t -c user.name=t commit -qam old-rule
+out="$(bash "$UPGRADE" "$RR" 2>&1)" || fail "read rule upgrade: expected exit 0"
+echo "$out" | grep -q '^CHANGED: AGENTS.md (read rule: one read per command' || fail "read rule: 3.15 wording must be upgraded (M44-001)"
+grep -qxF -- "$new_rule" "$RR/AGENTS.md" || fail "read rule: 3.15 line must become the template's"
+git -C "$RR" -c user.email=t@t -c user.name=t commit -qam new-rule
+[ "$(grep -c 'Read rule:' "$RR/AGENTS.md")" -eq 1 ] || fail "read rule: upgrade duplicated the line"
+# shellcheck disable=SC2016 # literal backticks
+mine='- Read rule: grep first; never `cat` a source file over 200 lines, my edit.'
+awk -v m="$mine" '/^- Read rule:/ { print m; next } { print }' "$RR/AGENTS.md" > "$WORK/rr.tmp" && cat "$WORK/rr.tmp" > "$RR/AGENTS.md"
+edited="$(grep '^- Read rule:' "$RR/AGENTS.md")"
+git -C "$RR" -c user.email=t@t -c user.name=t commit -qam edited-rule
+bash "$UPGRADE" "$RR" >/dev/null 2>&1 || fail "read rule edited: expected exit 0"
+[ "$(grep '^- Read rule:' "$RR/AGENTS.md")" = "$edited" ] || fail "read rule: an edited line must be kept"
 
 # 4d. feature-work scope (M40-001): paragraph right under "## Session loop",
 #     the two unedited "every session" lines reworded, once; no heading → TODO

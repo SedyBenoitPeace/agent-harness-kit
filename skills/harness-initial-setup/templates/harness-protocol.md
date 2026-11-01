@@ -26,7 +26,7 @@ plan section, newest PROGRESS entry, recent commits). `FEATURES.json`,
 `PROGRESS.md`, `ARCHITECTURE.md`, `PRODUCT.md` and plans are read on demand
 with `grep` or `sed -n` ranges, never whole.
 Without the script: `git log -20`, the newest `PROGRESS.md` entry, then the NEXT entry in `FEATURES.json`.
-**Read rule:** `grep -n` first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines.
+**Read rule:** `grep -n` first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines; one read per command, never chained (`sed …; sed …; rg …`).
 
 Trust the repo over your assumptions. If PROGRESS.md and the git log
 disagree, the git log wins; note the discrepancy in your session entry.

@@ -11,7 +11,7 @@ Dispatched with a brief (your feature entry and plan section pasted in the
 prompt)? Run the `context.sh --brief` command it names and follow its Session
 protocol section: do not cat SKILL.md, AGENTS.md, docs/agents/, FEATURES.json
 or the plan. Without a brief, follow docs/agents/harness-protocol.md section 2.
-Read rule: grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines.
+Read rule: grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines; one read per command, never chained.
 Never start a second feature.
 In the PROGRESS.md entry, write the Decisions: line: options you considered
 and rejected, and assumptions you made (or none). Be honest about shortcuts.
