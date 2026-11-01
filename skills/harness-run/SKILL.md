@@ -43,14 +43,20 @@ stays interactive and stops at the first problem.
    only at start) and invoke harness-run again, then STOP. Never brief a
    general-purpose or built-in subagent to act as the builder.
    Dispatch the named agent itself (Copilot CLI: the task tool's
-   `agent_type` set to that name) with a brief, never the plan's path:
+   `agent_type` set to that name) with a brief, never the plan's path.
+   A `SPAWN:` line is a spawn argument: on Codex pass `fork_turns: "none"`
+   to every `spawn_agent` in this skill (builders, evaluators, lanes);
+   omitted, Codex forks the orchestrator's whole history into the subagent,
+   so it starts from hundreds of thousands of tokens and your old instructions.
+   The brief:
    "Run one harness session for <id>, inline. Start with
    `bash <this skill's folder>/../harness-session/scripts/context.sh --brief`
    and follow its Session protocol; do not cat SKILL.md, AGENTS.md,
    docs/agents/, FEATURES.json or the plan. End with the SESSION line."
    followed by the output of `bash scripts/feature.sh <id> <target>` (path
    relative to this skill: the feature entry and its plan section), pasted
-   as is. Own tools only — never load an external workflow skill.
+   as is. Own tools only — never load an external workflow skill, and open no
+   other skill's SKILL.md.
    When status.sh printed an `effort: <level>` line under `NEXT:`, the
    feature asks for that effort (protocol §1.4): set it as the dispatch
    tool's own effort setting if it has one, otherwise add the line
@@ -95,7 +101,8 @@ set; absent means no evaluation and today's flow):
    with only: the feature entry, the commit range, its
    `bar`, whether `evaluate` is `ui` (QA mode), and — when any `paths`
    entry touches auth, payments, personal data or migrations — the
-   security checklist. Never pass the builder's transcript. If the agent
+   security checklist. Never pass the builder's transcript (Codex:
+   `fork_turns: "none"`). If the agent
    is missing, run `../../scripts/gen-agents.sh <target>`, commit the agent
    files, tell the human to restart the CLI, and STOP; never a stand-in subagent.
 2. Integrity check: `git status --short` must be empty and HEAD unchanged.

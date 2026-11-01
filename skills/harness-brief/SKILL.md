@@ -43,7 +43,8 @@ runs in the main conversation because it must ask the human questions.
    however the reviewer runs (a subagent or a separate CLI process). Dispatch
    the `harness-brief-reviewer` agent (generate it with
    `../../scripts/gen-agents.sh <target-repo>` if the repo lacks it) giving
-   it only the brief path — never your conversation — and, from round 2,
+   it only the brief path — never your conversation (Codex: `spawn_agent`
+   with `fork_turns: "none"`) — and, from round 2,
    the previous gap list, so round 2 re-checks those gaps instead of a fresh
    audit. Its first line is exactly `READY` or `GAPS`; only BLOCKING
    findings are gaps. On `GAPS`, ask the human about the numbered gaps,

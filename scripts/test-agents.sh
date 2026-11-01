@@ -145,6 +145,7 @@ for f in "$t/.claude/agents/harness-builder.md" "$t/.github/agents/harness-build
   grep -qF 'context.sh --brief' "$f" || fail "$f: briefed builder must start from context.sh --brief"
   grep -qF 'do not cat SKILL.md, AGENTS.md' "$f" || fail "$f: briefed builder must not cat SKILL.md/AGENTS.md"
   grep -qF 'grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines' "$f" || fail "$f: read rule missing"
+  grep -qF 'one read per command, never chained' "$f" || fail "$f: read rule must forbid chained reads (M44-001)"
 done
 
 echo "AGENTS TESTS GREEN"

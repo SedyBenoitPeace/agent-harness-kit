@@ -283,11 +283,11 @@ done
 [ -f "$D/.harness-run/models.log" ] && fail "dispatch: a missing agent must not log a model"
 mkdir -p "$D/.github/agents"
 : > "$D/.codex/agents/harness-builder.toml"; : > "$D/.claude/agents/harness-builder.md"; : > "$D/.github/agents/harness-builder.agent.md"
-[ "$(disp codex S-1)" = "AGENT: harness-builder-small SIZE: small " ] || fail "dispatch: small -> harness-builder-small"
-[ "$(disp codex S-1 1)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: retry steps small up to medium"
-[ "$(disp codex S-2 1)" = "AGENT: harness-builder-large SIZE: large " ] || fail "dispatch: retry caps at large"
-[ "$(disp codex S-3)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: no model -> medium on codex"
-[ "$(disp codex S-4)" = "AGENT: harness-builder-medium SIZE: medium " ] || fail "dispatch: another CLI's alias -> medium"
+[ "$(disp codex S-1)" = "AGENT: harness-builder-small SIZE: small SPAWN: fork_turns=none " ] || fail "dispatch: small -> harness-builder-small"
+[ "$(disp codex S-1 1)" = "AGENT: harness-builder-medium SIZE: medium SPAWN: fork_turns=none " ] || fail "dispatch: retry steps small up to medium"
+[ "$(disp codex S-2 1)" = "AGENT: harness-builder-large SIZE: large SPAWN: fork_turns=none " ] || fail "dispatch: retry caps at large"
+[ "$(disp codex S-3)" = "AGENT: harness-builder-medium SIZE: medium SPAWN: fork_turns=none " ] || fail "dispatch: no model -> medium on codex"
+[ "$(disp codex S-4)" = "AGENT: harness-builder-medium SIZE: medium SPAWN: fork_turns=none " ] || fail "dispatch: another CLI's alias -> medium"
 [ "$(disp copilot S-1)" = "AGENT: harness-builder SIZE: small " ] || fail "dispatch: no sized file -> harness-builder"
 [ "$(disp claude S-3)" = "AGENT: harness-builder SIZE: - " ] || fail "dispatch: claude without a size keeps the hook (harness-builder)"
 [ "$(disp claude S-1)" = "AGENT: harness-builder-small SIZE: small " ] || fail "dispatch: claude small -> harness-builder-small"
@@ -298,6 +298,12 @@ rc=0; bash "$DISPATCH" "$D" nope S-1 >/dev/null 2>&1 || rc=$?
 for f in "$run" "$md"; do
   grep -q 'dispatch.sh' "$f" || fail "$f: must dispatch through dispatch.sh"
 done
+# M44-001: Codex subagents start fresh, not as a fork of the orchestrator
+grep -q '^SPAWN: fork_turns=none' <<< "$(bash "$DISPATCH" "$D" codex S-1)" || fail "dispatch: codex must print SPAWN: fork_turns=none"
+grep -q 'SPAWN' <<< "$(bash "$DISPATCH" "$D" copilot S-1)$(bash "$DISPATCH" "$D" claude S-1)" && fail "dispatch: SPAWN is a codex-only line"
+[ "$(grep -c 'fork_turns: "none"' "$run")" -ge 2 ] || fail "$run: builders and the evaluator must spawn with fork_turns none on Codex (M44-001)"
+grep -q 'fork_turns: "none"' skills/harness-brief/SKILL.md || fail "harness-brief: the reviewer must spawn with fork_turns none on Codex (M44-001)"
+grep -q "open no" "$run" || fail "$run: the orchestrator must not open other skills' SKILL.md (M44-001)"
 grep -q 'models.log' "$run" || fail "harness-run SKILL.md: models.log step missing"
 grep -qi 'next size up' "$run" || fail "harness-run SKILL.md: retry step-up missing"
 
