@@ -28,13 +28,14 @@ work, stop and say so. Rules and Needs a human always apply.
 If the human says to skip the harness ("just build it"): no brief or plan, but
 FEATURES.json and its archive stay the source of truth: append an entry with
 the next free id, build it, run the gate, flip it to `passing`, commit.
+An approved plan or outline from another workflow: skip harness-brief, turn it
+into FEATURES.json entries plus a plan section, then go to harness-run.
 1. Read `git log -20`, `PROGRESS.md`, and `FEATURES.json`.
 2. Pick the feature to work on: lowest milestone, then lowest id, among
    `status: "failing"` (skip `deferred` and `superseded`).
 3. Run `bash scripts/e2e.sh` — confirm a green baseline before touching code.
-4. Implement that ONE feature, test-first — inline, or delegated to your
-   own built-in subagents when it has independent parts (protocol §2.4).
-   Own tools only; never load an external workflow plugin.
+4. Implement that ONE feature, test-first, inline or via your own built-in
+   subagents (protocol §2.4); never load an external workflow plugin.
 5. Re-run the gate. Flip the feature to `"passing"` only when its own
    `verify` criterion proves it — never touch other entries.
 6. Commit, then append an entry to `PROGRESS.md`.
@@ -48,8 +49,7 @@ plugin skill: one fresh subagent per feature (protocol §2.7).
 ## Rules
 
 - Read rule: `grep -n` first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines; one read per command, never chained (`sed …; sed …; rg …`).
-- The repo is the only interface: if it's not committed here, it doesn't
-  exist for the next session.
+- The repo is the only interface: if it isn't committed here, it doesn't exist.
 - Never delete or renumber FEATURES.json entries; append only.
 - Every feature session starts and ends green (`scripts/e2e.sh`).
 - Branch off `{{DEFAULT_BRANCH}}`; one branch per milestone-chunk of work;

@@ -222,6 +222,14 @@ grep -qF 'long-running-agent harness, plugin or' "$TMPL_DIR/AGENTS.md.tmpl" || f
 grep -qF 'These steps are the protocol, plugin or not.' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: manual steps must be the protocol, not a fallback (M41-001)"
 grep -qF '("just build it"): no brief or plan, but' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: skip line missing (M41-001)"
 grep -qF 'FEATURES.json and its archive stay the source of truth' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: skipping the harness must still update FEATURES.json (M41-001)"
+# approved outline from another workflow skips the brief (M43-001)
+for f in "$TMPL_DIR/AGENTS.md.tmpl" "$TMPL_DIR/harness-protocol-planning.md" skills/harness-brief/SKILL.md; do
+  flat="$(tr -d '`' < "$f" | tr '\n' ' ' | tr -s ' ')"
+  for w in 'approved plan or outline' 'FEATURES.json entries plus a plan section' 'harness-run'; do
+    grep -qF "$w" <<< "$flat" || fail "$f: approved-outline rule must say '$w' (M43-001)"
+  done
+done
+grep -qF 'context.sh --outline' "$TMPL_DIR/harness-protocol-planning.md" || fail "protocol 1.1: must name context.sh --outline (M43-001)"
 grep -qF 'plugin-less agents (M41-001)' skills/harness-upgrade-structure/scripts/upgrade.sh || fail "upgrade.sh: plugin-less block missing (M41-001)"
 grep -qF 'does not import AGENTS.md' skills/harness-audit/scripts/check.sh || fail "harness-audit: pointer import WARN missing (M41-001)"
 grep -q 'CONTINUING INTERRUPTED FEATURE' "$PROTO" || fail "protocol: interrupted-feature continuation rule missing"
@@ -405,7 +413,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.19.0" ] || fail "plugin version must be 3.19.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.19.1" ] || fail "plugin version must be 3.19.1"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"

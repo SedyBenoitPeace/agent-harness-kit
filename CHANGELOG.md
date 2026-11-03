@@ -10,6 +10,23 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.19.1 — 2026-11-03
+
+- An approved plan or outline from another workflow skips harness-brief
+  (M43-001). In one run, planning was 64% of $23.54 for 2 features, because
+  the kit wrote a brief and planned again on top of an outline the human had
+  already approved; build plus evaluation alone was in line with past
+  kit-only runs. The planning protocol (1.1), AGENTS.md.tmpl and
+  harness-brief now say: turn the outline into FEATURES.json entries plus a
+  plan section, keeping its phases and checks, then go to harness-run.
+  `context.sh --outline <path>` prints a `SKIP_BRIEF` hint (and `not found`,
+  with no hint, for a wrong path). Two AGENTS.md.tmpl lines were shortened
+  to keep it at 70 lines.
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`; it
+  adds the approved-outline line to AGENTS.md and recopies the protocol.
+
 ## 3.19.0 — 2026-11-01
 
 - Codex subagents start fresh (M44-001). Codex `spawn_agent` forks the

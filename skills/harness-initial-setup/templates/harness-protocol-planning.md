@@ -68,6 +68,16 @@ otherwise; production follows the §1.4 table, never below `medium` for APIs
 and data. Interview only the gaps. Its Needs-a-human list
 is a stop-and-ask boundary for sessions (a `blocked` outcome with a question), never an action taken.
 
+**Already have an approved plan or outline?** If the task points to a plan
+or outline the human already approved in another workflow (a research,
+plan, implement structure outline, for example), do not run harness-brief
+and do not re-plan it: turn it into FEATURES.json entries plus a plan
+section (§1.4, §1.5), keeping its phases, order and checks, then go to
+harness-run. Add only what the harness needs and the outline lacks: a
+falsifiable `verify` per feature, `effort`, and the gate. Ask the human
+only where it leaves one of those open. `context.sh --outline <path>`
+prints this as a `SKIP_BRIEF` hint.
+
 If an answer is vague, push back once with a concrete alternative ("do you
 mean X or Y?"). Ambiguity you accept here becomes an unfalsifiable feature
 later.

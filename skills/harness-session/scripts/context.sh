@@ -2,7 +2,8 @@
 # harness-session: bounded, read-only "what do I need to start?" report.
 # Bundles harness-status's report with the git/plan facts a coding session
 # also needs, so an agent can start from one call instead of several.
-# Usage: context.sh [--skip FILE] [--brief] [TARGET_DIR]    (default: current directory)
+# Usage: context.sh [--skip FILE] [--brief] [--outline FILE] [TARGET_DIR]
+#        (TARGET_DIR defaults to the current directory)
 # --skip FILE is passed to harness-status (see status.sh) so NEXT, PLAN and
 # PARALLEL all follow the first feature that is not skipped.
 # --brief is for a session dispatched with a brief (harness-run pasted the
@@ -10,17 +11,21 @@
 # == Session protocol == section prints the protocol 2.9 card plus the repo's
 # AGENTS.md Rules and Needs-a-human sections, so the session never reads
 # SKILL.md, AGENTS.md or the protocol files.
+# --outline FILE: the task points to an approved plan or outline from another
+# workflow (M43-001). Prints its path and a SKIP_BRIEF hint (protocol 1.1);
+# a path that does not exist prints "not found" and no hint.
 # Exit codes: delegated from harness-status — 0 report printed; 2 harness
 # file broken; 3 harness not initialized.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STATUS="$SCRIPT_DIR/../../harness-status/scripts/status.sh"
-SKIP=(); BRIEF=0
+SKIP=(); BRIEF=0; OUTLINE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip) SKIP=(--skip "${2:?--skip needs a file}"); shift 2 ;;
     --brief) BRIEF=1; shift ;;
+    --outline) OUTLINE="${2:?--outline needs a file}"; shift 2 ;;
     *) break ;;
   esac
 done
@@ -42,6 +47,18 @@ SKIPPED_IDS=""
 if [ ${#SKIP[@]} -gt 0 ]; then
   skip_report="$(bash "$STATUS" "${SKIP[@]}" "$TARGET")"
   SKIPPED_IDS="$(printf '%s\n' "$skip_report" | sed -n 's/^SKIPPED: \([^ ]*\) .*/\1/p')"
+fi
+# Approved outline (M43-001): checked before cd, so a relative path is the
+# caller's. The brief already exists in another form; never brief it again.
+if [ -n "$OUTLINE" ]; then
+  echo
+  echo "== Approved outline =="
+  if [ -f "$OUTLINE" ]; then
+    echo "OUTLINE: $OUTLINE"
+    echo 'SKIP_BRIEF: approved outline — do not run harness-brief or re-plan it; turn it into FEATURES.json entries plus a plan section (protocol 1.1), then go to harness-run'
+  else
+    echo "OUTLINE: not found — $OUTLINE"
+  fi
 fi
 cd "$TARGET"
 
