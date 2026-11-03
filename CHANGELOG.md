@@ -10,7 +10,7 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
-## 3.18.1 — 2026-11-01
+## 3.19.1 — 2026-11-03
 
 - An approved plan or outline from another workflow skips harness-brief
   (M43-001). In one run, planning was 64% of $23.54 for 2 features, because
@@ -26,6 +26,30 @@ agent-harness-template>` and open a PR there; gate green; PR.
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure`; it
   adds the approved-outline line to AGENTS.md and recopies the protocol.
+
+## 3.19.0 — 2026-11-01
+
+- Codex subagents start fresh (M44-001). Codex `spawn_agent` forks the
+  orchestrator's whole history when `fork_turns` is omitted, and the kit
+  never set it: in one week of Codex runs every builder, evaluator and
+  brief reviewer opened with the parent's ~120 tool calls (one evaluator's
+  first prompt was 377k tokens), inherited the parent's stale instructions,
+  and ran at the parent's model and effort instead of its sized agent.
+  `dispatch.sh` now prints `SPAWN: fork_turns=none` on Codex, and
+  harness-run and harness-brief pass `fork_turns: "none"` to every spawn.
+  The orchestrator opens no other skill's SKILL.md.
+- Read rule: one read per command, never chained (M44-001). Agents met
+  "`sed -n` ≤80 lines" per file but chained 3+ reads in one command, so
+  outputs were still 6–10k tokens. The rule now says so in the protocol,
+  AGENTS.md and its template, harness-session and the builder agents.
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`; it
+  replaces the unedited 3.15 read rule line in AGENTS.md, recopies the
+  protocol and regenerates the builder agents. Commit them and restart
+  Codex/Copilot CLI.
+- Codex: start each kit run in a fresh session; subagents already running
+  keep their forked history.
 
 ## 3.18.0 — 2026-10-31
 

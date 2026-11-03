@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-01 -- session 82 (M44-001 Codex subagents start fresh; one read per command)
+
+- Branch: `codex-fresh-spawns`.
+- Done: M44-001. On Codex, `dispatch.sh` prints `SPAWN: fork_turns=none`
+  and harness-run/harness-brief pass it to every `spawn_agent`, because an
+  omitted `fork_turns` forks the orchestrator's whole history into the
+  subagent. Read rule adds "one read per command, never chained" in every
+  place it lives; upgrade.sh replaces the unedited 3.15 line. Release
+  3.19.0. Plan: `docs/plans/completed/2026-11-01-m44-codex-fresh-spawns.md`.
+- Decisions: `fork_turns: "none"` over a partial fork (the brief and
+  `context.sh --brief` already hold what a builder needs); the read rule
+  stays prose plus tests, no read helper script yet (measure first);
+  M43 is taken by the open approved-outline branch, so this is M44.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR; sync agent-harness-template to 3.19.0;
+  re-measure Codex read carry after one run.
+
 ## 2026-11-01 -- session 81 (M43-001 approved outlines skip the brief)
 
 - Branch: `approved-outline-skip-brief`.
@@ -11,13 +28,13 @@ Newest-first session log. One entry per working session. Read this (plus
   harness-session SKILL.md say turn it into FEATURES.json entries plus a
   plan section, then harness-run. `context.sh --outline FILE` prints
   `SKIP_BRIEF` (not for a missing file). upgrade.sh adds the AGENTS.md line
-  and shortens two unedited template lines. Release 3.18.1.
+  and shortens two unedited template lines. Release 3.19.1 (after M44 took 3.19.0).
   Plan: `docs/plans/completed/2026-11-01-m43-approved-outline.md`.
 - Decisions: the rule lives in planning protocol 1.1 (core is at its
   150-line cap); AGENTS.md.tmpl stays at 70 by shortening step 4 and the
   "only interface" rule.
 - Gate: GREEN (bash scripts/e2e.sh).
-- Next: owner reviews the PR; sync agent-harness-template to 3.18.1.
+- Next: owner reviews the PR; sync agent-harness-template to 3.19.1.
 
 ## 2026-10-31 -- session 80 (M42-001 brief review stops after 2 rounds)
 

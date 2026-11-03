@@ -28,7 +28,8 @@ section carries this workflow. Do not cat this file, AGENTS.md,
    plan section, the newest `PROGRESS.md` entry. Read FEATURES.json,
    PROGRESS.md, ARCHITECTURE.md, PRODUCT.md and plans on demand with `grep`
    or `sed -n` ranges, never whole. Read rule, for source files too: `grep -n`
-   first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines.
+   first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines;
+   one read per command, never chained (`sed …; sed …; rg …`).
    - Exit 3 / 2 → relayed from harness-status: not initialized or broken.
      Offer harness-initial-setup / harness-audit, STOP.
 2. If the report ends with `UPGRADE: offer`, the repo was scaffolded by

@@ -119,7 +119,7 @@ the scripts named here are in its `SCRIPTS:` folder.
 - One feature: the id in your brief. The brief holds its entry and plan
   section; do not read FEATURES.json, the plan, SKILL.md, AGENTS.md or
   `docs/agents/` again.
-- Read rule: `grep -n` first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines.
+- Read rule: `grep -n` first, then `sed -n` ≤80 lines; never `cat` a source file over 200 lines; one read per command, never chained (`sed …; sed …; rg …`).
   Start from the brief's `paths`.
 - Baseline: `run-gate.sh baseline .` before any edit (`baseline reused` is
   green; red → fixing the gate is the session). A parallel lane skips it.

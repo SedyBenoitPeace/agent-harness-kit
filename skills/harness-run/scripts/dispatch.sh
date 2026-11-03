@@ -5,7 +5,9 @@
 # on claude where the edition's hook decides (plain harness-builder).
 # A sized agent file that does not exist falls back to harness-builder.
 # Usage: dispatch.sh <target> <cli: claude|codex|copilot> <id> [retries]
-# Prints `AGENT: <name>` and `SIZE: <size>`; appends `<id> <size> model <size>[, +n]`
+# Prints `AGENT: <name>` and `SIZE: <size>` (codex also `SPAWN: fork_turns=none`:
+# Codex spawn_agent forks the orchestrator's whole history when fork_turns is
+# omitted, so a builder would start from it, M44-001); appends `<id> <size> model <size>[, +n]`
 # to <target>/.harness-run/models.log (not on claude: its hook logs the model).
 # Each retry steps up one size, capped at large. Exit 2 = usage error.
 # Exit 3 = no builder agent file for this CLI (prints `AGENT: missing`): the
@@ -43,6 +45,7 @@ agent=harness-builder-$size
 [ -f "$(agent_file "$agent")" ] || agent=harness-builder
 echo "AGENT: $agent"
 echo "SIZE: $size"
+[ "$cli" = codex ] && echo "SPAWN: fork_turns=none"
 [ "$cli" = claude ] && exit 0
 reason="model $base"; [ "$retries" -eq 0 ] || reason="$reason, +$retries"
 mkdir -p "$target/.harness-run"

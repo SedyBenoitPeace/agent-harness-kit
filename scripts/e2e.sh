@@ -413,7 +413,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.18.1" ] || fail "plugin version must be 3.18.1"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.19.1" ] || fail "plugin version must be 3.19.1"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"
@@ -524,6 +524,8 @@ done
 for f in "$CORE" "$TMPL_DIR/AGENTS.md.tmpl" AGENTS.md "$TMPL_DIR/harness-protocol-runs.md" skills/harness-session/SKILL.md; do
   grep -qF 'grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines' <<< "$(tr -d '`' < "$f" | tr '\n' ' ' | tr -s ' ')" \
     || fail "$f: read rule missing (M38-003)"
+  grep -qF 'one read per command, never chained' <<< "$(tr -d '`' < "$f" | tr '\n' ' ' | tr -s ' ')" \
+    || fail "$f: read rule must forbid chained reads (M44-001)"
 done
 grep -q '^### 2\.9 Dispatched-session card' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.9: dispatched-session card missing (M38-001)"
 grep -qF 'feature.sh' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7: the brief must paste feature.sh output (M38-002)"

@@ -9,7 +9,8 @@
     "40": "Session loop for feature work only",
     "41": "Harnessed repos work without the kit plugin",
     "42": "Brief review converges",
-    "43": "Approved outlines skip the brief"
+    "43": "Approved outlines skip the brief",
+    "44": "Codex subagents start fresh; one read per command"
   },
   "features": [
     {
@@ -215,6 +216,23 @@
         "skills/harness-initial-setup/",
         "skills/harness-brief/",
         "skills/harness-upgrade-structure/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M44-001",
+      "milestone": 44,
+      "title": "Codex subagents start fresh: dispatch.sh prints SPAWN: fork_turns=none on codex, harness-run and harness-brief pass fork_turns \"none\" to every spawn_agent (builders, evaluators, lanes, brief reviewer) and the orchestrator opens no other skill's SKILL.md; read rule adds 'one read per command, never chained' everywhere and upgrade.sh replaces the unedited 3.15 line",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving dispatch prints SPAWN: fork_turns=none only on codex and harness-run/harness-brief name fork_turns none; test-agents.sh proving every builder agent carries 'one read per command, never chained'; test-upgrade.sh proving the 3.15 read rule line becomes the template's once and an edited line is kept; e2e.sh proving the wording in protocol, AGENTS.md, its template, protocol-runs and harness-session",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/",
+        "skills/harness-brief/",
+        "skills/harness-upgrade-structure/",
+        "agents/src/",
         "scripts/"
       ]
     }

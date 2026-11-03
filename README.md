@@ -45,7 +45,8 @@ English:
   the newest PROGRESS entry, under 80 lines); FEATURES.json, PROGRESS.md,
   plans and docs are then read on demand with `grep` or `sed -n`, never
   whole. One read rule for every file: `grep -n` first, then `sed -n` ≤80
-  lines; never `cat` a source file over 200 lines. Builds, simulators and tests run through `quiet.sh <name> --
+  lines; never `cat` a source file over 200 lines; one read per command, never
+  chained. Builds, simulators and tests run through `quiet.sh <name> --
   <command>`, which keeps the full log in `.harness-run/logs/` and prints
   only the exit code, the log path, up to 40 error/fail/warning lines and
   the last 20 lines; `run-gate.sh` prints the same shape. A session that
