@@ -3,6 +3,24 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-17 -- session 83 (M45-001 effort optional again)
+
+- Branch: `effort-optional`.
+- Done: M45-001. Reverts the M36-001 requirement: a feature without
+  `effort` runs at the CLI's default effort (the model decides per step);
+  harness-audit FAILs only an unknown value, upgrade.sh and its skill drop
+  the effort TODO, the template's first feature carries no effort, protocol
+  1.4 and 1.1 (brief Stage) treat effort as an override, README and
+  ARCHITECTURE updated. Plan: `docs/plans/completed/2026-11-17-m45-effort-optional.md`.
+- Decisions: optional, not removed: status.sh, harness-run and the agent
+  generator keep honouring an explicit level (the evaluator keeps
+  `effort: high`). Evidence: a 31-subagent run where per-feature effort was
+  passed correctly but bought nothing measurable; the owner chose the
+  model's own judgment over planner-picked levels. Model size and the
+  rework step-up are unchanged on purpose.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR (shared with the parallel-lanes change).
+
 ## 2026-11-01 -- session 82 (M44-001 Codex subagents start fresh; one read per command)
 
 - Branch: `codex-fresh-spawns`.

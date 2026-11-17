@@ -134,23 +134,17 @@ if jq -e '[.features[]? | select(.evaluate? == "ui")] | length > 0' FEATURES.jso
   fi
 fi
 
-# Effort (FAIL, M36-001): required on every feature still to build or judge
-# (failing, review, deferred) so every agent knows how much checking it
-# deserves; passing and superseded ones are history and may lack it. A value
+# Effort (optional, M45-001): absent means the CLI's default effort. A value
 # outside low|medium|high|max fails wherever it appears.
-no_effort="$(jq -r '[.features[]? | select((.status? // "") | IN("failing","review","deferred")) | select(has("effort") | not) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
 bad_effort="$(jq -r '[.features[]? | select(has("effort") and (.effort | IN("low","medium","high","max") | not)) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
-if [ -n "$no_effort" ]; then
-  failc "effort is required (low, medium, high or max; protocol 1.4) — missing on: $no_effort"
-fi
 if [ -n "$bad_effort" ]; then
   failc "effort must be low, medium, high or max — unknown value on: $bad_effort"
 fi
-if [ -z "$no_effort" ] && [ -z "$bad_effort" ] && jq -e . FEATURES.json >/dev/null 2>&1; then
-  pass "every open feature has a valid effort"
+if [ -z "$bad_effort" ] && jq -e . FEATURES.json >/dev/null 2>&1; then
+  pass "every effort set is valid"
 fi
 
-# Model size (FAIL, M36-002): required on the same open features as effort;
+# Model size (FAIL, M36-002): required on every open feature;
 # small|medium|large or a CLI alias (lowercase letters, digits, dot, dash,
 # underscore). A malformed value fails wherever it appears.
 no_model="$(jq -r '[.features[]? | select((.status? // "") | IN("failing","review","deferred")) | select(has("model") | not) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"

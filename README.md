@@ -213,11 +213,10 @@ protocol so every agent follows them:
   turned down; written down, you (or the evaluator) can ask for the skipped
   option instead of rediscovering it. The evaluator reads the line as
   leads, never as evidence.
-- **Per-feature effort.** Every feature still to build carries `"effort":
+- **Per-feature effort.** A feature may carry `"effort":
   "low" | "medium" | "high" | "max"`: how much verification and edge-case
-  testing it deserves. It is required: `harness-audit` fails a failing,
-  review or deferred feature without it, and `harness-upgrade-structure`
-  lists the ones an older repo is missing.
+  testing it deserves. It is optional: without it the agent runs at its
+  CLI's default effort and the model decides per step.
   UI work rarely gains from high effort; APIs, data and security do.
   `harness-status` prints it under `NEXT:`, sessions scale their checking
   to it, and `harness-run` passes it to the agent it dispatches (as the
@@ -237,7 +236,7 @@ protocol so every agent follows them:
 ## Choosing a model size
 
 Every feature still to build carries `"model": "small" | "medium" |
-"large"`: which size of model builds it. Like `effort` it is required:
+"large"`: which size of model builds it. It is required:
 `harness-audit` fails a failing, review or deferred feature without it, and
 `harness-upgrade-structure` lists the ones an older repo is missing. It is separate from `effort`, which only sets how hard the
 model checks its own work. Any size works with any effort.

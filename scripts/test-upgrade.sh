@@ -64,7 +64,7 @@ echo "$out" | grep -q "^UPGRADE-NOTE: $(jq -r .version .claude-plugin/plugin.jso
 echo "$out" | grep -q '^TODO: .*harness-audit' || fail "upgrade: depends_on/paths via harness-audit must be a TODO"
 grep -qF 'a source file over 200 lines' "$R/AGENTS.md" || fail "upgrade: AGENTS.md without Rules must get the read rule appended (M38-003)"
 echo "$out" | grep -q '^CHANGED: AGENTS.md (added the read rule' || fail "upgrade: read rule change not reported"
-echo "$out" | grep -q '^TODO: effort is now required.*on: M1-001$' || fail "upgrade: an open feature without effort must be a TODO naming it (M36-001)"
+echo "$out" | grep -Eq '^(TODO|OK):.*effort' && fail "upgrade: effort is optional, no TODO or OK line for it (M45-001)"
 echo "$out" | grep -q '^TODO: model is now required.*on: M1-001$' || fail "upgrade: an open feature without model must be a TODO naming it (M36-002)"
 [ "$(g rev-parse HEAD)" = "$before" ] || fail "upgrade: must not commit"
 [ -z "$(g diff --cached --name-only)" ] || fail "upgrade: must not stage anything"
@@ -127,7 +127,6 @@ for r in harness-builder harness-evaluator harness-brief-reviewer; do
 done
 echo "$out" | grep -q '^CHANGED: .claude/agents/harness-builder.md' || fail "stale agents: builder change not reported"
 if [ -d "$S/.codex" ] || [ -d "$S/.github" ]; then fail "stale agents: must not add CLIs the repo does not use"; fi
-echo "$out" | grep -q '^OK: open features declare effort' || fail "upgrade: a passing feature without effort needs no TODO (M36-001)"
 echo "$out" | grep -q '^OK: open features declare model' || fail "upgrade: a passing feature without model needs no TODO (M36-002)"
 git -C "$S" -c user.email=t@t -c user.name=t add -A; git -C "$S" -c user.email=t@t -c user.name=t commit -qm up
 out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stale agents second run: expected exit 0"

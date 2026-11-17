@@ -10,7 +10,8 @@
     "41": "Harnessed repos work without the kit plugin",
     "42": "Brief review converges",
     "43": "Approved outlines skip the brief",
-    "44": "Codex subagents start fresh; one read per command"
+    "44": "Codex subagents start fresh; one read per command",
+    "45": "Effort optional again; the model decides by default"
   },
   "features": [
     {
@@ -235,6 +236,14 @@
         "agents/src/",
         "scripts/"
       ]
+    },
+    {
+      "id": "M45-001",
+      "milestone": 45,
+      "title": "effort is optional again: harness-audit no longer FAILs an open feature without effort (an unknown value still FAILs), upgrade.sh prints no effort TODO, the template's first feature carries none, protocol 1.4 says absent = the CLI's default effort",
+      "status": "passing",
+      "model": "small",
+      "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a missing effort passes on every status and an unknown one FAILs, test-upgrade.sh proving no effort TODO/OK line, and the gate proving protocol 1.4 names the CLI's default effort"
     }
   ]
 }

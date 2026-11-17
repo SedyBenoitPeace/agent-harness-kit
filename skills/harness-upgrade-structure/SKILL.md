@@ -45,14 +45,12 @@ commits it. It is **not** for new repos: that is harness-initial-setup.
    - `depends_on` / `paths` → offer **harness-audit**, which proposes them
      for the human to approve (without declared `depends_on`, a skipped
      feature stops a continuous run);
-   - `effort is now required` → propose a level for each listed feature
-     from the protocol §1.4 table (`docs/agents/harness-protocol-planning.md`),
-     one line per feature with its reason; once the human approves, write
-     them into FEATURES.json in the upgrade commit. Never skip it: until
-     every open feature has one, harness-audit fails;
-   - `model is now required` → the same, with a size per feature from the
-     §1.4 size table (`small`, `medium` or `large`, respecting its floors);
-     propose both in one list when both TODOs appear.
+   - `model is now required` → propose a size for each listed feature
+     from the §1.4 size table (`docs/agents/harness-protocol-planning.md`:
+     `small`, `medium` or `large`, respecting its floors), one line per
+     feature with its reason; once the human approves, write them into
+     FEATURES.json in the upgrade commit. Never skip it: until every open
+     feature has one, harness-audit fails.
 6. Commit the upgrade as its own commit, explicit paths, message
    `chore: upgrade harness structure` — never mixed with feature work.
    Never push; the human decides.

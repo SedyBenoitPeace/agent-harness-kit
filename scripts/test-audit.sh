@@ -97,26 +97,21 @@ bash scripts/gen-agents.sh "$WORK/opt-in" >/dev/null
 out="$(bash "$CHECK" "$WORK/opt-in")" || fail "opt-in with agent files: exit non-zero"
 echo "$out" | grep -q "^WARN.*harness-evaluator" && fail "opt-in with agent files: WARN should clear"
 
-# 2f. effort (M36-001): required on failing/review/deferred features; a
-# missing one or an unknown value FAILs naming the feature; passing and
-# superseded features may lack it (history)
+# 2f. effort (optional again, M45-001): an unknown value FAILs naming the
+# feature; a missing one passes on every status (the CLI's default applies)
 make_fixture "$WORK/effort"
 jq '.features[0].effort = "high"' "$WORK/effort/FEATURES.json" > "$WORK/effort/F.tmp" && mv "$WORK/effort/F.tmp" "$WORK/effort/FEATURES.json"
 out="$(bash "$CHECK" "$WORK/effort")" || fail "valid effort must not fail the audit"
 echo "$out" | grep -q "^PASS.*effort" || fail "valid effort: expected a PASS line"
 jq '.features[0].effort = "turbo"' "$WORK/effort/FEATURES.json" > "$WORK/effort/F.tmp" && mv "$WORK/effort/F.tmp" "$WORK/effort/FEATURES.json"
 expect_fail "$WORK/effort" "effort.*unknown value on: M0-001" "unknown effort"
-for st in failing review deferred; do
-  jq --arg s "$st" '.features[0] |= (del(.effort) | .status = $s)' "$WORK/effort/FEATURES.json" > "$WORK/effort/F.tmp" && mv "$WORK/effort/F.tmp" "$WORK/effort/FEATURES.json"
-  expect_fail "$WORK/effort" "effort is required.*missing on: M0-001" "missing effort on a $st feature"
-done
-for st in passing superseded; do
+for st in failing review deferred passing superseded; do
   jq --arg s "$st" '.features[0] |= (del(.effort) | .status = $s)' "$WORK/effort/FEATURES.json" > "$WORK/effort/F.tmp" && mv "$WORK/effort/F.tmp" "$WORK/effort/FEATURES.json"
   out="$(bash "$CHECK" "$WORK/effort")" || fail "a $st feature without effort must not fail the audit: $out"
 done
-# the template's first feature carries effort, so a fresh setup passes
-jq -e '.features[0].effort | IN("low","medium","high","max")' <(sed 's/{{[A-Za-z0-9_]*}}/X/g' "$TMPL/FEATURES.json.tmpl") >/dev/null \
-  || fail "FEATURES.json.tmpl: first feature must carry a valid effort"
+# the template's first feature carries no effort: absent means the CLI's default
+jq -e '.features[0] | has("effort") | not' <(sed 's/{{[A-Za-z0-9_]*}}/X/g' "$TMPL/FEATURES.json.tmpl") >/dev/null \
+  || fail "FEATURES.json.tmpl: first feature must not carry effort (optional, M45-001)"
 
 # 2f2. model size (M33-001, required since M36-002): a size or a lowercase
 # alias passes; a malformed value, or none on an open feature, FAILs naming

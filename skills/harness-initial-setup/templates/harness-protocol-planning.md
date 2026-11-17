@@ -62,10 +62,9 @@ requirement.
 harness-brief skill (or the human names one), read it first: its
 Objective, Context and Non-goals answer the questions above, its Done-when
 lines seed each feature's `verify`, and its Quality bar seeds
-`evaluate`/`bar` (§1.4). Its Stage seeds `effort` and the bar: a prototype
-gets `low` or `medium` effort and "gate is sufficient" unless the brief says
-otherwise; production follows the §1.4 table, never below `medium` for APIs
-and data. Interview only the gaps. Its Needs-a-human list
+`evaluate`/`bar` (§1.4). Its Stage seeds the bar and any `effort` override:
+a prototype gets no effort and "gate is sufficient" unless the brief says
+otherwise; production may set `high` where the §1.4 table says so. Interview only the gaps. Its Needs-a-human list
 is a stop-and-ask boundary for sessions (a `blocked` outcome with a question), never an action taken.
 
 **Already have an approved plan or outline?** If the task points to a plan
@@ -185,11 +184,11 @@ Status reports list it as waiting on a human and hold every feature whose
 `depends_on` reaches it, so no session spends time finding the blocker.
 
 Last question per feature: **How much verification does this deserve?**
-Record the answer as `effort`, one of low, medium, high or max. It is
-required on every feature that is not yet passing (harness-audit fails
-without it), so every agent knows how hard to check its work. Effort
-is spent mostly on verification and edge cases, so it pays where those
-matter:
+Optional: leave `effort` out and the builder runs at the CLI's default effort,
+where the model decides per step how hard to think. Set it to
+low, medium, high or max only when you have a reason to override that default.
+Effort is spent mostly on verification and edge cases, so an override pays
+where those matter:
 
 | Kind of feature | Effort |
 |---|---|
@@ -199,11 +198,11 @@ matter:
 
 The session reads it as how much checking to do beyond the `verify`
 check, and an orchestrator passes it to the agent it dispatches. When
-unsure, pick `medium`; never leave it out.
+unsure, leave it out.
 
 Then ask: **Which size of model should build it?** Record `model`: `small`,
-`medium` or `large`; required on every feature not yet passing, like
-`effort` (harness-audit fails without it). Size is separate from effort: effort is how
+`medium` or `large`; required on every feature not yet passing
+(harness-audit fails without it). Size is separate from effort: effort is how
 hard the checking goes, size is who builds. Any size goes with any effort.
 
 | Size | When | Examples |
