@@ -3,6 +3,24 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-17 -- session 84 (M45-002 more parallel lanes)
+
+- Branch: `parallel-lanes`, rebased on `effort-optional` (one PR for both).
+- Done: M45-002. Lane overlap in context.sh: only a named file blocks a
+  lane (both features list it, or one sits in the other's folder or glob);
+  two folders never block, a real conflict is still caught at merge.
+  Protocol 1.4 and the FEATURES template ask for `depends_on` (code need,
+  not order) and narrow `paths` on every feature. harness-audit WARNs
+  naming each failing feature without both (was: only a plan with
+  neither). Plan: `docs/plans/completed/2026-11-17-m45-more-parallel-lanes.md`.
+- Decisions: rejected treating a missing `depends_on` as `[]` (unknown is
+  not "none"). Kept rebuilding a conflicting lane from scratch rather than
+  resolving it in the lane: smallest change, revisit if conflicts get
+  common. A rolling scheduler or peer-messaging teammates is a separate
+  proposal to the owner, not this change.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR.
+
 ## 2026-11-17 -- session 83 (M45-001 effort optional again)
 
 - Branch: `effort-optional`.

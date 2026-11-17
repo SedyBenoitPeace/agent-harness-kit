@@ -117,14 +117,20 @@ fi
 
 # Parallel lanes for harness-run: declared at planning time, never inferred.
 # Eligible = failing, in NEXT's milestone, declares depends_on (all passing)
-# and non-empty paths. Greedy from NEXT over non-overlapping glob prefixes,
-# max 3, never two with the same optional exclusive value; fewer than 2 lanes, or NEXT itself ineligible → sequential.
+# and non-empty paths. Greedy from NEXT, max 3, never two with the same
+# optional exclusive value; fewer than 2 lanes, or NEXT itself ineligible → sequential.
+# Overlap (M45-002): only a named file blocks — a file both features list, or one
+# inside the other's directory/glob. Two directories never block: disjoint
+# files in a shared folder merge cleanly, and a real conflict is caught at
+# merge (lane dropped, redone sequentially).
+# ponytail: a conflicting lane is rebuilt from scratch; resolve-in-lane if that gets common.
 # Archived ids (docs/features-archive.json, M34-010) count as passing.
 ARCH=docs/features-archive.json; [ -f "$ARCH" ] || ARCH=/dev/null
 jq -r --arg ex "$SKIPPED_IDS" --slurpfile arc "$ARCH" '
-  def prefix: sub("[*?\\[].*$"; "");
+  def entry: {s: sub("[*?\\[].*$"; ""), d: (test("[*?\\[]") or endswith("/"))};
   def overlaps($a; $b): any($a[]; . as $x | any($b[]; . as $y
-    | ($x | startswith($y)) or ($y | startswith($x))));
+    | ($x.d and $y.d | not)
+      and (($x.s | startswith($y.s)) or ($y.s | startswith($x.s)))));
   ([$arc[].features[]?, .features[]] | map({key: .id, value: .status}) | from_entries) as $st
   | ([.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]
       | sort_by(.milestone, .id)) as $f
@@ -134,7 +140,7 @@ jq -r --arg ex "$SKIPPED_IDS" --slurpfile arc "$ARCH" '
           and (.paths | type) == "array" and (.paths | length) > 0) ] as $el
       | if ($el | length) == 0 or $el[0].id != $f[0].id then "PARALLEL: none" else
           reduce $el[] as $e ([];
-            ($e.paths | map(prefix)) as $p
+            ($e.paths | map(entry)) as $p
             | ($e.exclusive // null) as $x
             | if length < 3 and all(.[]; overlaps(.p; $p) | not)
                 and ($x == null or all(.[]; .x != $x))

@@ -244,6 +244,24 @@
       "status": "passing",
       "model": "small",
       "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a missing effort passes on every status and an unknown one FAILs, test-upgrade.sh proving no effort TODO/OK line, and the gate proving protocol 1.4 names the CLI's default effort"
+    },
+    {
+      "id": "M45-002",
+      "milestone": 45,
+      "title": "More parallel lanes: only a named file blocks a lane (two folders never do), protocol 1.4 and the FEATURES template ask for depends_on (code need, not order) and narrow paths on every feature, harness-audit WARNs naming each failing feature without them",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving shared or nested folders give PARALLEL lanes while a file inside another feature's folder or a file both name stays sequential, and test-audit.sh proving the WARN names each failing feature missing depends_on or paths and no feature with both",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-audit/scripts/check.sh",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "skills/harness-initial-setup/templates/FEATURES.json.tmpl",
+        "scripts/test-session.sh",
+        "scripts/test-audit.sh"
+      ]
     }
   ]
 }

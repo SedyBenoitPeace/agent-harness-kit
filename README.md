@@ -83,9 +83,9 @@ English:
   `/agent-harness-kit:harness-audit` or _"audit this repo's harness"_.
   It also warns when a failing feature's `verify` needs something only you
   can give (a live session, your machine, a device, a push, a PR, an
-  answer: that belongs in the plan's `## Before the run`), when an active
-  plan declares neither `depends_on` nor `paths` (no parallel lanes
-  possible), and, for information only, when your global Codex, Claude
+  answer: that belongs in the plan's `## Before the run`), when a failing
+  feature lacks `depends_on` or `paths` (it can never run as a parallel
+  lane; the WARN names each one), and, for information only, when your global Codex, Claude
   Code or Copilot setup has a memory or workflow server or plugin that may
   add its own instructions to every session. It never edits your setup.
 - **harness-handoff** — verify the session-end ritual (clean tree, gate

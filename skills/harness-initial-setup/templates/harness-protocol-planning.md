@@ -138,22 +138,25 @@ it.
 Size each feature to be completable in one session, including its test. If
 it doesn't fit, split it and let the ids reflect the order.
 
-Two optional fields let an orchestrated run (§2.7) build independent
-features side by side. Ask for each feature, and record them only when the
-answer is clear:
+Two fields let an orchestrated run (§2.7) build independent features side
+by side. Record both on every feature:
 
-- **Depends on?** → `depends_on`: ids that must be `passing` first, e.g.
-  `["M1-002"]`. Use `[]` for "nothing".
-- **Paths touched?** → `paths`: the directories or globs the feature
-  changes, e.g. `["src/billing/", "tests/billing/**"]`.
+- **Depends on?** → `depends_on`: ids whose code this feature cannot build
+  or test without, e.g. `["M1-002"]`. Use `[]` for "nothing". Preferred
+  order is not a dependency: the ids already give the order.
+- **Paths touched?** → `paths`: the files the feature changes, or the
+  narrowest folder it owns, e.g. `["src/billing/", "lib/main.dart"]`. Name a
+  shared file (`pubspec.yaml`, a router) explicitly; never a whole `src/` or
+  `test/`. Put the feature's tests in its own files.
 
 - **Shares a resource?** → `exclusive` (optional): a name for a resource
   only one feature may use at a time (a simulator, a device, a database),
   e.g. `"ios-simulator"`. Two features with the same value never run in
   one parallel batch, even when their `paths` are disjoint.
 
-A feature with either `depends_on` or `paths` missing always runs sequentially — leaving
-them out is always safe.
+A feature with either field missing always runs sequentially. Two
+features run side by side only when no file one names sits in the other's
+`paths`; folders alone never keep them apart.
 
 Ask one more question per feature: **Can the gate prove this? If not, what
 is the bar?** A green gate proves tests pass, not that they test the right
