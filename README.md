@@ -187,7 +187,11 @@ copilot plugin update agent-harness-kit
    `/agent-harness-kit:harness-run` repeat it for you: one fresh subagent
    per feature, stopping at a blocker, the milestone boundary, or a cap
    of 10, and running independent features (declared `depends_on` /
-   `paths`) as parallel lanes. To walk away entirely, invoke
+   `paths`) as parallel lanes, up to 3 at once. Lanes roll: when one
+   finishes (built, or passed its evaluator) it merges and its slot takes
+   the next ready feature, so a slow review never holds unrelated builds,
+   and a feature waiting on a running one starts once that one lands. To
+   walk away entirely, invoke
    `/agent-harness-kit:harness-continuous` instead (see
    [Unattended runs](#unattended-runs)).
 3. **Check where you are** — `/agent-harness-kit:harness-status` any
@@ -483,7 +487,7 @@ What it does, so nothing surprises you:
   retried once in a fresh session at the same size; a second budget stop
   is a skip.
 - **Shared resources.** Features that set the same `exclusive` value (e.g.
-  `simulator`, `device`, `database`) never run in the same parallel batch;
+  `simulator`, `device`, `database`) never run as parallel lanes at the same time;
   others still can.
 - **Never pushes.** With `through M<n>` it creates one stacked branch per
   milestone and leaves them local.

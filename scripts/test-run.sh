@@ -326,13 +326,15 @@ git -C "$R5" check-ignore -q .harness-run || fail "run-start: .harness-run not i
 cd "$R5/.harness-run"
 printf 'M1-001 9.99\n' > cost.log; printf 'a 1\n' > run-cost; printf 'M1-001 small model small\n' > models.log
 printf 's c m 1 2 3\n' > usage.log; printf 'budget x\n' > budget.log; mkdir decisions; echo d > decisions/M1-001.md; mkdir results
-echo M1-002 > skip; touch STOP
+echo M1-002 > skip; echo M1-003 > busy; touch STOP
 cd "$OLDPWD"
 g5 commit -q --allow-empty -m "run 1 work"
 second="$(git -C "$R5" rev-parse HEAD)"
 bash "$START_SH" "$R5" >/dev/null || fail "run-start: second run failed"
 [ "$(cat "$R5/.harness-run/start")" = "$second" ] || fail "run-start: second start should be new HEAD"
 [ ! -s "$R5/.harness-run/skip" ] || fail "run-start: skip must be empty"
+[ -e "$R5/.harness-run/busy" ] || fail "run-start: busy must exist (M46-001)"
+[ ! -s "$R5/.harness-run/busy" ] || fail "run-start: busy must be empty (M46-001)"
 [ ! -e "$R5/.harness-run/STOP" ] || fail "run-start: stale STOP must be removed"
 for f in cost.log run-cost models.log usage.log budget.log decisions results; do
   [ ! -e "$R5/.harness-run/$f" ] || fail "run-start: $f not moved out of the live run"
@@ -340,6 +342,15 @@ for f in cost.log run-cost models.log usage.log budget.log decisions results; do
 done
 (cd "$R5" && bash "$REPORT" "$second" --stop-reason x >/dev/null) || fail "run-start: report after second start failed"
 ! grep -rq '9.99' "$R5/docs/runs" || fail "run-start: report shows the first run's cost"
+
+# M46-001: rolling lanes in harness-run, reused by harness-continuous
+RUN_MD="skills/harness-run/SKILL.md"
+grep -q 'context.sh --busy .harness-run/busy' "$RUN_MD" || fail "harness-run: refill must call context.sh --busy"
+grep -q 'Lanes roll' "$RUN_MD" || fail "harness-run: lanes must roll, not wait for a batch"
+grep -q 'inside the lane' "$RUN_MD" || fail "harness-run: lane evaluator must run inside the lane worktree"
+grep -q 'one writer' "$RUN_MD" || fail "harness-run: no sequential feature while lanes are busy"
+grep -q 'rolling Parallel lanes' "$md" || fail "harness-continuous: must reuse rolling lanes"
+grep -q 'ORIG_HEAD' "$md" || fail "harness-continuous: a red lane merge must be undone before skipping"
 
 # M34-007: wait-result.sh blocks in the shell, prints the result file once, silent while waiting
 WAIT="skills/harness-run/scripts/wait-result.sh"

@@ -152,7 +152,7 @@ by side. Record both on every feature:
 - **Shares a resource?** → `exclusive` (optional): a name for a resource
   only one feature may use at a time (a simulator, a device, a database),
   e.g. `"ios-simulator"`. Two features with the same value never run in
-  one parallel batch, even when their `paths` are disjoint.
+  parallel lanes at the same time, even when their `paths` are disjoint.
 
 A feature with either field missing always runs sequentially. Two
 features run side by side only when no file one names sits in the other's

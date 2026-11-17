@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-17 -- session 85 (M46-001 rolling lanes)
+
+- Branch: `parallel-lanes` (same PR as M45).
+- Done: M46-001. `context.sh --busy FILE` lists lanes that can start
+  beside running ones. harness-run's Parallel lanes section is a rolling
+  loop: start lanes, wait for the next finisher, evaluate it inside its
+  lane worktree, merge + gate + flip per lane, refill. harness-continuous
+  reuses it with skips (a red merge undone first). run-start.sh empties
+  `.harness-run/busy`. README updated. Plan:
+  `docs/plans/completed/2026-11-17-m46-rolling-lanes.md`.
+- Decisions: rejected Claude Code agent teams for this (experimental,
+  Claude-only, no worktree isolation for teammates, cost per teammate);
+  rolling lanes add no agents and work on every CLI. The evaluator runs in
+  the lane worktree so merges on the current branch never break its
+  integrity check. One gate per merge instead of per batch: more shell
+  time, no tokens. A conflicted lane stays busy until it can run alone,
+  so a refill cannot relist it.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews PR #49.
+
 ## 2026-11-17 -- session 84 (M45-002 more parallel lanes)
 
 - Branch: `parallel-lanes`, rebased on `effort-optional` (one PR for both).

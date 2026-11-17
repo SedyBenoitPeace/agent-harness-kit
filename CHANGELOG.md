@@ -24,10 +24,16 @@ agent-harness-template>` and open a PR there; gate green; PR.
   Protocol 1.4 and the FEATURES template ask for `depends_on` (code need,
   not order) and narrow `paths` on every feature; harness-audit WARNs
   naming each failing feature that lacks either.
+- Rolling lanes (M46-001): a parallel run keeps up to 3 lanes busy and
+  refills a slot as soon as any builder or evaluator finishes, instead of
+  waiting for the whole batch, so a slow review no longer holds unrelated
+  builds and a feature waiting on a running one starts once it lands.
+  `context.sh --busy FILE` lists lanes that can start beside running ones;
+  evaluators run inside the lane's worktree; harness-continuous reuses it.
 
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to
-  recopy the protocol, then `/agent-harness-kit:harness-audit` and approve
+  recopy the protocol (it brings the rolling-lane rules), then `/agent-harness-kit:harness-audit` and approve
   `depends_on` / `paths` for the failing features its WARN names.
 
 ## 3.19.1 — 2026-11-03
