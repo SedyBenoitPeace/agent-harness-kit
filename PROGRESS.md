@@ -3,6 +3,37 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-18 -- session 87 (M47-002 run board wiring)
+
+- Branch: `run-board`.
+- Done: M47-002. `dispatch.sh`, `second-opinion.sh`, `run-gate.sh`,
+  `context.sh` and `status.sh` set an EXIT trap that runs `board.sh` (output
+  to /dev/null, `|| true`) only when `.harness-run/start` exists in the main
+  repo and the last `events.log` line is not `run-end`; a trap leaves the
+  exit code alone. `run-report.sh` calls it right after `run-end` (the final
+  snapshot); `run-start.sh` already passed `BOARD:` through (M47-001).
+  Interactive harness-run now says to call `run-start.sh` once, before its
+  loop and not when resuming with busy lanes (it empties `busy`). Both run
+  SKILL.md files put the `BOARD:` line in the first progress line. New
+  stage `merging` (result says passing, FEATURES not yet) between `blocked`
+  and `review`. test-board.sh gained: refresh from status/context/gate and
+  no reopen, the junk-board.sh case, no writes without a run for status and
+  context, final snapshot "run ended", no rewrite after run-end, `merging`.
+  Docs: protocol-runs template, README, CHANGELOG; 3.21.0 in the seven files.
+- Decisions: an EXIT trap per script instead of editing every exit path (a
+  dispatch.sh/second-opinion.sh/status.sh path has several exits; the trap is
+  the one place "last step" holds). Rejected: a shared sourced helper (each
+  script keeps its five-line `board()`, as with `ev()`); a `HARNESS_BOARD`
+  override env to test the junk case (the test copies the skills tree and
+  swaps board.sh instead). `context.sh` also refreshes through the
+  `status.sh` it calls, so a context call refreshes twice (about 0.15 s
+  each); kept because the brief lists both callers. `status.sh --watch`
+  refreshes via its child calls. The trap runs only past each script's
+  argument and agent checks, so usage errors write nothing. harness-run's
+  run-start step is skill prose, not enforced by a script.
+- Gate: GREEN (bash scripts/e2e.sh via run-gate.sh final).
+- Next: none in M47; open the PR for `run-board`.
+
 ## 2026-11-18 -- session 86 (M47-001 run board core)
 
 - Branch: `run-board`.

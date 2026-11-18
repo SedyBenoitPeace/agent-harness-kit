@@ -20,6 +20,13 @@ stays interactive and stops at the first problem.
 
 ## Workflow
 
+Once, at the start of a fresh run (not on each loop, not when resuming a run
+whose lanes are still busy: `.harness-run/busy` lists ids or `../<repo>-<id>`
+worktrees exist; then keep the run as it is): once the first step-1
+`context.sh` is clean, run `bash scripts/run-start.sh <target>`. It writes the run
+state and prints `BOARD: <path>`, the live run board; put that line in your
+first progress line. It empties `busy`, so run it before any lane starts.
+
 1. Run `bash ../harness-session/scripts/context.sh` (path relative to this
    skill) from the target repo root.
    - Exit 3 / 2, a dirty worktree, `UPGRADE: offer`, or a `PREFLIGHT:`

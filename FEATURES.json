@@ -308,7 +308,7 @@
       "id": "M47-002",
       "milestone": 47,
       "title": "Run board wiring: dispatch, second-opinion, run-gate, context, status refresh the board during a run (never changing their output or exit code), run-report writes the final snapshot, run-start opens it and prints BOARD:; interactive harness-run now calls run-start.sh; both run skills show the BOARD: path; docs and 3.21.0",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-board.sh proving the brief's wiring cases (junk board.sh leaves callers' stdout and exit codes unchanged, no board or events without a run, no rewrite after run-end, final page says run ended); grep finds run-start.sh in harness-run SKILL.md and BOARD: in both run SKILL.md files; bash scripts/ci-local.sh prints CI-LOCAL GREEN",
       "model": "medium",
       "depends_on": [

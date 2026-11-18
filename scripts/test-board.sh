@@ -2,7 +2,7 @@
 # Proves the run board core (M47-001): run identity and archives in
 # run-start.sh, events.log writers, board.sh stages/columns and --open.
 # Spec: docs/briefs/2026-11-18-run-board.md. Exit 0 = green.
-# shellcheck disable=SC2016 # literal $ in patterns and the opener stub
+# shellcheck disable=SC2016,SC2086 # literal $ in patterns; $c is a command line to split
 set -euo pipefail
 cd "$(dirname "$0")/.."
 KIT="$PWD"
@@ -44,7 +44,9 @@ expect() { [ "$(stage "$1")" = "$2" ] || fail "$1: want stage '$2', got '$(stage
 # --- no run: nothing is written -------------------------------------------
 (cd "$R" && HARNESS_GATE_REUSE=0 bash "$GATE" baseline . >/dev/null) || fail "gate without run failed"
 bash "$BOARD" "$R" >/dev/null || fail "board.sh without run must exit 0"
-[ ! -e "$H/events.log" ] && [ ! -e "$HTML" ] || fail "no .harness-run/start: no events.log or board.html"
+(cd "$R" && bash "$KIT/skills/harness-status/scripts/status.sh" . >/dev/null 2>&1; bash "$KIT/skills/harness-session/scripts/context.sh" . >/dev/null 2>&1) || true
+[ ! -e "$H/events.log" ] || fail "no .harness-run/start (gate, status, context): no events.log"
+[ ! -e "$HTML" ] || fail "no .harness-run/start (gate, status, context): no board.html"
 
 # --- run-start: run-id, BOARD: line, opener once ---------------------------
 COUNT="$WORK/opened"; OPENER="$WORK/opener.sh"
@@ -55,6 +57,11 @@ out="$(bash "$START_SH" "$R")" || fail "run-start failed"
 [ -f "$HTML" ] || fail "run-start: board.html missing"
 [ "$(wc -l < "$COUNT")" -eq 1 ] || fail "opener must run once"
 grep -qx "$HTML" "$COUNT" || fail "opener must get the absolute board path"
+for c in "$KIT/skills/harness-status/scripts/status.sh ." "$KIT/skills/harness-session/scripts/context.sh ." "$KIT/skills/harness-session/scripts/run-gate.sh baseline ."; do
+  rm -f "$HTML"; (cd "$R" && HARNESS_GATE_REUSE=0 bash $c >/dev/null 2>&1) || true
+  [ -f "$HTML" ] || fail "${c%% *} must refresh the board during a run"
+done
+[ "$(wc -l < "$COUNT")" -eq 1 ] || fail "later calls must not reopen the board"
 rid1="$(cat "$H/run-id")"
 [[ "$rid1" =~ ^[0-9]+-[0-9]+$ ]] || fail "run-id must be <epoch>-<pid>, got $rid1"
 grep -q "^[0-9]* run-start - $(g rev-parse HEAD)$" "$H/events.log" || fail "run-start event missing"
@@ -106,6 +113,8 @@ expect_after M1-006 "rework (1/2)"
 echo "$((now + 100)) dispatch M1-006 claude harness-builder -" >> "$H/events.log"
 expect_after M1-006 building
 res M1-007 blocked red; expect_after M1-007 blocked
+# merge pending: the result says passing, FEATURES.json not yet
+res M1-007 passing green; expect_after M1-007 merging; res M1-007 blocked red
 echo M1-008 >> "$H/skip"; expect_after M1-008 skipped
 jq '(.features[] | select(.id == "M1-009")) |= (.status = "passing")' "$R/FEATURES.json" > "$WORK/f" && mv "$WORK/f" "$R/FEATURES.json"
 expect_after M1-009 passing
@@ -146,10 +155,29 @@ out="$(HARNESS_BOARD_OPEN=0 bash "$START_SH" "$R")"; [ "$out" = "BOARD: $HTML" ]
 [ -f "$H/previous/$rid2/events.log" ] || fail "third run must archive under previous/<second run-id>"
 [ "$(find "$H/previous/$rid1" -type f -exec cat {} + | cksum)" = "$sum1" ] || fail "first archive changed"
 
+# --- junk board.sh: callers' stdout and exit codes stay unchanged -------------
+JK="$WORK/junk"; mkdir -p "$JK"; cp -R "$KIT/skills" "$JK/skills"
+callers() { # kit-root: stdout of the three callers, then their exit codes
+  local k="$1" c rc
+  for c in "$k/skills/harness-run/scripts/dispatch.sh $R claude M1-001" "$k/skills/harness-status/scripts/status.sh $R" "$k/skills/harness-session/scripts/context.sh $R"; do
+    rc=0; (cd "$R" && bash $c 2>/dev/null) || rc=$?
+    echo "rc=$rc"
+  done
+}
+rm "$JK/skills/harness-run/scripts/board.sh"
+nob="$(callers "$JK")"
+printf '#!/usr/bin/env bash\necho JUNK-OUT\necho JUNK-ERR >&2\nexit 1\n' > "$JK/skills/harness-run/scripts/board.sh"
+junk="$(callers "$JK")"
+[ "$nob" = "$junk" ] || fail "a junk board.sh changed a caller's stdout or exit code"
+case "$junk" in *JUNK*) fail "board.sh output leaked to a caller" ;; esac
+
 # --- run-end ------------------------------------------------------------------
 (cd "$R" && bash "$REPORT" "$(cat "$H/start")" --stop-reason "cap reached" >/dev/null 2>"$WORK/rep.err") || { cat "$WORK/rep.err"; false; } || fail "run-report failed"
 tail -1 "$H/events.log" | grep -q "^[0-9]* run-end - cap reached$" || fail "run-end event missing"
-bash "$BOARD" "$R"; grep -q 'run ended: cap reached' "$HTML" || fail "header must say run ended"
+grep -q 'run ended: cap reached' "$HTML" || fail "run-report must leave the final snapshot saying run ended"
+touch -t 200001010000 "$HTML"; m0="$(stat -c %Y "$HTML" 2>/dev/null || stat -f %m "$HTML")"
+(cd "$R" && bash "$KIT/skills/harness-status/scripts/status.sh" . >/dev/null 2>&1 || true)
+[ "$(stat -c %Y "$HTML" 2>/dev/null || stat -f %m "$HTML")" = "$m0" ] || fail "status.sh must not rewrite the board after run-end"
 
 # --- second opinion event -----------------------------------------------------
 B="$WORK/bin"; mkdir -p "$B"; printf '#!/usr/bin/env bash\necho PASS\n' > "$B/claude"; chmod +x "$B/claude"

@@ -10,6 +10,27 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.21.0 — 2026-11-18
+
+- Live run board (M47-001, M47-002): a run writes `.harness-run/board.html`,
+  a self-reloading page with one row per open feature (stage, agent, gate,
+  time in stage, cost) built from `events.log`, result files and FEATURES.json
+  by `harness-run/scripts/board.sh` (bash + jq). `run-start.sh` opens it once
+  per run and prints `BOARD: <path>`; `dispatch.sh`, `second-opinion.sh`,
+  `run-gate.sh`, `context.sh` and `status.sh` refresh it as their last step
+  and `run-report.sh` writes the final snapshot ("run ended"). Refreshing
+  never changes their stdout or exit code and does nothing outside a run.
+  `HARNESS_BOARD_OPEN=0` opens nothing; `HARNESS_BOARD_OPEN_CMD` replaces the
+  opener. The interactive harness-run now calls `run-start.sh` once at the
+  start of a fresh run; both run skills show the `BOARD:` line.
+- Board fix: a lane whose result says `passing` while FEATURES.json is not
+  yet `passing` (merge pending) shows `merging` (between `blocked` and
+  `review`), no longer `queued`.
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to
+  recopy the protocol (it brings the run-board paragraph).
+
 ## 3.20.0 — 2026-11-17
 
 - effort is optional again (M45-001): harness-audit no longer fails an open

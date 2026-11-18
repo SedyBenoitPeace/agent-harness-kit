@@ -78,6 +78,7 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
        elif $g != null and $g.f[1] == "start" and .res == null then {st: "gate running", since: $g.ts}
        elif .dp != null and .res == null then {st: "building", since: .dp.ts}
        elif .rs == "blocked" then {st: "blocked", since: .res.m}
+       elif .rs == "passing" then {st: "merging", since: .res.m}
        elif .status == "review" then {st: "review", since: .res.m}
        elif .status == "failing" and $ea > 0 then {st: "rework (\($ea)/2)", since: null}
        elif .rs == "review" then {st: "review", since: .res.m}
@@ -126,7 +127,7 @@ h1{font-size:20px;margin:0}small,.muted{color:var(--mut)}
 .row{display:grid;grid-template-columns:3fr 1.3fr 2fr 1.2fr .8fr .8fr;gap:8px;padding:6px 4px;border-bottom:1px solid var(--line);cursor:pointer}
 .head{font-weight:600;color:var(--mut);cursor:default}summary{list-style:none}summary::-webkit-details-marker{display:none}
 .more{padding:6px 12px;color:var(--mut)}pre{white-space:pre-wrap;margin:4px 0}
-.st-passing{color:var(--acc)}.st-building,.st-gate{color:var(--run)}.st-review,.st-rework{color:var(--warn)}.st-blocked{color:var(--bad)}
+.st-passing{color:var(--acc)}.st-building,.st-gate{color:var(--run)}.st-merging,.st-review,.st-rework{color:var(--warn)}.st-blocked{color:var(--bad)}
 @media (max-width:700px){.row{grid-template-columns:1fr 1fr}}
 </style></head><body>
 EOF

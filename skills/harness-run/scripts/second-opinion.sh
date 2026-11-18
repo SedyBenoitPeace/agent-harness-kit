@@ -33,6 +33,14 @@ entry="$(jq -c --arg id "$id" '.features[]? | select(.id == $id)' FEATURES.json 
 head_before="$(git rev-parse HEAD)"
 ev() { local root; root="$(cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
   [ ! -f "$root/.harness-run/start" ] || echo "$(date +%s) $*" >> "$root/.harness-run/events.log"; }
+# M47-002: refresh the run board last (guarded; never changes output or exit code)
+_bt="$(cd . 2>/dev/null && pwd)" || _bt=.; _bs="$here/board.sh"
+# shellcheck disable=SC2317,SC2329 # runs from the EXIT trap
+board() { local r; r="$(cd "$_bt" && cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
+  [ -s "$r/.harness-run/start" ] || return 0
+  [ "$(tail -n1 "$r/.harness-run/events.log" 2>/dev/null | cut -d' ' -f2)" != run-end ] || return 0
+  bash "$_bs" "$_bt" >/dev/null 2>&1 || true; }
+trap board EXIT
 
 # The evaluator role, as gen-agents.sh writes it for every CLI.
 role="$(awk 'c>=2{print} /^---$/{c++}' "$kit/agents/src/harness-evaluator.md")"

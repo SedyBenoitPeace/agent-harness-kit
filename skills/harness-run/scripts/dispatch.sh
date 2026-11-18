@@ -37,6 +37,14 @@ agent_file() {
 }
 ev() { local root; root="$(cd "$target" 2>/dev/null && cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
   [ ! -f "$root/.harness-run/start" ] || echo "$(date +%s) $*" >> "$root/.harness-run/events.log"; }
+# M47-002: refresh the run board last (guarded; never changes output or exit code)
+_bt="$(cd "$target" 2>/dev/null && pwd)" || _bt=.; _bs="$(cd "$(dirname "$0")" && pwd)/board.sh"
+# shellcheck disable=SC2317,SC2329 # runs from the EXIT trap
+board() { local r; r="$(cd "$_bt" && cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
+  [ -s "$r/.harness-run/start" ] || return 0
+  [ "$(tail -n1 "$r/.harness-run/events.log" 2>/dev/null | cut -d' ' -f2)" != run-end ] || return 0
+  bash "$_bs" "$_bt" >/dev/null 2>&1 || true; }
+trap board EXIT
 case "$m" in
   small) n=0 ;; medium) n=1 ;; large) n=2 ;;
   *) if [ "$cli" = claude ]; then echo "AGENT: harness-builder"; echo "SIZE: -"; ev dispatch "$id" claude harness-builder -; exit 0; fi

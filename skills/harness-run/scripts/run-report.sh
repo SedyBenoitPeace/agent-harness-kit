@@ -278,4 +278,6 @@ list() { if [ -n "$1" ]; then printf '%s' "$1"; else echo "- none"; fi; }
 ev() { local root; root="$(cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
   [ ! -f "$root/.harness-run/start" ] || echo "$(date +%s) $*" >> "$root/.harness-run/events.log"; }
 ev run-end - "$REASON"
+# M47-002: the final snapshot (the one refresh that follows run-end)
+bash "$SCRIPT_DIR/board.sh" . >/dev/null 2>&1 || true
 echo "$out"

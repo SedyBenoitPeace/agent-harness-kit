@@ -33,6 +33,14 @@ while [ $# -gt 0 ]; do
   esac
 done
 TARGET="${1:-.}"
+# M47-002: refresh the run board last (guarded; never changes output or exit code)
+_bt="$(cd "$TARGET" 2>/dev/null && pwd)" || _bt=.; _bs="$SCRIPT_DIR/../../harness-run/scripts/board.sh"
+# shellcheck disable=SC2317,SC2329 # runs from the EXIT trap
+board() { local r; r="$(cd "$_bt" && cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
+  [ -s "$r/.harness-run/start" ] || return 0
+  [ "$(tail -n1 "$r/.harness-run/events.log" 2>/dev/null | cut -d' ' -f2)" != run-end ] || return 0
+  bash "$_bs" "$_bt" >/dev/null 2>&1 || true; }
+trap board EXIT
 
 # Brief, not history (M34-009): completed milestones collapse to one line.
 rc=0; report="$(bash "$STATUS" ${SKIP[@]+"${SKIP[@]}"} "$TARGET")" || rc=$?
