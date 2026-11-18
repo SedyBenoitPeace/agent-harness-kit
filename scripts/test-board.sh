@@ -220,11 +220,12 @@ touch -t 200001010000 "$HTML"; m0="$(stat -c %Y "$HTML" 2>/dev/null || stat -f %
 [ "$(stat -c %Y "$HTML" 2>/dev/null || stat -f %m "$HTML")" = "$m0" ] || fail "status.sh must not rewrite the board after run-end"
 # archive-features.sh runs after the report: archived features keep their rows
 aid="$(sed -n 's/.*data-id="\([^"]*\)".*/\1/p' "$HTML" | head -1)"
-(cd "$R" && jq --arg i "$aid" '{features: [.features[] | select(.id == $i)]}' FEATURES.json > docs-arc.json \
+(cd "$R" && jq --arg i "$aid" '{features: ([.features[] | select(.id == $i)] + [{id: "M0-999", milestone: 0, title: "old", status: "passing"}])}' FEATURES.json > docs-arc.json \
   && mkdir -p docs && mv docs-arc.json docs/features-archive.json \
   && jq --arg i "$aid" '.features |= map(select(.id != $i))' FEATURES.json > f.json && mv f.json FEATURES.json)
 (cd "$R" && bash "$BOARD" . >/dev/null) || fail "board.sh failed after archiving"
 row "$aid" | grep -q . || fail "archived feature $aid lost its board row"
+row M0-999 | grep -q . && fail "a feature archived before the run must not get a row"
 
 # --- second opinion event -----------------------------------------------------
 B="$WORK/bin"; mkdir -p "$B"; printf '#!/usr/bin/env bash\necho PASS\n' > "$B/claude"; chmod +x "$B/claude"
