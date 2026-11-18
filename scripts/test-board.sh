@@ -238,7 +238,7 @@ X="$WORK/hx"; mkdir -p "$X"; git -C "$X" init -q -b main
 { echo '{"features":['; feat H-001 failing 0; echo ,; feat H-002 failing 0; echo ,; feat H-003 failing 0; echo ']}'; } > "$X/FEATURES.json"
 git -C "$X" add -A; git -C "$X" -c user.email=t@t -c user.name=t commit -qm seed
 mkdir -p "$X/.harness-run/hints"; git -C "$X" rev-parse HEAD > "$X/.harness-run/start"
-echo "$(date +%s)" > "$X/.harness-run/run-id"; echo H-002 > "$X/.harness-run/skip"
+date +%s > "$X/.harness-run/run-id"; echo H-002 > "$X/.harness-run/skip"
 jq '(.features[] | select(.id == "H-001") | .status) = "passing"' "$X/FEATURES.json" > "$X/f.json" && mv "$X/f.json" "$X/FEATURES.json"
 printf '<b>x</b> & "q"\nsecond line\n' > "$X/.harness-run/hints/H-003.md"
 XH="$X/.harness-run/board.html"
@@ -271,7 +271,7 @@ else
 fi
 rm -f "$X/.harness-run/hints/H-003.md"
 bash -c "$cmd"
-[ ! -e "$WORK/pwn" ] && [ ! -e "$WORK/pwn2" ] || fail "hint command executed its text"
+{ [ ! -e "$WORK/pwn" ] && [ ! -e "$WORK/pwn2" ]; } || fail "hint command executed its text"
 [ "$(cat "$X/.harness-run/hints/H-003.md")" = "$txt" ] || fail "hint command must write the text verbatim ($how)"
 echo "hint quoting proven with $how"
 
