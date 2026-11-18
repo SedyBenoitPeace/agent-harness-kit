@@ -39,7 +39,7 @@ for l in ../"$repo"-*; do [ -d "$l" ] && lanes="$lanes${l#../"$repo"-}"$'\n'; do
 tmp="$(mktemp "$d/.board.XXXXXX")"
 trap 'rm -f "$tmp" "$tmp.body"' EXIT
 jq -nr --argjson now "$(date +%s)" --arg repo "$repo" --arg branch "$branch" \
-  --arg runid "$(cat "$d/run-id" 2>/dev/null || true)" --arg mt "$mt" --arg rl "$rl" --arg lanes "$lanes" \
+  --arg runid "$(cat "$d/run-id" 2>/dev/null || true)" --arg st "$(stat -c %Y "$d/start" 2>/dev/null || stat -f %m "$d/start")" --arg mt "$mt" --arg rl "$rl" --arg lanes "$lanes" \
   --argjson s0 "$startf" --slurpfile cur FEATURES.json \
   --rawfile ev "$(rf "$d/events.log")" --rawfile skip "$(rf "$d/skip")" \
   --rawfile cost "$(rf "$d/cost.log")" --rawfile usage "$(rf "$d/usage.log")" '
@@ -92,14 +92,14 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
    | .model = ([$us[] | select(.m != "-" and .m != null) | .m] | last)
    | .agent = (if .dp then (.dp.f | join(" ")) else "—" end) + (if .model then " · \(.model)" else "" end)
    | .ops = [$E[] | select(.e == "opinion" and .id == $i) | .f | join(" ")]] as $rows
-| ([$E[] | select(.e == "run-start")] | first.ts // ($runid | split("-")[0] | tonumber? // $now)) as $t0
+| ([$E[] | select(.e == "run-start")] | first.ts // ($runid | split("-")[0] | tonumber? // ($st | tonumber? // $now))) as $t0
 | ([$E[] | select(.e == "run-end")] | last) as $end
 | ($rows | length) as $n | ([$rows[] | select(.st == "passing")] | length) as $np
 | ($rows | group_by(.st | split(" ")[0]) | map("\(.[0].st | split(" ")[0]) \(length)") | join(" · ")) as $counts
 | (if $C != [] then ($C | map(.usd) | add | usd)
    elif $U != [] then ($U | map(.t) | add | tok) else "—" end) as $total
 | "<header><h1>\($repo | h) <small>\($branch | h)</small></h1>"
-  + "<p>run started \($t0 | todate | h) · \($counts | h) · cost \($total | h) · updated <span class=\"tick\" data-since=\"\($now)\">0s</span> ago"
+  + "<p>run started <span class=\"local\" data-ts=\"\($t0)\">\($t0 | todate | h)</span> · \($counts | h) · cost \($total | h) · updated <span class=\"tick\" data-since=\"\($now)\">0s</span> ago"
   + (if $end then " · <b>run ended: \($end.f | join(" ") | h)</b>" else "" end) + "</p>"
   + "<div class=\"bar\"><i style=\"width:\(if $n > 0 then ($np * 100 / $n | floor) else 0 end)%\"></i></div>"
   + "<p class=\"muted\">\($np)/\($n) passing</p></header>"
@@ -143,7 +143,7 @@ EOF
   });
   function dur(s){s=Math.max(0,Math.floor(s));return s<60?s+'s':s<3600?Math.floor(s/60)+'m '+s%60+'s':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m'}
   function tick(){var n=Date.now()/1000;document.querySelectorAll('.tick').forEach(function(e){e.textContent=dur(n-e.dataset.since)})}
-  tick();setInterval(tick,1000);setTimeout(function(){location.reload()},5000);
+  document.querySelectorAll('.local').forEach(function(e){e.textContent=new Date(e.dataset.ts*1000).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})});tick();setInterval(tick,1000);setTimeout(function(){location.reload()},5000);
 })();
 </script></body></html>
 EOF
