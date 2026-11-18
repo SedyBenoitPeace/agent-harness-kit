@@ -35,7 +35,20 @@
     "31": "Orchestration cost in the run report",
     "32": "Token usage in the run report, for every CLI",
     "33": "Model size separate from effort, for every CLI",
-    "34": "Run fixes: quick handoff, correct reports, cheaper runs"
+    "34": "Run fixes: quick handoff, correct reports, cheaper runs",
+    "35": "M34 follow-ups: run-report decisions, README, template mirror",
+    "36": "Effort and model size required on every open feature",
+    "37": "Harness line on Copilot CLI status line",
+    "38": "Lean worker reads: protocol card, feature brief, read rule",
+    "39": "Dispatch the kit's builder agents, never a stand-in",
+    "40": "Session loop for feature work only",
+    "41": "Harnessed repos work without the kit plugin",
+    "42": "Brief review converges",
+    "43": "Approved outlines skip the brief",
+    "44": "Codex subagents start fresh; one read per command",
+    "45": "Effort optional again; the model decides by default",
+    "46": "Rolling lanes",
+    "47": "Live run board"
   },
   "features": [
     {
@@ -1665,6 +1678,322 @@
       "model": "small",
       "effort": "low",
       "verify": "bash scripts/e2e.sh exits 0 with version 3.12.0 checked; CHANGELOG 3.12.0 has an Upgrade block naming the handoff change, run-start.sh, exclusive, quiet.sh, the supervisor default, the session brief, archive-features.sh, the session budget, wait-result.sh and the global plugin warnings; when ../agent-harness-template exists, sync-template.sh --check exits 0 against it after the sync, otherwise the PROGRESS entry says the mirror was absent; the M34 plan is moved to docs/plans/completed/"
+    },
+    {
+      "id": "M35-001",
+      "milestone": 35,
+      "title": "Run report reads a feature's Decisions only from what its done commit brought in (first parent for a lane merge), so a planning entry never counts in either PROGRESS.md order",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving, on an append-order PROGRESS.md whose planning entry's Done: line names the id and a feature landing as a lane merge, that the report uses the lane's entry and never the planning one",
+      "effort": "low",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/run-report.sh",
+        "scripts/test-run.sh"
+      ]
+    },
+    {
+      "id": "M35-002",
+      "milestone": 35,
+      "title": "README documents every M34 change; template mirror synced to 3.12.0 and its PR updated",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0; README names the session brief, quiet.sh, session budget, audit warnings, supervisor default, run-start.sh, wait-result.sh, exclusive and archive-features.sh; sync-template.sh ../agent-harness-template --check prints IN SYNC",
+      "effort": "low",
+      "depends_on": [
+        "M35-001"
+      ],
+      "paths": [
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    },
+    {
+      "id": "M36-001",
+      "milestone": 36,
+      "title": "effort is required: harness-audit FAILs a failing/review/deferred feature without a valid effort, upgrade.sh lists the ones missing it",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a missing or unknown effort FAILs on failing/review/deferred features and passes on passing/superseded ones, and test-upgrade.sh proving the missing-effort TODO",
+      "effort": "high",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-audit/",
+        "skills/harness-upgrade-structure/",
+        "skills/harness-initial-setup/templates/",
+        "scripts/"
+      ],
+      "model": "medium"
+    },
+    {
+      "id": "M36-002",
+      "milestone": 36,
+      "title": "model is required: harness-audit FAILs a failing/review/deferred feature without a valid model size, upgrade.sh lists the ones missing it",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a missing or malformed model FAILs on failing/review/deferred features and passes on passing/superseded ones, and test-upgrade.sh proving the missing-model TODO",
+      "effort": "high",
+      "model": "medium",
+      "depends_on": [
+        "M36-001"
+      ],
+      "paths": [
+        "skills/harness-audit/",
+        "skills/harness-upgrade-structure/",
+        "skills/harness-initial-setup/templates/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M37-001",
+      "milestone": 37,
+      "title": "copilot-statusline.sh: the harness line after the user's own Copilot CLI status line, with --install/--uninstall that keep and restore their statusLine",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-copilot-statusline.sh proving install keeps the user's statusLine (twice), the rendered line is theirs + the harness line, uninstall restores settings.json, the default line has tokens and no dollars, and a broken settings.json is left untouched",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-status/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M38-001",
+      "milestone": 38,
+      "title": "context.sh --brief prints the protocol 2.9 card and the repo's AGENTS.md Rules/Needs a human; briefed builders never cat SKILL.md or AGENTS.md",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving --brief prints the card, SCRIPTS, the AGENTS.md sections and no plan section, and test-agents.sh proving every CLI's builder tells a briefed session not to cat SKILL.md/AGENTS.md",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/",
+        "skills/harness-initial-setup/templates/harness-protocol-runs.md",
+        "agents/src/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M38-002",
+      "milestone": 38,
+      "title": "feature.sh <id> prints one FEATURES.json entry and its plan section; harness-run pastes it into each builder brief instead of the plan path",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving feature.sh prints only that entry and section (80-line cap, exit 2 on an unknown id) and the harness-run brief contract; claude plugin test passes with the new prompt test",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [
+        "M38-001"
+      ],
+      "paths": [
+        "skills/harness-run/",
+        "claude/hooks/",
+        "claude/tests/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M38-003",
+      "milestone": 38,
+      "title": "Read rule (grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines) in protocol, AGENTS.md and its template, builder agents; upgrade.sh adds it to existing AGENTS.md",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with e2e checking the rule in each file and test-upgrade.sh proving it lands once under ## Rules",
+      "effort": "low",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-initial-setup/templates/",
+        "skills/harness-upgrade-structure/",
+        "AGENTS.md",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M39-001",
+      "milestone": 39,
+      "title": "dispatch.sh exits 3 (AGENT: missing) without a builder agent file; harness-run/continuous generate, commit and stop instead of a stand-in subagent; setup and upgrade always generate the agent files",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving AGENT: missing + exit 3 + no models.log line on claude, codex and copilot, and test-upgrade.sh proving a repo without agent files or evaluation opt-in gets the builder for every CLI",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/",
+        "skills/harness-continuous/",
+        "skills/harness-initial-setup/SKILL.md",
+        "skills/harness-upgrade-structure/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M40-001",
+      "milestone": 40,
+      "title": "AGENTS.md.tmpl scopes the session loop to feature work (small tasks: do it, check it, stop); protocol §2 and e2e.sh.tmpl say feature session; upgrade.sh adds the paragraph to existing repos",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with the M40-001 asserts on AGENTS.md.tmpl and the protocol core, and test-upgrade.sh proving the paragraph lands right under ## Session loop once, the two unedited 'every session' lines are reworded, and a repo without the heading gets a TODO",
+      "effort": "low",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-initial-setup/templates/",
+        "skills/harness-upgrade-structure/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M41-001",
+      "milestone": 41,
+      "title": "CLAUDE.md/GEMINI.md import AGENTS.md (@AGENTS.md) instead of linking it; AGENTS.md.tmpl declares the harness applies plugin or not, makes the six steps the protocol and adds the 'just build it' skip line (FEATURES.json still updated); upgrade.sh applies all of it to existing repos; harness-audit warns on a link-only pointer",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with the M41-001 asserts, test-upgrade.sh case 4e proving a 3.16.0 AGENTS.md upgrades to exactly the current template, the kit pointer becomes the import, a custom GEMINI.md keeps its text under @AGENTS.md, a hand-written AGENTS.md gets the declaration under its title, and a second run changes nothing; test-audit.sh proving the link-only WARN",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-initial-setup/",
+        "skills/harness-upgrade-structure/",
+        "skills/harness-audit/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M42-001",
+      "milestone": 42,
+      "title": "Brief review stops: review-round.sh counts rounds in the brief and STOPs past 2, check-brief.sh FAILs at the cap; the reviewer returns GAPS only for BLOCKING findings (at most 5, the rest are NOTEs), round 2 re-checks the previous gaps instead of a fresh audit; SKILL.md step 6 wires it; every CLI's generated reviewer carries the rules",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-brief.sh proving a third review-round.sh call exits non-zero with the STOP line, check-brief.sh FAILs a brief at the cap and passes one marked READY or carrying only NOTE lines in Open questions, and the nits-only fixture passes check-brief; test-agents.sh proving the Claude, Copilot and Codex reviewers carry the BLOCKING list, the 5-gap limit, the NOTE rule and the re-check rule; SKILL.md step 6 runs review-round.sh",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-brief/",
+        "agents/src/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M43-001",
+      "milestone": 43,
+      "title": "An approved plan or outline from another workflow skips harness-brief: the planning protocol (1.1), AGENTS.md.tmpl and harness-brief SKILL.md say turn it into FEATURES.json entries plus a plan section and go to harness-run; context.sh --outline FILE prints the skip hint; upgrade.sh adds the AGENTS.md line to existing repos",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving context.sh --outline on an existing file prints OUTLINE and a SKIP_BRIEF line naming harness-brief, FEATURES.json, plan section and harness-run, a missing file prints OUTLINE: not found and no SKIP_BRIEF, and no --outline prints neither; test-upgrade.sh proving upgrade.sh adds the outline line after the skip line once and a second run reports OK; e2e asserting the rule in the planning protocol, AGENTS.md.tmpl (still at most 70 lines) and harness-brief SKILL.md",
+      "effort": "low",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/",
+        "skills/harness-initial-setup/",
+        "skills/harness-brief/",
+        "skills/harness-upgrade-structure/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M44-001",
+      "milestone": 44,
+      "title": "Codex subagents start fresh: dispatch.sh prints SPAWN: fork_turns=none on codex, harness-run and harness-brief pass fork_turns \"none\" to every spawn_agent (builders, evaluators, lanes, brief reviewer) and the orchestrator opens no other skill's SKILL.md; read rule adds 'one read per command, never chained' everywhere and upgrade.sh replaces the unedited 3.15 line",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving dispatch prints SPAWN: fork_turns=none only on codex and harness-run/harness-brief name fork_turns none; test-agents.sh proving every builder agent carries 'one read per command, never chained'; test-upgrade.sh proving the 3.15 read rule line becomes the template's once and an edited line is kept; e2e.sh proving the wording in protocol, AGENTS.md, its template, protocol-runs and harness-session",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/",
+        "skills/harness-brief/",
+        "skills/harness-upgrade-structure/",
+        "agents/src/",
+        "scripts/"
+      ]
+    },
+    {
+      "id": "M45-001",
+      "milestone": 45,
+      "title": "effort is optional again: harness-audit no longer FAILs an open feature without effort (an unknown value still FAILs), upgrade.sh prints no effort TODO, the template's first feature carries none, protocol 1.4 says absent = the CLI's default effort",
+      "status": "passing",
+      "model": "small",
+      "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a missing effort passes on every status and an unknown one FAILs, test-upgrade.sh proving no effort TODO/OK line, and the gate proving protocol 1.4 names the CLI's default effort"
+    },
+    {
+      "id": "M45-002",
+      "milestone": 45,
+      "title": "More parallel lanes: only a named file blocks a lane (two folders never do), protocol 1.4 and the FEATURES template ask for depends_on (code need, not order) and narrow paths on every feature, harness-audit WARNs naming each failing feature without them",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving shared or nested folders give PARALLEL lanes while a file inside another feature's folder or a file both name stays sequential, and test-audit.sh proving the WARN names each failing feature missing depends_on or paths and no feature with both",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-audit/scripts/check.sh",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "skills/harness-initial-setup/templates/FEATURES.json.tmpl",
+        "scripts/test-session.sh",
+        "scripts/test-audit.sh"
+      ]
+    },
+    {
+      "id": "M46-001",
+      "milestone": 46,
+      "title": "Rolling lanes: context.sh --busy lists lanes that can start beside running ones (their files, exclusive value and cap slots taken; one new lane is enough); harness-run refills a slot when any lane builder or evaluator finishes, evaluates inside the lane, merges and gates per lane; harness-continuous reuses it with skips; run-start.sh empties busy",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving --busy keeps a busy lane's files, exclusive value and cap slots, allows one new lane beside it and ignores an ineligible NEXT while lanes run, and test-run.sh proving run-start.sh empties busy and harness-run/harness-continuous describe the rolling loop",
+      "model": "medium",
+      "depends_on": [
+        "M45-002"
+      ],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-run/SKILL.md",
+        "skills/harness-run/scripts/run-start.sh",
+        "skills/harness-continuous/SKILL.md",
+        "scripts/test-session.sh",
+        "scripts/test-run.sh",
+        "README.md"
+      ]
+    },
+    {
+      "id": "M47-001",
+      "milestone": 47,
+      "title": "Run board core: run-start.sh writes run-id and archives events.log by run-id; dispatch/run-gate/second-opinion/run-start/run-report append events.log lines during a run; new board.sh writes a self-refreshing .harness-run/board.html (stage per feature, agent, gate, time, cost) and --open opens it once per run",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with scripts/test-board.sh proving the brief's board.sh, event and run-start cases (stages incl. stale result and same-second tie, gate in a lane worktree, archive per run-id on one HEAD, opener counter and HARNESS_BOARD_OPEN=0, cost and tokens, 60 features under 1.0 s locally / 3.0 s with CI=1); docs/briefs/2026-11-18-run-board.md is the spec",
+      "model": "large",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/board.sh",
+        "skills/harness-run/scripts/run-start.sh",
+        "skills/harness-run/scripts/dispatch.sh",
+        "skills/harness-run/scripts/second-opinion.sh",
+        "skills/harness-run/scripts/run-report.sh",
+        "skills/harness-session/scripts/run-gate.sh",
+        "scripts/test-board.sh",
+        "scripts/e2e.sh"
+      ]
+    },
+    {
+      "id": "M47-002",
+      "milestone": 47,
+      "title": "Run board wiring: dispatch, second-opinion, run-gate, context, status refresh the board during a run (never changing their output or exit code), run-report writes the final snapshot, run-start opens it and prints BOARD:; interactive harness-run now calls run-start.sh; both run skills show the BOARD: path; docs and 3.21.0",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with scripts/test-board.sh proving the brief's wiring cases (junk board.sh leaves callers' stdout and exit codes unchanged, no board or events without a run, no rewrite after run-end, final page says run ended); grep finds run-start.sh in harness-run SKILL.md and BOARD: in both run SKILL.md files; bash scripts/ci-local.sh prints CI-LOCAL GREEN",
+      "model": "medium",
+      "depends_on": [
+        "M47-001"
+      ],
+      "paths": [
+        "skills/harness-run/scripts/",
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-session/scripts/run-gate.sh",
+        "skills/harness-status/scripts/status.sh",
+        "skills/harness-run/SKILL.md",
+        "skills/harness-continuous/SKILL.md",
+        "skills/harness-initial-setup/templates/harness-protocol-runs.md",
+        "scripts/test-board.sh",
+        "README.md",
+        "CHANGELOG.md",
+        "AGENTS.md",
+        "package.json",
+        ".claude-plugin/",
+        "claude/.claude-plugin/plugin.json",
+        "scripts/e2e.sh"
+      ]
     }
   ]
 }
