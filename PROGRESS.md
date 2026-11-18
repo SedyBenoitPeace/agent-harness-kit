@@ -1760,3 +1760,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: kept the Claude Code edition's effort-to-size fallback for older FEATURES.json files rather than removing it; required on the same statuses as effort so the two rules read as one.
 - Gate: GREEN (e2e.sh, ci-local.sh).
 - Next: none; owner merges the PR, then sync the template mirror.
+
+## 2026-11-18 -- session 89 (M49-001 board hints and STOP)
+
+- Branch: `run-board`.
+- Done: M49-001. `feature.sh` prints `.harness-run/hints/<id>.md` as `== Human hint ==` after the plan section (non-empty only; root via git common dir so lanes see it); `run-start.sh` already only moves named files, so `hints/` is kept (now tested). `board.sh`: header "Stop after current feature" button / "stop requested"; non-passing, non-skipped rows get a textarea + "Copy hint command", existing hint shown escaped, "hint" tag; commands are built in JS (`q`, `hintCmd`), clipboard with a selected read-only fallback; typed hint kept in sessionStorage; reload skipped while a textarea/input has focus. harness-run SKILL.md step 2 honours `.harness-run/STOP`. README, runs protocol template, CHANGELOG (3.21.0) updated.
+- Decisions: hints read in one grep like results (rejected: per-feature file tests); quoting tested by extracting the page's own two JS lines and running them with node, with a jq mirror as fallback when node is absent (the fallback branch is not exercised where node exists); commands built at click time from `data-root`, not pre-rendered per row; the STOP sentence went in step 2 beside the cap rule, since step 1 has no stop rule; typed text is not cleared after copying (assumption: losing a hint is worse than a duplicate); zsh not run in the test, only bash.
+- Gate: GREEN (bash scripts/ci-local.sh prints CI-LOCAL GREEN).
+- Next: none in M49; open the PR for `run-board`.
