@@ -370,6 +370,9 @@ grep -q 'reaching 2' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: STOP-a
 
 shellcheck skills/harness-run/scripts/run-report.sh
 bash scripts/test-run.sh
+# M47-001: the live run board (run-id, events.log, board.sh)
+shellcheck skills/harness-run/scripts/board.sh skills/harness-run/scripts/run-start.sh scripts/test-board.sh
+bash scripts/test-board.sh
 # M32: every CLI's usage collector test (added by its own feature)
 for t in scripts/test-usage-*.sh; do
   [ -f "$t" ] || continue
@@ -408,7 +411,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.20.0" ] || fail "plugin version must be 3.20.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.21.0" ] || fail "plugin version must be 3.21.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"

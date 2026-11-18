@@ -77,6 +77,15 @@ nothing stops it for a feature it cannot finish. The human invokes the
 - It never asks the human anything. Run state lives in `.harness-run/`
   at the repo root (never committed, listed in `.gitignore`):
   `start` (the start commit), `skip` (one id per line), and `STOP`.
+  `run-start.sh` also writes `run-id` and `events.log` and prints
+  `BOARD: <path>`: `board.html`, a live page (stage, agent, gate, time, cost
+  per feature) that the run scripts refresh and `run-report.sh` closes.
+  `HARNESS_BOARD_OPEN=0` stops it opening; `HARNESS_BOARD_OPEN_CMD` sets the
+  opener. The board also copies shell commands for the human to run: `touch
+  .harness-run/STOP` (both run skills stop after the current feature) and, per
+  open feature, a command appending a hint to `.harness-run/hints/<id>.md`;
+  `feature.sh` prints that file as `== Human hint ==` in the next builder brief
+  (first build or rework). A hint stays until the human deletes it.
 - A session blocked on a Needs-a-human item has already set its feature to
   `deferred` (`Needs a human: …`): the run only records the skip, and later
   runs leave it alone until the human answers and sets it back to `failing`.

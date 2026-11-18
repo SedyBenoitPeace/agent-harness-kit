@@ -31,3 +31,11 @@ for pf in docs/plans/active/*.md; do
   [ "$n" -le 80 ] || echo "(section cut at 80 of $n lines: sed -n the rest from $pf)"
 done
 [ "$found" -eq 1 ] || echo "PLAN: no section naming $id in docs/plans/active/"
+# a hint the human left on the board (M49-001): .harness-run/hints/<id>.md in the main repo
+root="$PWD"; gc="$(git rev-parse --git-common-dir 2>/dev/null)" && root="$(cd "$gc/.." && pwd -P)"
+hf="$root/.harness-run/hints/$id.md"
+if [ -s "$hf" ]; then
+  echo
+  echo "== Human hint =="
+  cat "$hf"
+fi

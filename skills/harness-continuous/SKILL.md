@@ -37,7 +37,8 @@ permissions only — never a skip-all-permissions flag.
    fails it ignores `.harness-run/` (committing `.gitignore` alone), writes `start`, empties
    `skip`, deletes a `STOP` left over from an earlier run, and archives the
    previous run's logs under `.harness-run/previous/<its start commit>/`.
-   Invoking the command is the signal to start.
+   Invoking the command is the signal to start. It prints `BOARD: <path>`
+   (the live run board): put that line in your first progress line to the human.
 
 ## Loop
 

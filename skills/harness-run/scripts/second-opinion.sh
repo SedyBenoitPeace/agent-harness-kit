@@ -9,6 +9,8 @@
 # Exit codes: 0 PASS; 1 NEEDS_WORK, or REJECTED (the agent changed the tree
 # or HEAD; the change is left for the human); 2 broken (unknown or missing
 # CLI, unknown feature, dirty tree before the run).
+# Inside a run it appends `<epoch> opinion <id> <cli> <verdict>` to the main
+# repo's .harness-run/events.log (M47-001).
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
@@ -29,6 +31,16 @@ entry="$(jq -c --arg id "$id" '.features[]? | select(.id == $id)' FEATURES.json 
 [ -n "$entry" ] || broken "no feature $id in FEATURES.json"
 [ -z "$(git status --porcelain)" ] || broken "the tree is dirty; commit or stash before a second opinion"
 head_before="$(git rev-parse HEAD)"
+ev() { local root; root="$(cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
+  [ ! -f "$root/.harness-run/start" ] || echo "$(date +%s) $*" >> "$root/.harness-run/events.log"; }
+# M47-002: refresh the run board last (guarded; never changes output or exit code)
+_bt="$(cd . 2>/dev/null && pwd)" || _bt=.; _bs="$here/board.sh"
+# shellcheck disable=SC2317,SC2329 # runs from the EXIT trap
+board() { local r; r="$(cd "$_bt" && cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
+  [ -s "$r/.harness-run/start" ] || return 0
+  [ "$(tail -n1 "$r/.harness-run/events.log" 2>/dev/null | cut -d' ' -f2)" != run-end ] || return 0
+  bash "$_bs" "$_bt" >/dev/null 2>&1 || true; }
+trap board EXIT
 
 # The evaluator role, as gen-agents.sh writes it for every CLI.
 role="$(awk 'c>=2{print} /^---$/{c++}' "$kit/agents/src/harness-evaluator.md")"
@@ -64,6 +76,7 @@ touch "$reply"
 # Read-only flags differ per CLI; this check is the guarantee.
 changes="$(git status --porcelain)"
 if [ "$(git rev-parse HEAD)" != "$head_before" ] || [ -n "$changes" ]; then
+  ev opinion "$id" "$cli" REJECTED
   echo "VERDICT: REJECTED"
   echo "CLI: $cli"
   echo "The second-opinion agent changed the repo; its verdict is void. Left as found:"
@@ -83,6 +96,7 @@ fi
 
 first="$(grep -m1 -v '^[[:space:]]*$' "$reply" | tr -d '[:space:]' || true)"
 if [ "$first" = PASS ]; then verdict=PASS; else verdict=NEEDS_WORK; fi
+ev opinion "$id" "$cli" "$verdict"
 echo "VERDICT: $verdict"
 echo "CLI: $cli"
 cat "$reply"

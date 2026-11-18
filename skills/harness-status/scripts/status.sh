@@ -47,7 +47,16 @@ if [ -n "$WATCH" ]; then
     sleep "$WATCH"
   done
 fi
+_bs="$(cd "$(dirname "$0")" && pwd)/../../harness-run/scripts/board.sh"
 cd "$TARGET"
+# M47-002: refresh the run board last (guarded; never changes output or exit code)
+_bt="$PWD"
+# shellcheck disable=SC2317,SC2329 # runs from the EXIT trap
+board() { local r; r="$(cd "$_bt" && cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
+  [ -s "$r/.harness-run/start" ] || return 0
+  [ "$(tail -n1 "$r/.harness-run/events.log" 2>/dev/null | cut -d' ' -f2)" != run-end ] || return 0
+  bash "$_bs" "$_bt" >/dev/null 2>&1 || true; }
+trap board EXIT
 
 if [ "$LINE" -eq 1 ] && { [ ! -f FEATURES.json ] || [ ! -f PROGRESS.md ]; }; then exit 3; fi
 if [ ! -f FEATURES.json ] || [ ! -f PROGRESS.md ]; then

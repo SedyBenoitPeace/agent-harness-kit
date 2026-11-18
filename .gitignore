@@ -13,3 +13,4 @@ docs/plans/private/
 claude/evals/results/
 claude/.claude-plugin/types/
 .harness-run/
+.harness-run/

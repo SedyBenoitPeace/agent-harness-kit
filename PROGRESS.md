@@ -3,6 +3,96 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-18 -- session 88 (M48-001 board feature context)
+
+- Branch: `run-board`.
+- Done: M48-001. `board.sh` rows now show "Done when" (verify), depends_on,
+  paths, effort and model, the feature's plan section (first `## ` heading
+  naming the id, active plans then completed; 40 lines, "cut at 40 of N";
+  "no plan section" otherwise) as escaped `<pre>`, and file:// links to the
+  plan and the existing docs/briefs files it mentions. CSS adds the ▸/▾ marker
+  and pointer cursor. test-board.sh covers all of it plus 60 plan sections
+  (0.2 s). CHANGELOG added to the 3.21.0 entry; no version bump.
+- Decisions: plans are read in one awk (files joined by a \001 marker) and
+  split in the existing jq pass; existing briefs from one glob, intersected in
+  jq (rejected: a per-feature feature.sh call, a per-brief test -f loop).
+  Matching is `index(id)` on the heading like feature.sh, so M1-00 also hits
+  M1-001; brief links come from the whole plan file, not just the section;
+  the board's later `.model` (from usage.log) would clobber the feature's, so
+  it is captured early as `fm`. Plan moved to completed (last M48 feature).
+- Gate: GREEN (bash scripts/ci-local.sh prints CI-LOCAL GREEN).
+- Next: none in M48; open the PR for `run-board`.
+
+## 2026-11-18 -- session 87 (M47-002 run board wiring)
+
+- Branch: `run-board`.
+- Done: M47-002. `dispatch.sh`, `second-opinion.sh`, `run-gate.sh`,
+  `context.sh` and `status.sh` set an EXIT trap that runs `board.sh` (output
+  to /dev/null, `|| true`) only when `.harness-run/start` exists in the main
+  repo and the last `events.log` line is not `run-end`; a trap leaves the
+  exit code alone. `run-report.sh` calls it right after `run-end` (the final
+  snapshot); `run-start.sh` already passed `BOARD:` through (M47-001).
+  Interactive harness-run now says to call `run-start.sh` once, before its
+  loop and not when resuming with busy lanes (it empties `busy`). Both run
+  SKILL.md files put the `BOARD:` line in the first progress line. New
+  stage `merging` (result says passing, FEATURES not yet) between `blocked`
+  and `review`. test-board.sh gained: refresh from status/context/gate and
+  no reopen, the junk-board.sh case, no writes without a run for status and
+  context, final snapshot "run ended", no rewrite after run-end, `merging`.
+  Docs: protocol-runs template, README, CHANGELOG; 3.21.0 in the seven files.
+- Decisions: an EXIT trap per script instead of editing every exit path (a
+  dispatch.sh/second-opinion.sh/status.sh path has several exits; the trap is
+  the one place "last step" holds). Rejected: a shared sourced helper (each
+  script keeps its five-line `board()`, as with `ev()`); a `HARNESS_BOARD`
+  override env to test the junk case (the test copies the skills tree and
+  swaps board.sh instead). `context.sh` also refreshes through the
+  `status.sh` it calls, so a context call refreshes twice (about 0.15 s
+  each); kept because the brief lists both callers. `status.sh --watch`
+  refreshes via its child calls. The trap runs only past each script's
+  argument and agent checks, so usage errors write nothing. harness-run's
+  run-start step is skill prose, not enforced by a script.
+- Gate: GREEN (bash scripts/e2e.sh via run-gate.sh final).
+- Next: none in M47; open the PR for `run-board`.
+
+## 2026-11-18 -- session 86 (M47-001 run board core)
+
+- Branch: `run-board`.
+- Done: M47-001. `run-start.sh` writes `.harness-run/run-id`
+  (`<epoch>-<pid>`), resets `board-opened`, archives `events.log` with the
+  other logs under `previous/<run-id>/` (start commit when the old run has
+  none), logs `run-start` and prints only board.sh's `BOARD:` line.
+  `dispatch.sh` (every CLI, only past the exit-3 agent check), `run-gate.sh`
+  (id from a `lane/<id>` branch, else `-`; a reused baseline logs `green`
+  only), `second-opinion.sh` (PASS, NEEDS_WORK, REJECTED) and
+  `run-report.sh` (`run-end`) append to the main repo's `events.log`, found
+  via `git rev-parse --git-common-dir`, only when `.harness-run/start`
+  exists. New `board.sh <target> [--open]`: one jq pass writes
+  `board.html` (temp + mv); `--open` opens once per run-id
+  (`HARNESS_BOARD_OPEN=0`, `HARNESS_BOARD_OPEN_CMD`). New
+  `scripts/test-board.sh` in e2e (60 features in about 0.2 s).
+  `test-run.sh` sets `HARNESS_BOARD_OPEN=0` and drops the first run's
+  run-id so its archive check still covers the start-commit fallback.
+- Decisions: the brief's stale-result case contradicts its own stage order
+  (a result older than the latest dispatch is `building`, so "stale review
+  + failing eval_attempts 1 -> rework" and "redispatch -> building" are the
+  same input). Chosen order: skipped, passing, gate running, building,
+  blocked, FEATURES review, rework (failing, eval_attempts > 0), current
+  result review, queued, so a NEEDS_WORK feature whose review result is
+  still current shows rework. Known ceiling: a lane's second attempt shows
+  rework, not review, until the orchestrator flips it (lanes never touch
+  FEATURES.json); a lane result saying passing before its merge shows
+  queued, as the brief's order says. A `-` gate event belongs to the one
+  non-lane building feature only when it is at or after that feature's
+  dispatch. `--open` prints `BOARD:` on every call, not only the first.
+  Opinion lines in the expanded row come from events.log, not
+  `so-<cli>-<id>.txt`. Rejected: per-file stat/jq calls (60 features
+  would cost seconds) and a shared sourced helper across two skills
+  (each script keeps a two-line `ev()`). The refresh calls in the other
+  scripts, the junk-board and run-end-mtime cases, SKILL.md, docs and
+  the version are M47-002.
+- Gate: GREEN (bash scripts/e2e.sh via run-gate.sh final).
+- Next: M47-002 (wiring, skills, docs, 3.21.0).
+
 ## 2026-11-17 -- session 85 (M46-001 rolling lanes)
 
 - Branch: `parallel-lanes` (same PR as M45).
@@ -1670,3 +1760,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: kept the Claude Code edition's effort-to-size fallback for older FEATURES.json files rather than removing it; required on the same statuses as effort so the two rules read as one.
 - Gate: GREEN (e2e.sh, ci-local.sh).
 - Next: none; owner merges the PR, then sync the template mirror.
+
+## 2026-11-18 -- session 89 (M49-001 board hints and STOP)
+
+- Branch: `run-board`.
+- Done: M49-001. `feature.sh` prints `.harness-run/hints/<id>.md` as `== Human hint ==` after the plan section (non-empty only; root via git common dir so lanes see it); `run-start.sh` already only moves named files, so `hints/` is kept (now tested). `board.sh`: header "Stop after current feature" button / "stop requested"; non-passing, non-skipped rows get a textarea + "Copy hint command", existing hint shown escaped, "hint" tag; commands are built in JS (`q`, `hintCmd`), clipboard with a selected read-only fallback; typed hint kept in sessionStorage; reload skipped while a textarea/input has focus. harness-run SKILL.md step 2 honours `.harness-run/STOP`. README, runs protocol template, CHANGELOG (3.21.0) updated.
+- Decisions: hints read in one grep like results (rejected: per-feature file tests); quoting tested by extracting the page's own two JS lines and running them with node, with a jq mirror as fallback when node is absent (the fallback branch is not exercised where node exists); commands built at click time from `data-root`, not pre-rendered per row; the STOP sentence went in step 2 beside the cap rule, since step 1 has no stop rule; typed text is not cleared after copying (assumption: losing a hint is worse than a duplicate); zsh not run in the test, only bash.
+- Gate: GREEN (bash scripts/ci-local.sh prints CI-LOCAL GREEN).
+- Next: none in M49; open the PR for `run-board`.
