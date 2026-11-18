@@ -328,6 +328,7 @@ cd "$R5/.harness-run"
 printf 'M1-001 9.99\n' > cost.log; printf 'a 1\n' > run-cost; printf 'M1-001 small model small\n' > models.log
 printf 's c m 1 2 3\n' > usage.log; printf 'budget x\n' > budget.log; mkdir decisions; echo d > decisions/M1-001.md; mkdir results
 echo M1-002 > skip; echo M1-003 > busy; touch STOP
+mkdir hints; echo "keep me" > hints/M1-002.md
 rm run-id # a run from before M47-001: its archive falls back to its start commit
 cd "$OLDPWD"
 g5 commit -q --allow-empty -m "run 1 work"
@@ -338,6 +339,7 @@ bash "$START_SH" "$R5" >/dev/null || fail "run-start: second run failed"
 [ -e "$R5/.harness-run/busy" ] || fail "run-start: busy must exist (M46-001)"
 [ ! -s "$R5/.harness-run/busy" ] || fail "run-start: busy must be empty (M46-001)"
 [ ! -e "$R5/.harness-run/STOP" ] || fail "run-start: stale STOP must be removed"
+[ "$(cat "$R5/.harness-run/hints/M1-002.md" 2>/dev/null)" = "keep me" ] || fail "run-start: hints/ must be kept (M49-001)"
 for f in cost.log run-cost models.log usage.log budget.log decisions results; do
   [ ! -e "$R5/.harness-run/$f" ] || fail "run-start: $f not moved out of the live run"
   [ -e "$R5/.harness-run/previous/$first/$f" ] || fail "run-start: $f not archived under previous/<first start>"
@@ -384,13 +386,24 @@ rc=0; bash "$FEAT" M9-999 "$W" >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 2 ] || fail "feature.sh: unknown id must exit 2"
 rc=0; bash "$FEAT" >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 2 ] || fail "feature.sh: no id must exit 2"
-rm "$W/docs/plans/active/m1.md"
+# hints (M49-001): printed after the plan section only when the file is non-empty
+! echo "$out" | grep -qF '== Human hint ==' || fail "feature.sh: no hint file, no hint section"
+mkdir -p "$W/.harness-run/hints"; : > "$W/.harness-run/hints/M1-002.md"
+! bash "$FEAT" M1-002 "$W" | grep -qF '== Human hint ==' || fail "feature.sh: empty hint file must print nothing"
+printf 'use the v2 parser\nnot the regex\n' > "$W/.harness-run/hints/M1-002.md"
+out="$(bash "$FEAT" M1-002 "$W")"
+echo "$out" | grep -qxF '== Human hint ==' || fail "feature.sh: non-empty hint must print '== Human hint =='"
+echo "$out" | grep -qxF 'not the regex' || fail "feature.sh: hint text missing"
+echo "$out" | awk '/^== Human hint ==/{h=NR} /^== Plan section ==/{p=NR} END{exit !(h>p && p>0)}' || fail "feature.sh: hint must come after the plan section"
+! bash "$FEAT" M1-001 "$W" | grep -qF '== Human hint ==' || fail "feature.sh: another feature's hint leaked"
+rm "$W/docs/plans/active/m1.md" "$W/.harness-run/hints/M1-002.md" # (grep -q under pipefail would SIGPIPE on later output)
 bash "$FEAT" M1-002 "$W" | grep -q '^PLAN: no section naming M1-002' || fail "feature.sh: missing plan must say so"
 { printf '## M1-002 long\n'; seq 1 120; } > "$W/docs/plans/active/long.md"
 out="$(bash "$FEAT" M1-002 "$W")"
 echo "$out" | grep -q 'section cut at 80 of 121 lines' || fail "feature.sh: long section must be cut at 80 with a note"
 if echo "$out" | grep -qx 100; then fail "feature.sh: printed past the 80-line cap"; fi
 rm -rf "$W"
+grep -q '\.harness-run/STOP' "$run" || fail "harness-run SKILL.md must name .harness-run/STOP (M49-001)"
 # the brief replaces the plan path and the skill/AGENTS.md reads
 grep -qF 'bash scripts/feature.sh <id> <target>' "$run" || fail "harness-run SKILL.md: brief must paste feature.sh output"
 grep -qF 'context.sh --brief' "$run" || fail "harness-run SKILL.md: brief must start the builder with context.sh --brief"

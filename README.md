@@ -71,7 +71,10 @@ English:
   Both run skills open a live run board (`.harness-run/board.html`, the
   `BOARD:` line they print): one row per open feature with stage, agent, gate,
   time and cost. `HARNESS_BOARD_OPEN=0` stops it opening;
-  `HARNESS_BOARD_OPEN_CMD` sets the opener.
+  `HARNESS_BOARD_OPEN_CMD` sets the opener. The board can also talk back: it
+  copies a `touch .harness-run/STOP` command (stop after the current feature)
+  and, per open feature, a command that saves a hint to
+  `.harness-run/hints/<id>.md`, which the next builder brief prints.
 - **Independent evaluator** — features that opt in (`evaluate: "ui"` and a
   `bar` in FEATURES.json) end their session in `review`; harness-run then
   dispatches a separate, read-only `harness-evaluator` agent that returns

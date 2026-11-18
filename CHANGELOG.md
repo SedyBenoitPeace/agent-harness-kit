@@ -33,6 +33,14 @@ agent-harness-template>` and open a PR there; gate green; PR.
   note; "no plan section" when none) and file:// links to that plan and to
   the docs/briefs files it mentions that exist. Rows show a ▸/▾ marker and a
   pointer cursor. Plans are read in the same single jq pass.
+- Board talks to the next step (M49-001): a "Stop after current feature"
+  button copies `touch '<repo>/.harness-run/STOP'` ("stop requested" once it
+  exists); open rows get a hint box and "Copy hint command", which appends the
+  text (single-quote-escaped, clipboard fallback to a selected field) to
+  `.harness-run/hints/<id>.md`. `feature.sh` prints a non-empty hint as
+  `== Human hint ==` in the builder brief; `run-start.sh` keeps `hints/`. A
+  half-typed hint survives the 5 s reload. The interactive harness-run now
+  honours `.harness-run/STOP` like harness-continuous.
 
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to

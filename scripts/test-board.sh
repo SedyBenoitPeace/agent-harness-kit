@@ -233,6 +233,48 @@ g add -A; g commit -qm "run work"
 (cd "$R" && PATH="$B:$PATH" bash "$S/second-opinion.sh" claude M1-003 HEAD~1 . >/dev/null 2>"$WORK/so.err") || { cat "$WORK/so.err"; false; } || fail "second-opinion failed"
 grep -q "^[0-9]* opinion M1-003 claude PASS$" "$H/events.log" || fail "opinion event missing"
 
+# --- hints and STOP (M49-001) --------------------------------------------------
+X="$WORK/hx"; mkdir -p "$X"; git -C "$X" init -q -b main
+{ echo '{"features":['; feat H-001 failing 0; echo ,; feat H-002 failing 0; echo ,; feat H-003 failing 0; echo ']}'; } > "$X/FEATURES.json"
+git -C "$X" add -A; git -C "$X" -c user.email=t@t -c user.name=t commit -qm seed
+mkdir -p "$X/.harness-run/hints"; git -C "$X" rev-parse HEAD > "$X/.harness-run/start"
+echo "$(date +%s)" > "$X/.harness-run/run-id"; echo H-002 > "$X/.harness-run/skip"
+jq '(.features[] | select(.id == "H-001") | .status) = "passing"' "$X/FEATURES.json" > "$X/f.json" && mv "$X/f.json" "$X/FEATURES.json"
+printf '<b>x</b> & "q"\nsecond line\n' > "$X/.harness-run/hints/H-003.md"
+XH="$X/.harness-run/board.html"
+xrow() { awk -v id="data-id=\"$1\"" 'index($0, id){on=1} on{print} /<\/details>/{if(on) exit}' "$XH"; }
+bash "$BOARD" "$X"
+grep -q 'Stop after current feature' "$XH" || fail "board: STOP button missing"
+! grep -q 'stop requested' "$XH" || fail "board: 'stop requested' without a STOP file"
+xr="$(xrow H-003)"
+echo "$xr" | grep -q '<textarea' || fail "board: non-passing row needs a hint box"
+echo "$xr" | grep -q 'Copy hint command' || fail "board: hint button missing"
+echo "$xr" | grep -qF '&lt;b&gt;x&lt;/b&gt; &amp;' || fail "board: existing hint must be escaped"
+! echo "$xr" | grep -qF '<b>x</b>' || fail "board: existing hint injected as HTML"
+echo "$xr" | grep -q 'class="tag">hint' || fail "board: row with a hint needs a 'hint' tag"
+! xrow H-001 | grep -q '<textarea' || fail "board: passing row must have no hint box"
+! xrow H-002 | grep -q '<textarea' || fail "board: skipped row must have no hint box"
+grep -qF "data-root=\"$X\"" "$XH" || fail "board: copy commands need the absolute repo path"
+touch "$X/.harness-run/STOP"; bash "$BOARD" "$X"
+grep -q 'stop requested' "$XH" || fail "board: 'stop requested' missing with STOP present"
+! grep -q 'Stop after current feature' "$XH" || fail "board: STOP button must go once STOP exists"
+# the page's own quoting (built in JS): write the command through bash, text must arrive verbatim
+txt="$(printf "it's \$(touch %s/pwn) \`touch %s/pwn2\` \"dq\"\nline2 ; rm -rf x" "$WORK" "$WORK")"
+if command -v node >/dev/null; then
+  fn="$(grep -E '^function (q|hintCmd)\(' "$XH")"; [ "$(echo "$fn" | wc -l)" -eq 2 ] || fail "board JS: q/hintCmd lines missing"
+  cmd="$(node -e "$fn"'; process.stdout.write(hintCmd(process.argv[1], "H-003", process.argv[2]))' "$X" "$txt")"
+  how="the page's JS run with node"
+else
+  qt="$(printf '%s' "$txt" | jq -Rsr "gsub(\"'\"; \"'\\\\\\\\''\")")"
+  cmd="mkdir -p '$X/.harness-run/hints' && printf '%s\\n' '$qt' >> '$X/.harness-run/hints/H-003.md'"
+  how="a jq mirror of the quoting (no node)"
+fi
+rm -f "$X/.harness-run/hints/H-003.md"
+bash -c "$cmd"
+[ ! -e "$WORK/pwn" ] && [ ! -e "$WORK/pwn2" ] || fail "hint command executed its text"
+[ "$(cat "$X/.harness-run/hints/H-003.md")" = "$txt" ] || fail "hint command must write the text verbatim ($how)"
+echo "hint quoting proven with $how"
+
 # --- 60 features: speed ----------------------------------------------------------
 P="$WORK/perf"; mkdir -p "$P"; git -C "$P" init -q -b main
 { echo '{"features":['; for i in $(seq 1 60); do feat "M9-$i" failing 1; [ "$i" = 60 ] || echo ,; done; echo ']}'; } > "$P/FEATURES.json"

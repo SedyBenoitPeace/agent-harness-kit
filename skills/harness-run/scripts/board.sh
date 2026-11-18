@@ -3,6 +3,9 @@
 # Writes <main repo>/.harness-run/board.html (temp file + mv) from the run
 # state on disk: FEATURES.json now and at .harness-run/start, events.log,
 # results/, skip, cost.log, usage.log and lane worktrees ../<repo>-<id>.
+# Talks back (M49-001): a Stop button and, on rows not passing/skipped, a hint box;
+# both only build a shell command to copy (the board stays read-only). Hints
+# live in .harness-run/hints/<id>.md (feature.sh prints them into the brief).
 # Does nothing outside a run (no .harness-run/start in the main repo).
 # Spec: docs/briefs/2026-11-18-run-board.md.
 # Usage: board.sh <target> [--open]
@@ -33,6 +36,13 @@ if [ -d "$d/results" ]; then
     rl="$(cd "$d/results" && { grep -H '' "${names[@]}" || true; })"
   fi
 fi
+# hints: "<id>.md:<line>" in one grep (empty files give no line)
+hl=""
+if [ -d "$d/hints" ]; then
+  shopt -s nullglob; hfiles=("$d"/hints/*.md); shopt -u nullglob
+  [ "${#hfiles[@]}" -eq 0 ] || hl="$(cd "$d/hints" && { grep -H '' "${hfiles[@]##*/}" || true; })"
+fi
+stop=0; [ ! -e "$d/STOP" ] || stop=1
 lanes=""
 for l in ../"$repo"-*; do [ -d "$l" ] && lanes="$lanes${l#../"$repo"-}"$'\n'; done
 
@@ -46,7 +56,7 @@ briefs=""; [ "${#bf[@]}" -eq 0 ] || briefs="$(printf '%s\n' "${bf[@]}")"
 tmp="$(mktemp "$d/.board.XXXXXX")"
 trap 'rm -f "$tmp" "$tmp.body"' EXIT
 jq -nr --argjson now "$(date +%s)" --arg repo "$repo" --arg branch "$branch" \
-  --arg runid "$(cat "$d/run-id" 2>/dev/null || true)" --arg st "$(stat -c %Y "$d/start" 2>/dev/null || stat -f %m "$d/start")" --arg mt "$mt" --arg rl "$rl" --arg lanes "$lanes" --arg root "$root" --arg plans "$plans" --arg briefs "$briefs" \
+  --arg runid "$(cat "$d/run-id" 2>/dev/null || true)" --arg st "$(stat -c %Y "$d/start" 2>/dev/null || stat -f %m "$d/start")" --arg mt "$mt" --arg rl "$rl" --arg hl "$hl" --argjson stop "$stop" --arg lanes "$lanes" --arg root "$root" --arg plans "$plans" --arg briefs "$briefs" \
   --argjson s0 "$startf" --slurpfile cur FEATURES.json --slurpfile arc "$(rf docs/features-archive.json)" \
   --rawfile ev "$(rf "$d/events.log")" --rawfile skip "$(rf "$d/skip")" \
   --rawfile cost "$(rf "$d/cost.log")" --rawfile usage "$(rf "$d/usage.log")" '
@@ -62,6 +72,7 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
 | ($skip | lines) as $SK | ($lanes | lines) as $LN
 | ($mt | lines | map(capture("^(?<m>[0-9]+) (?<id>.*)\\.txt$")) | map({key: .id, value: (.m | tonumber)}) | from_entries) as $RM
 | ($rl | lines | map(capture("^(?<id>[^:]*)\\.txt:(?<l>.*)$")) | group_by(.id) | map({key: .[0].id, value: map(.l)}) | from_entries) as $RL
+| ($hl | lines | map(capture("^(?<id>[^:]*)\\.md:(?<l>.*)$")) | group_by(.id) | map({key: .[0].id, value: (map(.l) | join("\n"))}) | from_entries) as $HT
 | ($cost | lines | map(split(" ") | {id: .[0], usd: (.[1] | tonumber? // 0)})) as $C
 | ($usage | lines | map(split(" ") | {s: .[0], id: (.[0] | split("/")[0]), m: .[2], t: ((.[3] | tonumber? // 0) + (.[5] | tonumber? // 0))})) as $U
 | ($briefs | lines) as $BX
@@ -104,6 +115,7 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
               elif $us != [] then ($us | map(.t) | add | tok) else "—" end)
    | .model = ([$us[] | select(.m != "-" and .m != null) | .m] | last)
    | .agent = (if .dp then (.dp.f | join(" ")) else "—" end) + (if .model then " · \(.model)" else "" end)
+   | .hint = ($HT[$i] // null)
    | .ops = [$E[] | select(.e == "opinion" and .id == $i) | .f | join(" ")]] as $rows
 | ([$E[] | select(.e == "run-start")] | first.ts // ($runid | split("-")[0] | tonumber? // ($st | tonumber? // $now))) as $t0
 | ([$E[] | select(.e == "run-end")] | last) as $end
@@ -111,15 +123,17 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
 | ($rows | group_by(.st | split(" ")[0]) | map("\(.[0].st | split(" ")[0]) \(length)") | join(" · ")) as $counts
 | (if $C != [] then ($C | map(.usd) | add | usd)
    elif $U != [] then ($U | map(.t) | add | tok) else "—" end) as $total
-| "<header><h1>\($repo | h) <small>\($branch | h)</small></h1>"
+| "<header data-root=\"\($root | h)\"><h1>\($repo | h) <small>\($branch | h)</small></h1>"
   + "<p>run started <span class=\"local\" data-ts=\"\($t0)\">\($t0 | todate | h)</span> · \($counts | h) · cost \($total | h) · updated <span class=\"tick\" data-since=\"\($now)\">0s</span> ago"
   + (if $end then " · <b>run ended: \($end.f | join(" ") | h)</b>" else "" end) + "</p>"
   + "<div class=\"bar\"><i style=\"width:\(if $n > 0 then ($np * 100 / $n | floor) else 0 end)%\"></i></div>"
-  + "<p class=\"muted\">\($np)/\($n) passing</p></header>"
+  + "<p class=\"muted\">\($np)/\($n) passing · "
+    + (if $stop == 1 then "<b>stop requested</b>" else "<button class=\"stop\">Stop after current feature</button>" end)
+    + " <span class=\"msg\" data-for=\"stop\"></span></p></header>"
   + "<div class=\"row head\"><span>feature</span><span>stage</span><span>agent</span><span>gate</span><span>time</span><span>cost</span></div>"
   + ([$rows[] | "<details class=\"row-d\" data-id=\"\(.id | h)\" data-stage=\"\(.st | h)\"><summary class=\"row\">"
       + "<span><b>\(.id | h)</b> \(.title // "" | h)</span>"
-      + "<span class=\"st st-\(.st | split(" ")[0])\">\(.st | h)\(if .lane and (.st == "building" or .st == "gate running") then " <em>lane</em>" else "" end)</span>"
+      + "<span class=\"st st-\(.st | split(" ")[0])\">\(.st | h)\(if .hint then " <span class=\"tag\">hint</span>" else "" end)\(if .lane and (.st == "building" or .st == "gate running") then " <em>lane</em>" else "" end)</span>"
       + "<span>\(.agent | h)</span><span>\(.gate | h)</span>"
       + (if .since then "<span class=\"tick\" data-since=\"\(.since)\">\($now - .since | dur)</span>" else "<span>—</span>" end)
       + "<span>\(.cost | h)</span></summary><div class=\"more\">"
@@ -135,6 +149,9 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
         else "<p>no plan section</p>" end)
       + "<p>\(.notes // "no notes" | h)</p>"
       + (if .res then "<pre>\(.res.l | join("\n") | h)</pre>" else "" end)
+      + (if .hint then "<p><b>Hint</b></p><pre class=\"hint\">\(.hint | h)</pre>" else "" end)
+      + (if .st == "passing" or .st == "skipped" then "" else
+          "<p><textarea rows=\"3\" placeholder=\"hint for the next builder\" data-id=\"\(.id | h)\"></textarea> <button class=\"hint\" data-id=\"\(.id | h)\">Copy hint command</button> <span class=\"msg\" data-for=\"\(.id | h)\"></span></p>" end)
       + (if .ops != [] then "<p>second opinions: \(.ops | join(", ") | h)</p>" else "" end)
       + "</div></details>"] | join("\n"))
 ' > "$tmp.body"
@@ -151,6 +168,7 @@ h1{font-size:20px;margin:0}small,.muted{color:var(--mut)}
 a{color:var(--run)}.head{font-weight:600;color:var(--mut);cursor:default}summary{list-style:none}summary::-webkit-details-marker{display:none}
 summary{cursor:pointer}.row-d>summary>span:first-child::before{content:"▸ "}.row-d[open]>summary>span:first-child::before{content:"▾ "}
 .more{padding:6px 12px;color:var(--mut)}pre{white-space:pre-wrap;margin:4px 0}
+.tag{border:1px solid var(--warn);color:var(--warn);border-radius:3px;padding:0 4px;font-size:11px}textarea{width:60%;vertical-align:top}.msg input{width:90%}
 .st-passing{color:var(--acc)}.st-building,.st-gate{color:var(--run)}.st-merging,.st-review,.st-rework{color:var(--warn)}.st-blocked{color:var(--bad)}
 @media (max-width:700px){.row{grid-template-columns:1fr 1fr}}
 </style></head><body>
@@ -158,6 +176,8 @@ EOF
   cat "$tmp.body"
   cat <<'EOF'
 <script>
+function q(s){return "'"+String(s).replace(/'/g,"'\\''")+"'"}
+function hintCmd(root,id,text){return "mkdir -p "+q(root+"/.harness-run/hints")+" && printf '%s\\n' "+q(text)+" >> "+q(root+"/.harness-run/hints/"+id+".md")}
 (function(){
   var k='harness-board-open',o={};
   try{o=JSON.parse(sessionStorage.getItem(k)||'{}')}catch(e){}
@@ -165,9 +185,24 @@ EOF
     if(o[d.dataset.id])d.open=true;
     d.addEventListener('toggle',function(){o[d.dataset.id]=d.open;try{sessionStorage.setItem(k,JSON.stringify(o))}catch(e){}});
   });
+  var root=document.querySelector('header').dataset.root,hk='harness-board-hint',hv={};
+  try{hv=JSON.parse(sessionStorage.getItem(hk)||'{}')}catch(e){}
+  document.querySelectorAll('textarea[data-id]').forEach(function(t){
+    if(hv[t.dataset.id])t.value=hv[t.dataset.id];
+    t.addEventListener('input',function(){hv[t.dataset.id]=t.value;try{sessionStorage.setItem(hk,JSON.stringify(hv))}catch(e){}});
+  });
+  function say(id,cmd){
+    var m=document.querySelector('.msg[data-for="'+id+'"]');
+    function manual(){m.textContent='copy it yourself: ';var i=document.createElement('input');i.readOnly=true;i.value=cmd;m.appendChild(i);i.focus();i.select()}
+    try{navigator.clipboard.writeText(cmd).then(function(){m.textContent='copied, paste it in a terminal'},manual)}catch(e){manual()}
+  }
+  document.querySelectorAll('button.stop').forEach(function(b){b.onclick=function(){say('stop','touch '+q(root+'/.harness-run/STOP'))}});
+  document.querySelectorAll('button.hint').forEach(function(b){b.onclick=function(){
+    var t=document.querySelector('textarea[data-id="'+b.dataset.id+'"]');
+    if(t.value)say(b.dataset.id,hintCmd(root,b.dataset.id,t.value))}});
   function dur(s){s=Math.max(0,Math.floor(s));return s<60?s+'s':s<3600?Math.floor(s/60)+'m '+s%60+'s':Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m'}
   function tick(){var n=Date.now()/1000;document.querySelectorAll('.tick').forEach(function(e){e.textContent=dur(n-e.dataset.since)})}
-  document.querySelectorAll('.local').forEach(function(e){e.textContent=new Date(e.dataset.ts*1000).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})});tick();setInterval(tick,1000);setTimeout(function(){location.reload()},5000);
+  document.querySelectorAll('.local').forEach(function(e){e.textContent=new Date(e.dataset.ts*1000).toLocaleString([], {dateStyle:'medium',timeStyle:'short'})});tick();setInterval(tick,1000);setInterval(function(){var a=document.activeElement;if(!a||(a.tagName!=='TEXTAREA'&&a.tagName!=='INPUT'))location.reload()},5000);
 })();
 </script></body></html>
 EOF

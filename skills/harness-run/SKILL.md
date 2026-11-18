@@ -36,7 +36,7 @@ first progress line. It empties `busy`, so run it before any lane starts.
 2. Note the `NEXT:` id and its milestone (`M<n>`). Stop at the milestone
    boundary: when the next id belongs to a different milestone than the
    first one this run dispatched, report and STOP.
-   Also stop at the cap (default 10 features per run; the human may name another).
+   Also stop at the cap (default 10 features per run; the human may name another), or when `.harness-run/STOP` exists (delete it, report "stopped by STOP").
 3. Run `bash scripts/dispatch.sh <target> <cli> <id> [retries]` (path relative
    to this skill; `retries` = the feature's `eval_attempts`, 0 for a first
    build). It prints the agent to dispatch (`harness-builder-<size>` when
