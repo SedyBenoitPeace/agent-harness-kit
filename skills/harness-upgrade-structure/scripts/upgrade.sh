@@ -343,11 +343,19 @@ elif grep -q 'FULL_LOG' scripts/e2e.sh; then
 else
   echo "TODO: scripts/e2e.sh output is unbounded — wrap each command with the step function from $TEMPLATES/e2e.sh.tmpl and add echo \"FULL_LOG: \$LOG\" after GATE GREEN"
 fi
-if jq -e '[.features[] | select(.status == "failing" and (.depends_on | type) != "array")] | length > 0' FEATURES.json >/dev/null; then
-  echo "TODO: run harness-audit and approve its depends_on/paths proposals — without declared depends_on a skipped feature stops a continuous run"
+# Open plans are re-checked against the current protocol 1.4 (M51-001): a
+# plan written under an older copy may lack lane fields or chain by order.
+nolane="$(jq -r '[.features[] | select(.status == "failing" and (((.depends_on | type) == "array" and (.paths | type) == "array" and (.paths | length) > 0) | not)) | .id] | join(" ")' FEATURES.json)"
+if [ -n "$nolane" ]; then
+  echo "TODO: run harness-audit and approve its depends_on/paths proposals (protocol 1.4; without them a feature never runs as a parallel lane, and a skipped one stops a continuous run) on: $nolane"
 else
-  echo "OK: failing features declare depends_on"
+  echo "OK: failing features declare depends_on and paths"
 fi
+# a chain: each open feature depends only on the open feature just before it
+chain="$(jq -r '[.features[] | select(.status == "failing")] | sort_by(.milestone, .id) as $f
+  | [range(1; $f | length) | select($f[.].depends_on == [$f[. - 1].id]) | $f[.].id]
+  | if length >= 2 then join(" ") else "" end' FEATURES.json)"
+[ -z "$chain" ] || echo "TODO: depends_on may be order only (each needs just the previous feature; protocol 1.4 says order is not a dependency) — confirm or relax: $chain"
 # model is required too (M36-002), proposed from the protocol 1.4 size table
 no_model="$(jq -r '[.features[] | select((.status // "") | IN("failing","review","deferred")) | select(has("model") | not) | .id] | join(" ")' FEATURES.json)"
 if [ -n "$no_model" ]; then

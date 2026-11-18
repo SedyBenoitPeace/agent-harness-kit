@@ -12,6 +12,24 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.22.0 — 2026-11-19
+
+- Upgrade re-checks plans not yet built (M51-001): `upgrade.sh` names each
+  open feature missing `depends_on` or `paths`, and a chain where each open
+  feature depends only on the one before it ("depends_on may be order
+  only"), so a plan written under an older protocol copy is fixed before a
+  run instead of running without lanes. The upgrade skill proposes fixes;
+  nothing is written without approval.
+- Board shows every field (M51-002): an expanded row ends with **All
+  fields**, each key of the FEATURES.json entry as written; a queued row's
+  agent column shows its planned model and effort instead of a dash.
+
+README: `All fields`, `depends_on may be order only`
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure` and
+  answer its lane TODOs for open features.
+
 ## 3.21.0 — 2026-11-18
 
 - Live run board (M47-001, M47-002): a run writes `.harness-run/board.html`,

@@ -3,6 +3,24 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-19 -- session 90 (M51-001, M51-002 upgrade re-checks open plans; board shows every field)
+
+- Branch: `board-and-upgrade-checks`.
+- Done: M51-001. upgrade.sh names open features missing `depends_on` or
+  `paths`, and a chain of open features each depending only on the previous
+  one ("depends_on may be order only"); the upgrade skill proposes fixes
+  for approval. M51-002. Board rows end with "All fields" (every
+  FEATURES.json key, escaped, open state kept across reloads); a queued
+  row's agent column shows planned model and effort. Plan:
+  `docs/plans/completed/2026-11-19-m51-upgrade-rechecks-board-fields.md`.
+- Decisions: the order-only check is a TODO, not a FAIL: a real chain is
+  legitimate, only the human can tell. Rejected a raw JSON dump (pretty
+  JSON has no jq string form and multi-line rows break the one-line row
+  layout); key: value lines with `<br>` instead. Checked on a copy of a real
+  plan at phone width in a browser.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR.
+
 ## 2026-11-18 -- session 89 (M50-001 README coverage per release)
 
 - Branch: `readme-catch-up-3.21` (PR #51, with the README catch-up).
