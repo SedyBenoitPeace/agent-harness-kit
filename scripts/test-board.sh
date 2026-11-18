@@ -176,7 +176,7 @@ case "$junk" in *JUNK*) fail "board.sh output leaked to a caller" ;; esac
 tail -1 "$H/events.log" | grep -q "^[0-9]* run-end - cap reached$" || fail "run-end event missing"
 grep -q 'run ended: cap reached' "$HTML" || fail "run-report must leave the final snapshot saying run ended"
 touch -t 200001010000 "$HTML"; m0="$(stat -c %Y "$HTML" 2>/dev/null || stat -f %m "$HTML")"
-(cd "$R" && bash "$KIT/skills/harness-status/scripts/status.sh" . >/dev/null 2>&1 || true)
+(cd "$R" && { bash "$KIT/skills/harness-status/scripts/status.sh" . >/dev/null 2>&1; true; })
 [ "$(stat -c %Y "$HTML" 2>/dev/null || stat -f %m "$HTML")" = "$m0" ] || fail "status.sh must not rewrite the board after run-end"
 
 # --- second opinion event -----------------------------------------------------
