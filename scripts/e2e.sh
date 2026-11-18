@@ -707,6 +707,14 @@ shellcheck scripts/sync-template.sh
 bash scripts/test-sync-template.sh
 grep -qF 'scripts/sync-template.sh' CHANGELOG.md || fail "CHANGELOG release checklist must name sync-template.sh"
 grep -q 'bash 3.2' CHANGELOG.md || fail "CHANGELOG: the 3.10.0 entry must name the macOS bash 3.2 / BWK awk gate fix"
+# a mirror checkout to compare (HARNESS_TEMPLATE_DIR) must be in sync (M50-001)
+if [ -n "${HARNESS_TEMPLATE_DIR:-}" ]; then
+  bash scripts/sync-template.sh "$HARNESS_TEMPLATE_DIR" --check || fail "template mirror is stale: run scripts/sync-template.sh $HARNESS_TEMPLATE_DIR and open a PR there"
+fi
+
+# --- README coverage per release (M50-001) ------------------------------------
+shellcheck scripts/check-readme.sh scripts/test-check-readme.sh
+bash scripts/test-check-readme.sh
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"

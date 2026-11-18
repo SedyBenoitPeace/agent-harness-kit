@@ -1,5 +1,23 @@
 {
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
-  "milestones": {},
-  "features": []
+  "milestones": {
+    "50": "Docs stay current"
+  },
+  "features": [
+    {
+      "id": "M50-001",
+      "milestone": 50,
+      "title": "Release README coverage: every CHANGELOG release from 3.17.0 names the README phrases that document it (or README: none (reason)), checked by scripts/check-readme.sh in the gate; HARNESS_TEMPLATE_DIR runs the template sync check",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-check-readme.sh proving a covered release passes, and a missing README: line, a line without phrases, none without a reason, a phrase absent from README.md and 3.17.10 (numeric compare) all fail; this repo's CHANGELOG/README pass; bash scripts/ci-local.sh prints CI-LOCAL GREEN",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "scripts/check-readme.sh",
+        "scripts/test-check-readme.sh",
+        "scripts/e2e.sh",
+        "CHANGELOG.md"
+      ]
+    }
+  ]
 }

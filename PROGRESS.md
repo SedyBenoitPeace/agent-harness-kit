@@ -3,6 +3,23 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-18 -- session 89 (M50-001 README coverage per release)
+
+- Branch: `readme-catch-up-3.21` (PR #51, with the README catch-up).
+- Done: M50-001. `scripts/check-readme.sh` requires a `README:` line in every
+  CHANGELOG release from 3.17.0 and finds each backticked phrase in README.md;
+  `README: none (<reason>)` opts out. Backfilled 3.17.0–3.21.0. The gate runs
+  `test-check-readme.sh`; with `HARNESS_TEMPLATE_DIR` it also runs
+  `sync-template.sh --check`. Release checklist updated.
+- Decisions: an explicit `README:` line per release, not a heuristic over
+  CHANGELOG backticks (rejected: most backticked terms are script internals,
+  so a heuristic needs an allowlist bigger than the check). Cutoff 3.17.0, the
+  oldest release audited. Kit CI cannot check the private mirror, so the
+  mirror gets its own workflow against the public kit (template PR #10).
+  No version bump: gate and docs only.
+- Gate: GREEN (also with HARNESS_TEMPLATE_DIR on the synced mirror).
+- Next: none in M50.
+
 ## 2026-11-18 -- session 88 (M48-001 board feature context)
 
 - Branch: `run-board`.
