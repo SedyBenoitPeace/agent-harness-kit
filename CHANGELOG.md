@@ -7,7 +7,9 @@ repo was last upgraded to, so keep each line short and actionable.
 
 Release checklist (kit maintainers): bump `package.json`, both
 `.claude-plugin` manifests and `claude/.claude-plugin/plugin.json`; add the
-entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
+entry here with its Upgrade block and a `README:` line naming the README
+phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh`
+checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
 ## 3.21.0 — 2026-11-18
@@ -42,6 +44,8 @@ agent-harness-template>` and open a PR there; gate green; PR.
   half-typed hint survives the 5 s reload. The interactive harness-run now
   honours `.harness-run/STOP` like harness-continuous.
 
+README: `board.html`, `Click a row to expand it`, `Human hint`, `HARNESS_BOARD_OPEN`
+
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to
   recopy the protocol (it brings the run-board paragraph).
@@ -67,6 +71,8 @@ Upgrade:
   `context.sh --busy FILE` lists lanes that can start beside running ones;
   evaluators run inside the lane's worktree; harness-continuous reuses it.
 
+README: `CLI's default effort`, `Lanes roll`, `as narrow as you can`
+
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to
   recopy the protocol (it brings the rolling-lane rules), then `/agent-harness-kit:harness-audit` and approve
@@ -84,6 +90,8 @@ Upgrade:
   `context.sh --outline <path>` prints a `SKIP_BRIEF` hint (and `not found`,
   with no hint, for a wrong path). Two AGENTS.md.tmpl lines were shortened
   to keep it at 70 lines.
+
+README: `approved in another`
 
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure`; it
@@ -104,6 +112,8 @@ Upgrade:
   "`sed -n` ≤80 lines" per file but chained 3+ reads in one command, so
   outputs were still 6–10k tokens. The rule now says so in the protocol,
   AGENTS.md and its template, harness-session and the builder agents.
+
+README: `one read per command`, `fork_turns`
 
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure`; it
@@ -127,6 +137,8 @@ Upgrade:
   questions. From round 2 it re-checks the previous gaps instead of a fresh
   audit.
 
+README: `Review stops after 2 rounds`
+
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to
   regenerate the brief reviewer agent for every CLI; restart the CLI after.
@@ -143,6 +155,8 @@ Upgrade:
   speeds them up), and says how to skip the harness: "just build it" drops
   the brief and plan, but FEATURES.json and its archive are still updated.
   harness-audit warns when a pointer file does not import AGENTS.md.
+
+README: `@AGENTS.md`, `just build`
 
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure`; it turns
