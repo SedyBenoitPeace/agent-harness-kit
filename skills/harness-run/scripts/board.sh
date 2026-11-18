@@ -36,10 +36,17 @@ fi
 lanes=""
 for l in ../"$repo"-*; do [ -d "$l" ] && lanes="$lanes${l#../"$repo"-}"$'\n'; done
 
+# plan files (active first, then completed) in one awk, existing briefs in one glob
+shopt -s nullglob
+pf=(docs/plans/active/*.md docs/plans/completed/*.md); bf=(docs/briefs/*.md)
+shopt -u nullglob
+plans=""; [ "${#pf[@]}" -eq 0 ] || plans="$(awk 'FNR == 1 { printf "\001%s\n", FILENAME } 1' "${pf[@]}")"
+briefs=""; [ "${#bf[@]}" -eq 0 ] || briefs="$(printf '%s\n' "${bf[@]}")"
+
 tmp="$(mktemp "$d/.board.XXXXXX")"
 trap 'rm -f "$tmp" "$tmp.body"' EXIT
 jq -nr --argjson now "$(date +%s)" --arg repo "$repo" --arg branch "$branch" \
-  --arg runid "$(cat "$d/run-id" 2>/dev/null || true)" --arg st "$(stat -c %Y "$d/start" 2>/dev/null || stat -f %m "$d/start")" --arg mt "$mt" --arg rl "$rl" --arg lanes "$lanes" \
+  --arg runid "$(cat "$d/run-id" 2>/dev/null || true)" --arg st "$(stat -c %Y "$d/start" 2>/dev/null || stat -f %m "$d/start")" --arg mt "$mt" --arg rl "$rl" --arg lanes "$lanes" --arg root "$root" --arg plans "$plans" --arg briefs "$briefs" \
   --argjson s0 "$startf" --slurpfile cur FEATURES.json \
   --rawfile ev "$(rf "$d/events.log")" --rawfile skip "$(rf "$d/skip")" \
   --rawfile cost "$(rf "$d/cost.log")" --rawfile usage "$(rf "$d/usage.log")" '
@@ -57,6 +64,10 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
 | ($rl | lines | map(capture("^(?<id>[^:]*)\\.txt:(?<l>.*)$")) | group_by(.id) | map({key: .[0].id, value: map(.l)}) | from_entries) as $RL
 | ($cost | lines | map(split(" ") | {id: .[0], usd: (.[1] | tonumber? // 0)})) as $C
 | ($usage | lines | map(split(" ") | {s: .[0], id: (.[0] | split("/")[0]), m: .[2], t: ((.[3] | tonumber? // 0) + (.[5] | tonumber? // 0))})) as $U
+| ($briefs | lines) as $BX
+| [$plans | split("\u0001")[] | select(length > 0) | index("\n") as $i | {f: .[:$i], t: ("\n" + .[$i + 1:])}] as $PF
+| [$PF[] | .f as $f | .t | split("\n## ")[1:][] | {f: $f, l: ("## " + .) | split("\n") | until(length == 0 or .[-1] != ""; .[:-1])}] as $SEC
+| (reduce $PF[] as $p ({}; .[$p.f] = ([$p.t | scan("docs/briefs/[A-Za-z0-9._/-]+\\.md")] | unique | map(select(. as $b | $BX | index([$b]) != null))))) as $BR
 | ($cur[0].features // []) as $CF
 | (($s0.features // []) | map({key: .id, value: .status}) | from_entries) as $S0
 | [$CF[] | .id as $i | select(($S0[$i] // "absent") != "passing" and (($S0 | has($i)) or .status == "passing"))] as $rows0
@@ -64,7 +75,8 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
 | [$rows0[] | .id as $i
    | ([$E[] | select(.e == "dispatch" and .id == $i)] | last) as $dp
    | ($RM[$i]) as $rm
-   | . + {dp: $dp, lane: ($LN | index([$i]) != null),
+   | ([$SEC[] | select(.l[0] | index($i))] | first) as $sec
+   | . + {fm: .model, sec: $sec, dp: $dp, lane: ($LN | index([$i]) != null),
           res: (if $rm != null and ($dp == null or $rm >= $dp.ts) then {m: $rm, l: ($RL[$i] // [])} else null end)}
    | .rs = ((.res.l[0] // "") | [capture("· (?<s>passing|review|blocked) ·")][0].s)
    | .rg = ((.res.l[0] // "") | [capture("gate (?<g>green|red)")][0].g)] as $rows1
@@ -110,6 +122,16 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
       + "<span>\(.agent | h)</span><span>\(.gate | h)</span>"
       + (if .since then "<span class=\"tick\" data-since=\"\(.since)\">\($now - .since | dur)</span>" else "<span>—</span>" end)
       + "<span>\(.cost | h)</span></summary><div class=\"more\">"
+      + (if .verify then "<p><b>Done when</b> \(.verify | h)</p>" else "" end)
+      + (if (.depends_on // []) != [] then "<p>depends on: \(.depends_on | join(", ") | h)</p>" else "" end)
+      + (if (.paths // []) != [] then "<p>paths: \(.paths | join(", ") | h)</p>" else "" end)
+      + (if .effort or .fm then "<p>\([(if .effort then "effort \(.effort)" else empty end), (if .fm then "model \(.fm)" else empty end)] | join(" · ") | h)</p>" else "" end)
+      + (if .sec then "<pre class=\"plan\">\(.sec.l[:40] | join("\n") | h)</pre>"
+          + (if (.sec.l | length) > 40 then "<p>cut at 40 of \(.sec.l | length) lines</p>" else "" end)
+          + "<p>plan: <a href=\"file://\($root | h)/\(.sec.f | h)\">\(.sec.f | h)</a>"
+          + ([($BR[.sec.f] // [])[] | " · brief: <a href=\"file://\($root | h)/\(. | h)\">\(. | h)</a>"] | join(""))
+          + "</p>"
+        else "<p>no plan section</p>" end)
       + "<p>\(.notes // "no notes" | h)</p>"
       + (if .res then "<pre>\(.res.l | join("\n") | h)</pre>" else "" end)
       + (if .ops != [] then "<p>second opinions: \(.ops | join(", ") | h)</p>" else "" end)
@@ -126,6 +148,7 @@ h1{font-size:20px;margin:0}small,.muted{color:var(--mut)}
 .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
 .row{display:grid;grid-template-columns:3fr 1.3fr 2fr 1.2fr .8fr .8fr;gap:8px;padding:6px 4px;border-bottom:1px solid var(--line);cursor:pointer}
 .head{font-weight:600;color:var(--mut);cursor:default}summary{list-style:none}summary::-webkit-details-marker{display:none}
+summary{cursor:pointer}.row-d>summary>span:first-child::before{content:"▸ "}.row-d[open]>summary>span:first-child::before{content:"▾ "}
 .more{padding:6px 12px;color:var(--mut)}pre{white-space:pre-wrap;margin:4px 0}
 .st-passing{color:var(--acc)}.st-building,.st-gate{color:var(--run)}.st-merging,.st-review,.st-rework{color:var(--warn)}.st-blocked{color:var(--bad)}
 @media (max-width:700px){.row{grid-template-columns:1fr 1fr}}

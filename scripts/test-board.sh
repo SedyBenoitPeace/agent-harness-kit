@@ -141,6 +141,46 @@ jq '(.features[] | select(.id == "M1-007")) |= (.notes = "<script>alert(1)</scri
 bash "$BOARD" "$R"; grep -q '<script>alert' "$HTML" && fail "html must be escaped"
 grep -q '&lt;script&gt;alert' "$HTML" || fail "escaped notes missing"
 
+# --- M48-001: feature context in the expanded row ------------------------------
+mkdir -p "$R/docs/plans/active" "$R/docs/plans/completed" "$R/docs/briefs"
+{
+  echo "# Plan"; echo "## M1-004 and <b>x</b>"
+  for i in $(seq 1 50); do echo "plan line $i <i>raw</i>"; done
+  echo "see docs/briefs/real.md and docs/briefs/ghost.md"
+  echo "## M1-005"; echo "short section"
+} > "$R/docs/plans/active/p1.md"
+printf '# Old\n## M1-006\nold plan text\n## M1-007\nother\n' > "$R/docs/plans/completed/old.md"
+echo brief > "$R/docs/briefs/real.md"
+jq '(.features[] | select(.id == "M1-004")) |= (.verify = "bash x.sh <u>ok</u>" | .depends_on = ["M1-001","M1-002"] | .paths = ["a/b.sh","c.md"] | .model = "medium" | .effort = "high")' "$R/FEATURES.json" > "$WORK/f" && mv "$WORK/f" "$R/FEATURES.json"
+bash "$BOARD" "$R"
+rowof() { awk -v id="$1" 'index($0, "data-id=\"" id "\"") {on=1} on{print} /<\/details>/{if(on)exit}' "$HTML"; }
+r4="$(rowof M1-004)"
+case "$r4" in *"Done when"*"bash x.sh &lt;u&gt;ok&lt;/u&gt;"*) ;; *) fail "verify (Done when, escaped) missing" ;; esac
+case "$r4" in *"M1-001, M1-002"*) ;; *) fail "depends_on missing" ;; esac
+case "$r4" in *"a/b.sh, c.md"*) ;; *) fail "paths missing" ;; esac
+case "$r4" in *medium*high*|*high*medium*) ;; *) fail "model/effort missing" ;; esac
+case "$r4" in *"plan line 39 "*) ;; *) fail "plan line 39 missing" ;; esac
+case "$r4" in *"plan line 40 "*) fail "plan section must be cut at 40 lines (heading + 39)" ;; esac
+case "$r4" in *"cut at 40 of 52"*) ;; *) fail "cut note missing (want 'cut at 40 of 52')" ;; esac
+case "$r4" in *"&lt;i&gt;raw&lt;/i&gt;"*) ;; *) fail "HTML in a plan line must be escaped" ;; esac
+case "$r4" in *"<i>raw"*|*"<b>x</b>"*) fail "plan HTML leaked unescaped" ;; esac
+case "$r4" in *"href=\"file://$R/docs/plans/active/p1.md\""*) ;; *) fail "plan file link missing" ;; esac
+r5="$(rowof M1-005)"
+case "$r5" in *"short section"*) ;; *) fail "short plan section missing" ;; esac
+case "$r5" in *"cut at"*|*"Done when"*) fail "no cut note or absent fields for M1-005" ;; esac
+r6="$(rowof M1-006)"
+case "$r6" in *"old plan text"*"completed/old.md"*) ;; *) fail "completed-plan fallback missing" ;; esac
+case "$r6" in *other*) fail "plan section must stop at the next ##" ;; esac
+case "$(rowof M1-001)" in *"no plan section"*) ;; *) fail "'no plan section' missing" ;; esac
+# the brief mention sits in M1-004's section only when under 40 lines: put it in a short one
+printf '## M1-008\nsee docs/briefs/real.md and docs/briefs/ghost.md\n' >> "$R/docs/plans/active/p1.md"
+bash "$BOARD" "$R"; r8="$(rowof M1-008)"
+case "$r8" in *"href=\"file://$R/docs/briefs/real.md\""*) ;; *) fail "existing brief link missing" ;; esac
+case "$r8" in *'href="file://'*ghost.md*) fail "brief link only when the file exists" ;; esac
+grep -q '\[open\]>summary' "$HTML" && grep -q '▾' "$HTML" && grep -q '▸' "$HTML" || fail "row marker missing"
+grep -q 'summary{[^}]*cursor:pointer' "$HTML" || fail "summary pointer cursor missing"
+rm -rf "$R/docs"
+
 # --- archives per run-id on one HEAD; HARNESS_BOARD_OPEN=0 -------------------
 out="$(bash "$START_SH" "$R")"; [ "$out" = "BOARD: $HTML" ] || fail "second run-start BOARD line"
 [ "$(wc -l < "$COUNT")" -eq 2 ] || fail "second run must open once more"
@@ -189,7 +229,9 @@ grep -q "^[0-9]* opinion M1-003 claude PASS$" "$H/events.log" || fail "opinion e
 P="$WORK/perf"; mkdir -p "$P"; git -C "$P" init -q -b main
 { echo '{"features":['; for i in $(seq 1 60); do feat "M9-$i" failing 1; [ "$i" = 60 ] || echo ,; done; echo ']}'; } > "$P/FEATURES.json"
 git -C "$P" add -A; git -C "$P" -c user.email=t@t -c user.name=t commit -qm seed
-mkdir -p "$P/.harness-run/results"; git -C "$P" rev-parse HEAD > "$P/.harness-run/start"
+mkdir -p "$P/docs/plans/active" "$P/.harness-run/results"
+for i in $(seq 1 60); do { echo "## M9-$i"; for j in $(seq 1 60); do echo "line $j"; done; } >> "$P/docs/plans/active/big.md"; done
+git -C "$P" rev-parse HEAD > "$P/.harness-run/start"
 for i in $(seq 1 60); do
   echo "$now dispatch M9-$i claude harness-builder -" >> "$P/.harness-run/events.log"
   echo "$now gate M9-$i final start" >> "$P/.harness-run/events.log"
@@ -200,5 +242,6 @@ limit=1.0; [ -z "${CI:-}" ] || limit=3.0
 secs="$( { TIMEFORMAT=%R; time bash "$BOARD" "$P" >/dev/null; } 2>&1 )"
 awk -v s="$secs" -v l="$limit" 'BEGIN { exit !(s < l) }' || fail "board.sh on 60 features took ${secs}s (limit ${limit}s)"
 [ "$(grep -c 'data-stage=' "$P/.harness-run/board.html")" -eq 60 ] || fail "60 rows expected"
+[ "$(grep -c 'cut at 40 of 61' "$P/.harness-run/board.html")" -eq 60 ] || fail "60 plan sections expected"
 
 echo "BOARD TESTS GREEN (60 features in ${secs}s)"

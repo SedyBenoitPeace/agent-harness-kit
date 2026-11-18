@@ -26,6 +26,13 @@ agent-harness-template>` and open a PR there; gate green; PR.
 - Board fix: a lane whose result says `passing` while FEATURES.json is not
   yet `passing` (merge pending) shows `merging` (between `blocked` and
   `review`), no longer `queued`.
+- Board rows show feature context (M48-001): the expanded row now leads with
+  "Done when" (verify), depends_on, paths, effort and model, then the
+  feature's plan section (the `## ` heading naming the id in
+  docs/plans/active, then completed; cut at 40 lines with a "cut at 40 of N"
+  note; "no plan section" when none) and file:// links to that plan and to
+  the docs/briefs files it mentions that exist. Rows show a ▸/▾ marker and a
+  pointer cursor. Plans are read in the same single jq pass.
 
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to

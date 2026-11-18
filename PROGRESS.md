@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-18 -- session 88 (M48-001 board feature context)
+
+- Branch: `run-board`.
+- Done: M48-001. `board.sh` rows now show "Done when" (verify), depends_on,
+  paths, effort and model, the feature's plan section (first `## ` heading
+  naming the id, active plans then completed; 40 lines, "cut at 40 of N";
+  "no plan section" otherwise) as escaped `<pre>`, and file:// links to the
+  plan and the existing docs/briefs files it mentions. CSS adds the ▸/▾ marker
+  and pointer cursor. test-board.sh covers all of it plus 60 plan sections
+  (0.2 s). CHANGELOG added to the 3.21.0 entry; no version bump.
+- Decisions: plans are read in one awk (files joined by a \001 marker) and
+  split in the existing jq pass; existing briefs from one glob, intersected in
+  jq (rejected: a per-feature feature.sh call, a per-brief test -f loop).
+  Matching is `index(id)` on the heading like feature.sh, so M1-00 also hits
+  M1-001; brief links come from the whole plan file, not just the section;
+  the board's later `.model` (from usage.log) would clobber the feature's, so
+  it is captured early as `fm`. Plan moved to completed (last M48 feature).
+- Gate: GREEN (bash scripts/ci-local.sh prints CI-LOCAL GREEN).
+- Next: none in M48; open the PR for `run-board`.
+
 ## 2026-11-18 -- session 87 (M47-002 run board wiring)
 
 - Branch: `run-board`.
