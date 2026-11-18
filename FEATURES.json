@@ -10,7 +10,9 @@
     "41": "Harnessed repos work without the kit plugin",
     "42": "Brief review converges",
     "43": "Approved outlines skip the brief",
-    "44": "Codex subagents start fresh; one read per command"
+    "44": "Codex subagents start fresh; one read per command",
+    "45": "Effort optional again; the model decides by default",
+    "46": "Rolling lanes"
   },
   "features": [
     {
@@ -234,6 +236,52 @@
         "skills/harness-upgrade-structure/",
         "agents/src/",
         "scripts/"
+      ]
+    },
+    {
+      "id": "M45-001",
+      "milestone": 45,
+      "title": "effort is optional again: harness-audit no longer FAILs an open feature without effort (an unknown value still FAILs), upgrade.sh prints no effort TODO, the template's first feature carries none, protocol 1.4 says absent = the CLI's default effort",
+      "status": "passing",
+      "model": "small",
+      "verify": "bash scripts/e2e.sh exits 0 with test-audit.sh proving a missing effort passes on every status and an unknown one FAILs, test-upgrade.sh proving no effort TODO/OK line, and the gate proving protocol 1.4 names the CLI's default effort"
+    },
+    {
+      "id": "M45-002",
+      "milestone": 45,
+      "title": "More parallel lanes: only a named file blocks a lane (two folders never do), protocol 1.4 and the FEATURES template ask for depends_on (code need, not order) and narrow paths on every feature, harness-audit WARNs naming each failing feature without them",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving shared or nested folders give PARALLEL lanes while a file inside another feature's folder or a file both name stays sequential, and test-audit.sh proving the WARN names each failing feature missing depends_on or paths and no feature with both",
+      "effort": "medium",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-audit/scripts/check.sh",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "skills/harness-initial-setup/templates/FEATURES.json.tmpl",
+        "scripts/test-session.sh",
+        "scripts/test-audit.sh"
+      ]
+    },
+    {
+      "id": "M46-001",
+      "milestone": 46,
+      "title": "Rolling lanes: context.sh --busy lists lanes that can start beside running ones (their files, exclusive value and cap slots taken; one new lane is enough); harness-run refills a slot when any lane builder or evaluator finishes, evaluates inside the lane, merges and gates per lane; harness-continuous reuses it with skips; run-start.sh empties busy",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving --busy keeps a busy lane's files, exclusive value and cap slots, allows one new lane beside it and ignores an ineligible NEXT while lanes run, and test-run.sh proving run-start.sh empties busy and harness-run/harness-continuous describe the rolling loop",
+      "model": "medium",
+      "depends_on": [
+        "M45-002"
+      ],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-run/SKILL.md",
+        "skills/harness-run/scripts/run-start.sh",
+        "skills/harness-continuous/SKILL.md",
+        "scripts/test-session.sh",
+        "scripts/test-run.sh",
+        "README.md"
       ]
     }
   ]

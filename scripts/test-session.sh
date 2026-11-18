@@ -123,12 +123,32 @@ make_lanes_repo "$WORK/l-disjoint" "[$(f M1-000 1 passing '[]' '["x/"]'),$(f M1-
 [ "$(lanes "$WORK/l-disjoint")" = 'PARALLEL: M1-001 M1-002' ] || fail "lanes: disjoint same-milestone features not listed"
 make_lanes_repo "$WORK/l-dep" "[$(f M1-001 1 failing '[]' '["src/a/"]'),$(f M1-002 1 failing '["M1-001"]' '["src/b/"]')]"
 [ "$(lanes "$WORK/l-dep")" = 'PARALLEL: none' ] || fail "lanes: dependency on a failing feature must be sequential"
-make_lanes_repo "$WORK/l-overlap" "[$(f M1-001 1 failing '[]' '["src/"]'),$(f M1-002 1 failing '[]' '["src/b/**"]')]"
-[ "$(lanes "$WORK/l-overlap")" = 'PARALLEL: none' ] || fail "lanes: overlapping path prefixes must be sequential"
+make_lanes_repo "$WORK/l-overlap" "[$(f M1-001 1 failing '[]' '["src/"]'),$(f M1-002 1 failing '[]' '["src/b/x.js"]')]"
+[ "$(lanes "$WORK/l-overlap")" = 'PARALLEL: none' ] || fail "lanes: a file inside another feature's directory must be sequential"
+make_lanes_repo "$WORK/l-samefile" "[$(f M1-001 1 failing '[]' '["a/","pubspec.yaml"]'),$(f M1-002 1 failing '[]' '["b/","pubspec.yaml"]')]"
+[ "$(lanes "$WORK/l-samefile")" = 'PARALLEL: none' ] || fail "lanes: a file both features name must be sequential"
+# M45-002: two directories never block (disjoint files in a shared folder merge; a conflict is caught at merge)
+make_lanes_repo "$WORK/l-dirs" "[$(f M1-001 1 failing '[]' '["src/","test/"]'),$(f M1-002 1 failing '[]' '["src/b/**","test/"]')]"
+[ "$(lanes "$WORK/l-dirs")" = 'PARALLEL: M1-001 M1-002' ] || fail "lanes: shared or nested directories alone must not block"
 make_lanes_repo "$WORK/l-missing" "[$(f M1-001 1 failing '' '["src/a/"]'),$(f M1-002 1 failing '[]' '["src/b/"]')]"
 [ "$(lanes "$WORK/l-missing")" = 'PARALLEL: none' ] || fail "lanes: missing fields on NEXT must be sequential"
 make_lanes_repo "$WORK/l-cap" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]')]"
 [ "$(lanes "$WORK/l-cap")" = 'PARALLEL: M1-001 M1-002 M1-003' ] || fail "lanes: cap of 3 not applied"
+
+# M46-001 rolling lanes: --busy FILE lists ids whose lane is still running;
+# new lanes avoid their files and exclusive value, share the cap of 3, and one
+# new lane is enough while others run; an ineligible NEXT no longer blocks then
+blanes() { tr ' ' '\n' <<<"$2" > "$1/busy.ids"; bash "$CONTEXT" --busy "$1/busy.ids" "$1" | grep '^PARALLEL:'; }
+make_lanes_repo "$WORK/r-one" "[$(f M1-001 1 failing '[]' '["a/x.js"]'),$(f M1-002 1 failing '[]' '["a/"]'),$(f M1-003 1 failing '[]' '["b/"]')]"
+[ "$(blanes "$WORK/r-one" M1-001)" = 'PARALLEL: M1-003' ] || fail "rolling: one new lane beside a busy one, avoiding its file"
+make_lanes_repo "$WORK/r-cap" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]')]"
+[ "$(blanes "$WORK/r-cap" 'M1-001 M1-002')" = 'PARALLEL: M1-003' ] || fail "rolling: busy lanes count toward the cap of 3"
+[ "$(blanes "$WORK/r-cap" 'M1-001 M1-002 M1-003')" = 'PARALLEL: none' ] || fail "rolling: no new lane when 3 are busy"
+make_lanes_repo "$WORK/r-next" "[$(f M1-001 1 failing '' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]')]"
+[ "$(blanes "$WORK/r-next" M1-002)" = 'PARALLEL: M1-003' ] || fail "rolling: an ineligible NEXT must not block refills while lanes run"
+[ "$(lanes "$WORK/r-next")" = 'PARALLEL: none' ] || fail "rolling: with nothing busy, an ineligible NEXT still means sequential"
+make_lanes_repo "$WORK/r-ex" "[$(f M1-001 1 failing '[]' '["a/"]' | sed 's/}$/,"exclusive":"sim"}/'),$(f M1-002 1 failing '[]' '["b/"]' | sed 's/}$/,"exclusive":"sim"}/')]"
+[ "$(blanes "$WORK/r-ex" M1-001)" = 'PARALLEL: none' ] || fail "rolling: a busy lane's exclusive value blocks a new lane"
 
 # exclusive (M34-006): same value never shares a batch; a third without it joins
 ex() { sed 's/}$/,"exclusive":"sim"}/'; }

@@ -83,9 +83,9 @@ English:
   `/agent-harness-kit:harness-audit` or _"audit this repo's harness"_.
   It also warns when a failing feature's `verify` needs something only you
   can give (a live session, your machine, a device, a push, a PR, an
-  answer: that belongs in the plan's `## Before the run`), when an active
-  plan declares neither `depends_on` nor `paths` (no parallel lanes
-  possible), and, for information only, when your global Codex, Claude
+  answer: that belongs in the plan's `## Before the run`), when a failing
+  feature lacks `depends_on` or `paths` (it can never run as a parallel
+  lane; the WARN names each one), and, for information only, when your global Codex, Claude
   Code or Copilot setup has a memory or workflow server or plugin that may
   add its own instructions to every session. It never edits your setup.
 - **harness-handoff** — verify the session-end ritual (clean tree, gate
@@ -187,7 +187,11 @@ copilot plugin update agent-harness-kit
    `/agent-harness-kit:harness-run` repeat it for you: one fresh subagent
    per feature, stopping at a blocker, the milestone boundary, or a cap
    of 10, and running independent features (declared `depends_on` /
-   `paths`) as parallel lanes. To walk away entirely, invoke
+   `paths`) as parallel lanes, up to 3 at once. Lanes roll: when one
+   finishes (built, or passed its evaluator) it merges and its slot takes
+   the next ready feature, so a slow review never holds unrelated builds,
+   and a feature waiting on a running one starts once that one lands. To
+   walk away entirely, invoke
    `/agent-harness-kit:harness-continuous` instead (see
    [Unattended runs](#unattended-runs)).
 3. **Check where you are** — `/agent-harness-kit:harness-status` any
@@ -213,11 +217,10 @@ protocol so every agent follows them:
   turned down; written down, you (or the evaluator) can ask for the skipped
   option instead of rediscovering it. The evaluator reads the line as
   leads, never as evidence.
-- **Per-feature effort.** Every feature still to build carries `"effort":
+- **Per-feature effort.** A feature may carry `"effort":
   "low" | "medium" | "high" | "max"`: how much verification and edge-case
-  testing it deserves. It is required: `harness-audit` fails a failing,
-  review or deferred feature without it, and `harness-upgrade-structure`
-  lists the ones an older repo is missing.
+  testing it deserves. It is optional: without it the agent runs at its
+  CLI's default effort and the model decides per step.
   UI work rarely gains from high effort; APIs, data and security do.
   `harness-status` prints it under `NEXT:`, sessions scale their checking
   to it, and `harness-run` passes it to the agent it dispatches (as the
@@ -237,7 +240,7 @@ protocol so every agent follows them:
 ## Choosing a model size
 
 Every feature still to build carries `"model": "small" | "medium" |
-"large"`: which size of model builds it. Like `effort` it is required:
+"large"`: which size of model builds it. It is required:
 `harness-audit` fails a failing, review or deferred feature without it, and
 `harness-upgrade-structure` lists the ones an older repo is missing. It is separate from `effort`, which only sets how hard the
 model checks its own work. Any size works with any effort.
@@ -484,7 +487,7 @@ What it does, so nothing surprises you:
   retried once in a fresh session at the same size; a second budget stop
   is a skip.
 - **Shared resources.** Features that set the same `exclusive` value (e.g.
-  `simulator`, `device`, `database`) never run in the same parallel batch;
+  `simulator`, `device`, `database`) never run as parallel lanes at the same time;
   others still can.
 - **Never pushes.** With `through M<n>` it creates one stacked branch per
   milestone and leaves them local.

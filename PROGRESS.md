@@ -3,6 +3,62 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-17 -- session 85 (M46-001 rolling lanes)
+
+- Branch: `parallel-lanes` (same PR as M45).
+- Done: M46-001. `context.sh --busy FILE` lists lanes that can start
+  beside running ones. harness-run's Parallel lanes section is a rolling
+  loop: start lanes, wait for the next finisher, evaluate it inside its
+  lane worktree, merge + gate + flip per lane, refill. harness-continuous
+  reuses it with skips (a red merge undone first). run-start.sh empties
+  `.harness-run/busy`. README updated. Plan:
+  `docs/plans/completed/2026-11-17-m46-rolling-lanes.md`.
+- Decisions: rejected Claude Code agent teams for this (experimental,
+  Claude-only, no worktree isolation for teammates, cost per teammate);
+  rolling lanes add no agents and work on every CLI. The evaluator runs in
+  the lane worktree so merges on the current branch never break its
+  integrity check. One gate per merge instead of per batch: more shell
+  time, no tokens. A conflicted lane stays busy until it can run alone,
+  so a refill cannot relist it.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews PR #49.
+
+## 2026-11-17 -- session 84 (M45-002 more parallel lanes)
+
+- Branch: `parallel-lanes`, rebased on `effort-optional` (one PR for both).
+- Done: M45-002. Lane overlap in context.sh: only a named file blocks a
+  lane (both features list it, or one sits in the other's folder or glob);
+  two folders never block, a real conflict is still caught at merge.
+  Protocol 1.4 and the FEATURES template ask for `depends_on` (code need,
+  not order) and narrow `paths` on every feature. harness-audit WARNs
+  naming each failing feature without both (was: only a plan with
+  neither). Plan: `docs/plans/completed/2026-11-17-m45-more-parallel-lanes.md`.
+- Decisions: rejected treating a missing `depends_on` as `[]` (unknown is
+  not "none"). Kept rebuilding a conflicting lane from scratch rather than
+  resolving it in the lane: smallest change, revisit if conflicts get
+  common. A rolling scheduler or peer-messaging teammates is a separate
+  proposal to the owner, not this change.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR.
+
+## 2026-11-17 -- session 83 (M45-001 effort optional again)
+
+- Branch: `effort-optional`.
+- Done: M45-001. Reverts the M36-001 requirement: a feature without
+  `effort` runs at the CLI's default effort (the model decides per step);
+  harness-audit FAILs only an unknown value, upgrade.sh and its skill drop
+  the effort TODO, the template's first feature carries no effort, protocol
+  1.4 and 1.1 (brief Stage) treat effort as an override, README and
+  ARCHITECTURE updated. Plan: `docs/plans/completed/2026-11-17-m45-effort-optional.md`.
+- Decisions: optional, not removed: status.sh, harness-run and the agent
+  generator keep honouring an explicit level (the evaluator keeps
+  `effort: high`). Evidence: a 31-subagent run where per-feature effort was
+  passed correctly but bought nothing measurable; the owner chose the
+  model's own judgment over planner-picked levels. Model size and the
+  rework step-up are unchanged on purpose.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: owner reviews the PR (shared with the parallel-lanes change).
+
 ## 2026-11-01 -- session 82 (M44-001 Codex subagents start fresh; one read per command)
 
 - Branch: `codex-fresh-spawns`.

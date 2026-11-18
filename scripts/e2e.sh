@@ -39,21 +39,16 @@ jq -e '[ .features[]
   FEATURES.json >/dev/null \
   || fail "FEATURES.json: evaluate must be ui|none, bar a string, eval_attempts an integer"
 
-# effort (M36-001): required on every feature still to build or judge
-jq -e '[ .features[] | select(.status | IN("failing","review","deferred"))
-         | select((.effort // "") | IN("low","medium","high","max") | not) ] | length == 0' \
-  FEATURES.json >/dev/null \
-  || fail "FEATURES.json: failing/review/deferred features need effort low|medium|high|max"
 # model (M36-002): required on the same features
 jq -e '[ .features[] | select(.status | IN("failing","review","deferred"))
          | select((.model // "") | test("^[a-z][a-z0-9._-]*$") | not) ] | length == 0' \
   FEATURES.json >/dev/null \
   || fail "FEATURES.json: failing/review/deferred features need model small|medium|large or a CLI alias"
-grep -q 'effort is required' skills/harness-audit/scripts/check.sh || fail "harness-audit: required-effort FAIL missing"
+grep -q 'effort is required' skills/harness-audit/scripts/check.sh && fail "harness-audit: effort is optional (M45-001), no required-effort FAIL"
 grep -q 'model is required' skills/harness-audit/scripts/check.sh || fail "harness-audit: required-model FAIL missing"
 grep -q 'model is now required' skills/harness-upgrade-structure/scripts/upgrade.sh || fail "upgrade.sh: missing-model TODO missing"
-grep -q 'effort is now required' skills/harness-upgrade-structure/scripts/upgrade.sh || fail "upgrade.sh: missing-effort TODO missing"
-grep -q 'effort is now required' skills/harness-upgrade-structure/SKILL.md || fail "harness-upgrade-structure SKILL.md: missing-effort TODO handling missing"
+grep -q 'effort is now required' skills/harness-upgrade-structure/scripts/upgrade.sh skills/harness-upgrade-structure/SKILL.md \
+  && fail "harness-upgrade-structure: effort is optional (M45-001), no missing-effort TODO"
 
 # AGENTS.md stays a table of contents
 [ "$(wc -l < AGENTS.md)" -le 100 ] || fail "AGENTS.md exceeds 100 lines"
@@ -413,7 +408,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.19.1" ] || fail "plugin version must be 3.19.1"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.20.0" ] || fail "plugin version must be 3.20.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"
@@ -495,6 +490,7 @@ grep -q 'effort' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: eff
 plan_14="$(sed -n '/^### 1\.4 Write FEATURES.json entries/,/^### 1\.5/p' "$PROTO")"
 grep -qF 'How much verification does this deserve?' <<< "$plan_14" || fail "protocol 1.4: effort question missing"
 grep -qF 'low, medium, high or max' <<< "$plan_14" || fail "protocol 1.4: effort levels missing"
+grep -qF "CLI's default effort" <<< "$plan_14" || fail "protocol 1.4: absent effort must mean the CLI's default (M45-001)"
 grep -qF 'effort:' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: must pass the effort line to the builder dispatch"
 grep -qF 'evaluator at high or above' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: evaluator must be dispatched at high or above"
 grep -qF 'effort:' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: must read the effort line"

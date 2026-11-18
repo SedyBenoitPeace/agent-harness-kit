@@ -2,7 +2,7 @@
 # harness-session: bounded, read-only "what do I need to start?" report.
 # Bundles harness-status's report with the git/plan facts a coding session
 # also needs, so an agent can start from one call instead of several.
-# Usage: context.sh [--skip FILE] [--brief] [--outline FILE] [TARGET_DIR]
+# Usage: context.sh [--skip FILE] [--busy FILE] [--brief] [--outline FILE] [TARGET_DIR]
 #        (TARGET_DIR defaults to the current directory)
 # --skip FILE is passed to harness-status (see status.sh) so NEXT, PLAN and
 # PARALLEL all follow the first feature that is not skipped.
@@ -11,6 +11,8 @@
 # == Session protocol == section prints the protocol 2.9 card plus the repo's
 # AGENTS.md Rules and Needs-a-human sections, so the session never reads
 # SKILL.md, AGENTS.md or the protocol files.
+# --busy FILE: ids whose parallel lane is still running (M46-001, rolling
+# lanes); PARALLEL then lists only lanes that can start beside them.
 # --outline FILE: the task points to an approved plan or outline from another
 # workflow (M43-001). Prints its path and a SKIP_BRIEF hint (protocol 1.1);
 # a path that does not exist prints "not found" and no hint.
@@ -20,10 +22,11 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STATUS="$SCRIPT_DIR/../../harness-status/scripts/status.sh"
-SKIP=(); BRIEF=0; OUTLINE=""
+SKIP=(); BRIEF=0; OUTLINE=""; BUSY=/dev/null
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip) SKIP=(--skip "${2:?--skip needs a file}"); shift 2 ;;
+    --busy) BUSY="${2:?--busy needs a file}"; shift 2 ;;
     --brief) BRIEF=1; shift ;;
     --outline) OUTLINE="${2:?--outline needs a file}"; shift 2 ;;
     *) break ;;
@@ -117,14 +120,23 @@ fi
 
 # Parallel lanes for harness-run: declared at planning time, never inferred.
 # Eligible = failing, in NEXT's milestone, declares depends_on (all passing)
-# and non-empty paths. Greedy from NEXT over non-overlapping glob prefixes,
-# max 3, never two with the same optional exclusive value; fewer than 2 lanes, or NEXT itself ineligible → sequential.
+# and non-empty paths. Greedy from NEXT, max 3, never two with the same
+# optional exclusive value; fewer than 2 lanes, or NEXT itself ineligible → sequential.
+# --busy (M46-001): running lanes keep their files, exclusive value and cap
+# slots; then one new lane is enough, and an ineligible NEXT waits.
+# Overlap (M45-002): only a named file blocks — a file both features list, or one
+# inside the other's directory/glob. Two directories never block: disjoint
+# files in a shared folder merge cleanly, and a real conflict is caught at
+# merge (lane dropped, redone sequentially).
+# ponytail: a conflicting lane is rebuilt from scratch; resolve-in-lane if that gets common.
 # Archived ids (docs/features-archive.json, M34-010) count as passing.
 ARCH=docs/features-archive.json; [ -f "$ARCH" ] || ARCH=/dev/null
-jq -r --arg ex "$SKIPPED_IDS" --slurpfile arc "$ARCH" '
-  def prefix: sub("[*?\\[].*$"; "");
+[ -e "$BUSY" ] || { echo "context: --busy file not found: $BUSY" >&2; exit 2; }
+jq -r --arg ex "$SKIPPED_IDS" --arg busy "$(cat "$BUSY")" --slurpfile arc "$ARCH" '
+  def entry: {s: sub("[*?\\[].*$"; ""), d: (test("[*?\\[]") or endswith("/"))};
   def overlaps($a; $b): any($a[]; . as $x | any($b[]; . as $y
-    | ($x | startswith($y)) or ($y | startswith($x))));
+    | ($x.d and $y.d | not)
+      and (($x.s | startswith($y.s)) or ($y.s | startswith($x.s)))));
   ([$arc[].features[]?, .features[]] | map({key: .id, value: .status}) | from_entries) as $st
   | ([.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]
       | sort_by(.milestone, .id)) as $f
@@ -132,14 +144,18 @@ jq -r --arg ex "$SKIPPED_IDS" --slurpfile arc "$ARCH" '
       [ $f[] | select(.milestone == $f[0].milestone
           and (.depends_on | type) == "array" and all(.depends_on[]; $st[.] == "passing")
           and (.paths | type) == "array" and (.paths | length) > 0) ] as $el
-      | if ($el | length) == 0 or $el[0].id != $f[0].id then "PARALLEL: none" else
-          reduce $el[] as $e ([];
-            ($e.paths | map(prefix)) as $p
+      | ($busy | split("\n") | map(select(length > 0))) as $b
+      | if ($b | length) == 0 and (($el | length) == 0 or $el[0].id != $f[0].id) then "PARALLEL: none" else
+          reduce ($el[] | select(.id as $i | $b | index($i) | not)) as $e (
+            [ $f[] | select(.id as $i | $b | index($i)) | {id, p: ((.paths // []) | map(entry)), x: (.exclusive // null), busy: true} ];
+            ($e.paths | map(entry)) as $p
             | ($e.exclusive // null) as $x
             | if length < 3 and all(.[]; overlaps(.p; $p) | not)
                 and ($x == null or all(.[]; .x != $x))
               then . + [{id: $e.id, p: $p, x: $x}] else . end)
-          | if length >= 2 then "PARALLEL: " + (map(.id) | join(" ")) else "PARALLEL: none" end
+          | map(select(.busy | not)) as $new
+          | if ($new | length) >= (if ($b | length) > 0 then 1 else 2 end)
+            then "PARALLEL: " + ($new | map(.id) | join(" ")) else "PARALLEL: none" end
         end
     end
 ' FEATURES.json

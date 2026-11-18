@@ -2,7 +2,7 @@
 # harness-run: give a continuous run clean run state. No model calls.
 # Ignores .harness-run/ (committing .gitignore alone), archives the previous
 # run's logs under .harness-run/previous/<its start commit>/ (kept, never
-# deleted), then writes a fresh start, an empty skip and no STOP.
+# deleted), then writes a fresh start, an empty skip and busy, and no STOP.
 # Usage: run-start.sh <target>
 set -euo pipefail
 t="${1:-}"; [ -d "$t" ] || { echo "usage: run-start.sh <target>" >&2; exit 2; }
@@ -21,4 +21,5 @@ if [ -s "$d/start" ]; then
 fi
 git rev-parse HEAD > "$d/start"
 : > "$d/skip"
+: > "$d/busy"
 rm -f "$d/STOP"

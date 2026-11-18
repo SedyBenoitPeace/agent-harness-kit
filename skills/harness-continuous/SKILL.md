@@ -57,7 +57,11 @@ permissions only — never a skip-all-permissions flag.
    (one blocking wait per builder, never short polls, never send a message to steer a running builder,
    script output only, a fresh conversation on resume), then `status.sh --skip
    .harness-run/skip` and `git status --short` as proof), including its
-   Evaluator step and Parallel lanes. A blocked parallel lane becomes a skip.
+   Evaluator step and rolling Parallel lanes. A lane harness-run would stop
+   for (blocked, red gate, second NEEDS_WORK) becomes a skip instead (a red gate after its merge: undo that merge
+   first, `git reset --hard ORIG_HEAD`): the other lanes keep rolling and
+   its slot is refilled (refill with `context.sh --skip .harness-run/skip
+   --busy .harness-run/busy`).
    `dispatch.sh` exit 3 (`AGENT: missing`) is not a skip: generate and
    commit the agent files as harness-run says, then End with the reason
    "restart the CLI to load the builder agents" (never a stand-in subagent).

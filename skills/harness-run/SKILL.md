@@ -132,27 +132,55 @@ set; absent means no evaluation and today's flow):
 
 When `context.sh` prints `PARALLEL: <id> <id> …` (instead of
 `PARALLEL: none`), those features declared `depends_on` / `paths` that
-the script proved independent — never infer lanes yourself. Instead of
-Workflow steps 3–5, for that batch:
+the script proved independent — never infer lanes yourself. Lanes roll
+(M46-001): a free slot is refilled as soon as any lane agent finishes,
+never held for a whole batch. `.harness-run/busy` lists the ids whose lane
+is running, one per line; empty it (`: > .harness-run/busy`) before a
+run's first lane. Instead of Workflow steps 3–5:
 
-1. For each id, create a lane from the current branch:
-   `git worktree add ../<repo>-<id> -b lane/<id>`.
-2. Dispatch one subagent per lane, in parallel, with the Workflow step 3
-   brief, its first sentence ending "inline, as a parallel lane in
-   ../<repo>-<id>." (`context.sh --brief` runs in that worktree).
-   Wait for each lane as in Workflow step 4. Lanes implement, run their own verify, commit, and never touch FEATURES.json or PROGRESS.md;
-   each puts its `Decisions:` line in its commit message body.
-3. Merge each `passing` lane into the current branch (`git merge --no-ff
-   lane/<id>`), then remove its worktree and branch. A blocked lane is
-   relayed to the human like step 6; its worktree stays for inspection.
-4. Merge conflict → `git merge --abort`, drop that lane, and redo that feature sequentially after the others land.
-5. Run one full gate (`bash ../harness-session/scripts/run-gate.sh final
-   <target>`). Green → flip the merged ids to `passing`, write one
-   `PROGRESS.md` entry naming them (with each lane's `Decisions:` line from
-   its commit message), commit explicit paths. Red → STOP and
-   report; flip nothing.
-6. Verify as in Workflow step 5 (status.sh + clean tree), count the
-   lanes toward the cap, and loop to Workflow step 1.
+1. **Start lanes.** For each id `PARALLEL:` lists: create its lane from the
+   current branch (`git worktree add ../<repo>-<id> -b lane/<id>`), append
+   the id to `.harness-run/busy`, and dispatch its builder in the
+   background with the Workflow step 3 brief, its first sentence ending
+   "inline, as a parallel lane in ../<repo>-<id>." (`context.sh --brief`
+   runs in that worktree). Lanes implement, run their own verify, commit,
+   and never touch FEATURES.json or PROGRESS.md; each puts its
+   `Decisions:` line in its commit message body.
+2. **Wait for the next finisher**, once per agent as in Workflow step 4
+   (the CLI's completion notice, or `wait-result.sh` for each id), and
+   handle only that lane:
+   - `review` → run the Evaluator step inside the lane: the evaluator and
+     the integrity check (clean tree, lane HEAD unchanged) use
+     `../<repo>-<id>`, so merges on the current branch never disturb it.
+     `NEEDS_WORK` → record the findings as step 5 says (on the current
+     branch) and dispatch the rework builder into the same lane, with
+     `retries` = `eval_attempts` and `feature.sh` run against the current
+     branch, so it carries the notes. Its slot stays busy.
+   - `passing` (or evaluator `PASS`) → merge it (`git merge --no-ff
+     lane/<id>`); conflict → `git merge --abort`, keep its id in
+     `.harness-run/busy` (so refills skip it), and redo it sequentially once
+     it is the only id left. Run the full gate
+     (`bash ../harness-session/scripts/run-gate.sh final <target>`).
+     Green → flip the id to `passing` (with `docs/verification/<id>.md`
+     when evaluated), add its `PROGRESS.md` entry (its `Decisions:` line
+     from the commit message), commit explicit paths. Red → dispatch
+     nothing new, let running lanes finish without merging them, then STOP
+     and report.
+   - `blocked` → relay it like Workflow step 6, start nothing new, let
+     running lanes finish, then STOP; its worktree stays for inspection.
+   Once its flip is committed, remove the id from `.harness-run/busy`, its
+   worktree and its branch.
+3. **Refill.** Run `context.sh --busy .harness-run/busy` (from the repo
+   root). It lists only lanes that can start beside the running ones:
+   their files, `exclusive` value and the cap of 3 are already taken, and a
+   feature waiting on a running one appears once that one is merged and
+   `passing`. Any ids → step 1. `PARALLEL: none` with lanes still busy →
+   step 2. Nothing busy → Workflow step 1 (status.sh + clean tree, then the
+   next feature or batch).
+
+Every lane counts toward the cap. A feature runs outside a lane (Workflow
+steps 3–5) only when no lane is busy, so the current branch has one writer
+at a time.
 
 **No subagent tool** (the agent cannot dispatch subagents): run one
 normal harness-session for `NEXT:` in this conversation and STOP — tell

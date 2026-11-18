@@ -134,23 +134,17 @@ if jq -e '[.features[]? | select(.evaluate? == "ui")] | length > 0' FEATURES.jso
   fi
 fi
 
-# Effort (FAIL, M36-001): required on every feature still to build or judge
-# (failing, review, deferred) so every agent knows how much checking it
-# deserves; passing and superseded ones are history and may lack it. A value
+# Effort (optional, M45-001): absent means the CLI's default effort. A value
 # outside low|medium|high|max fails wherever it appears.
-no_effort="$(jq -r '[.features[]? | select((.status? // "") | IN("failing","review","deferred")) | select(has("effort") | not) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
 bad_effort="$(jq -r '[.features[]? | select(has("effort") and (.effort | IN("low","medium","high","max") | not)) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
-if [ -n "$no_effort" ]; then
-  failc "effort is required (low, medium, high or max; protocol 1.4) — missing on: $no_effort"
-fi
 if [ -n "$bad_effort" ]; then
   failc "effort must be low, medium, high or max — unknown value on: $bad_effort"
 fi
-if [ -z "$no_effort" ] && [ -z "$bad_effort" ] && jq -e . FEATURES.json >/dev/null 2>&1; then
-  pass "every open feature has a valid effort"
+if [ -z "$bad_effort" ] && jq -e . FEATURES.json >/dev/null 2>&1; then
+  pass "every effort set is valid"
 fi
 
-# Model size (FAIL, M36-002): required on the same open features as effort;
+# Model size (FAIL, M36-002): required on every open feature;
 # small|medium|large or a CLI alias (lowercase letters, digits, dot, dash,
 # underscore). A malformed value fails wherever it appears.
 no_model="$(jq -r '[.features[]? | select((.status? // "") | IN("failing","review","deferred")) | select(has("model") | not) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
@@ -180,16 +174,10 @@ unprov="$(jq -r '[.features[]? | select(.status == "failing" and ((.verify? // "
 if [ -n "$unprov" ]; then
   warn "verify names something a builder cannot prove from the repo alone (real session, owner, machine, device, hardware, push, PR, human) on: $unprov — move it to the plan's Before the run section (protocol 1.4)"
 fi
-# Lanes (WARN only, M34-005): an active plan whose features declare neither
-# depends_on nor paths can only run sequentially
-for plan in docs/plans/active/*.md; do
-  [ -f "$plan" ] || continue
-  ids="$( { grep -E '^#{2,4} ' "$plan" || true; } | grep -oE 'M[0-9]+-[0-9]{3}' | sort -u | tr '\n' ' ')"
-  [ -n "$ids" ] || continue
-  if jq -e --arg ids "$ids" '($ids | split(" ")) as $i | [.features[]? | select(.id as $x | $i | index($x)) | select(has("depends_on") or has("paths"))] | length == 0' FEATURES.json >/dev/null 2>&1; then
-    warn "$plan: its features declare neither depends_on nor paths, so no two can run side by side (protocol 1.4)"
-  fi
-done
+# Lanes (WARN only, M34-005, M45-002): a failing feature missing depends_on or
+# paths can only run sequentially, so name every such feature.
+nolane="$(jq -r '[.features[]? | select(.status == "failing" and (((.depends_on | type) == "array" and (.paths | type) == "array" and (.paths | length) > 0) | not)) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
+[ -z "$nolane" ] || warn "no parallel lanes for $nolane: depends_on or paths missing (protocol 1.4)"
 
 # Global memory/workflow plugins (WARN only, M34-012): a memory or workflow
 # MCP server or plugin in the person's own CLI setup may inject its instructions

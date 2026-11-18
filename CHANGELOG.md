@@ -10,6 +10,32 @@ Release checklist (kit maintainers): bump `package.json`, both
 entry here with its Upgrade block; run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.20.0 — 2026-11-17
+
+- effort is optional again (M45-001): harness-audit no longer fails an open
+  feature without effort; absent = the CLI's default effort; upgrade prints
+  no effort TODO.
+- More features qualify as parallel lanes (M45-002). Lanes were rare because
+  the overlap check treated two features sharing any folder (`test/`,
+  `api/`) as conflicting: in three private repos 64–100% of independent
+  same-milestone pairs were blocked, against 6% in a repo with narrow paths.
+  Now only a named file blocks a lane (both list it, or one sits in the
+  other's folder or glob); a real conflict is still caught at merge.
+  Protocol 1.4 and the FEATURES template ask for `depends_on` (code need,
+  not order) and narrow `paths` on every feature; harness-audit WARNs
+  naming each failing feature that lacks either.
+- Rolling lanes (M46-001): a parallel run keeps up to 3 lanes busy and
+  refills a slot as soon as any builder or evaluator finishes, instead of
+  waiting for the whole batch, so a slow review no longer holds unrelated
+  builds and a feature waiting on a running one starts once it lands.
+  `context.sh --busy FILE` lists lanes that can start beside running ones;
+  evaluators run inside the lane's worktree; harness-continuous reuses it.
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure` to
+  recopy the protocol (it brings the rolling-lane rules), then `/agent-harness-kit:harness-audit` and approve
+  `depends_on` / `paths` for the failing features its WARN names.
+
 ## 3.19.1 — 2026-11-03
 
 - An approved plan or outline from another workflow skips harness-brief

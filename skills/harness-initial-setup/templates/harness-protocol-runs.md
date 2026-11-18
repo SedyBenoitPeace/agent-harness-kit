@@ -33,9 +33,12 @@ the repo — not the subagent's word — before starting the next. Rules:
   (§1.4) prove them independent, computed by script, never guessed. Each
   lane works in its own worktree and never touches FEATURES.json or
   PROGRESS.md; it puts its `Decisions:` line in its commit message body.
-  The orchestrator merges, runs one full gate, flips the statuses, and
-  writes one PROGRESS.md entry carrying each lane's `Decisions:` line. A merge conflict means that
-  feature is redone sequentially.
+  Lanes roll: up to 3 run at once, and as each finishes (built, or passed
+  its evaluator inside the lane) the orchestrator merges it, runs the full
+  gate, flips its status, writes its PROGRESS.md entry with its
+  `Decisions:` line, and starts the next ready lane in its slot. A merge
+  conflict means that feature is redone sequentially once no other lane
+  runs.
 - Independent evaluation (opt-in per feature via `evaluate`, §1.4): the
   session that builds such a feature ends it in `review`, never
   `passing`. The orchestrator then dispatches the named agent
