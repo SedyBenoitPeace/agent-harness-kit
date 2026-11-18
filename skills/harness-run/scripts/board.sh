@@ -30,7 +30,7 @@ if [ -d "$d/results" ]; then
   if [ "${#files[@]}" -gt 0 ]; then
     names=("${files[@]##*/}")
     mt="$(cd "$d/results" && { stat -c '%Y %n' "${names[@]}" 2>/dev/null || stat -f '%m %N' "${names[@]}"; })"
-    rl="$(cd "$d/results" && grep -H '' "${names[@]}" || true)"
+    rl="$(cd "$d/results" && { grep -H '' "${names[@]}" || true; })"
   fi
 fi
 lanes=""
