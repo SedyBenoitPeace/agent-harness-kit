@@ -12,7 +12,8 @@
     "43": "Approved outlines skip the brief",
     "44": "Codex subagents start fresh; one read per command",
     "45": "Effort optional again; the model decides by default",
-    "46": "Rolling lanes"
+    "46": "Rolling lanes",
+    "47": "Live run board"
   },
   "features": [
     {
@@ -282,6 +283,53 @@
         "scripts/test-session.sh",
         "scripts/test-run.sh",
         "README.md"
+      ]
+    },
+    {
+      "id": "M47-001",
+      "milestone": 47,
+      "title": "Run board core: run-start.sh writes run-id and archives events.log by run-id; dispatch/run-gate/second-opinion/run-start/run-report append events.log lines during a run; new board.sh writes a self-refreshing .harness-run/board.html (stage per feature, agent, gate, time, cost) and --open opens it once per run",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with scripts/test-board.sh proving the brief's board.sh, event and run-start cases (stages incl. stale result and same-second tie, gate in a lane worktree, archive per run-id on one HEAD, opener counter and HARNESS_BOARD_OPEN=0, cost and tokens, 60 features under 1.0 s locally / 3.0 s with CI=1); docs/briefs/2026-11-18-run-board.md is the spec",
+      "model": "large",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/board.sh",
+        "skills/harness-run/scripts/run-start.sh",
+        "skills/harness-run/scripts/dispatch.sh",
+        "skills/harness-run/scripts/second-opinion.sh",
+        "skills/harness-run/scripts/run-report.sh",
+        "skills/harness-session/scripts/run-gate.sh",
+        "scripts/test-board.sh",
+        "scripts/e2e.sh"
+      ]
+    },
+    {
+      "id": "M47-002",
+      "milestone": 47,
+      "title": "Run board wiring: dispatch, second-opinion, run-gate, context, status refresh the board during a run (never changing their output or exit code), run-report writes the final snapshot, run-start opens it and prints BOARD:; interactive harness-run now calls run-start.sh; both run skills show the BOARD: path; docs and 3.21.0",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with scripts/test-board.sh proving the brief's wiring cases (junk board.sh leaves callers' stdout and exit codes unchanged, no board or events without a run, no rewrite after run-end, final page says run ended); grep finds run-start.sh in harness-run SKILL.md and BOARD: in both run SKILL.md files; bash scripts/ci-local.sh prints CI-LOCAL GREEN",
+      "model": "medium",
+      "depends_on": [
+        "M47-001"
+      ],
+      "paths": [
+        "skills/harness-run/scripts/",
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-session/scripts/run-gate.sh",
+        "skills/harness-status/scripts/status.sh",
+        "skills/harness-run/SKILL.md",
+        "skills/harness-continuous/SKILL.md",
+        "skills/harness-initial-setup/templates/harness-protocol-runs.md",
+        "scripts/test-board.sh",
+        "README.md",
+        "CHANGELOG.md",
+        "AGENTS.md",
+        "package.json",
+        ".claude-plugin/",
+        "claude/.claude-plugin/plugin.json",
+        "scripts/e2e.sh"
       ]
     }
   ]
