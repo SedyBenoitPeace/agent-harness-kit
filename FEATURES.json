@@ -1,22 +1,5 @@
 {
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
-  "milestones": {
-    "48": "Run board feature context"
-  },
-  "features": [
-    {
-      "id": "M48-001",
-      "milestone": 48,
-      "title": "Run board rows show feature context: verify, depends_on, paths, effort/model, the feature's plan section (40 lines) and links to its plan and brief; rows show a ▸/▾ marker and pointer cursor",
-      "status": "passing",
-      "verify": "bash scripts/e2e.sh exits 0 with scripts/test-board.sh proving the expanded row shows verify/depends_on/paths, the plan section (cut at 40 lines, completed-plan fallback), file:// links to the plan and to existing briefs it names, escaped HTML, the row marker, and 60 features with plan sections under 1.0 s locally / 3.0 s with CI=1; bash scripts/ci-local.sh prints CI-LOCAL GREEN",
-      "model": "medium",
-      "depends_on": [],
-      "paths": [
-        "skills/harness-run/scripts/board.sh",
-        "scripts/test-board.sh",
-        "CHANGELOG.md"
-      ]
-    }
-  ]
+  "milestones": {},
+  "features": []
 }
