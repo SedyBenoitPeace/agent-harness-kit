@@ -47,7 +47,7 @@ tmp="$(mktemp "$d/.board.XXXXXX")"
 trap 'rm -f "$tmp" "$tmp.body"' EXIT
 jq -nr --argjson now "$(date +%s)" --arg repo "$repo" --arg branch "$branch" \
   --arg runid "$(cat "$d/run-id" 2>/dev/null || true)" --arg st "$(stat -c %Y "$d/start" 2>/dev/null || stat -f %m "$d/start")" --arg mt "$mt" --arg rl "$rl" --arg lanes "$lanes" --arg root "$root" --arg plans "$plans" --arg briefs "$briefs" \
-  --argjson s0 "$startf" --slurpfile cur FEATURES.json \
+  --argjson s0 "$startf" --slurpfile cur FEATURES.json --slurpfile arc "$(rf docs/features-archive.json)" \
   --rawfile ev "$(rf "$d/events.log")" --rawfile skip "$(rf "$d/skip")" \
   --rawfile cost "$(rf "$d/cost.log")" --rawfile usage "$(rf "$d/usage.log")" '
 def lines: split("\n") | map(select(length > 0));
@@ -68,7 +68,7 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
 | [$plans | split("\u0001")[] | select(length > 0) | index("\n") as $i | {f: .[:$i], t: ("\n" + .[$i + 1:])}] as $PF
 | [$PF[] | .f as $f | .t | split("\n## ")[1:][] | {f: $f, l: ("## " + .) | split("\n") | until(length == 0 or .[-1] != ""; .[:-1])}] as $SEC
 | (reduce $PF[] as $p ({}; .[$p.f] = ([$p.t | scan("docs/briefs/[A-Za-z0-9._/-]+\\.md")] | unique | map(select(. as $b | $BX | index([$b]) != null))))) as $BR
-| ($cur[0].features // []) as $CF
+| (($cur[0].features // []) + ($arc[0].features // [])) as $CF  # archived features keep their rows (archive-features.sh runs after the report)
 | (($s0.features // []) | map({key: .id, value: .status}) | from_entries) as $S0
 | [$CF[] | .id as $i | select(($S0[$i] // "absent") != "passing" and (($S0 | has($i)) or .status == "passing"))] as $rows0
 # per feature facts, then the one non-lane building feature that owns "-" gate events

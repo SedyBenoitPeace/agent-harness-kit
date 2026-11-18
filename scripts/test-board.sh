@@ -177,7 +177,7 @@ printf '## M1-008\nsee docs/briefs/real.md and docs/briefs/ghost.md\n' >> "$R/do
 bash "$BOARD" "$R"; r8="$(rowof M1-008)"
 case "$r8" in *"href=\"file://$R/docs/briefs/real.md\""*) ;; *) fail "existing brief link missing" ;; esac
 case "$r8" in *'href="file://'*ghost.md*) fail "brief link only when the file exists" ;; esac
-grep -q '\[open\]>summary' "$HTML" && grep -q '▾' "$HTML" && grep -q '▸' "$HTML" || fail "row marker missing"
+if ! { grep -q '\[open\]>summary' "$HTML" && grep -q '▾' "$HTML" && grep -q '▸' "$HTML"; }; then fail "row marker missing"; fi
 grep -q 'summary{[^}]*cursor:pointer' "$HTML" || fail "summary pointer cursor missing"
 rm -rf "$R/docs"
 
@@ -218,6 +218,13 @@ grep -q 'run ended: cap reached' "$HTML" || fail "run-report must leave the fina
 touch -t 200001010000 "$HTML"; m0="$(stat -c %Y "$HTML" 2>/dev/null || stat -f %m "$HTML")"
 (cd "$R" && { bash "$KIT/skills/harness-status/scripts/status.sh" . >/dev/null 2>&1; true; })
 [ "$(stat -c %Y "$HTML" 2>/dev/null || stat -f %m "$HTML")" = "$m0" ] || fail "status.sh must not rewrite the board after run-end"
+# archive-features.sh runs after the report: archived features keep their rows
+aid="$(sed -n 's/.*data-id="\([^"]*\)".*/\1/p' "$HTML" | head -1)"
+(cd "$R" && jq --arg i "$aid" '{features: [.features[] | select(.id == $i)]}' FEATURES.json > docs-arc.json \
+  && mkdir -p docs && mv docs-arc.json docs/features-archive.json \
+  && jq --arg i "$aid" '.features |= map(select(.id != $i))' FEATURES.json > f.json && mv f.json FEATURES.json)
+(cd "$R" && bash "$BOARD" . >/dev/null) || fail "board.sh failed after archiving"
+row "$aid" | grep -q . || fail "archived feature $aid lost its board row"
 
 # --- second opinion event -----------------------------------------------------
 B="$WORK/bin"; mkdir -p "$B"; printf '#!/usr/bin/env bash\necho PASS\n' > "$B/claude"; chmod +x "$B/claude"
