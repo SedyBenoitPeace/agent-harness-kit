@@ -3,6 +3,45 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-18 -- session 86 (M47-001 run board core)
+
+- Branch: `run-board`.
+- Done: M47-001. `run-start.sh` writes `.harness-run/run-id`
+  (`<epoch>-<pid>`), resets `board-opened`, archives `events.log` with the
+  other logs under `previous/<run-id>/` (start commit when the old run has
+  none), logs `run-start` and prints only board.sh's `BOARD:` line.
+  `dispatch.sh` (every CLI, only past the exit-3 agent check), `run-gate.sh`
+  (id from a `lane/<id>` branch, else `-`; a reused baseline logs `green`
+  only), `second-opinion.sh` (PASS, NEEDS_WORK, REJECTED) and
+  `run-report.sh` (`run-end`) append to the main repo's `events.log`, found
+  via `git rev-parse --git-common-dir`, only when `.harness-run/start`
+  exists. New `board.sh <target> [--open]`: one jq pass writes
+  `board.html` (temp + mv); `--open` opens once per run-id
+  (`HARNESS_BOARD_OPEN=0`, `HARNESS_BOARD_OPEN_CMD`). New
+  `scripts/test-board.sh` in e2e (60 features in about 0.2 s).
+  `test-run.sh` sets `HARNESS_BOARD_OPEN=0` and drops the first run's
+  run-id so its archive check still covers the start-commit fallback.
+- Decisions: the brief's stale-result case contradicts its own stage order
+  (a result older than the latest dispatch is `building`, so "stale review
+  + failing eval_attempts 1 -> rework" and "redispatch -> building" are the
+  same input). Chosen order: skipped, passing, gate running, building,
+  blocked, FEATURES review, rework (failing, eval_attempts > 0), current
+  result review, queued, so a NEEDS_WORK feature whose review result is
+  still current shows rework. Known ceiling: a lane's second attempt shows
+  rework, not review, until the orchestrator flips it (lanes never touch
+  FEATURES.json); a lane result saying passing before its merge shows
+  queued, as the brief's order says. A `-` gate event belongs to the one
+  non-lane building feature only when it is at or after that feature's
+  dispatch. `--open` prints `BOARD:` on every call, not only the first.
+  Opinion lines in the expanded row come from events.log, not
+  `so-<cli>-<id>.txt`. Rejected: per-file stat/jq calls (60 features
+  would cost seconds) and a shared sourced helper across two skills
+  (each script keeps a two-line `ev()`). The refresh calls in the other
+  scripts, the junk-board and run-end-mtime cases, SKILL.md, docs and
+  the version are M47-002.
+- Gate: GREEN (bash scripts/e2e.sh via run-gate.sh final).
+- Next: M47-002 (wiring, skills, docs, 3.21.0).
+
 ## 2026-11-17 -- session 85 (M46-001 rolling lanes)
 
 - Branch: `parallel-lanes` (same PR as M45).

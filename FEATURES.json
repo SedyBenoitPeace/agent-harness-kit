@@ -289,7 +289,7 @@
       "id": "M47-001",
       "milestone": 47,
       "title": "Run board core: run-start.sh writes run-id and archives events.log by run-id; dispatch/run-gate/second-opinion/run-start/run-report append events.log lines during a run; new board.sh writes a self-refreshing .harness-run/board.html (stage per feature, agent, gate, time, cost) and --open opens it once per run",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with scripts/test-board.sh proving the brief's board.sh, event and run-start cases (stages incl. stale result and same-second tie, gate in a lane worktree, archive per run-id on one HEAD, opener counter and HARNESS_BOARD_OPEN=0, cost and tokens, 60 features under 1.0 s locally / 3.0 s with CI=1); docs/briefs/2026-11-18-run-board.md is the spec",
       "model": "large",
       "depends_on": [],

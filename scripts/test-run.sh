@@ -5,6 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 fail() { echo "RUN TEST FAIL: $*" >&2; exit 1; }
+export HARNESS_BOARD_OPEN=0 # run-start.sh must never open a fixture's run board (M47-001)
 
 md="skills/harness-continuous/SKILL.md"
 run="skills/harness-run/SKILL.md"
@@ -327,6 +328,7 @@ cd "$R5/.harness-run"
 printf 'M1-001 9.99\n' > cost.log; printf 'a 1\n' > run-cost; printf 'M1-001 small model small\n' > models.log
 printf 's c m 1 2 3\n' > usage.log; printf 'budget x\n' > budget.log; mkdir decisions; echo d > decisions/M1-001.md; mkdir results
 echo M1-002 > skip; echo M1-003 > busy; touch STOP
+rm run-id # a run from before M47-001: its archive falls back to its start commit
 cd "$OLDPWD"
 g5 commit -q --allow-empty -m "run 1 work"
 second="$(git -C "$R5" rev-parse HEAD)"

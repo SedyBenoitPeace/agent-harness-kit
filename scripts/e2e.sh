@@ -370,6 +370,9 @@ grep -q 'reaching 2' "$RUN_SKILL/SKILL.md" || fail "harness-run SKILL.md: STOP-a
 
 shellcheck skills/harness-run/scripts/run-report.sh
 bash scripts/test-run.sh
+# M47-001: the live run board (run-id, events.log, board.sh)
+shellcheck skills/harness-run/scripts/board.sh skills/harness-run/scripts/run-start.sh scripts/test-board.sh
+bash scripts/test-board.sh
 # M32: every CLI's usage collector test (added by its own feature)
 for t in scripts/test-usage-*.sh; do
   [ -f "$t" ] || continue

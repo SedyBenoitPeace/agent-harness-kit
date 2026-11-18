@@ -9,6 +9,8 @@
 # Codex spawn_agent forks the orchestrator's whole history when fork_turns is
 # omitted, so a builder would start from it, M44-001); appends `<id> <size> model <size>[, +n]`
 # to <target>/.harness-run/models.log (not on claude: its hook logs the model).
+# Inside a run (.harness-run/start in the main repo) it also appends
+# `<epoch> dispatch <id> <cli> <agent> <size>` to .harness-run/events.log (M47-001).
 # Each retry steps up one size, capped at large. Exit 2 = usage error.
 # Exit 3 = no builder agent file for this CLI (prints `AGENT: missing`): the
 # orchestrator generates them with gen-agents.sh and stops for a CLI restart,
@@ -33,9 +35,11 @@ agent_file() {
   echo "dispatch: no $(agent_file harness-builder): run gen-agents.sh $target, commit the agent files, restart the CLI" >&2
   exit 3
 }
+ev() { local root; root="$(cd "$target" 2>/dev/null && cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
+  [ ! -f "$root/.harness-run/start" ] || echo "$(date +%s) $*" >> "$root/.harness-run/events.log"; }
 case "$m" in
   small) n=0 ;; medium) n=1 ;; large) n=2 ;;
-  *) if [ "$cli" = claude ]; then echo "AGENT: harness-builder"; echo "SIZE: -"; exit 0; fi
+  *) if [ "$cli" = claude ]; then echo "AGENT: harness-builder"; echo "SIZE: -"; ev dispatch "$id" claude harness-builder -; exit 0; fi
      m=medium; n=1 ;;
 esac
 base=$m
@@ -45,6 +49,7 @@ agent=harness-builder-$size
 [ -f "$(agent_file "$agent")" ] || agent=harness-builder
 echo "AGENT: $agent"
 echo "SIZE: $size"
+ev dispatch "$id" "$cli" "$agent" "$size"
 [ "$cli" = codex ] && echo "SPAWN: fork_turns=none"
 [ "$cli" = claude ] && exit 0
 reason="model $base"; [ "$retries" -eq 0 ] || reason="$reason, +$retries"

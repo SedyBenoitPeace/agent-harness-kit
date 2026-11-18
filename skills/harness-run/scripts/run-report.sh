@@ -274,4 +274,8 @@ list() { if [ -n "$1" ]; then printf '%s' "$1"; else echo "- none"; fi; }
   echo
   list "$branches_out"
 } > "$out"
+# M47-001: the run's last events.log line
+ev() { local root; root="$(cd "$(git rev-parse --git-common-dir 2>/dev/null)/.." 2>/dev/null && pwd)" || return 0
+  [ ! -f "$root/.harness-run/start" ] || echo "$(date +%s) $*" >> "$root/.harness-run/events.log"; }
+ev run-end - "$REASON"
 echo "$out"
