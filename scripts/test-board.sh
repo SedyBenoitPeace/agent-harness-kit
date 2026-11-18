@@ -260,12 +260,12 @@ grep -q 'stop requested' "$XH" || fail "board: 'stop requested' missing with STO
 ! grep -q 'Stop after current feature' "$XH" || fail "board: STOP button must go once STOP exists"
 # the page's own quoting (built in JS): write the command through bash, text must arrive verbatim
 txt="$(printf "it's \$(touch %s/pwn) \`touch %s/pwn2\` \"dq\"\nline2 ; rm -rf x" "$WORK" "$WORK")"
-if command -v node >/dev/null; then
+if [ -z "${BOARD_TEST_NO_NODE:-}" ] && command -v node >/dev/null; then
   fn="$(grep -E '^function (q|hintCmd)\(' "$XH")"; [ "$(echo "$fn" | wc -l)" -eq 2 ] || fail "board JS: q/hintCmd lines missing"
   cmd="$(node -e "$fn"'; process.stdout.write(hintCmd(process.argv[1], "H-003", process.argv[2]))' "$X" "$txt")"
   how="the page's JS run with node"
 else
-  qt="$(printf '%s' "$txt" | jq -Rsr "gsub(\"'\"; \"'\\\\\\\\''\")")"
+  qt="$(printf '%s' "$txt" | jq -Rsr --arg a "'" --arg b "'\\''" 'gsub($a; $b)')"
   cmd="mkdir -p '$X/.harness-run/hints' && printf '%s\\n' '$qt' >> '$X/.harness-run/hints/H-003.md'"
   how="a jq mirror of the quoting (no node)"
 fi
