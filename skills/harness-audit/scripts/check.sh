@@ -248,6 +248,14 @@ for f in CLAUDE.md GEMINI.md; do
   fi
 done
 
+# Run state (WARN only, M52-001): .harness-run/ holds run state and quiet.sh
+# logs; the protocol says it is never committed, so it must be ignored.
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  if git check-ignore -q .harness-run/x; then pass ".harness-run/ is git-ignored"
+  else warn ".harness-run/ is not git-ignored — add it to .gitignore (harness-upgrade-structure does it)"; fi
+elif grep -qsE '^/?\.harness-run/?\*?$' .gitignore; then pass ".harness-run/ is git-ignored"
+else warn ".harness-run/ is not in .gitignore — add it (harness-upgrade-structure does it)"; fi
+
 # Optionally run the gate itself
 if [ "$RUN_GATE" -eq 1 ]; then
   if bash scripts/e2e.sh; then failc_gate=0; else failc_gate=1; fi

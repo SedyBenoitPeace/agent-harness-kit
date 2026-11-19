@@ -37,6 +37,13 @@ an existing codebase (retrofit). The output is a repository where any agent
 can do useful work one session at a time. Planning is done when the gate is
 green and everything below is committed.
 
+Templates (`*.tmpl`) and bare script names (`context.sh`) named here are
+agent-harness-kit files, not files in this repo: the templates are in the
+kit's `skills/harness-initial-setup/templates/`, the scripts in its
+`skills/<skill>/scripts/`. Setup copies the templates, so a harnessed repo
+holds their filled-in results (`FEATURES.json`, `PROGRESS.md`,
+`ARCHITECTURE.md`, `scripts/e2e.sh`, `scripts/dev.sh`), never the templates.
+
 ### 1.1 Interview the human
 
 Do not skip this, and do not answer these questions yourself. Ask, then

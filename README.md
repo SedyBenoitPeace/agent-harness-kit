@@ -406,8 +406,9 @@ After updating the plugin, bring each repo that already has a harness up to
 date with `harness-upgrade-structure` (new repos use
 `harness-initial-setup`); the full checklist is in "Upgrading after every
 release" below. It recopies the protocol, adds the missing harness-run line
-to `AGENTS.md`, regenerates your agent files, prints the release notes you
-still need, and lists what still needs you (an unbounded gate,
+to `AGENTS.md`, regenerates your agent files, adds `.harness-run/` to
+`.gitignore`, prints the release notes you still need, and lists what still
+needs you (an unbounded gate,
 `depends_on`/`paths`). It refuses a dirty tree, creates `harness-upgrade`
 when you are on the default branch, and commits nothing.
 
@@ -655,6 +656,12 @@ says the harness applies plugin or not, and `CLAUDE.md` / `GEMINI.md` import
 it with `@AGENTS.md` (a link in words is not loaded). The plugin only makes
 the same steps faster. To skip the harness for one change, say "just build
 it": no brief or plan, but FEATURES.json is still updated.
+
+Script and template names in the protocol (`quiet.sh`, `context.sh`,
+`FEATURES.json.tmpl`) are kit files, not files in your repo, and each doc
+says where they live; without the plugin each rule says what to do instead.
+The gate's `scripts/check-doc-refs.sh` fails if an onboarded doc names a
+file that is neither installed in the repo nor shipped by the kit.
 
 ## Start a repo from scratch — just chat
 

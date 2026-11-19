@@ -335,6 +335,15 @@ if [ -n "$kit_v" ] && [ -f "$KIT/CHANGELOG.md" ]; then
   fi
 fi
 
+# run state and quiet.sh logs are never committed (protocol 2.7, M52-001)
+if git check-ignore -q .harness-run/x 2>/dev/null; then
+  echo "OK: .harness-run/ is git-ignored"
+else
+  [ ! -s .gitignore ] || [ -z "$(tail -c1 .gitignore)" ] || echo >> .gitignore
+  echo ".harness-run/" >> .gitignore
+  echo "CHANGED: .gitignore (ignores .harness-run/: run state and quiet.sh logs)"
+fi
+
 # things only a human or an agent can do
 if [ ! -f scripts/e2e.sh ]; then
   echo "TODO: scripts/e2e.sh is missing — adapt $TEMPLATES/e2e.sh.tmpl"

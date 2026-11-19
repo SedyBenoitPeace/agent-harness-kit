@@ -220,6 +220,14 @@ case "$qlog" in .harness-run/logs/noisy-*) ;; *) fail "quiet: log path wrong: $q
 [ "$(awk '{ if (length($0) > m) m = length($0) } END { print m }' "$WORK/q.out")" -le 300 ] || fail "quiet: a line exceeds 300 characters"
 rc=0; bash "$QUIET" bad >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 2 ] || fail "quiet: usage error should exit 2"
+# logs never reach a commit (M52-001): in a git repo without the .gitignore
+# entry quiet.sh ignores its own folder; with the entry it adds nothing
+QG="$WORK/quietgit"; mkdir -p "$QG"; git -C "$QG" init -q
+(cd "$QG" && bash "$QUIET" ok -- true >/dev/null)
+[ -z "$(git -C "$QG" status --porcelain)" ] || fail "quiet: logs show up in git status: $(git -C "$QG" status --porcelain)"
+QI="$WORK/quietignored"; mkdir -p "$QI"; git -C "$QI" init -q; printf '.harness-run/\n' > "$QI/.gitignore"
+(cd "$QI" && bash "$QUIET" ok -- true >/dev/null)
+[ ! -e "$QI/.harness-run/.gitignore" ] || fail "quiet: wrote its own .gitignore although the repo ignores .harness-run/"
 
 # 7d. run-gate.sh red output has the same capped shape
 make_gate_target "$WORK/redq" 150 3 'error sentinel'

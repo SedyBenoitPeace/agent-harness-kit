@@ -22,6 +22,11 @@ if [ $# -lt 3 ] || [ "$2" != "--" ]; then
 fi
 name="$1"; shift 2
 mkdir -p .harness-run/logs
+# never let logs reach a commit, even in a repo whose .gitignore lacks the
+# entry (setup and upgrade add it, M52-001)
+if git rev-parse --git-dir >/dev/null 2>&1 && ! git check-ignore -q .harness-run/logs/x; then
+  printf '*\n' > .harness-run/.gitignore
+fi
 log=".harness-run/logs/${name}-$(date +%Y%m%d-%H%M%S)-$$.log"
 "$@" >"$log" 2>&1
 status=$?
