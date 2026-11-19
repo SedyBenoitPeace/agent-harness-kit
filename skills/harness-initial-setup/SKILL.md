@@ -65,6 +65,11 @@ Copy each template and substitute every `{{PLACEHOLDER}}`:
 | `templates/e2e.sh.tmpl` | `scripts/e2e.sh` (chmod +x) |
 | `templates/harness-protocol.md`, `templates/harness-protocol-planning.md`, `templates/harness-protocol-runs.md`, `templates/harness-protocol-maintenance.md` | `docs/agents/`, same names — **copied whole, never generated or summarized** |
 
+Append `.harness-run/` to `.gitignore` (create it if missing): run state and
+`quiet.sh` logs live there and are never committed (protocol §2.7, M52-001).
+The protocol docs name kit scripts and templates (`context.sh`, `quiet.sh`,
+`*.tmpl`); they stay in the kit and the docs say so, so do not copy them in.
+
 Always run the plugin's `../../scripts/gen-agents.sh <target-repo>` (path
 relative to this skill) to write the builder, evaluator and brief reviewer
 agent files for Claude Code, Copilot CLI and Codex CLI, and commit them with

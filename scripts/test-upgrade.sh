@@ -272,6 +272,9 @@ cp scripts/fixtures/agents-3.16.0.md "$PL/AGENTS.md"
 git -C "$PL" -c user.email=t@t -c user.name=t add -A; git -C "$PL" -c user.email=t@t -c user.name=t commit -qm seed
 out="$(bash "$UPGRADE" "$PL" 2>&1)" || fail "plugin-less: expected exit 0 (got: $out)"
 cmp -s "$TPL/pointer.md.tmpl" "$PL/CLAUDE.md" || fail "plugin-less: kit pointer CLAUDE.md must become the template import"
+# run state (M52-001): .harness-run/ joins .gitignore once, kept after other entries
+echo "$out" | grep -qF 'CHANGED: .gitignore (ignores .harness-run/' || fail "gitignore: CHANGED line missing"
+grep -qxF '.harness-run/' "$PL/.gitignore" || fail "gitignore: .harness-run/ not added"
 [ "$(head -1 "$PL/GEMINI.md")" = '@AGENTS.md' ] || fail "plugin-less: custom GEMINI.md must start with @AGENTS.md"
 grep -qxF 'See AGENTS.md for everything.' "$PL/GEMINI.md" || fail "plugin-less: custom GEMINI.md text must be kept"
 grep -qF 'long-running-agent harness, plugin or' "$PL/AGENTS.md" || fail "plugin-less: declaration not reworded"
@@ -290,7 +293,7 @@ echo "$out" | grep -qF 'CHANGED: AGENTS.md (an approved plan or outline skips ha
 git -C "$PL" -c user.email=t@t -c user.name=t add -A; git -C "$PL" -c user.email=t@t -c user.name=t commit -qm up
 out="$(bash "$UPGRADE" "$PL" 2>&1)" || fail "plugin-less second run: expected exit 0"
 [ "$(grep -c '^An approved plan or outline' "$PL/AGENTS.md")" -eq 1 ] || fail "outline: inserted twice"
-for w in 'OK: CLAUDE.md imports AGENTS.md' 'OK: GEMINI.md imports AGENTS.md' 'OK: AGENTS.md declares the harness, plugin or not' 'OK: AGENTS.md says how to skip the harness' 'OK: AGENTS.md treats the plugin as an accelerator' 'OK: AGENTS.md says an approved outline skips the brief'; do
+for w in 'OK: .harness-run/ is git-ignored' 'OK: CLAUDE.md imports AGENTS.md' 'OK: GEMINI.md imports AGENTS.md' 'OK: AGENTS.md declares the harness, plugin or not' 'OK: AGENTS.md says how to skip the harness' 'OK: AGENTS.md treats the plugin as an accelerator' 'OK: AGENTS.md says an approved outline skips the brief'; do
   echo "$out" | grep -qF "$w" || fail "plugin-less second run: '$w' missing"
 done
 [ -z "$(git -C "$PL" status --short)" ] || fail "plugin-less: second run must change nothing"
@@ -309,6 +312,14 @@ grep -qF 'just build it' "$HW/AGENTS.md" || fail "hand-written: skip line missin
 grep -qF 'approved plan or outline' "$HW/AGENTS.md" || fail "hand-written: outline line missing"
 [ "$(head -1 "$HW/CLAUDE.md")" = '@AGENTS.md' ] || fail "hand-written: missing CLAUDE.md must be created as the import"
 [ ! -e "$HW/GEMINI.md" ] || fail "hand-written: GEMINI.md must not be created"
+
+# .gitignore without a trailing newline: the existing last entry stays whole
+GI="$WORK/gitignore"; mkdir -p "$GI"; git -C "$GI" init -q -b main
+printf '{ "milestones": {"1":"C"}, "features": [] }\n' > "$GI/FEATURES.json"
+printf '# PROGRESS\n' > "$GI/PROGRESS.md"; printf 'node_modules' > "$GI/.gitignore"
+git -C "$GI" -c user.email=t@t -c user.name=t add -A; git -C "$GI" -c user.email=t@t -c user.name=t commit -qm seed
+bash "$UPGRADE" "$GI" >/dev/null 2>&1 || fail "gitignore no-newline: expected exit 0"
+[ "$(cat "$GI/.gitignore")" = "$(printf 'node_modules\n.harness-run/')" ] || fail "gitignore no-newline: got $(cat "$GI/.gitignore")"
 
 sess="skills/harness-session/SKILL.md"
 grep -q 'harness-upgrade-structure' "$sess" || fail "harness-session SKILL.md: UPGRADE: offer must point at harness-upgrade-structure"

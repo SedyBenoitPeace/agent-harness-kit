@@ -6,12 +6,15 @@ sessions, for any agent. One rule at its core:
 > **The repo is the only interface. If it's not in the repo, it doesn't
 > exist.** A fresh session, any vendor, recovers full context from the repo.
 
-This file is what every feature session reads. The rest of the protocol is
-read only when needed, from this folder:
+This file is what every feature session reads; the rest, only when needed:
 
 - `harness-protocol-planning.md`: section 1, planning a project or feature set.
 - `harness-protocol-runs.md`: §2.7–§2.9, orchestrated runs and the dispatched-session card.
 - `harness-protocol-maintenance.md`: section 3, maintenance passes.
+
+Bare script names (`context.sh`, `quiet.sh`) are agent-harness-kit plugin
+tools (the kit's `skills/<skill>/scripts/`), not files in this repo; each
+rule says what to do without them.
 
 ## 2. Coding-session protocol
 
@@ -46,11 +49,11 @@ Check `git status` before claiming anything about the baseline — never
 assume the tree is clean.
 
 - **Clean tree:** run `bash scripts/e2e.sh` (or the harness-session gate
-  wrapper: same gate, concise report, full log on disk; it reports a
-  baseline as reused when the tree is identical, bookkeeping aside, to its
-  last green run, and that counts as green). If it is red, **fixing the gate is the session** — do that instead, and log it
-  as such. Never build on a red baseline: you can't tell your breakage
-  from inherited breakage.
+  wrapper: same gate, concise report, full log on disk; a baseline it
+  reports as reused, the tree matching its last green run bookkeeping
+  aside, counts as green). If red, **fixing the gate is the session**:
+  log it as such. Never build on a red baseline: you can't tell your
+  breakage from inherited breakage.
 - **Dirty tree that clearly matches the selected feature** (the diff and
   an in-flight plan both point at the same feature id): announce
   CONTINUING INTERRUPTED FEATURE, inspect the existing diff, run the
@@ -70,14 +73,11 @@ gate.
 **Execution mode.** Before touching code, propose one mode in a single
 line — the human can override:
 
-- **Inline** (default): you edit, test, and commit yourself. Right for
-  almost every one-session feature.
-- **Delegated**: the feature has two or more independent parts (say, a
-  script and its fixture suite). Dispatch each part to the agent's
-  **own built-in** subagent or task tool, hand it only that task section
-  plus the `verify` criterion, and keep just its one-paragraph summary in
-  your context. You still own the gate, the status flip, the commit, and the
-  PROGRESS.md entry.
+- **Inline** (default): you edit, test, and commit yourself.
+- **Delegated**: two or more independent parts. Dispatch each to the
+  agent's **own built-in** subagent or task tool with only its task section
+  and the `verify` criterion; keep its one-paragraph summary. You still own
+  the gate, the status flip, the commit, and the PROGRESS.md entry.
 
 Either way, use only the tools the agent ships with. Never load an
 external execution-workflow skill or plugin: it front-loads its manual
@@ -99,7 +99,8 @@ this is the rule that keeps it safe.
 **Run every build, simulator and test command (`xcodebuild`, `simctl`,
 test runners) through `quiet.sh <name> -- <command>`, never raw.** The full
 output goes to `.harness-run/logs/`; you see the exit code, up to 40 error
-lines and the last 20. Search a log (`grep`, `sed -n`), never read it whole.
+lines and the last 20. Without the plugin, redirect to a log there yourself
+and show the same. Search a log (`grep`, `sed -n`), never read it whole.
 
 Stay inside the selected feature: a passing gate's warning that is
 already tracked by another failing or deferred feature is out of scope —
@@ -124,8 +125,7 @@ requires it.
 6. Append a PROGRESS.md entry at the top: branch, what was done, gate
    status, and the next feature. Add one `Decisions:` line: the
    options considered and rejected, and the assumptions made, each in a
-   few words (or `none`). Most wrong results are a right answer the session thought of and
-   turned down; written down, a reviewer can ask for the skipped option
+   few words (or `none`), so a reviewer can ask for a skipped option
    instead of rediscovering it.
 
 Not done when you must stop, or past 60 tool calls or about 150k of context

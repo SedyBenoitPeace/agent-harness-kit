@@ -3,6 +3,30 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-19 -- session 91 (M52-001, M52-002 onboarding installs what its docs reference)
+
+- Branch: `onboarding-installs-what-docs-reference`.
+- Trigger: an AI PR review of a real onboarding flagged three gaps:
+  `.harness-run/` claimed git-ignored but never added; `*.tmpl` named
+  without saying they live in the kit; `quiet.sh`, `context.sh`,
+  `run-gate.sh`, `feature.sh`, `status.sh` mandated but absent from the repo.
+- Done: M52-001. Setup (SKILL.md) and upgrade.sh add `.harness-run/` to
+  `.gitignore` (and sync-template.sh into the mirror's); quiet.sh writes `.harness-run/.gitignore` (`*`) when the
+  repo does not ignore it; audit WARNs. M52-002. Each protocol doc that
+  names kit scripts or templates says they are "not files in this repo"
+  with the kit path; the core gives the plugin-less quiet.sh fallback.
+  `scripts/check-doc-refs.sh` (in the gate) fails on a name neither
+  installed by setup nor shipped by the kit, on kit names without the
+  note, and on the .gitignore claim without setup/upgrade adding it. It
+  fails on the old docs with exactly the three review findings.
+- Decisions: rejected vendoring the scripts into each repo (option C of the
+  plugin-less proposal: two copies, skill shadowing, heavier upgrade); the
+  docs point to the kit and give fallbacks instead. Patch release (3.22.1),
+  no plan file ("just build it" scale), FEATURES.json still updated.
+  harness-protocol.md stays at its 150-line cap by tightening 2.3/2.4/2.5.
+- Gate: GREEN (bash scripts/e2e.sh with HARNESS_TEMPLATE_DIR; ci-local.sh CI-LOCAL GREEN).
+- Next: owner reviews the PR; template mirror PR via sync-template.sh.
+
 ## 2026-11-19 -- session 90 (M51-001, M51-002 upgrade re-checks open plans; board shows every field)
 
 - Branch: `board-and-upgrade-checks`.

@@ -2,7 +2,8 @@
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
   "milestones": {
     "50": "Docs stay current",
-    "51": "Upgrade re-checks open plans; board shows every field"
+    "51": "Upgrade re-checks open plans; board shows every field",
+    "52": "Onboarding installs what its docs reference"
   },
   "features": [
     {
@@ -45,6 +46,43 @@
       "paths": [
         "skills/harness-run/scripts/board.sh",
         "scripts/test-board.sh"
+      ]
+    },
+    {
+      "id": "M52-001",
+      "milestone": 52,
+      "title": "Run state is never committed: setup, upgrade and the template mirror sync add .harness-run/ to .gitignore (the runs protocol already claimed it was listed), quiet.sh ignores its own log folder in a repo that lacks the entry, and the audit warns when .harness-run/ is not ignored",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-upgrade.sh proving upgrade.sh adds .harness-run/ once (CHANGED, then OK) and keeps a last .gitignore line without a newline whole, test-session.sh proving quiet.sh leaves git status clean in a repo without the entry and writes no .gitignore where the repo ignores it, and test-audit.sh proving the WARN, and test-sync-template.sh proving the mirror's .gitignore gets .harness-run/ appended with its own entries kept",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-upgrade-structure/scripts/upgrade.sh",
+        "skills/harness-session/scripts/quiet.sh",
+        "skills/harness-audit/scripts/check.sh",
+        "skills/harness-initial-setup/SKILL.md",
+        "scripts/test-upgrade.sh",
+        "scripts/test-session.sh",
+        "scripts/test-audit.sh",
+        "scripts/sync-template.sh",
+        "scripts/test-sync-template.sh"
+      ]
+    },
+    {
+      "id": "M52-002",
+      "milestone": 52,
+      "title": "Onboarded docs name only files that exist where they say: kit scripts and templates (quiet.sh, context.sh, run-gate.sh, feature.sh, status.sh, *.tmpl) are called kit files with their kit location and a plugin-less fallback, and scripts/check-doc-refs.sh fails the gate when a protocol doc or AGENTS.md.tmpl names a file neither installed by setup nor shipped by the kit, or names kit files without saying so",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-check-doc-refs.sh proving the kit is clean and each of: an unknown script, a kit script or template without the location note, an uninstalled scripts/*.sh (unless called optional), and a .gitignore claim without setup or upgrade adding .harness-run/ makes check-doc-refs.sh exit 1",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "scripts/check-doc-refs.sh",
+        "scripts/test-check-doc-refs.sh",
+        "scripts/e2e.sh",
+        "skills/harness-initial-setup/templates/harness-protocol.md",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "skills/harness-initial-setup/templates/harness-protocol-runs.md"
       ]
     }
   ]

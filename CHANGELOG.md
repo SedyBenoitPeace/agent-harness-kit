@@ -12,6 +12,30 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.22.1 — 2026-11-19
+
+Fixes found by a PR review of a real onboarding:
+
+- Run state is never committed (M52-001): setup, `upgrade.sh` and
+  `sync-template.sh` add `.harness-run/` to `.gitignore` (the runs protocol said it was listed;
+  nothing put it there, so `quiet.sh` logs could be committed in any normal
+  session). `quiet.sh` now ignores its own folder in a repo without the
+  entry, and harness-audit warns when `.harness-run/` is not ignored.
+- Onboarded docs say where the files they name live (M52-002): `quiet.sh`,
+  `context.sh`, `run-gate.sh`, `feature.sh`, `status.sh` and the `*.tmpl`
+  templates are kit files, not repo files, and each protocol doc now says
+  so with the kit path; the session core says what to do without the
+  plugin. New gate check `scripts/check-doc-refs.sh` fails when a
+  protocol doc or `AGENTS.md.tmpl` names a file that setup does not install
+  and the kit does not ship, or names kit files without saying so.
+
+README: `kit files, not files in your repo`, `check-doc-refs.sh`
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure` (recopies
+  the protocol docs, adds `.harness-run/` to `.gitignore`); if a
+  `.harness-run/` file was ever committed, `git rm -r --cached .harness-run`.
+
 ## 3.22.0 — 2026-11-19
 
 - Upgrade re-checks plans not yet built (M51-001): `upgrade.sh` names each

@@ -4,6 +4,13 @@
 a normal section 2 session (`harness-protocol.md`); §2.9 is the card such a
 session gets from `context.sh --brief` instead of reading this folder.
 
+Runs are driven by the agent-harness-kit plugin. The scripts named here are
+its tools, not files in this repo: `context.sh`, `quiet.sh` and
+`run-gate.sh` in the kit's `skills/harness-session/scripts/`; `feature.sh`,
+`run-start.sh`, `run-report.sh` and `wait-result.sh` in
+`skills/harness-run/scripts/`; `status.sh` in `skills/harness-status/scripts/`.
+Without the plugin there is no run: build one feature per session (§2).
+
 ### 2.7 Orchestrated runs
 
 To work through many features without one conversation's context growing

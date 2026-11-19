@@ -21,6 +21,7 @@ make_fixture() {  # $1 = destination dir
   chmod +x "$d/scripts/e2e.sh"
   cp "$TMPL"/harness-protocol*.md "$d/docs/agents/"
   cp "$TMPL/pointer.md.tmpl" "$d/CLAUDE.md"
+  printf '.harness-run/\n' > "$d/.gitignore"
 }
 
 expect_fail() {  # $1 = fixture dir, $2 = expected FAIL pattern, $3 = label
@@ -52,6 +53,15 @@ printf 'See AGENTS.md\n' > "$WORK/linkonly/GEMINI.md"
 out="$(bash "$CHECK" "$WORK/linkonly")" || fail "link-only pointer: checker must still exit 0"
 echo "$out" | grep -q "^WARN.*CLAUDE.md does not import AGENTS.md" || fail "link-only CLAUDE.md: expected WARN"
 echo "$out" | grep -q "^WARN.*GEMINI.md does not import AGENTS.md" || fail "link-only GEMINI.md: expected WARN"
+
+# 1c. run state (M52-001): .harness-run/ must be ignored; WARN when it is not
+echo "$out" | grep -q "^PASS.*.harness-run/ is git-ignored" || fail "good fixture: expected PASS for ignored .harness-run/"
+make_fixture "$WORK/noignore"; rm "$WORK/noignore/.gitignore"
+out="$(bash "$CHECK" "$WORK/noignore")" || fail "unignored run state must not fail the audit"
+grep -q "^WARN.*.harness-run/ is not" <<< "$out" || fail "unignored run state: expected WARN"
+git -C "$WORK/noignore" init -q
+out="$(bash "$CHECK" "$WORK/noignore")" || fail "unignored run state (git): must not fail the audit"
+grep -q "^WARN.*.harness-run/ is not git-ignored" <<< "$out" || fail "unignored run state (git): expected WARN"
 
 # 2. drifted protocol doc: WARN, still exit 0
 make_fixture "$WORK/drift"

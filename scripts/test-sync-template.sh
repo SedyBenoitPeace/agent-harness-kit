@@ -15,6 +15,7 @@ printf '# AGENTS.md — {{PROJECT_NAME}}\n\n> **UNINITIALIZED TEMPLATE.** Plan f
 printf 'mirror readme\n' > "$M/README.md"
 mkdir -p "$M/docs"; printf 'product skeleton\n' > "$M/docs/PRODUCT.md"
 printf 'old protocol\n' > "$M/docs/agents/harness-protocol.md"
+printf '.DS_Store' > "$M/.gitignore"
 
 rc=0; bash "$SYNC" "$M" --check >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 1 ] || fail "--check on a stale mirror: want exit 1, got $rc"
@@ -35,6 +36,7 @@ grep -q 'old body' "$M/AGENTS.md" && fail "AGENTS.md: old body kept"
 [ "$(head -1 "$M/AGENTS.md")" = "$(head -1 "$T/AGENTS.md.tmpl")" ] || fail "AGENTS.md: title line wrong"
 [ "$(cat "$M/README.md")" = "mirror readme" ] && [ "$(cat "$M/docs/PRODUCT.md")" = "product skeleton" ] || fail "README/PRODUCT must be left alone"
 
+[ "$(cat "$M/.gitignore")" = "$(printf '.DS_Store\n.harness-run/')" ] || fail ".gitignore: .harness-run/ must be appended, own entries kept (M52-001)"
 before="$(cd "$M" && find . -type f -exec cksum {} + | sort)"
 bash "$SYNC" "$M" >/dev/null
 [ "$before" = "$(cd "$M" && find . -type f -exec cksum {} + | sort)" ] || fail "sync is not idempotent"
