@@ -23,6 +23,7 @@ agent-harness-template>` and open a PR there; gate green; PR.
 - Board shows every field (M51-002): an expanded row ends with **All
   fields**, each key of the FEATURES.json entry as written; a queued row's
   agent column shows its planned model and effort instead of a dash.
+  A deferred feature shows `deferred` (it showed `queued`).
 
 README: `All fields`, `depends_on may be order only`
 

@@ -37,9 +37,9 @@
     {
       "id": "M51-002",
       "milestone": 51,
-      "title": "Board rows show every FEATURES.json field ('All fields', open state kept across reloads) and a queued row's agent column shows its planned model and effort",
+      "title": "Board rows show every FEATURES.json field ('All fields', open state kept across reloads) and a queued row's agent column shows its planned model and effort; a deferred feature shows 'deferred', not 'queued'",
       "status": "passing",
-      "verify": "bash scripts/e2e.sh exits 0 with test-board.sh proving a row lists exclusive, evaluate, bar, depends_on, paths and an escaped verify under All fields, and a queued row shows 'model large · effort high'",
+      "verify": "bash scripts/e2e.sh exits 0 with test-board.sh proving a row lists exclusive, evaluate, bar, depends_on, paths and an escaped verify under All fields, and a queued row shows 'model large · effort high', and a deferred feature's row has stage deferred",
       "model": "small",
       "depends_on": [],
       "paths": [

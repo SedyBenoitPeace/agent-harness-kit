@@ -11,7 +11,8 @@ Newest-first session log. One entry per working session. Read this (plus
   one ("depends_on may be order only"); the upgrade skill proposes fixes
   for approval. M51-002. Board rows end with "All fields" (every
   FEATURES.json key, escaped, open state kept across reloads); a queued
-  row's agent column shows planned model and effort. Plan:
+  row's agent column shows planned model and effort; a deferred feature
+  shows `deferred`, no longer `queued`. Plan:
   `docs/plans/completed/2026-11-19-m51-upgrade-rechecks-board-fields.md`.
 - Decisions: the order-only check is a TODO, not a FAIL: a real chain is
   legitimate, only the human can tell. Rejected a raw JSON dump (pretty

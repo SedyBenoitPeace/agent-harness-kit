@@ -305,5 +305,9 @@ for k in 'exclusive: native-desktop' 'evaluate: ui' 'bar: docs/bar.md' 'depends_
   echo "$QR" | grep -q "$k" || fail "all fields: '$k' missing or unescaped"
 done
 echo "$QR" | grep -q '<span>model large · effort high</span>' || fail "queued row: planned model and effort missing from the agent column"
+# a deferred feature is not queued (M51-002)
+jq '.features += [{"id":"M1-002","milestone":1,"title":"d","status":"deferred","notes":"Needs a human: ok?"}]' "$Q/FEATURES.json" > "$Q/f.tmp" && mv "$Q/f.tmp" "$Q/FEATURES.json"
+git -C "$Q" -c user.email=t@t -c user.name=t commit -qam d; git -C "$Q" rev-parse HEAD > "$Q/.harness-run/start"
+bash "$BOARD" "$Q"; grep 'data-id="M1-002"' "$Q/.harness-run/board.html" | grep -q 'data-stage="deferred"' || fail "deferred feature must show stage deferred, not queued"
 
 echo "BOARD TESTS GREEN (60 features in ${secs}s)"
