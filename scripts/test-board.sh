@@ -294,4 +294,20 @@ awk -v s="$secs" -v l="$limit" 'BEGIN { exit !(s < l) }' || fail "board.sh on 60
 [ "$(grep -c 'data-stage=' "$P/.harness-run/board.html")" -eq 60 ] || fail "60 rows expected"
 [ "$(grep -c 'cut at 40 of 61' "$P/.harness-run/board.html")" -eq 60 ] || fail "60 plan sections expected"
 
+# --- M51-002: a row shows every FEATURES.json field; a queued row shows its planned model and effort
+Q="$WORK/fields"; mkdir -p "$Q/.harness-run"; git -C "$Q" init -q -b main
+printf '%s\n' '{"features":[{"id":"M1-001","milestone":1,"title":"t","status":"failing","verify":"v <ok>","model":"large","effort":"high","depends_on":[],"paths":["a/x.swift"],"exclusive":"native-desktop","evaluate":"ui","bar":"docs/bar.md"}]}' > "$Q/FEATURES.json"
+git -C "$Q" add -A; git -C "$Q" -c user.email=t@t -c user.name=t commit -qm seed
+git -C "$Q" rev-parse HEAD > "$Q/.harness-run/start"
+bash "$BOARD" "$Q"; QR="$(grep 'data-id="M1-001"' "$Q/.harness-run/board.html" | head -1)"
+echo "$QR" | grep -q 'All fields' || fail "row must offer all fields"
+for k in 'exclusive: native-desktop' 'evaluate: ui' 'bar: docs/bar.md' 'depends_on: \[\]' 'paths: \[&quot;a/x.swift&quot;\]' 'verify: v &lt;ok&gt;'; do
+  echo "$QR" | grep -q "$k" || fail "all fields: '$k' missing or unescaped"
+done
+echo "$QR" | grep -q '<span>model large · effort high</span>' || fail "queued row: planned model and effort missing from the agent column"
+# a deferred feature is not queued (M51-002)
+jq '.features += [{"id":"M1-002","milestone":1,"title":"d","status":"deferred","notes":"Needs a human: ok?"}]' "$Q/FEATURES.json" > "$Q/f.tmp" && mv "$Q/f.tmp" "$Q/FEATURES.json"
+git -C "$Q" -c user.email=t@t -c user.name=t commit -qam d; git -C "$Q" rev-parse HEAD > "$Q/.harness-run/start"
+bash "$BOARD" "$Q"; grep 'data-id="M1-002"' "$Q/.harness-run/board.html" | grep -q 'data-stage="deferred"' || fail "deferred feature must show stage deferred, not queued"
+
 echo "BOARD TESTS GREEN (60 features in ${secs}s)"

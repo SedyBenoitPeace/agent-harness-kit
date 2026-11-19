@@ -132,6 +132,27 @@ git -C "$S" -c user.email=t@t -c user.name=t add -A; git -C "$S" -c user.email=t
 out="$(bash "$UPGRADE" "$S" 2>&1)" || fail "stale agents second run: expected exit 0"
 if echo "$out" | grep -q '^CHANGED: .claude/agents'; then fail "stale agents second run: nothing should change"; fi
 
+# 4b2. open plans re-checked for lanes (M51-001): a failing feature missing
+#      depends_on or paths is named; a chain where each open feature depends
+#      only on the previous one is named as possibly order-only
+L="$WORK/lanes"
+mkdir -p "$L/docs/agents"
+git -C "$L" init -q -b main
+printf '%s\n' '{ "milestones": {"1":"C"}, "features": [' \
+  '{ "id": "M1-000", "milestone": 1, "title": "t", "status": "passing", "verify": "x", "model": "small" },' \
+  '{ "id": "M1-001", "milestone": 1, "title": "t", "status": "failing", "verify": "x", "model": "small", "depends_on": [], "paths": ["a/"] },' \
+  '{ "id": "M1-002", "milestone": 1, "title": "t", "status": "failing", "verify": "x", "model": "small", "depends_on": ["M1-001"] },' \
+  '{ "id": "M1-003", "milestone": 1, "title": "t", "status": "failing", "verify": "x", "model": "small", "depends_on": ["M1-002"], "paths": ["c/"] },' \
+  '{ "id": "M1-004", "milestone": 1, "title": "t", "status": "failing", "verify": "x", "model": "small", "depends_on": ["M1-003"], "paths": ["d/"] } ] }' > "$L/FEATURES.json"
+printf '# PROGRESS\n' > "$L/PROGRESS.md"
+printf '# AGENTS.md\nharness-run\n' > "$L/AGENTS.md"
+cp "$SHIPPED" "$L/docs/agents/harness-protocol.md"
+git -C "$L" -c user.email=t@t -c user.name=t add -A; git -C "$L" -c user.email=t@t -c user.name=t commit -qm seed
+out="$(bash "$UPGRADE" "$L" 2>&1)" || fail "lanes: expected exit 0"
+echo "$out" | grep -q '^TODO: .*harness-audit.* on: M1-002$' || fail "lanes: open feature without paths must be a TODO naming it (M51-001)"
+echo "$out" | grep -q '^TODO: depends_on may be order only .*: M1-002 M1-003 M1-004$' || fail "lanes: a chain of open features must be named (M51-001)"
+echo "$out" | grep -q 'M1-000' && fail "lanes: a passing feature must not be named"
+
 # 4c. version stamp + release notes (M27-004): the first upgrade records the
 #     kit version and prints every release's Upgrade notes; a repo stamped
 #     with an older version gets only the newer ones; a current one none

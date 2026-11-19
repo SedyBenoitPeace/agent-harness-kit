@@ -88,7 +88,7 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
    | ([$E[] | select(.e == "dispatch" and .id == $i)] | last) as $dp
    | ($RM[$i]) as $rm
    | ([$SEC[] | select(.l[0] | index($i))] | first) as $sec
-   | . + {fm: .model, sec: $sec, dp: $dp, lane: ($LN | index([$i]) != null),
+   | . + {src: ., fm: .model, sec: $sec, dp: $dp, lane: ($LN | index([$i]) != null),
           res: (if $rm != null and ($dp == null or $rm >= $dp.ts) then {m: $rm, l: ($RL[$i] // [])} else null end)}
    | .rs = ((.res.l[0] // "") | [capture("· (?<s>passing|review|blocked) ·")][0].s)
    | .rg = ((.res.l[0] // "") | [capture("gate (?<g>green|red)")][0].g)] as $rows1
@@ -106,6 +106,7 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
        elif .status == "review" then {st: "review", since: .res.m}
        elif .status == "failing" and $ea > 0 then {st: "rework (\($ea)/2)", since: null}
        elif .rs == "review" then {st: "review", since: .res.m}
+       elif .status == "deferred" then {st: "deferred", since: null}
        else {st: "queued", since: null} end)
    | .gate = (if .st == "building" or .st == "gate running" then (if $g then "\($g.f[0]) \($g.f[1])" else "—" end)
               elif .rg then "gate \(.rg)" else "—" end)
@@ -114,7 +115,8 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
    | .cost = (if $cs != [] then ($cs | add | usd)
               elif $us != [] then ($us | map(.t) | add | tok) else "—" end)
    | .model = ([$us[] | select(.m != "-" and .m != null) | .m] | last)
-   | .agent = (if .dp then (.dp.f | join(" ")) else "—" end) + (if .model then " · \(.model)" else "" end)
+   | .agent = (if .dp then (.dp.f | join(" ")) + (if .model then " · \(.model)" else "" end)
+               else ([(if .fm then "model \(.fm)" else empty end), (if .effort then "effort \(.effort)" else empty end)] | join(" · ") | if . == "" then "—" else . end) end)
    | .hint = ($HT[$i] // null)
    | .ops = [$E[] | select(.e == "opinion" and .id == $i) | .f | join(" ")]] as $rows
 | ([$E[] | select(.e == "run-start")] | first.ts // ($runid | split("-")[0] | tonumber? // ($st | tonumber? // $now))) as $t0
@@ -153,6 +155,10 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
       + (if .st == "passing" or .st == "skipped" then "" else
           "<p><textarea rows=\"3\" placeholder=\"hint for the next builder\" data-id=\"\(.id | h)\"></textarea> <button class=\"hint\" data-id=\"\(.id | h)\">Copy hint command</button> <span class=\"msg\" data-for=\"\(.id | h)\"></span></p>" end)
       + (if .ops != [] then "<p>second opinions: \(.ops | join(", ") | h)</p>" else "" end)
+      # every FEATURES.json field, as written (M51-002)
+      + "<details class=\"all\" data-key=\"\(.id | h):all\"><summary>All fields</summary><pre>"
+        + (.src | to_entries | map("\(.key): \(.value | if type == "string" then . else tojson end)" | h) | join("<br>"))
+        + "</pre></details>"
       + "</div></details>"] | join("\n"))
 ' > "$tmp.body"
 {
@@ -165,11 +171,11 @@ body{background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,sans-serif;mar
 h1{font-size:20px;margin:0}small,.muted{color:var(--mut)}
 .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
 .row{display:grid;grid-template-columns:3fr 1.3fr 2fr 1.2fr .8fr .8fr;gap:8px;padding:6px 4px;border-bottom:1px solid var(--line);cursor:pointer}
-a{color:var(--run)}.head{font-weight:600;color:var(--mut);cursor:default}summary{list-style:none}summary::-webkit-details-marker{display:none}
+a{color:var(--run)}.head{font-weight:600;color:var(--mut);cursor:default}summary{list-style:none}.all summary{cursor:pointer;color:var(--mut)}.all pre{white-space:pre-wrap;overflow-wrap:anywhere}summary::-webkit-details-marker{display:none}
 summary{cursor:pointer}.row-d>summary>span:first-child::before{content:"▸ "}.row-d[open]>summary>span:first-child::before{content:"▾ "}
 .more{padding:6px 12px;color:var(--mut)}pre{white-space:pre-wrap;margin:4px 0}
 .tag{border:1px solid var(--warn);color:var(--warn);border-radius:3px;padding:0 4px;font-size:11px}textarea{width:60%;vertical-align:top}.msg input{width:90%}
-.st-passing{color:var(--acc)}.st-building,.st-gate{color:var(--run)}.st-merging,.st-review,.st-rework{color:var(--warn)}.st-blocked{color:var(--bad)}
+.st-passing{color:var(--acc)}.st-building,.st-gate{color:var(--run)}.st-merging,.st-review,.st-rework{color:var(--warn)}.st-blocked{color:var(--bad)}.st-deferred{color:var(--mut)}
 @media (max-width:700px){.row{grid-template-columns:1fr 1fr}}
 </style></head><body>
 EOF
@@ -181,9 +187,9 @@ function hintCmd(root,id,text){return "mkdir -p "+q(root+"/.harness-run/hints")+
 (function(){
   var k='harness-board-open',o={};
   try{o=JSON.parse(sessionStorage.getItem(k)||'{}')}catch(e){}
-  document.querySelectorAll('details[data-id]').forEach(function(d){
-    if(o[d.dataset.id])d.open=true;
-    d.addEventListener('toggle',function(){o[d.dataset.id]=d.open;try{sessionStorage.setItem(k,JSON.stringify(o))}catch(e){}});
+  document.querySelectorAll('details[data-id],details[data-key]').forEach(function(d){
+    var id=d.dataset.key||d.dataset.id;if(o[id])d.open=true;
+    d.addEventListener('toggle',function(){o[id]=d.open;try{sessionStorage.setItem(k,JSON.stringify(o))}catch(e){}});
   });
   var root=document.querySelector('header').dataset.root,hk='harness-board-hint',hv={};
   try{hv=JSON.parse(sessionStorage.getItem(hk)||'{}')}catch(e){}

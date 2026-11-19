@@ -1,7 +1,8 @@
 {
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
   "milestones": {
-    "50": "Docs stay current"
+    "50": "Docs stay current",
+    "51": "Upgrade re-checks open plans; board shows every field"
   },
   "features": [
     {
@@ -17,6 +18,33 @@
         "scripts/test-check-readme.sh",
         "scripts/e2e.sh",
         "CHANGELOG.md"
+      ]
+    },
+    {
+      "id": "M51-001",
+      "milestone": 51,
+      "title": "Upgrade re-checks open plans against the current protocol: upgrade.sh names each failing feature missing depends_on or paths, and a chain where each open feature depends only on the previous one as 'depends_on may be order only'; the upgrade skill proposes fixes for approval",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-upgrade.sh proving the lanes TODO names the open feature without paths, the order-only TODO names the chain, and a passing feature is never named",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-upgrade-structure/scripts/upgrade.sh",
+        "skills/harness-upgrade-structure/SKILL.md",
+        "scripts/test-upgrade.sh"
+      ]
+    },
+    {
+      "id": "M51-002",
+      "milestone": 51,
+      "title": "Board rows show every FEATURES.json field ('All fields', open state kept across reloads) and a queued row's agent column shows its planned model and effort; a deferred feature shows 'deferred', not 'queued'",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-board.sh proving a row lists exclusive, evaluate, bar, depends_on, paths and an escaped verify under All fields, and a queued row shows 'model large · effort high', and a deferred feature's row has stage deferred",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/board.sh",
+        "scripts/test-board.sh"
       ]
     }
   ]

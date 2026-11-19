@@ -44,7 +44,11 @@ commits it. It is **not** for new repos: that is harness-initial-setup.
      function from the initial-setup `templates/e2e.sh.tmpl`;
    - `depends_on` / `paths` → offer **harness-audit**, which proposes them
      for the human to approve (without declared `depends_on`, a skipped
-     feature stops a continuous run);
+     feature stops a continuous run; without `paths`, no lanes);
+   - `depends_on may be order only` → for each listed feature, say whether
+     its code really needs the previous one (§1.4: order is not a
+     dependency) and propose the true `depends_on`, one line per feature
+     with its reason; write only what the human approves;
    - `model is now required` → propose a size for each listed feature
      from the §1.4 size table (`docs/agents/harness-protocol-planning.md`:
      `small`, `medium` or `large`, respecting its floors), one line per

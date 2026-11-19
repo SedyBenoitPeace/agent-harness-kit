@@ -74,7 +74,9 @@ English:
   `HARNESS_BOARD_OPEN_CMD` sets the opener. Click a row to expand it: its
   "Done when" (`verify`), `depends_on`, `paths`, effort and model, the
   feature's plan section (cut at 40 lines) and links to that plan and the
-  briefs it mentions. The board can also talk back: it
+  briefs it mentions, then **All fields**: every key of the feature's
+  FEATURES.json entry as written. A queued row's agent column shows its
+  planned model and effort. The board can also talk back: it
   copies a `touch .harness-run/STOP` command (stop after the current feature;
   both run skills honour it) and, per open feature, a command that saves a
   hint to `.harness-run/hints/<id>.md`, which the next builder brief prints
@@ -438,6 +440,11 @@ every time:
 3. Run **harness-upgrade-structure** (or `upgrade.sh` by hand, above). It
    recopies the protocol, regenerates your agent files, records the kit
    version in `docs/agents/harness-kit-version`, and lists what is left.
+   It also re-checks plans not yet built against the current protocol:
+   open features missing `depends_on` or `paths`, and a chain where each
+   open feature depends only on the one before it
+   (`depends_on may be order only`), so a plan written under an older copy
+   is fixed before a run, not after.
 4. Read every `UPGRADE-NOTE: <version>: …` line it prints: the Upgrade steps
    from the CHANGELOG for each release since your last upgrade, oldest first.
    Do them.
