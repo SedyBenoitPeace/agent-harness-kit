@@ -2,8 +2,8 @@
 # Sync the agent-harness-template mirror from this repo's templates (M27-005).
 # Usage: sync-template.sh <mirror-dir> [--check]
 # Writes every template to its mirror path. The mirror keeps its own README.md,
-# docs/PRODUCT.md, LICENSE, .gitignore and the "uninitialized" banner at the
-# top of AGENTS.md. Idempotent; commits nothing.
+# docs/PRODUCT.md, LICENSE, .gitignore (plus a .harness-run/ line) and the
+# "uninitialized" banner at the top of AGENTS.md. Idempotent; commits nothing.
 # --check: change nothing; print STALE: <path> per out-of-date file, exit 1
 # when any is stale, 0 when the mirror is in sync.
 set -euo pipefail
@@ -58,6 +58,15 @@ for d in docs/plans/active docs/plans/completed; do
     else mkdir -p "$mirror/$d"; : > "$mirror/$d/.gitkeep"; echo "SYNCED: $d/.gitkeep"; fi
   fi
 done
+
+# the mirror keeps its own .gitignore, but run state must be in it (M52-001)
+if ! grep -qxE '/?\.harness-run/?' "$mirror/.gitignore" 2>/dev/null; then
+  if [ "$check" -eq 1 ]; then echo "STALE: .gitignore (.harness-run/ not ignored)"; stale=1
+  else
+    [ ! -s "$mirror/.gitignore" ] || [ -z "$(tail -c1 "$mirror/.gitignore")" ] || echo >> "$mirror/.gitignore"
+    echo ".harness-run/" >> "$mirror/.gitignore"; echo "SYNCED: .gitignore (.harness-run/)"
+  fi
+fi
 
 if [ "$check" -eq 1 ]; then
   [ "$stale" -eq 0 ] && echo "IN SYNC: $mirror"

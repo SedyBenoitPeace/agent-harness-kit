@@ -11,7 +11,7 @@ Newest-first session log. One entry per working session. Read this (plus
   without saying they live in the kit; `quiet.sh`, `context.sh`,
   `run-gate.sh`, `feature.sh`, `status.sh` mandated but absent from the repo.
 - Done: M52-001. Setup (SKILL.md) and upgrade.sh add `.harness-run/` to
-  `.gitignore`; quiet.sh writes `.harness-run/.gitignore` (`*`) when the
+  `.gitignore` (and sync-template.sh into the mirror's); quiet.sh writes `.harness-run/.gitignore` (`*`) when the
   repo does not ignore it; audit WARNs. M52-002. Each protocol doc that
   names kit scripts or templates says they are "not files in this repo"
   with the kit path; the core gives the plugin-less quiet.sh fallback.
@@ -24,7 +24,7 @@ Newest-first session log. One entry per working session. Read this (plus
   docs point to the kit and give fallbacks instead. Patch release (3.22.1),
   no plan file ("just build it" scale), FEATURES.json still updated.
   harness-protocol.md stays at its 150-line cap by tightening 2.3/2.4/2.5.
-- Gate: see PR.
+- Gate: GREEN (bash scripts/e2e.sh with HARNESS_TEMPLATE_DIR; ci-local.sh CI-LOCAL GREEN).
 - Next: owner reviews the PR; template mirror PR via sync-template.sh.
 
 ## 2026-11-19 -- session 90 (M51-001, M51-002 upgrade re-checks open plans; board shows every field)

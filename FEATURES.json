@@ -51,9 +51,9 @@
     {
       "id": "M52-001",
       "milestone": 52,
-      "title": "Run state is never committed: setup and upgrade add .harness-run/ to .gitignore (the runs protocol already claimed it was listed), quiet.sh ignores its own log folder in a repo that lacks the entry, and the audit warns when .harness-run/ is not ignored",
+      "title": "Run state is never committed: setup, upgrade and the template mirror sync add .harness-run/ to .gitignore (the runs protocol already claimed it was listed), quiet.sh ignores its own log folder in a repo that lacks the entry, and the audit warns when .harness-run/ is not ignored",
       "status": "passing",
-      "verify": "bash scripts/e2e.sh exits 0 with test-upgrade.sh proving upgrade.sh adds .harness-run/ once (CHANGED, then OK) and keeps a last .gitignore line without a newline whole, test-session.sh proving quiet.sh leaves git status clean in a repo without the entry and writes no .gitignore where the repo ignores it, and test-audit.sh proving the WARN",
+      "verify": "bash scripts/e2e.sh exits 0 with test-upgrade.sh proving upgrade.sh adds .harness-run/ once (CHANGED, then OK) and keeps a last .gitignore line without a newline whole, test-session.sh proving quiet.sh leaves git status clean in a repo without the entry and writes no .gitignore where the repo ignores it, and test-audit.sh proving the WARN, and test-sync-template.sh proving the mirror's .gitignore gets .harness-run/ appended with its own entries kept",
       "model": "small",
       "depends_on": [],
       "paths": [
@@ -63,7 +63,9 @@
         "skills/harness-initial-setup/SKILL.md",
         "scripts/test-upgrade.sh",
         "scripts/test-session.sh",
-        "scripts/test-audit.sh"
+        "scripts/test-audit.sh",
+        "scripts/sync-template.sh",
+        "scripts/test-sync-template.sh"
       ]
     },
     {

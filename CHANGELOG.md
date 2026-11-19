@@ -16,8 +16,8 @@ agent-harness-template>` and open a PR there; gate green; PR.
 
 Fixes found by a PR review of a real onboarding:
 
-- Run state is never committed (M52-001): setup and `upgrade.sh` add
-  `.harness-run/` to `.gitignore` (the runs protocol said it was listed;
+- Run state is never committed (M52-001): setup, `upgrade.sh` and
+  `sync-template.sh` add `.harness-run/` to `.gitignore` (the runs protocol said it was listed;
   nothing put it there, so `quiet.sh` logs could be committed in any normal
   session). `quiet.sh` now ignores its own folder in a repo without the
   entry, and harness-audit warns when `.harness-run/` is not ignored.
