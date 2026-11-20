@@ -3,6 +3,30 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-20 -- session 92 (M53-001..005 acceptance checks, zero-touch QA phase 1)
+
+- Branch: `qa-checks`. Owner decisions in `docs/decisions.md` (new file).
+- Done: M53-001 `read-checks.sh`, one reader with FEATURES.json, issue
+  (`--issue-json`/`--issue N`) and markdown backends printing the same lines.
+  M53-002 briefs carry `## Checks`; check-brief.sh fails none, malformed or
+  vague; reviewer blocks them. M53-003 builder: one test per check, titled
+  with its id. M53-004 `check-coverage.sh` in the gate (setup installs it;
+  this repo's gate runs it over `scripts/test-checks.sh`, 13 checks).
+  M53-005 evaluator per-check table, `acceptance-verdict.sh` decides.
+  Every M53 feature carries its own checks (dogfood). Plan:
+  `docs/plans/completed/2026-11-20-m53-qa-checks.md`.
+- Decisions: issue-backed repos keep a committed FEATURES.json mirror synced
+  by a script (no live `gh` reader: offline agents, no per-read tokens);
+  rejected one PR for sync and migration (M54, second PR); check-coverage and
+  the reader are installed into repos (CI runs them on a clean clone),
+  unlike M52's kit-only scripts; vague-word list is mechanical, the reviewer
+  catches the rest; upgrade.sh does not yet copy the three scripts (manual
+  Upgrade step instead). One board.sh timing flake (1.2 s vs 1.0 s limit,
+  0.17 s on rerun).
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: fresh-session evaluation of M53; then M54 sync-issues and
+  migrate-to-issues.
+
 ## 2026-11-19 -- session 91 (M52-001, M52-002 onboarding installs what its docs reference)
 
 - Branch: `onboarding-installs-what-docs-reference`.
