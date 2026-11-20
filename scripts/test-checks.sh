@@ -16,8 +16,8 @@ out="$(bash "$S/read-checks.sh" "$FX/features.json")" || fail "reader exited non
 want='{"feature":"M1-001","id":"M1-001.1","title":"Book a future session","critical":true,"steps":["Open Book","Pick a future session and confirm"],"pass_if":"Booking confirmed appears and the session is listed under My bookings","evidence":"test"}'
 [ "$(printf '%s\n' "$out" | head -1)" = "$want" ] || fail "first line wrong: $(printf '%s\n' "$out" | head -1)"
 printf '%s\n' "$out" | tail -1 | grep -q '"feature":"M1-002","id":"M1-002.1"' || fail "feature id missing on last line"
-st="$(bash "$S/read-checks.sh" --status passing "$FX/features.json" | jq -r .id | tr '\n' ' ')"
-[ "$st" = "M1-001.1 M1-001.2 " ] || fail "--status passing kept: $st"
+st="$(bash "$S/read-checks.sh" --status passing "$FX/features.json" | jq -r .id | tr '\n' ',')"
+[ "$st" = "M1-001.1,M1-001.2," ] || fail "--status passing kept: $st"
 
 t "M53-001.2 issue backend matches the FEATURES.json backend @critical"
 a="$(bash "$S/read-checks.sh" --issue-json "$FX/issue.json")" || fail "issue backend exited non-zero"
@@ -116,5 +116,33 @@ for f in agents/src/harness-builder.md $(gen harness-builder); do
   grep -qF '@critical' "$f" || fail "$f: must tag critical checks @critical"
 done
 [ "$n" -ge 4 ] || fail "expected the source plus generated builders, found $n"
+
+COV="$S/check-coverage.sh"
+cov() {  # cov <tests file>: run check-coverage.sh against the fixture features
+  bash "$COV" --features "$FX/features.json" "$1" 2>&1
+}
+t "M53-004.1 full coverage passes @critical"
+out="$(cov "$FX/cov/booking.spec.ts")" || fail "full coverage failed: $out"
+grep -q '2 checks covered' <<< "$out" || fail "no '2 checks covered' line: $out"
+
+t "M53-004.2 each coverage gap fails with its own message @critical"
+gap() {  # gap <name> <sed expr> <expected stderr text>
+  sed "$2" "$FX/cov/booking.spec.ts" > "$tmp/$1.spec.ts"
+  if out="$(cov "$tmp/$1.spec.ts")"; then fail "$1: coverage passed"; fi
+  grep -qF "$3" <<< "$out" || fail "$1: expected '$3' in: $out"
+}
+gap missing '/M1-001\.2/,/^});/d' 'M1-001.2: no test'
+gap twice 's/M1-001\.2/M1-001.1/' 'M1-001.1: 2 tests'
+gap unknown 's/M1-001\.2/M1-007.1/' 'M1-007.1: no such check'
+gap untagged 's/ @critical//' 'M1-001.1: critical check, test lacks @critical'
+gap overtagged 's/looks right/looks right @critical/' 'M1-001.2: test tagged @critical'
+grep -q 'M1-002.1' <<< "$(cov "$FX/cov/booking.spec.ts")" && fail "a failing feature's missing test must not be reported"
+
+t "M53-004.3 repos get the coverage step"
+grep -qF 'scripts/check-coverage.sh' skills/harness-initial-setup/templates/e2e.sh.tmpl || fail "e2e.sh.tmpl must run scripts/check-coverage.sh"
+setup="skills/harness-initial-setup/SKILL.md"
+for w in check-coverage.sh read-checks.sh; do
+  grep -E '^\| `\.\./harness-session/scripts/' "$setup" | grep -qF "$w" || fail "setup SKILL.md scaffold table must copy $w into scripts/"
+done
 
 echo "CHECKS TESTS GREEN"

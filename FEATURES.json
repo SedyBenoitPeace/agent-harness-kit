@@ -218,7 +218,7 @@
       "id": "M53-004",
       "milestone": 53,
       "title": "check-coverage.sh: every check of a passing or review feature has exactly one test with an agreeing @critical tag, and no test names an unknown check; setup installs it with the reader and e2e.sh.tmpl runs it; this repo's gate runs it over scripts/",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-checks.sh proving each check below and check-coverage.sh green on this repo; bash scripts/ci-local.sh prints CI-LOCAL GREEN",
       "model": "medium",
       "depends_on": [
