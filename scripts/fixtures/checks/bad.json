@@ -1,0 +1,11 @@
+{
+  "features": [
+    {"id": "M2-001", "status": "failing", "checks": [
+      {"id": "M9-001.1", "title": "Wrong prefix", "critical": true, "steps": ["a"], "pass_if": "b", "evidence": "test"},
+      {"id": "M2-001.2", "title": "No steps", "critical": true, "steps": [], "pass_if": "b", "evidence": "test"},
+      {"id": "M2-001.3", "title": "Bad evidence", "critical": true, "steps": ["a"], "pass_if": "b", "evidence": "video"},
+      {"id": "M2-001.4", "title": "Critical as text", "critical": "yes", "steps": ["a"], "pass_if": "b", "evidence": "test"},
+      {"id": "M2-001.4", "title": "Duplicate", "critical": false, "steps": ["a"], "pass_if": "b", "evidence": "test"}
+    ]}
+  ]
+}

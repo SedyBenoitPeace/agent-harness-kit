@@ -85,3 +85,9 @@ upgrades it and checks the result equals the current template.
 `nits-only.md` is complete and unambiguous; its only flaws are nits (the
 `cd app &&` leaves the shell in `app/`; `grep -c` counts lines, not notes).
 Under the reviewer's BLOCKING bar it must get `READY` plus NOTEs, never `GAPS`.
+
+## checks/ — acceptance checks (M53)
+
+Synthetic features and a `gh issue view N --json number,title,body` issue for
+`read-checks.sh`, `check-coverage.sh` and `acceptance-verdict.sh`. Never a
+live repo: the issue backend is tested only against `issue.json`.

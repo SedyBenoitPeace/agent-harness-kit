@@ -3,7 +3,8 @@
   "milestones": {
     "50": "Docs stay current",
     "51": "Upgrade re-checks open plans; board shows every field",
-    "52": "Onboarding installs what its docs reference"
+    "52": "Onboarding installs what its docs reference",
+    "53": "Acceptance checks (zero-touch QA phase 1)"
   },
   "features": [
     {
@@ -83,6 +84,231 @@
         "skills/harness-initial-setup/templates/harness-protocol.md",
         "skills/harness-initial-setup/templates/harness-protocol-planning.md",
         "skills/harness-initial-setup/templates/harness-protocol-runs.md"
+      ]
+    },
+    {
+      "id": "M53-001",
+      "milestone": 53,
+      "title": "Acceptance checks: a checks list per feature and one reader (read-checks.sh) with FEATURES.json, markdown and GitHub issue backends that print the same normalized lines",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-checks.sh proving each check below",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/scripts/read-checks.sh",
+        "scripts/test-checks.sh",
+        "scripts/fixtures/checks",
+        "scripts/e2e.sh"
+      ],
+      "checks": [
+        {
+          "id": "M53-001.1",
+          "title": "FEATURES.json backend prints one line per check",
+          "critical": true,
+          "steps": [
+            "Run read-checks.sh on a fixture FEATURES.json with two features carrying three checks"
+          ],
+          "pass_if": "Three JSON lines, each with feature, id, title, critical, steps, pass_if and evidence equal to the fixture values; exit 0",
+          "evidence": "test"
+        },
+        {
+          "id": "M53-001.2",
+          "title": "Issue backend matches the FEATURES.json backend",
+          "critical": true,
+          "steps": [
+            "Run read-checks.sh --issue-json on a gh issue view fixture whose body holds the same checks in markdown",
+            "Compare with the FEATURES.json backend output for that feature"
+          ],
+          "pass_if": "The two outputs are byte-identical and the feature id comes from the [ID] issue title prefix",
+          "evidence": "test"
+        },
+        {
+          "id": "M53-001.3",
+          "title": "Malformed checks are named and rejected",
+          "critical": false,
+          "steps": [
+            "Run the reader on fixtures with a wrong id prefix, empty steps, an unknown evidence, a non-boolean critical and a duplicate id"
+          ],
+          "pass_if": "Exit 1 and stderr names the check id and the broken field for each case",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M53-002",
+      "milestone": 53,
+      "title": "harness-brief writes checks: brief template gains a Checks section; check-brief.sh fails a brief without checks, with a malformed check or a vague Pass if; the brief reviewer treats missing or vague checks as BLOCKING",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-brief.sh and test-checks.sh proving each check below",
+      "model": "medium",
+      "depends_on": [
+        "M53-001"
+      ],
+      "paths": [
+        "skills/harness-brief/SKILL.md",
+        "skills/harness-brief/templates/brief.md.tmpl",
+        "skills/harness-brief/scripts/check-brief.sh",
+        "agents/src/harness-brief-reviewer.md",
+        "scripts/test-brief.sh",
+        "scripts/test-checks.sh"
+      ],
+      "checks": [
+        {
+          "id": "M53-002.1",
+          "title": "A brief without checks fails",
+          "critical": true,
+          "steps": [
+            "Run check-brief.sh on a brief with no Checks section",
+            "Run it on a brief whose Checks section has no ### check"
+          ],
+          "pass_if": "Both exit non-zero with a FAIL line naming Checks",
+          "evidence": "test"
+        },
+        {
+          "id": "M53-002.2",
+          "title": "A vague Pass if fails",
+          "critical": false,
+          "steps": [
+            "Run check-brief.sh on a brief whose check says Pass if: it works correctly"
+          ],
+          "pass_if": "Exit non-zero with a FAIL line naming the check id and the vague word",
+          "evidence": "test"
+        },
+        {
+          "id": "M53-002.3",
+          "title": "The reviewer blocks missing or vague checks",
+          "critical": false,
+          "steps": [
+            "Read agents/src/harness-brief-reviewer.md and the generated reviewer agents"
+          ],
+          "pass_if": "The BLOCKING list names a deliverable with no check and a Pass if a stranger could not judge",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M53-003",
+      "milestone": 53,
+      "title": "harness-builder writes one test per check, before the code, titled with the check id and tagged @critical when the check is critical",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-checks.sh proving the check below",
+      "model": "low",
+      "depends_on": [
+        "M53-001"
+      ],
+      "paths": [
+        "agents/src/harness-builder.md",
+        "scripts/test-checks.sh"
+      ],
+      "checks": [
+        {
+          "id": "M53-003.1",
+          "title": "Builder instructions require one test per check",
+          "critical": false,
+          "steps": [
+            "Read agents/src/harness-builder.md and every generated builder agent"
+          ],
+          "pass_if": "Each says one test per check, written before the code, title starting with the check id, @critical when critical",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M53-004",
+      "milestone": 53,
+      "title": "check-coverage.sh: every check of a passing or review feature has exactly one test with an agreeing @critical tag, and no test names an unknown check; setup installs it with the reader and e2e.sh.tmpl runs it; this repo's gate runs it over scripts/",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-checks.sh proving each check below and check-coverage.sh green on this repo; bash scripts/ci-local.sh prints CI-LOCAL GREEN",
+      "model": "medium",
+      "depends_on": [
+        "M53-001"
+      ],
+      "paths": [
+        "skills/harness-session/scripts/check-coverage.sh",
+        "skills/harness-initial-setup/SKILL.md",
+        "skills/harness-initial-setup/templates/e2e.sh.tmpl",
+        "scripts/test-checks.sh",
+        "scripts/e2e.sh"
+      ],
+      "checks": [
+        {
+          "id": "M53-004.1",
+          "title": "Full coverage passes",
+          "critical": true,
+          "steps": [
+            "Run check-coverage.sh on a fixture repo whose passing feature has two checks, one critical, each with one matching test"
+          ],
+          "pass_if": "Exit 0 and a line saying 2 checks covered",
+          "evidence": "test"
+        },
+        {
+          "id": "M53-004.2",
+          "title": "Each coverage gap fails with its own message",
+          "critical": true,
+          "steps": [
+            "Run it on fixtures with a missing test, two tests for one id, a test naming an unknown id, and a critical check without @critical"
+          ],
+          "pass_if": "Exit 1 for each, stderr naming the id and the gap; a failing feature's missing test does not fail",
+          "evidence": "test"
+        },
+        {
+          "id": "M53-004.3",
+          "title": "Repos get the coverage step",
+          "critical": false,
+          "steps": [
+            "Read e2e.sh.tmpl and harness-initial-setup SKILL.md"
+          ],
+          "pass_if": "The template runs scripts/check-coverage.sh and setup copies check-coverage.sh and read-checks.sh into scripts/",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M53-005",
+      "milestone": 53,
+      "title": "harness-evaluator writes one row per check (covered, partial, missing, unrequested) and acceptance-verdict.sh turns the table into PASS or NEEDS_WORK; the script decides, not the model",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-checks.sh proving each check below",
+      "model": "medium",
+      "depends_on": [
+        "M53-001"
+      ],
+      "paths": [
+        "skills/harness-session/scripts/acceptance-verdict.sh",
+        "agents/src/harness-evaluator.md",
+        "scripts/test-checks.sh"
+      ],
+      "checks": [
+        {
+          "id": "M53-005.1",
+          "title": "All covered is PASS",
+          "critical": true,
+          "steps": [
+            "Run acceptance-verdict.sh on a feature with two checks and a table marking both covered"
+          ],
+          "pass_if": "Prints PASS and exits 0",
+          "evidence": "test"
+        },
+        {
+          "id": "M53-005.2",
+          "title": "Anything else is NEEDS_WORK",
+          "critical": true,
+          "steps": [
+            "Run it with a partial row, a missing row, an unrequested row, a check with no row, two rows for one check and an unknown verdict word"
+          ],
+          "pass_if": "Each prints NEEDS_WORK with the reason and exits 1",
+          "evidence": "test"
+        },
+        {
+          "id": "M53-005.3",
+          "title": "The evaluator uses the script",
+          "critical": false,
+          "steps": [
+            "Read agents/src/harness-evaluator.md and the generated evaluator agents"
+          ],
+          "pass_if": "They require the per-check table and say the verdict is acceptance-verdict.sh's output",
+          "evidence": "test"
+        }
       ]
     }
   ]

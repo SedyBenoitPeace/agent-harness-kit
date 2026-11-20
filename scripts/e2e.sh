@@ -720,6 +720,10 @@ bash scripts/test-check-readme.sh
 shellcheck scripts/check-doc-refs.sh scripts/test-check-doc-refs.sh
 bash scripts/test-check-doc-refs.sh
 
+# --- acceptance checks (M53): one reader, coverage, script verdict --------------
+shellcheck skills/harness-session/scripts/read-checks.sh scripts/test-checks.sh
+bash scripts/test-checks.sh
+
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
 ! grep -q "ui.render" claude/hooks/register.tsx || fail "Claude edition: the next-steps band was removed (M28-004)"
