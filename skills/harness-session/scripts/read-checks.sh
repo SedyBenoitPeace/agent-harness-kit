@@ -31,26 +31,37 @@ done
 
 LIB='
 def md($f):
+  # only the "## Checks" section when the text has one; ### headings in code
+  # fences never count; CRLF, " - " separators and unindented steps accepted;
+  # a Pass if may wrap onto following lines (a blank line ends it)
   def flush: if .cur then .checks += [.cur] | .cur = null else . end;
-  split("\n")
-  | reduce .[] as $l ({checks: [], cur: null, field: null};
-      if ($l | test("^### ")) then
+  def trim: gsub("^\\s+|\\s+$"; "");
+  gsub("\r"; "") | split("\n")
+  | any(.[]; test("^## Checks\\s*$")) as $has
+  | reduce .[] as $l ({checks: [], cur: null, field: null, on: ($has | not), fence: false};
+      if ($l | test("^\\s*```")) then .fence = (.fence | not)
+      elif .fence then .
+      elif ($l | test("^## Checks\\s*$")) then flush | .on = true
+      elif ($l | test("^#{1,2} ")) then flush | .on = ($has | not)
+      elif .on | not then .
+      elif ($l | test("^### ")) then
         flush
-        | ($l | capture("^### (?<id>\\S+) — (?<title>.*)$") // {id: ($l | ltrimstr("### ")), title: ""}) as $h
-        | .cur = {feature: $f, id: $h.id, title: $h.title, critical: null, steps: [], pass_if: null, evidence: null}
+        | ($l | capture("^### (?<id>\\S+)\\s+[—–-]\\s+(?<title>.*)$") // {id: ($l | ltrimstr("### ") | trim), title: ""}) as $h
+        | .cur = {feature: $f, id: $h.id, title: ($h.title | trim), critical: null, steps: [], pass_if: null, evidence: null}
         | .field = null
-      elif ($l | test("^#{1,2} ")) then flush
       elif .cur == null then .
-      elif ($l | test("^- \\*\\*[^*]+:\\*\\*")) then
-        ($l | capture("^- \\*\\*(?<k>[^*]+):\\*\\*\\s*(?<v>.*)$")) as $m
-        | ($m.v | ascii_downcase | gsub("\\s+$"; "")) as $v
+      elif ($l | test("^\\s*$")) then .field = null
+      elif ($l | test("^\\s*- \\*\\*[^*]+:\\*\\*")) then
+        ($l | capture("^\\s*- \\*\\*(?<k>[^*]+):\\*\\*(?<v>.*)$")) as $m
+        | ($m.v | trim) as $v
         | .field = $m.k
-        | if $m.k == "Critical" then .cur.critical = (if $v == "yes" then true elif $v == "no" then false else $m.v end)
-          elif $m.k == "Pass if" then .cur.pass_if = $m.v
-          elif $m.k == "Evidence" then .cur.evidence = $v
+        | if $m.k == "Critical" then .cur.critical = (($v | ascii_downcase) as $d | if $d == "yes" then true elif $d == "no" then false else $v end)
+          elif $m.k == "Pass if" then .cur.pass_if = $v
+          elif $m.k == "Evidence" then .cur.evidence = ($v | ascii_downcase)
           else . end
-      elif .field == "Steps" and ($l | test("^\\s+[0-9]+\\.\\s+\\S")) then
-        .cur.steps += [$l | sub("^\\s+[0-9]+\\.\\s+"; "")]
+      elif .field == "Steps" and ($l | test("^\\s*[0-9]+\\.\\s+\\S")) then
+        .cur.steps += [$l | sub("^\\s*[0-9]+\\.\\s+"; "") | trim]
+      elif .field == "Pass if" then .cur.pass_if += " " + ($l | trim)
       else . end)
   | flush | .checks;
 
@@ -72,14 +83,14 @@ def row: {feature, id, title, critical, steps, pass_if, evidence};
 case "$mode" in
   features)
     prog="$LIB"'
-      [.features[] | select($st == "" or (.status | IN($st | split(",")[]))) | .id as $f
-       | (.checks // [])[] | . + {feature: $f}]'
-    all="$(jq --arg st "$status" "$prog" "$src")" ;;
+      [.features[] | select($st == "" or (.status | IN($st | split(",")[] | gsub("^\\s+|\\s+$"; "")))) | .id as $f
+       | (.checks // []) | if type == "array" then .[] | . + {feature: $f} else error("\($f): checks must be a list") end]'
+    all="$(jq --arg st "$status" "$prog" "$src" 2>&1)" || { printf '%s\n' "$all" | sed -E 's/^jq: error \(at [^)]*\): //' >&2; exit 1; } ;;
   issue)
     prog="$LIB"'
       ((.title | capture("^\\[(?<id>[^\\]]+)\\]")? | .id) // null) as $f
       | if $f == null then error("issue #\(.number): title must start with [<feature id>], got: \(.title)")
-        else .body | md($f) end'
+        else (.body // "") | md($f) end'
     if [ "$src" = "-" ]; then
       all="$(printf '%s' "$issue" | jq "$prog" 2>&1)" || { printf '%s\n' "$all" | sed -E 's/^jq: error \(at [^)]*\): //' >&2; exit 1; }
     else

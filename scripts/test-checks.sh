@@ -29,12 +29,21 @@ $b"
 jq '.title = "Book a session"' "$FX/issue.json" > "$tmp/noid.json"
 if bash "$S/read-checks.sh" --issue-json "$tmp/noid.json" 2>"$tmp/err"; then fail "issue without [ID] title accepted"; fi
 grep -q 'title' "$tmp/err" || fail "no-id error does not name the title: $(cat "$tmp/err")"
+c="$(bash "$S/read-checks.sh" --issue-json "$FX/issue-messy.json")" || fail "messy issue (CRLF, headings outside Checks, a fence, ' - ', wrapped Pass if, unindented steps) rejected"
+[ "$c" = "$b" ] || fail "messy issue output differs:
+$c
+---
+$b"
 
 t "M53-001.3 malformed checks are named and rejected"
 if bash "$S/read-checks.sh" "$FX/bad.json" >/dev/null 2>"$tmp/err"; then fail "bad checks accepted"; fi
 for want in "M9-001.1: id" "M2-001.2: steps" "M2-001.3: evidence" "M2-001.4: critical" "M2-001.4: listed twice"; do
   grep -qF "$want" "$tmp/err" || fail "missing problem '$want' in: $(cat "$tmp/err")"
 done
+jq '.features[0].checks = {}' "$FX/features.json" > "$tmp/obj.json"
+rc=0; bash "$S/read-checks.sh" "$tmp/obj.json" >/dev/null 2>"$tmp/err" || rc=$?
+{ [ "$rc" = 1 ] && grep -qF 'M1-001: checks must be a list' "$tmp/err"; } || fail "checks as an object: want exit 1 naming M1-001, got $rc: $(cat "$tmp/err")"
+[ "$(bash "$S/read-checks.sh" --status "passing, failing" "$FX/features.json" | wc -l | tr -d ' ')" = 3 ] || fail "--status must trim spaces"
 
 BRIEF="skills/harness-brief/scripts/check-brief.sh"
 good_brief() {  # a brief check-brief.sh passes; $1 replaces its ## Checks body
@@ -124,6 +133,7 @@ cov() {  # cov <tests file>: run check-coverage.sh against the fixture features
 t "M53-004.1 full coverage passes @critical"
 out="$(cov "$FX/cov/booking.spec.ts")" || fail "full coverage failed: $out"
 grep -q '2 checks covered' <<< "$out" || fail "no '2 checks covered' line: $out"
+out="$(cov "$FX/cov/tagged.spec.ts")" || fail "apostrophe title, tag option, backticks, comment and a version string must pass: $out"
 
 t "M53-004.2 each coverage gap fails with its own message @critical"
 gap() {  # gap <name> <sed expr> <expected stderr text>
@@ -139,7 +149,8 @@ gap overtagged 's/looks right/looks right @critical/' 'M1-001.2: test tagged @cr
 grep -q 'M1-002.1' <<< "$(cov "$FX/cov/booking.spec.ts")" && fail "a failing feature's missing test must not be reported"
 
 t "M53-004.3 repos get the coverage step"
-grep -qF 'scripts/check-coverage.sh' skills/harness-initial-setup/templates/e2e.sh.tmpl || fail "e2e.sh.tmpl must run scripts/check-coverage.sh"
+grep -qx 'step check-coverage "{{CHECK_COVERAGE_COMMAND}}"' skills/harness-initial-setup/templates/e2e.sh.tmpl || fail "e2e.sh.tmpl must run the check-coverage step"
+grep -qF 'bash scripts/check-coverage.sh' skills/harness-initial-setup/templates/e2e.sh.tmpl || fail "e2e.sh.tmpl must show the check-coverage command"
 setup="skills/harness-initial-setup/SKILL.md"
 for w in check-coverage.sh read-checks.sh; do
   grep -E '^\| `\.\./harness-session/scripts/' "$setup" | grep -qF "$w" || fail "setup SKILL.md scaffold table must copy $w into scripts/"
@@ -171,6 +182,8 @@ nw norow 'M1-001.2: no row' '| M1-001.1 | covered | ok |'
 nw tworows 'M1-001.1: 2 rows' '| M1-001.1 | covered | ok |' '| M1-001.1 | partial | flaky |' '| M1-001.2 | covered | ok |'
 nw badword 'M1-001.2: unknown verdict' '| M1-001.1 | covered | ok |' '| M1-001.2 | looks fine | ok |'
 nw foreign 'M1-002.1: not a check of M1-001' '| M1-001.1 | covered | ok |' '| M1-001.2 | covered | ok |' '| M1-002.1 | covered | ok |'
+out="$(bash "$VERDICT" --features "$FX/features.json" M1-001 - < /dev/null 2>&1)" && fail "an empty table must exit non-zero"
+{ [ "$(head -1 <<< "$out")" = NEEDS_WORK ] && grep -qF 'M1-001.1: no row' <<< "$out"; } || fail "empty table: want NEEDS_WORK and no-row reasons, got: $out"
 
 t "M53-005.3 the evaluator uses the script"
 n=0

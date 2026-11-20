@@ -16,12 +16,19 @@ features="FEATURES.json"
 
 all="$(bash "$here/read-checks.sh" "$features" | jq -s .)"
 req="$(bash "$here/read-checks.sh" --status passing,review "$features" | jq -s .)"
-# every quoted string that starts with a check-shaped id and a space
-tests="$(grep -rIhoE --exclude-dir=node_modules --exclude-dir=.git \
-  "[\"'\`][A-Z][A-Za-z0-9-]*\.[0-9]+ [^\"'\`]*" "$@" | cut -c2- || true)"
+# lines with a quoted string starting with a check-shaped id (<feature id>.<n>,
+# the feature id holding a dash) and a space; comment lines never count
+lines="$(grep -rIhE --exclude-dir=node_modules --exclude-dir=.git \
+  "[\"'\`][A-Z][A-Za-z0-9]*-[A-Za-z0-9-]*\.[0-9]+ " "$@" | grep -vE '^\s*(//|#|\*)' || true)"
 
-gaps="$(printf '%s\n' "$tests" | jq -R . | jq -rs --argjson all "$all" --argjson req "$req" '
-  map(select(. != "") | {id: (split(" ")[0]), critical: test("(^|\\s)@critical(\\s|$)")}) as $t
+gaps="$(printf '%s\n' "$lines" | jq -R . | jq -rs --argjson all "$all" --argjson req "$req" '
+  # the title runs to the matching closing quote; @critical in the title or
+  # in a Playwright tag option (tag: '\''@critical'\'' or tag: [..., '\''@critical'\''])
+  map(select(. != "") | . as $line
+      | [match("([\"'\''`])([A-Z][A-Za-z0-9]*-[A-Za-z0-9-]*\\.[0-9]+ [^\"'\''`]*(?:(?!\\1)[\"'\''`][^\"'\''`]*)*)\\1").captures[1].string][0] as $title
+      | select($title != null)
+      | {id: ($title | split(" ")[0]),
+         critical: (($title | test("(^|\\s)@critical(\\s|$)")) or ($line | test("tag:\\s*(\\[[^\\]]*)?[\"'\''`]@critical[\"'\''`]")))}) as $t
   | ($all | map({(.id): .critical}) | add // {}) as $known
   | ($t | group_by(.id) | map(select(length > 1) | "\(.[0].id): \(length) tests, want exactly one")[]),
     ($t[] | select(.id as $i | $known | has($i) | not) | "\(.id): no such check in FEATURES.json"),

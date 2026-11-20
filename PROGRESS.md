@@ -16,15 +16,20 @@ Newest-first session log. One entry per working session. Read this (plus
   Every M53 feature carries its own checks (dogfood). Plan:
   `docs/plans/completed/2026-11-20-m53-qa-checks.md`.
 - Decisions: issue-backed repos keep a committed FEATURES.json mirror synced
-  by a script (no live `gh` reader: offline agents, no per-read tokens);
+  by a script (agents never read issues live: offline agents, no per-read
+  tokens; the reader's `--issue N` is for that sync script, untested live);
   rejected one PR for sync and migration (M54, second PR); check-coverage and
   the reader are installed into repos (CI runs them on a clean clone),
   unlike M52's kit-only scripts; vague-word list is mechanical, the reviewer
   catches the rest; upgrade.sh does not yet copy the three scripts (manual
   Upgrade step instead). One board.sh timing flake (1.2 s vs 1.0 s limit,
   0.17 s on rerun).
-- Gate: GREEN (bash scripts/e2e.sh).
-- Next: fresh-session evaluation of M53; then M54 sync-issues and
+- Evaluation: a fresh evaluator session found 3 NEEDS_WORK (issue bodies
+  with CRLF, headings outside Checks, wrapped Pass if; coverage on
+  apostrophes and Playwright `tag:`; empty verdict table); each fixed
+  test-first. Ceiling kept: coverage is textual (a `test.todo` counts).
+- Gate: GREEN (bash scripts/e2e.sh; ci-local.sh CI-LOCAL GREEN).
+- Next: M54 sync-issues (with the board's details block, decision 10) and
   migrate-to-issues.
 
 ## 2026-11-19 -- session 91 (M52-001, M52-002 onboarding installs what its docs reference)

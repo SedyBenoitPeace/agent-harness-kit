@@ -750,7 +750,8 @@ issue body:
   and prints the same lines for each; every other piece reads through it.
 - The builder writes one test per check, titled with its id, `@critical`
   when critical. `check-coverage.sh`, in the gate, fails a missing,
-  duplicate, unknown or mistagged test.
+  duplicate, unknown or mistagged test. It reads test titles, not test
+  bodies, so a stub still counts; the evaluator's per-check grading catches it.
 - The evaluator grades each check covered, partial, missing or unrequested;
   `acceptance-verdict.sh` turns that table into PASS or NEEDS_WORK.
 

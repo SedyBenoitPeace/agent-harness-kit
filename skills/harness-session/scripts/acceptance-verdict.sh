@@ -17,10 +17,11 @@ table="${2:?usage: acceptance-verdict.sh [--features F] FEATURE_ID TABLE.md}"
 if [ "$table" = - ]; then t="$(mktemp)"; trap 'rm -f "$t"' EXIT; cat > "$t"; table="$t"; fi  # "-" = stdin (a read-only evaluator)
 [ -f "$table" ] || { echo "ERROR: $table not found" >&2; exit 2; }
 
-checks="$(bash "$here/read-checks.sh" "$features" | jq -s --arg f "$fid" 'map(select(.feature == $f) | .id)')"
+rows="$(bash "$here/read-checks.sh" "$features" 2>&1)" || { printf 'NEEDS_WORK\nchecks unreadable: %s\n' "$rows"; exit 1; }
+checks="$(printf '%s\n' "$rows" | jq -s --arg f "$fid" 'map(select(.feature == $f) | .id)')"
 [ "$(jq length <<< "$checks")" -gt 0 ] || { echo "ERROR: $fid has no checks in $features" >&2; exit 2; }
 
-reasons="$(grep -E '^\s*\|' "$table" | jq -R . | jq -rs --argjson c "$checks" --arg f "$fid" '
+reasons="$({ grep -E '^\s*\|' "$table" || true; } | jq -R . | jq -rs --argjson c "$checks" --arg f "$fid" '
   map(split("|")[1:-1] | map(gsub("^\\s+|\\s+$"; "")))
   | map(select(length >= 2 and (.[0] | ascii_downcase) != "check" and (.[0] | test("^:?-+:?$") | not)))
   | map({id: .[0], v: (.[1] | ascii_downcase)}) as $r

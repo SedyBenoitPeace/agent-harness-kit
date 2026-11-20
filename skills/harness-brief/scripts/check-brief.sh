@@ -77,7 +77,7 @@ else
     failc "Checks has no check: add ### C1 — <title> with Critical, Steps, Pass if, Evidence"
   else
     vague="$(printf '%s\n' "$rows" | jq -r '
-      (.pass_if | ascii_downcase | [match("\\b(works|working|correctly|properly|as expected|fine|good|nice|appropriate(ly)?|should)\\b"; "g").string] | unique) as $w
+      (.pass_if | ascii_downcase | [match("\\b(works|working|correctly|properly|as expected|fine|good|nice|looks right|appropriate(ly)?|should)\\b"; "g").string] | unique) as $w
       | select($w | length > 0) | "\(.id): Pass if is vague (\($w | join(", "))): say what a stranger would see"')"
     if [ -n "$vague" ]; then
       while IFS= read -r v; do failc "Checks: $v"; done <<< "$vague"
