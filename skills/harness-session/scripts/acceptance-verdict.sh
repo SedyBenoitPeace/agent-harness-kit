@@ -17,6 +17,7 @@ table="${2:?usage: acceptance-verdict.sh [--features F] FEATURE_ID TABLE.md}"
 if [ "$table" = - ]; then t="$(mktemp)"; trap 'rm -f "$t"' EXIT; cat > "$t"; table="$t"; fi  # "-" = stdin (a read-only evaluator)
 [ -f "$table" ] || { echo "ERROR: $table not found" >&2; exit 2; }
 
+[ -f "$features" ] || { echo "ERROR: $features not found" >&2; exit 2; }
 rows="$(bash "$here/read-checks.sh" "$features" 2>&1)" || { printf 'NEEDS_WORK\nchecks unreadable: %s\n' "$rows"; exit 1; }
 checks="$(printf '%s\n' "$rows" | jq -s --arg f "$fid" 'map(select(.feature == $f) | .id)')"
 [ "$(jq length <<< "$checks")" -gt 0 ] || { echo "ERROR: $fid has no checks in $features" >&2; exit 2; }

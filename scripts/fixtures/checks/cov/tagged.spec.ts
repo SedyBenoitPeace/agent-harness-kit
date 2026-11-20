@@ -6,3 +6,5 @@ test("M1-001.1 user's future session", { tag: '@critical' }, async ({ page }) =>
 });
 
 test(`M1-001.2 Booked screen looks right`, async () => {});
+
+const model = "GPT-4.1 mini"; // a dashed version string is not a check

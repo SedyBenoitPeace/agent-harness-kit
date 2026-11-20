@@ -27,7 +27,11 @@ Newest-first session log. One entry per working session. Read this (plus
 - Evaluation: a fresh evaluator session found 3 NEEDS_WORK (issue bodies
   with CRLF, headings outside Checks, wrapped Pass if; coverage on
   apostrophes and Playwright `tag:`; empty verdict table); each fixed
-  test-first. Ceiling kept: coverage is textual (a `test.todo` counts).
+  test-first. A second fresh evaluation found a blank-line regression in
+  Steps, tags on their own line (prettier), dashed version strings read as
+  ids and exit codes; fixed test-first (ids of features not in FEATURES.json
+  are ignored). Ceilings kept: coverage is textual (a `test.todo` counts);
+  an escaped quote inside a title ends it early.
 - Gate: GREEN (bash scripts/e2e.sh; ci-local.sh CI-LOCAL GREEN).
 - Next: M54 sync-issues (with the board's details block, decision 10) and
   migrate-to-issues.

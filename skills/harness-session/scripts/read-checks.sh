@@ -33,7 +33,8 @@ LIB='
 def md($f):
   # only the "## Checks" section when the text has one; ### headings in code
   # fences never count; CRLF, " - " separators and unindented steps accepted;
-  # a Pass if may wrap onto following lines (a blank line ends it)
+  # a Pass if may wrap onto following lines (a blank line ends it);
+  # blank lines between Steps items are fine
   def flush: if .cur then .checks += [.cur] | .cur = null else . end;
   def trim: gsub("^\\s+|\\s+$"; "");
   gsub("\r"; "") | split("\n")
@@ -50,7 +51,7 @@ def md($f):
         | .cur = {feature: $f, id: $h.id, title: ($h.title | trim), critical: null, steps: [], pass_if: null, evidence: null}
         | .field = null
       elif .cur == null then .
-      elif ($l | test("^\\s*$")) then .field = null
+      elif ($l | test("^\\s*$")) then (if .field == "Pass if" then .field = null else . end)
       elif ($l | test("^\\s*- \\*\\*[^*]+:\\*\\*")) then
         ($l | capture("^\\s*- \\*\\*(?<k>[^*]+):\\*\\*(?<v>.*)$")) as $m
         | ($m.v | trim) as $v
@@ -84,7 +85,7 @@ case "$mode" in
   features)
     prog="$LIB"'
       [.features[] | select($st == "" or (.status | IN($st | split(",")[] | gsub("^\\s+|\\s+$"; "")))) | .id as $f
-       | (.checks // []) | if type == "array" then .[] | . + {feature: $f} else error("\($f): checks must be a list") end]'
+       | (.checks // []) | if type == "array" then .[] | if type == "object" then . + {feature: $f} else error("\($f): each check must be an object") end else error("\($f): checks must be a list") end]'
     all="$(jq --arg st "$status" "$prog" "$src" 2>&1)" || { printf '%s\n' "$all" | sed -E 's/^jq: error \(at [^)]*\): //' >&2; exit 1; } ;;
   issue)
     prog="$LIB"'

@@ -34,6 +34,7 @@ c="$(bash "$S/read-checks.sh" --issue-json "$FX/issue-messy.json")" || fail "mes
 $c
 ---
 $b"
+[ "$(bash "$S/read-checks.sh" --issue-json "$FX/issue-loose.json")" = "$b" ] || fail "a Steps list with blank lines between items must parse the same"
 
 t "M53-001.3 malformed checks are named and rejected"
 if bash "$S/read-checks.sh" "$FX/bad.json" >/dev/null 2>"$tmp/err"; then fail "bad checks accepted"; fi
@@ -44,6 +45,9 @@ jq '.features[0].checks = {}' "$FX/features.json" > "$tmp/obj.json"
 rc=0; bash "$S/read-checks.sh" "$tmp/obj.json" >/dev/null 2>"$tmp/err" || rc=$?
 { [ "$rc" = 1 ] && grep -qF 'M1-001: checks must be a list' "$tmp/err"; } || fail "checks as an object: want exit 1 naming M1-001, got $rc: $(cat "$tmp/err")"
 [ "$(bash "$S/read-checks.sh" --status "passing, failing" "$FX/features.json" | wc -l | tr -d ' ')" = 3 ] || fail "--status must trim spaces"
+jq '.features[0].checks = ["x"]' "$FX/features.json" > "$tmp/str.json"
+bash "$S/read-checks.sh" "$tmp/str.json" >/dev/null 2>"$tmp/err" && fail "a non-object check was accepted"
+grep -qF 'M1-001: each check must be an object' "$tmp/err" || fail "non-object check not named: $(cat "$tmp/err")"
 
 BRIEF="skills/harness-brief/scripts/check-brief.sh"
 good_brief() {  # a brief check-brief.sh passes; $1 replaces its ## Checks body
@@ -134,6 +138,7 @@ t "M53-004.1 full coverage passes @critical"
 out="$(cov "$FX/cov/booking.spec.ts")" || fail "full coverage failed: $out"
 grep -q '2 checks covered' <<< "$out" || fail "no '2 checks covered' line: $out"
 out="$(cov "$FX/cov/tagged.spec.ts")" || fail "apostrophe title, tag option, backticks, comment and a version string must pass: $out"
+out="$(cov "$FX/cov-pretty/pretty.spec.ts")" || fail "a prettier-formatted test with its tag on its own line must pass: $out"
 
 t "M53-004.2 each coverage gap fails with its own message @critical"
 gap() {  # gap <name> <sed expr> <expected stderr text>
@@ -143,7 +148,7 @@ gap() {  # gap <name> <sed expr> <expected stderr text>
 }
 gap missing '/M1-001\.2/,/^});/d' 'M1-001.2: no test'
 gap twice 's/M1-001\.2/M1-001.1/' 'M1-001.1: 2 tests'
-gap unknown 's/M1-001\.2/M1-007.1/' 'M1-007.1: no such check'
+gap unknown 's/M1-001\.2/M1-001.9/' 'M1-001.9: no such check'
 gap untagged 's/ @critical//' 'M1-001.1: critical check, test lacks @critical'
 gap overtagged 's/looks right/looks right @critical/' 'M1-001.2: test tagged @critical'
 grep -q 'M1-002.1' <<< "$(cov "$FX/cov/booking.spec.ts")" && fail "a failing feature's missing test must not be reported"
@@ -184,6 +189,8 @@ nw badword 'M1-001.2: unknown verdict' '| M1-001.1 | covered | ok |' '| M1-001.2
 nw foreign 'M1-002.1: not a check of M1-001' '| M1-001.1 | covered | ok |' '| M1-001.2 | covered | ok |' '| M1-002.1 | covered | ok |'
 out="$(bash "$VERDICT" --features "$FX/features.json" M1-001 - < /dev/null 2>&1)" && fail "an empty table must exit non-zero"
 { [ "$(head -1 <<< "$out")" = NEEDS_WORK ] && grep -qF 'M1-001.1: no row' <<< "$out"; } || fail "empty table: want NEEDS_WORK and no-row reasons, got: $out"
+rc=0; bash "$VERDICT" --features "$tmp/nope.json" M1-001 "$tmp/ok.md" >/dev/null 2>&1 || rc=$?
+[ "$rc" = 2 ] || fail "a missing FEATURES.json is a usage error (exit 2), got $rc"
 
 t "M53-005.3 the evaluator uses the script"
 n=0
