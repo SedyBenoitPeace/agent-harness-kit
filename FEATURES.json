@@ -4,7 +4,8 @@
     "50": "Docs stay current",
     "51": "Upgrade re-checks open plans; board shows every field",
     "52": "Onboarding installs what its docs reference",
-    "53": "Acceptance checks (zero-touch QA phase 1)"
+    "53": "Acceptance checks (zero-touch QA phase 1)",
+    "55": "GitHub issues as the place to write features"
   },
   "features": [
     {
@@ -325,6 +326,166 @@
         "skills/harness-run/scripts/board.sh",
         "scripts/test-board.sh",
         "docs/briefs/2026-11-18-run-board.md"
+      ]
+    },
+    {
+      "id": "M55-001",
+      "milestone": 55,
+      "title": "issues.sh sync pulls GitHub issues into FEATURES.json: the issue owns title and checks, the repo owns everything else; new [id] issues become failing features; broken issues are reported and skipped",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-issues.sh proving each check below against a fake gh",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-issues/scripts/issues.sh",
+        "scripts/test-issues.sh",
+        "scripts/fixtures/issues",
+        "scripts/e2e.sh"
+      ],
+      "checks": [
+        {
+          "id": "M55-001.1",
+          "title": "Sync pulls titles and checks, keeps repo fields",
+          "critical": true,
+          "steps": [
+            "Fake gh serves an issue for an existing feature with a new title and checks, and an issue for an id not in FEATURES.json",
+            "Run issues.sh sync"
+          ],
+          "pass_if": "The existing feature has the issue's title and checks with status, paths and verify unchanged; the new id is a failing feature in its M<n> milestone with its checks",
+          "evidence": "test"
+        },
+        {
+          "id": "M55-001.2",
+          "title": "A broken issue is reported and skipped",
+          "critical": false,
+          "steps": [
+            "Add an issue whose check has no Steps",
+            "Run issues.sh sync"
+          ],
+          "pass_if": "Exit 1, stderr names the issue number and the check problem, and the other issues still sync",
+          "evidence": "test"
+        },
+        {
+          "id": "M55-001.3",
+          "title": "A features repo is left alone",
+          "critical": false,
+          "steps": [
+            "Run issues.sh sync on a FEATURES.json without source issues"
+          ],
+          "pass_if": "Exit 0, a line saying source is features, and gh is never called",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M55-002",
+      "milestone": 55,
+      "title": "issues.sh sync pushes the repo's view back: a generated details block (status, Done when, depends on, paths, model and effort, notes, Needs a human, plan section) between markers, a harness:<status> label, close on passing; idempotent",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-issues.sh proving each check below",
+      "model": "medium",
+      "depends_on": [
+        "M55-001"
+      ],
+      "paths": [
+        "skills/harness-issues/scripts/issues.sh",
+        "scripts/test-issues.sh"
+      ],
+      "checks": [
+        {
+          "id": "M55-002.1",
+          "title": "Details block written, owner text untouched, second run silent",
+          "critical": true,
+          "steps": [
+            "Run issues.sh sync on an issue whose feature has verify, paths, depends_on, model, effort, notes and a plan section",
+            "Run it again"
+          ],
+          "pass_if": "The body is the owner's text unchanged, then one marked block holding every listed field and the plan section; the second run makes no gh write call",
+          "evidence": "test"
+        },
+        {
+          "id": "M55-002.2",
+          "title": "Status shows as a label and closes passing issues",
+          "critical": false,
+          "steps": [
+            "Sync a passing feature whose issue is open and a failing one whose issue is closed"
+          ],
+          "pass_if": "The passing issue is closed with label harness:passing; the failing one is reopened with harness:failing and no other harness: label",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M55-003",
+      "milestone": 55,
+      "title": "issues.sh migrate moves only open work to GitHub issues (failing and deferred, ids kept, checks as markdown, GitHub milestones) and switches the repo to source issues; history stays in git; idempotent, --dry-run writes nothing",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-issues.sh proving each check below",
+      "model": "medium",
+      "depends_on": [
+        "M55-002"
+      ],
+      "paths": [
+        "skills/harness-issues/scripts/issues.sh",
+        "scripts/test-issues.sh",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M55-003.1",
+          "title": "Migrate creates issues for open features only",
+          "critical": true,
+          "steps": [
+            "Run issues.sh migrate on a FEATURES.json with passing, superseded, failing and deferred features"
+          ],
+          "pass_if": "One issue per failing and deferred feature titled [id] title in milestone M<n> <name>, whose checks read back through read-checks.sh identical to FEATURES.json; no issue for the others; source is issues; archive and PROGRESS.md unchanged",
+          "evidence": "test"
+        },
+        {
+          "id": "M55-003.2",
+          "title": "Migrate is safe to re-run and to preview",
+          "critical": false,
+          "steps": [
+            "Run issues.sh migrate --dry-run on a fresh repo",
+            "Run issues.sh migrate twice"
+          ],
+          "pass_if": "The dry run prints the issues it would create and makes no gh write call; the second real run creates nothing",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M55-004",
+      "milestone": 55,
+      "title": "harness-issues skill: /agent-harness-kit:harness-issues sync and migrate as a command instead of a script path; migrate always previews with --dry-run and asks before the real run",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-issues.sh proving the check below",
+      "model": "low",
+      "depends_on": [
+        "M55-003"
+      ],
+      "paths": [
+        "skills/harness-issues/SKILL.md",
+        "skills/harness-issues/scripts/issues.sh",
+        "scripts/test-issues.sh",
+        "scripts/e2e.sh",
+        "README.md",
+        "AGENTS.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M55-004.1",
+          "title": "Sync and migrate are a harness command",
+          "critical": false,
+          "steps": [
+            "Read skills/harness-issues/SKILL.md and README.md"
+          ],
+          "pass_if": "SKILL.md is the harness-issues skill running issues.sh sync and migrate, migrate runs --dry-run first and asks the human before the real run, and README names /agent-harness-kit:harness-issues",
+          "evidence": "test"
+        }
       ]
     }
   ]

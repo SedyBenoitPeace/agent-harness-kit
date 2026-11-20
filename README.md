@@ -89,6 +89,9 @@ English:
   evaluator agents are generated for Claude Code, Copilot CLI and Codex CLI
   by `scripts/gen-agents.sh` from one source in `agents/`, at setup and by
   the upgrade; harness-run dispatches the builder by name, never a stand-in.
+- **harness-issues** — GitHub issues as the place to write features:
+  `/agent-harness-kit:harness-issues migrate` moves open features to issues,
+  `… sync` brings them back into FEATURES.json (see Features in GitHub issues).
 - **harness-status** — where the project stands: progress per milestone,
   last session, exact next feature. `/agent-harness-kit:harness-status` or
   _"what's the harness status?"_.
@@ -755,6 +758,31 @@ issue body:
 - The evaluator grades each check covered, partial, missing or unrequested;
   `acceptance-verdict.sh` turns that table into PASS or NEEDS_WORK.
 
+## Features in GitHub issues
+
+A repo can keep its features in GitHub issues instead of only in
+FEATURES.json, so you can write and read them from your phone. Set
+`"source": "issues"` at the top of FEATURES.json, or let migrate do it:
+
+```text
+/agent-harness-kit:harness-issues migrate
+/agent-harness-kit:harness-issues sync
+```
+
+`migrate` previews with `--dry-run` and asks you before creating anything.
+Without the plugin, run `bash <kit>/skills/harness-issues/scripts/issues.sh
+migrate --dry-run`, then `migrate`, and `sync` the same way.
+
+`issues.sh migrate` creates one issue per failing or deferred feature
+(`[M12-003] title`, checks in the body, GitHub milestone `M12 <name>`);
+passing features, the archive and PROGRESS.md stay in git. After that,
+`issues.sh sync` pulls each issue's title and checks into FEATURES.json and
+writes back a details block (status, Done when, paths, model and effort,
+plan section), a `harness:<status>` label, and closes issues that pass.
+Agents always read the committed FEATURES.json, so an agent without GitHub
+access still works; sync is a script and spends no model tokens. Only
+issues opened by people with write access count.
+
 ## Repository layout
 
 ```
@@ -775,6 +803,8 @@ skills/
 ├── harness-audit/
 │   ├── SKILL.md        audit orchestration: report + offer fixes
 │   └── scripts/check.sh          deterministic readiness checker
+├── harness-issues/
+│   └── scripts/issues.sh
 ├── harness-status/
 │   ├── SKILL.md        status orchestration: read-only report
 │   └── scripts/

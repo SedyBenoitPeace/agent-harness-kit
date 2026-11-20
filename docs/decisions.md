@@ -44,3 +44,7 @@ low-risk PRs merge themselves.
     the plan section, `notes`, Needs a human, and live status. Sync rewrites only
     that block; edits inside it are overwritten (change the plan or
     FEATURES.json instead). Built with `sync-issues` (M55).
+11. **Only collaborators with write access write features through issues.** Sync
+    skips (and reports) any `[<id>]` issue opened by someone without push
+    access: on a public repo anyone can open an issue, and an unattended run
+    would build it. Only the author or a collaborator can edit a body later.

@@ -4,7 +4,7 @@ Open-source Claude Code skill + portable protocol pack for planning
 applications with the long-running-agent harness approach (in-repo
 FEATURES.json / PROGRESS.md / plans / e2e gate), consumable by any AI agent.
 
-## State: 3.23.0 ready (M0–M54); Claude Code edition `agent-harness-kit-claude` in `claude/`
+## State: 3.24.0 ready (M0–M55); Claude Code edition `agent-harness-kit-claude` in `claude/`
 
 1. Spec: `docs/specs/2026-07-03-harness-planning-skill-design.md`
 2. Active plans: `docs/plans/active/` (one per milestone; completed ones in `docs/plans/completed/`)
@@ -12,7 +12,7 @@ FEATURES.json / PROGRESS.md / plans / e2e gate), consumable by any AI agent.
 4. Gate: `bash scripts/e2e.sh` (exit 0 = green; run at session start and end)
 5. Deliverables: `.claude-plugin/` (manifests), `skills/` (harness-initial-setup, harness-audit,
    harness-session, harness-run, harness-continuous, harness-upgrade-structure,
-   harness-status, harness-handoff), README.
+   harness-status, harness-handoff, harness-issues), README.
 
 Any agent can build this repo: plans and FEATURES.json are agent-neutral. If
 the harness-session skill is available, use it; otherwise follow
