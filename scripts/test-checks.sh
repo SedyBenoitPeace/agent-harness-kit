@@ -99,9 +99,22 @@ if out="$(bash "$BRIEF" "$tmp/badev.md")"; then fail "malformed check passed"; f
 grep -q '^FAIL.*C1: evidence' <<< "$out" || fail "malformed check not named: $out"
 
 t "M53-002.3 the reviewer blocks missing or vague checks"
-for f in agents/src/harness-brief-reviewer.md $(git ls-files | grep -E '(^|/)harness-brief-reviewer\.(md|toml|agent\.md)$' | grep -v '^agents/src/'); do
+mkdir -p "$tmp/gen" && bash scripts/gen-agents.sh "$tmp/gen" >/dev/null
+gen() { find "$tmp/gen" -type f -name "$1*"; }
+for f in agents/src/harness-brief-reviewer.md $(gen harness-brief-reviewer); do
   grep -qi 'no check' "$f" || fail "$f: BLOCKING list must name a deliverable with no check"
   grep -qi 'Pass if' "$f" || fail "$f: BLOCKING list must name a vague Pass if"
 done
+
+t "M53-003.1 builder instructions require one test per check"
+n=0
+for f in agents/src/harness-builder.md $(gen harness-builder); do
+  n=$((n + 1))
+  grep -qi 'one test per check' "$f" || fail "$f: must say one test per check"
+  grep -qi 'before the code' "$f" || fail "$f: tests must come before the code"
+  grep -qi 'starting with the check id' "$f" || fail "$f: test title must start with the check id"
+  grep -qF '@critical' "$f" || fail "$f: must tag critical checks @critical"
+done
+[ "$n" -ge 4 ] || fail "expected the source plus generated builders, found $n"
 
 echo "CHECKS TESTS GREEN"

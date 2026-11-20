@@ -190,7 +190,7 @@
       "id": "M53-003",
       "milestone": 53,
       "title": "harness-builder writes one test per check, before the code, titled with the check id and tagged @critical when the check is critical",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-checks.sh proving the check below",
       "model": "low",
       "depends_on": [
@@ -198,7 +198,8 @@
       ],
       "paths": [
         "agents/src/harness-builder.md",
-        "scripts/test-checks.sh"
+        "scripts/test-checks.sh",
+        "skills/harness-initial-setup/templates/harness-protocol.md"
       ],
       "checks": [
         {
