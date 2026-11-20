@@ -721,7 +721,7 @@ shellcheck scripts/check-doc-refs.sh scripts/test-check-doc-refs.sh
 bash scripts/test-check-doc-refs.sh
 
 # --- acceptance checks (M53): one reader, coverage, script verdict --------------
-shellcheck skills/harness-session/scripts/read-checks.sh skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh
+shellcheck skills/harness-session/scripts/read-checks.sh skills/harness-session/scripts/check-coverage.sh skills/harness-session/scripts/acceptance-verdict.sh scripts/test-checks.sh
 bash scripts/test-checks.sh
 bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh
 

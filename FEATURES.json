@@ -268,7 +268,7 @@
       "id": "M53-005",
       "milestone": 53,
       "title": "harness-evaluator writes one row per check (covered, partial, missing, unrequested) and acceptance-verdict.sh turns the table into PASS or NEEDS_WORK; the script decides, not the model",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-checks.sh proving each check below",
       "model": "medium",
       "depends_on": [
@@ -277,7 +277,8 @@
       "paths": [
         "skills/harness-session/scripts/acceptance-verdict.sh",
         "agents/src/harness-evaluator.md",
-        "scripts/test-checks.sh"
+        "scripts/test-checks.sh",
+        "skills/harness-initial-setup/SKILL.md"
       ],
       "checks": [
         {

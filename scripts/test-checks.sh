@@ -145,4 +145,41 @@ for w in check-coverage.sh read-checks.sh; do
   grep -E '^\| `\.\./harness-session/scripts/' "$setup" | grep -qF "$w" || fail "setup SKILL.md scaffold table must copy $w into scripts/"
 done
 
+VERDICT="$S/acceptance-verdict.sh"
+table() {  # table <file> <row>...: an evaluator table for feature M1-001
+  { echo '| check | verdict | evidence |'; echo '|---|---|---|'; printf '%s\n' "${@:2}"; } > "$1"
+}
+verdict() { bash "$VERDICT" --features "$FX/features.json" M1-001 "$1" 2>&1; }
+t "M53-005.1 all covered is PASS @critical"
+table "$tmp/ok.md" '| M1-001.1 | covered | booking.spec.ts:3 passes |' '| M1-001.2 | covered | screenshots attached |'
+out="$(verdict "$tmp/ok.md")" || fail "all covered must exit 0: $out"
+[ "$(head -1 <<< "$out")" = PASS ] || fail "first line must be PASS: $out"
+out="$(bash "$VERDICT" --features "$FX/features.json" M1-001 - < "$tmp/ok.md")" || fail "a table on stdin must work: $out"
+
+t "M53-005.2 anything else is NEEDS_WORK @critical"
+nw() {  # nw <name> <expected reason> <row>...
+  local name="$1" want="$2"; shift 2
+  table "$tmp/$name.md" "$@"
+  if out="$(verdict "$tmp/$name.md")"; then fail "$name: must exit non-zero: $out"; fi
+  [ "$(head -1 <<< "$out")" = NEEDS_WORK ] || fail "$name: first line must be NEEDS_WORK: $out"
+  grep -qF "$want" <<< "$out" || fail "$name: expected '$want' in: $out"
+}
+nw partial 'M1-001.2: partial' '| M1-001.1 | covered | ok |' '| M1-001.2 | partial | no Italian screenshot |'
+nw missing 'M1-001.2: missing' '| M1-001.1 | covered | ok |' '| M1-001.2 | missing | none |'
+nw unrequested 'extra-export: unrequested' '| M1-001.1 | covered | ok |' '| M1-001.2 | covered | ok |' '| extra-export | unrequested | adds a CSV export |'
+nw norow 'M1-001.2: no row' '| M1-001.1 | covered | ok |'
+nw tworows 'M1-001.1: 2 rows' '| M1-001.1 | covered | ok |' '| M1-001.1 | partial | flaky |' '| M1-001.2 | covered | ok |'
+nw badword 'M1-001.2: unknown verdict' '| M1-001.1 | covered | ok |' '| M1-001.2 | looks fine | ok |'
+nw foreign 'M1-002.1: not a check of M1-001' '| M1-001.1 | covered | ok |' '| M1-001.2 | covered | ok |' '| M1-002.1 | covered | ok |'
+
+t "M53-005.3 the evaluator uses the script"
+n=0
+for f in agents/src/harness-evaluator.md $(gen harness-evaluator); do
+  n=$((n + 1))
+  grep -qF 'acceptance-verdict.sh' "$f" || fail "$f: must run acceptance-verdict.sh"
+  for w in covered partial missing unrequested; do grep -qw "$w" "$f" || fail "$f: verdict word $w missing"; done
+  grep -qi 'one row per check' "$f" || fail "$f: must write one row per check"
+done
+[ "$n" -ge 4 ] || fail "expected the source plus generated evaluators, found $n"
+
 echo "CHECKS TESTS GREEN"
