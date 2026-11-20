@@ -29,4 +29,12 @@ Gate is sufficient.
 ## Budget and stop condition
 One feature; stop at the first red gate.
 
+## Checks
+### C1 — List only notes with the tag
+- **Critical:** yes
+- **Steps:**
+  1. Run `node app/bin/notes list --tag work` on the seed data
+- **Pass if:** exactly the 2 seed notes tagged work are printed, nothing else; exit 0
+- **Evidence:** test
+
 ## Open questions

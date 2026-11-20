@@ -41,6 +41,14 @@ Gate is sufficient.
 ## Budget and stop condition
 Stop after 5 features or the first red gate.
 
+## Checks
+### C1 — Weather for a named city
+- **Critical:** yes
+- **Steps:**
+  1. Run `bin/weather --city Rome`
+- **Pass if:** one line containing "Rome" and a temperature in °C; exit 0
+- **Evidence:** test
+
 ## Open questions
 B
 

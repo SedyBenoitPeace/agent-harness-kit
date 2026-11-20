@@ -138,7 +138,7 @@
       "id": "M53-002",
       "milestone": 53,
       "title": "harness-brief writes checks: brief template gains a Checks section; check-brief.sh fails a brief without checks, with a malformed check or a vague Pass if; the brief reviewer treats missing or vague checks as BLOCKING",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-brief.sh and test-checks.sh proving each check below",
       "model": "medium",
       "depends_on": [

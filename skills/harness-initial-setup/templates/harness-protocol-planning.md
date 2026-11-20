@@ -179,6 +179,13 @@ human would check by using it), record:
 
 Leaving both out is always safe: the feature flips on its `verify` alone.
 
+Record the acceptance checks as `checks`: one entry per behaviour,
+`{id, title, critical, steps, pass_if, evidence}`, copied from the brief's
+`## Checks` with ids renumbered `<feature id>.<n>`; `evidence` is `test`,
+`screenshot` or `human`. Each check gets exactly one test titled with its id
+(`@critical` in the title when `critical`). The kit's `read-checks.sh` reads
+and validates them; `bar` stays as the live proof.
+
 For work where a miss is expensive (security, payments, data, anything the
 gate proves only in part), ask: **Should another vendor's agent check it?**
 Record `second_opinion`: the name of a command-line agent from another

@@ -36,4 +36,72 @@ for want in "M9-001.1: id" "M2-001.2: steps" "M2-001.3: evidence" "M2-001.4: cri
   grep -qF "$want" "$tmp/err" || fail "missing problem '$want' in: $(cat "$tmp/err")"
 done
 
+BRIEF="skills/harness-brief/scripts/check-brief.sh"
+good_brief() {  # a brief check-brief.sh passes; $1 replaces its ## Checks body
+  cat <<'B'
+# Brief: demo
+
+## Objective
+Ship a CLI that prints the weather.
+
+## Stage
+production — people will install it from npm.
+
+## Context
+Empty repo, Node 22.
+
+## Deliverables
+- `bin/weather`
+
+## Non-goals
+- No GUI.
+
+## Done when
+- `npm test` exits 0
+
+## Quality bar
+Gate is sufficient.
+
+## Needs a human
+- Publishing to npm.
+
+## Budget and stop condition
+Stop after 5 features.
+
+B
+  printf '%s\n\n## Open questions\n' "$1"
+}
+# shellcheck disable=SC2016 # backticks are literal markdown
+CHECK_C1='## Checks
+### C1 — Weather for a named city
+- **Critical:** yes
+- **Steps:**
+  1. Run `bin/weather --city Rome`
+- **Pass if:** one line containing "Rome" and a temperature in °C; exit 0
+- **Evidence:** test'
+good_brief "$CHECK_C1" > "$tmp/brief.md"
+bash "$BRIEF" "$tmp/brief.md" >/dev/null || fail "a brief with one good check must pass: $(bash "$BRIEF" "$tmp/brief.md" | grep FAIL)"
+
+t "M53-002.1 a brief without checks fails @critical"
+good_brief "" | sed '/^## Checks$/d' > "$tmp/nochecks.md"
+if out="$(bash "$BRIEF" "$tmp/nochecks.md")"; then fail "brief without a Checks section passed"; fi
+grep -q '^FAIL.*Checks' <<< "$out" || fail "no FAIL naming Checks: $out"
+good_brief "## Checks" > "$tmp/empty.md"
+if out="$(bash "$BRIEF" "$tmp/empty.md")"; then fail "brief with an empty Checks section passed"; fi
+grep -q '^FAIL.*Checks' <<< "$out" || fail "no FAIL naming Checks for an empty section: $out"
+
+t "M53-002.2 a vague Pass if fails"
+good_brief "${CHECK_C1/one line containing \"Rome\" and a temperature in °C; exit 0/it works correctly}" > "$tmp/vague.md"
+if out="$(bash "$BRIEF" "$tmp/vague.md")"; then fail "vague Pass if passed"; fi
+grep -q '^FAIL.*C1.*works' <<< "$out" || fail "no FAIL naming C1 and the vague word: $out"
+good_brief "${CHECK_C1/Evidence:\*\* test/Evidence:** video}" > "$tmp/badev.md"
+if out="$(bash "$BRIEF" "$tmp/badev.md")"; then fail "malformed check passed"; fi
+grep -q '^FAIL.*C1: evidence' <<< "$out" || fail "malformed check not named: $out"
+
+t "M53-002.3 the reviewer blocks missing or vague checks"
+for f in agents/src/harness-brief-reviewer.md $(git ls-files | grep -E '(^|/)harness-brief-reviewer\.(md|toml|agent\.md)$' | grep -v '^agents/src/'); do
+  grep -qi 'no check' "$f" || fail "$f: BLOCKING list must name a deliverable with no check"
+  grep -qi 'Pass if' "$f" || fail "$f: BLOCKING list must name a vague Pass if"
+done
+
 echo "CHECKS TESTS GREEN"
