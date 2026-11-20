@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Fake gh for test-issues.sh: a stateful stand-in for the gh calls issues.sh
+# makes, so the issue backend is tested without a live repo. State lives in
+# $FAKE_GH_DIR: issues.json [{number,title,body,state,labels:[names]}],
+# milestones.json [{title}], and log (every call; write calls start WRITE).
+# shellcheck disable=SC2016 # single-quoted jq programs use jq variables
+set -euo pipefail
+d="${FAKE_GH_DIR:?FAKE_GH_DIR not set}"
+I="$d/issues.json"; M="$d/milestones.json"
+[ -f "$I" ] || echo '[]' > "$I"; [ -f "$M" ] || echo '[]' > "$M"
+save() { jq "$@" "$I" > "$I.tmp" && mv "$I.tmp" "$I"; }
+case "$1 ${2:-}" in
+  "issue list")
+    echo "READ issue list" >> "$d/log"
+    jq '[.[] | .labels |= map({name: .})]' "$I" ;;
+  "issue edit")
+    n="$3"; shift 3; echo "WRITE issue edit $n $*" >> "$d/log"
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --body-file) save --argjson n "$n" --rawfile b "$2" 'map(if .number == $n then .body = $b else . end)' ;;
+        --add-label) save --argjson n "$n" --arg l "$2" 'map(if .number == $n then .labels = (.labels + ($l | split(",")) | unique) else . end)' ;;
+        --remove-label) save --argjson n "$n" --arg l "$2" 'map(if .number == $n then .labels -= ($l | split(",")) else . end)' ;;
+      esac; shift 2
+    done ;;
+  "issue close" | "issue reopen")
+    echo "WRITE issue $2 $3" >> "$d/log"
+    save --argjson n "$3" --arg s "$([ "$2" = close ] && echo CLOSED || echo OPEN)" 'map(if .number == $n then .state = $s else . end)' ;;
+  "issue create")
+    shift 2; t="" b="" l="" m=""
+    while [ $# -gt 0 ]; do
+      case "$1" in --title) t="$2" ;; --body-file) b="$(cat "$2")" ;; --label) l="$2" ;; --milestone) m="$2" ;; esac; shift 2
+    done
+    n=$(( $(jq 'map(.number) | max // 0' "$I") + 1 ))
+    echo "WRITE issue create $n $t milestone=$m labels=$l" >> "$d/log"
+    save --argjson n "$n" --arg t "$t" --arg b "$b" --arg l "$l" --arg m "$m" '. + [{number: $n, title: $t, body: $b, state: "OPEN", labels: ($l | split(",") | map(select(. != ""))), milestone: $m}]'
+    echo "https://github.com/owner/repo/issues/$n" ;;
+  "label create")
+    echo "WRITE label create $3" >> "$d/log" ;;
+  "api "*)
+    if [ "$2" = "--method" ]; then
+      t="$(printf '%s\n' "$@" | sed -n 's/^title=//p')"
+      echo "WRITE api milestone $t" >> "$d/log"
+      jq --arg t "$t" '. + [{title: $t}]' "$M" > "$M.tmp" && mv "$M.tmp" "$M"
+    else
+      echo "READ api $2" >> "$d/log"; cat "$M"
+    fi ;;
+  *) echo "fake gh: unsupported: $*" >&2; exit 2 ;;
+esac

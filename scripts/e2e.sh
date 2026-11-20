@@ -723,7 +723,11 @@ bash scripts/test-check-doc-refs.sh
 # --- acceptance checks (M53): one reader, coverage, script verdict --------------
 shellcheck skills/harness-session/scripts/read-checks.sh skills/harness-session/scripts/check-coverage.sh skills/harness-session/scripts/acceptance-verdict.sh scripts/test-checks.sh
 bash scripts/test-checks.sh
-bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh
+
+# --- GitHub issues as the place to write features (M55), against a fake gh -----
+shellcheck skills/harness-session/scripts/issues.sh scripts/test-issues.sh scripts/fixtures/issues/gh
+bash scripts/test-issues.sh
+bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
