@@ -38,3 +38,9 @@ low-risk PRs merge themselves.
 9. **The script decides, not the model.** The evaluator writes one row per check
    (covered | partial | missing | unrequested); a script turns the table into PASS or
    NEEDS_WORK.
+10. **Issues show what the run board shows.** Sync writes a generated details
+    block into each issue body, between hidden markers, below the owner's text
+    and checks: Done when (`verify`), `paths`, model and effort, `depends_on`,
+    the plan section, `notes`, Needs a human, and live status. Sync rewrites only
+    that block; edits inside it are overwritten (change the plan or
+    FEATURES.json instead). Built with `sync-issues` (M54).
