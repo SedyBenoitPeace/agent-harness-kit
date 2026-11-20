@@ -84,6 +84,20 @@
         "skills/harness-initial-setup/templates/harness-protocol-planning.md",
         "skills/harness-initial-setup/templates/harness-protocol-runs.md"
       ]
+    },
+    {
+      "id": "M54-001",
+      "milestone": 54,
+      "title": "The run board marks a run that died without run-end as stalled: with no run-end and no on-disk activity (events.log, results, quiet.sh logs in the main repo and lanes) for HARNESS_BOARD_STALE seconds (default 1800), building and gate-running rows show stalled, the header says run stalled with the idle time, and the Stop button is replaced by no live run",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-board.sh proving: a dispatched feature whose latest activity is 2h old shows stalled and the header says run stalled with no Stop button; touching a quiet.sh log makes it building again; HARNESS_BOARD_STALE raises the threshold; a run with run-end says run ended, not stalled",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/board.sh",
+        "scripts/test-board.sh",
+        "docs/briefs/2026-11-18-run-board.md"
+      ]
     }
   ]
 }

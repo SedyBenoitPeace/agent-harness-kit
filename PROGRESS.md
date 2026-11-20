@@ -3,6 +3,26 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-20 -- session 92 (M54-001 run board marks dead runs stalled)
+
+- Branch: `board-stale-runs`.
+- Trigger: a mac-window-tabber run died after M6-008 without `run-end`;
+  43 minutes later its board still showed a live run with a Stop button.
+  Cause: board.sh's only end signal is `run-end` in events.log, and
+  status.sh/context.sh keep refreshing it, so "updated 0s ago" stays fresh.
+- Done: M54-001. board.sh takes the newest mtime of events.log, results
+  and quiet.sh logs (main and lanes); no `run-end` and older than
+  `HARNESS_BOARD_STALE` (default 1800s) = stalled rows, `run stalled`
+  header, no Stop button. test-board.sh proves stall, recovery on a fresh
+  log, the override and that run-end still wins. Checked on the real
+  mac-window-tabber run state: header now reads stalled.
+- Decisions: a time heuristic, not a PID check: builders are agent
+  subagents with no PID on disk, and the orchestrator is a CLI session. 30
+  minutes because builders write quiet.sh logs every few minutes; a builder
+  silent longer reads stalled until it writes again. Patch release
+  (3.22.2), no plan file ("just build it" scale). M54 skips M53, which a
+  concurrent branch uses.
+
 ## 2026-11-19 -- session 91 (M52-001, M52-002 onboarding installs what its docs reference)
 
 - Branch: `onboarding-installs-what-docs-reference`.

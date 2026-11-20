@@ -45,6 +45,14 @@ fi
 stop=0; [ ! -e "$d/STOP" ] || stop=1
 lanes=""
 for l in ../"$repo"-*; do [ -d "$l" ] && lanes="$lanes${l#../"$repo"-}"$'\n'; done
+# M54-001: newest on-disk activity (events.log, results, quiet.sh logs here and
+# in lanes). No run-end and none for $HARNESS_BOARD_STALE seconds (default 1800) = stalled.
+# ponytail: a heuristic, no builder PID exists; a builder silent for longer reads as stalled
+shopt -s nullglob; act=("$d"/results/*.txt "$d"/logs/*); [ ! -f "$d/events.log" ] || act+=("$d/events.log")
+while IFS= read -r l; do [ -z "$l" ] || act+=(../"$repo-$l"/.harness-run/logs/*); done <<< "$lanes"
+shopt -u nullglob
+last=""; [ "${#act[@]}" -eq 0 ] || last="$( { stat -c %Y "${act[@]}" 2>/dev/null || stat -f %m "${act[@]}"; } | sort -n | tail -1)"
+stale="${HARNESS_BOARD_STALE:-1800}"; case "$stale" in '' | *[!0-9]*) stale=1800 ;; esac
 
 # plan files (active first, then completed) in one awk, existing briefs in one glob
 shopt -s nullglob
@@ -56,7 +64,7 @@ briefs=""; [ "${#bf[@]}" -eq 0 ] || briefs="$(printf '%s\n' "${bf[@]}")"
 tmp="$(mktemp "$d/.board.XXXXXX")"
 trap 'rm -f "$tmp" "$tmp.body"' EXIT
 jq -nr --argjson now "$(date +%s)" --arg repo "$repo" --arg branch "$branch" \
-  --arg runid "$(cat "$d/run-id" 2>/dev/null || true)" --arg st "$(stat -c %Y "$d/start" 2>/dev/null || stat -f %m "$d/start")" --arg mt "$mt" --arg rl "$rl" --arg hl "$hl" --argjson stop "$stop" --arg lanes "$lanes" --arg root "$root" --arg plans "$plans" --arg briefs "$briefs" \
+  --arg runid "$(cat "$d/run-id" 2>/dev/null || true)" --arg st "$(stat -c %Y "$d/start" 2>/dev/null || stat -f %m "$d/start")" --arg mt "$mt" --arg rl "$rl" --arg hl "$hl" --argjson stop "$stop" --arg last "$last" --argjson stale "$stale" --arg lanes "$lanes" --arg root "$root" --arg plans "$plans" --arg briefs "$briefs" \
   --argjson s0 "$startf" --slurpfile cur FEATURES.json --slurpfile arc "$(rf docs/features-archive.json)" \
   --rawfile ev "$(rf "$d/events.log")" --rawfile skip "$(rf "$d/skip")" \
   --rawfile cost "$(rf "$d/cost.log")" --rawfile usage "$(rf "$d/usage.log")" '
@@ -69,6 +77,8 @@ def usd: "$" + (. * 100 | round / 100 | tostring | if test("\\.[0-9]$") then . +
 def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 then "\(. / 100 | floor / 10)k tok" else "\(.) tok" end;
 ($ev | lines | to_entries | map(.key as $n | .value | split(" ")
   | {n: $n, ts: (.[0] | tonumber? // 0), e: .[1], id: .[2], f: .[3:]})) as $E
+| ($last | tonumber? // ($st | tonumber? // $now)) as $last
+| ([$E[] | select(.e == "run-end")] == [] and $now - $last > $stale) as $dead
 | ($skip | lines) as $SK | ($lanes | lines) as $LN
 | ($mt | lines | map(capture("^(?<m>[0-9]+) (?<id>.*)\\.txt$")) | map({key: .id, value: (.m | tonumber)}) | from_entries) as $RM
 | ($rl | lines | map(capture("^(?<id>[^:]*)\\.txt:(?<l>.*)$")) | group_by(.id) | map({key: .[0].id, value: map(.l)}) | from_entries) as $RL
@@ -99,8 +109,8 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
    | . + {g: $g} + (
        if $SK | index([$i]) then {st: "skipped", since: null}
        elif .status == "passing" then {st: "passing", since: .res.m}
-       elif $g != null and $g.f[1] == "start" and .res == null then {st: "gate running", since: $g.ts}
-       elif .dp != null and .res == null then {st: "building", since: .dp.ts}
+       elif $g != null and $g.f[1] == "start" and .res == null then {st: (if $dead then "stalled" else "gate running" end), since: $g.ts}
+       elif .dp != null and .res == null then {st: (if $dead then "stalled" else "building" end), since: .dp.ts}
        elif .rs == "blocked" then {st: "blocked", since: .res.m}
        elif .rs == "passing" then {st: "merging", since: .res.m}
        elif .status == "review" then {st: "review", since: .res.m}
@@ -108,7 +118,7 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
        elif .rs == "review" then {st: "review", since: .res.m}
        elif .status == "deferred" then {st: "deferred", since: null}
        else {st: "queued", since: null} end)
-   | .gate = (if .st == "building" or .st == "gate running" then (if $g then "\($g.f[0]) \($g.f[1])" else "—" end)
+   | .gate = (if .st == "building" or .st == "gate running" or .st == "stalled" then (if $g then "\($g.f[0]) \($g.f[1])" else "—" end)
               elif .rg then "gate \(.rg)" else "—" end)
    | ([$C[] | select(.id == $i) | .usd]) as $cs
    | ([$U[] | select(.id == $i)]) as $us
@@ -127,10 +137,11 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
    elif $U != [] then ($U | map(.t) | add | tok) else "—" end) as $total
 | "<header data-root=\"\($root | h)\"><h1>\($repo | h) <small>\($branch | h)</small></h1>"
   + "<p>run started <span class=\"local\" data-ts=\"\($t0)\">\($t0 | todate | h)</span> · \($counts | h) · cost \($total | h) · updated <span class=\"tick\" data-since=\"\($now)\">0s</span> ago"
-  + (if $end then " · <b>run ended: \($end.f | join(" ") | h)</b>" else "" end) + "</p>"
+  + (if $end then " · <b>run ended: \($end.f | join(" ") | h)</b>"
+     elif $dead then " · <b>run stalled: no activity for \($now - $last | dur)</b> (no run-end)" else "" end) + "</p>"
   + "<div class=\"bar\"><i style=\"width:\(if $n > 0 then ($np * 100 / $n | floor) else 0 end)%\"></i></div>"
   + "<p class=\"muted\">\($np)/\($n) passing · "
-    + (if $stop == 1 then "<b>stop requested</b>" else "<button class=\"stop\">Stop after current feature</button>" end)
+    + (if $dead then "no live run" elif $stop == 1 then "<b>stop requested</b>" else "<button class=\"stop\">Stop after current feature</button>" end)
     + " <span class=\"msg\" data-for=\"stop\"></span></p></header>"
   + "<div class=\"row head\"><span>feature</span><span>stage</span><span>agent</span><span>gate</span><span>time</span><span>cost</span></div>"
   + ([$rows[] | "<details class=\"row-d\" data-id=\"\(.id | h)\" data-stage=\"\(.st | h)\"><summary class=\"row\">"
@@ -175,7 +186,7 @@ a{color:var(--run)}.head{font-weight:600;color:var(--mut);cursor:default}summary
 summary{cursor:pointer}.row-d>summary>span:first-child::before{content:"▸ "}.row-d[open]>summary>span:first-child::before{content:"▾ "}
 .more{padding:6px 12px;color:var(--mut)}pre{white-space:pre-wrap;margin:4px 0}
 .tag{border:1px solid var(--warn);color:var(--warn);border-radius:3px;padding:0 4px;font-size:11px}textarea{width:60%;vertical-align:top}.msg input{width:90%}
-.st-passing{color:var(--acc)}.st-building,.st-gate{color:var(--run)}.st-merging,.st-review,.st-rework{color:var(--warn)}.st-blocked{color:var(--bad)}.st-deferred{color:var(--mut)}
+.st-passing{color:var(--acc)}.st-building,.st-gate{color:var(--run)}.st-merging,.st-review,.st-rework{color:var(--warn)}.st-blocked,.st-stalled{color:var(--bad)}.st-deferred{color:var(--mut)}
 @media (max-width:700px){.row{grid-template-columns:1fr 1fr}}
 </style></head><body>
 EOF
