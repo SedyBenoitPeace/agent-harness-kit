@@ -47,7 +47,8 @@ gh issue list --state all --limit 1000 --json number,title,body,state,labels,aut
 gh api 'repos/{owner}/{repo}/collaborators?per_page=100' --jq '.[] | select(.permissions.push) | .login' > "$tmp/writers"
 [ -s "$tmp/writers" ] || { echo "ERROR: could not list collaborators with write access; nothing synced" >&2; exit 2; }
 # shellcheck disable=SC2016
-WRITER='($w | split("\n") | map(select(length > 0))) as $ws | (.author.login // "") as $a | $a != "" and ($ws | index([$a]) != null)'
+# parenthesised whole: jq 1.8 binds "A and X as $v | …" as "(A and X) as $v"
+WRITER='(($w | split("\n") | map(select(length > 0))) as $ws | (.author.login // "") as $a | $a != "" and ($ws | index([$a]) != null))'
 jq -r --rawfile w "$tmp/writers" '.[] | select((.title | test("'"$FEAT"'")) and ('"$WRITER"' | not))
   | "issue #\(.number): opened by \(.author.login // "unknown"), who has no write access; skipped"' "$tmp/all.json" >&2
 jq --rawfile w "$tmp/writers" '[.[] | select((.title | test("'"$FEAT"'")) and '"$WRITER"')

@@ -32,6 +32,10 @@ Newest-first session log. One entry per working session. Read this (plus
 - M55-004 (owner ask): the script is a command, the new harness-issues
   skill (`/agent-harness-kit:harness-issues sync|migrate`); `issues.sh`
   moved to `skills/harness-issues/scripts/`; migrate previews and asks.
+- CI red on the PR while ci-local was green: GitHub's ubuntu-latest moved
+  to 26.04 (jq 1.8.1), which binds `A and X as $v | …` as `(A and X) as $v`;
+  ci-local still ran 24.04 (jq 1.7.1). Fixed the expression, and ci-local
+  now runs ubuntu:26.04 so it tracks CI again.
 - Gate: GREEN (bash scripts/e2e.sh; ci-local.sh CI-LOCAL GREEN).
 - Next: phase 2 (automerge flag, safe list,
   qa.yml).

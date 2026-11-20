@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run the CI gate locally, the way .github/workflows/gate.yml runs it: a clean
 # clone of the committed HEAD (uncommitted changes are not tested, as on CI),
-# in ubuntu:24.04 (ubuntu-latest) with apt's jq and shellcheck, no git
+# in ubuntu:26.04 (ubuntu-latest since Nov 2026; keep the two in step) with apt's jq and shellcheck, no git
 # identity, no personal config. Run it before every push.
 # Usage: bash scripts/ci-local.sh [--no-docker]
 #   --no-docker  clean clone + no git config on this machine; tool versions are
@@ -16,7 +16,7 @@ echo "CI-LOCAL: $(git rev-parse --short HEAD) in a clean clone"
 
 if [ "${1:-}" != "--no-docker" ] && command -v docker >/dev/null && docker info >/dev/null 2>&1; then
   # ponytail: apt on every run (~30s); bake an image if that ever matters
-  docker run --rm -v "$work/repo:/repo" -w /repo ubuntu:24.04 bash -c '
+  docker run --rm -v "$work/repo:/repo" -w /repo ubuntu:26.04 bash -c '
     set -e
     apt-get update -qq >/dev/null && apt-get install -y -qq git jq shellcheck >/dev/null
     git config --system safe.directory "*"
