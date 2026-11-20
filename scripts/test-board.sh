@@ -310,4 +310,34 @@ jq '.features += [{"id":"M1-002","milestone":1,"title":"d","status":"deferred","
 git -C "$Q" -c user.email=t@t -c user.name=t commit -qam d; git -C "$Q" rev-parse HEAD > "$Q/.harness-run/start"
 bash "$BOARD" "$Q"; grep 'data-id="M1-002"' "$Q/.harness-run/board.html" | grep -q 'data-stage="deferred"' || fail "deferred feature must show stage deferred, not queued"
 
+# --- M54-001: a run that died without run-end shows stalled, not live --------
+Z="$WORK/stall"; mkdir -p "$Z/.harness-run/logs" "$Z/.harness-run/results"; git -C "$Z" init -q -b main
+printf '%s\n' '{"features":[{"id":"S-001","milestone":1,"title":"s","status":"failing"},{"id":"S-002","milestone":1,"title":"q","status":"failing"}]}' > "$Z/FEATURES.json"
+git -C "$Z" add -A; git -C "$Z" -c user.email=t@t -c user.name=t commit -qm seed
+git -C "$Z" rev-parse HEAD > "$Z/.harness-run/start"
+old=$(( $(date +%s) - 7200 ))
+oldt="$(date -r "$old" +%Y%m%d%H%M.%S 2>/dev/null || date -d "@$old" +%Y%m%d%H%M.%S)"
+printf '%s run-start - x\n%s dispatch S-001 claude harness-builder -\n' "$old" "$old" > "$Z/.harness-run/events.log"
+echo x > "$Z/.harness-run/logs/build-1.log"
+touch -t "$oldt" "$Z/.harness-run/events.log" "$Z/.harness-run/logs/build-1.log"
+ZH="$Z/.harness-run/board.html"
+bash "$BOARD" "$Z"
+[ "$(stage S-001 "$ZH")" = stalled ] || fail "dead run: building row must show stalled, got '$(stage S-001 "$ZH")'"
+[ "$(stage S-002 "$ZH")" = queued ] || fail "dead run: queued row stays queued"
+grep -q 'run stalled: no activity for 2h' "$ZH" || fail "dead run: header must say the run stalled"
+! grep -q 'class="stop"' "$ZH" || fail "dead run: no Stop button"
+# a fresh quiet.sh log is activity: the run is live again
+touch "$Z/.harness-run/logs/build-1.log"; bash "$BOARD" "$Z"
+[ "$(stage S-001 "$ZH")" = building ] || fail "fresh log: row must be building, got '$(stage S-001 "$ZH")'"
+grep -q 'class="stop"' "$ZH" || fail "live run keeps its Stop button"
+# the threshold is tunable
+touch -t "$oldt" "$Z/.harness-run/logs/build-1.log"
+HARNESS_BOARD_STALE=99999 bash "$BOARD" "$Z"
+[ "$(stage S-001 "$ZH")" = building ] || fail "HARNESS_BOARD_STALE must raise the threshold"
+# a run that ended is reported as ended, not stalled
+echo "$old run-end - done" >> "$Z/.harness-run/events.log"; touch -t "$oldt" "$Z/.harness-run/events.log"
+bash "$BOARD" "$Z"
+grep -q 'run ended: done' "$ZH" || fail "ended run must say run ended"
+! grep -q 'run stalled' "$ZH" || fail "ended run is not stalled"
+
 echo "BOARD TESTS GREEN (60 features in ${secs}s)"
