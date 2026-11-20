@@ -2,7 +2,8 @@
 # Fake gh for test-issues.sh: a stateful stand-in for the gh calls issues.sh
 # makes, so the issue backend is tested without a live repo. State lives in
 # $FAKE_GH_DIR: issues.json [{number,title,body,state,labels:[names]}],
-# milestones.json [{title}], and log (every call; write calls start WRITE).
+# milestones.json [{title}], collaborators with write access = owner-me
+# (an issue's author defaults to owner-me), and log (every call; write calls start WRITE).
 # shellcheck disable=SC2016 # single-quoted jq programs use jq variables
 set -euo pipefail
 d="${FAKE_GH_DIR:?FAKE_GH_DIR not set}"
@@ -12,7 +13,7 @@ save() { jq "$@" "$I" > "$I.tmp" && mv "$I.tmp" "$I"; }
 case "$1 ${2:-}" in
   "issue list")
     echo "READ issue list" >> "$d/log"
-    jq '[.[] | .labels |= map({name: .})]' "$I" ;;
+    jq '[.[] | .labels |= map({name: .}) | .author = {login: (.author // "owner-me")}]' "$I" ;;
   "issue edit")
     n="$3"; shift 3; echo "WRITE issue edit $n $*" >> "$d/log"
     while [ $# -gt 0 ]; do
@@ -37,7 +38,9 @@ case "$1 ${2:-}" in
   "label create")
     echo "WRITE label create $3" >> "$d/log" ;;
   "api "*)
-    if [ "$2" = "--method" ]; then
+    if [[ "$2" == *collaborators* ]]; then
+      echo "READ api collaborators" >> "$d/log"; printf '%s\n' owner-me
+    elif [ "$2" = "--method" ]; then
       t="$(printf '%s\n' "$@" | sed -n 's/^title=//p')"
       echo "WRITE api milestone $t" >> "$d/log"
       jq --arg t "$t" '. + [{title: $t}]' "$M" > "$M.tmp" && mv "$M.tmp" "$M"

@@ -381,7 +381,7 @@
       "id": "M55-002",
       "milestone": 55,
       "title": "issues.sh sync pushes the repo's view back: a generated details block (status, Done when, depends on, paths, model and effort, notes, Needs a human, plan section) between markers, a harness:<status> label, close on passing; idempotent",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-issues.sh proving each check below",
       "model": "medium",
       "depends_on": [
