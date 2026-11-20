@@ -82,6 +82,15 @@ f="$r/FEATURES.json"
 jq -e '.features[] | select(.id == "M1-001") | .status == "failing" and .paths == ["src/book.ts", "e2e/booking.spec.ts"] and .verify == "npm test passes with booking.spec.ts"' "$f" >/dev/null || fail "repo-owned fields changed"
 [ "$(cd "$r" && bash "$READ" | jq -r 'select(.feature == "M1-001") | .id')" = "M1-001.1" ] || fail "checks not pulled"
 jq -e '.features[] | select(.id == "M3-001") | .status == "failing" and .milestone == 3 and .title == "Reminders" and (.checks[0].evidence == "human")' "$f" >/dev/null || fail "new issue not added as a failing feature"
+jq -e '.features[] | select(.id == "M3-001") | (.verify // "") != ""' "$f" >/dev/null || fail "a new feature needs a verify line (harness-audit requires it)"
+issue 8 "[WIP] Ideas" OPEN "### not a feature"
+issue 11 "[M1-003 ; rm -rf /] evil" OPEN "x"
+cp "$f" "$tmp/F1"; out="$(cd "$r" && bash "$ISS" sync --dry-run)" || fail "dry-run sync failed after adding non-feature issues"
+grep -q 'would update FEATURES.json' <<< "$out" && fail "nothing changed, but dry run says it would update FEATURES.json: $out"
+(cd "$r" && bash "$ISS" sync >/dev/null) || fail "titles that are not [<feature id>] must be ignored, not errors"
+jq -e '[.features[].id] | all(test("^M[0-9]+-[0-9]+$"))' "$f" >/dev/null || fail "a non-feature title became a feature: $(jq -c '[.features[].id]' "$f")"
+rc=0; (cd "$r" && bash "$ISS" sync --dryrun >/dev/null 2>&1) || rc=$?
+[ "$rc" = 2 ] || fail "an unknown flag must be a usage error (exit 2), got $rc"
 
 t "M55-001.2 a broken issue is reported and skipped"
 repo broken; echo '[]' > "$FAKE_GH_DIR/issues.json"
@@ -100,6 +109,10 @@ issue 10 "[M4-002] Ghost" OPEN "From a deleted account."
 jq 'map(if .number == 10 then .author = "" else . end)' "$FAKE_GH_DIR/issues.json" > "$FAKE_GH_DIR/x" && mv "$FAKE_GH_DIR/x" "$FAKE_GH_DIR/issues.json"
 (cd "$r" && bash "$ISS" sync >/dev/null 2>"$tmp/err") || true
 jq -e '.features[] | select(.id == "M4-002")' "$r/FEATURES.json" >/dev/null && fail "an issue with no author login became a feature"
+issue 12 "[M3-001] Reminders again" OPEN "$NEW_MD"
+(cd "$r" && bash "$ISS" sync >/dev/null 2>"$tmp/err") && fail "a feature id in two issues must exit 1"
+grep -q 'M3-001.*#7.*#12\|M3-001.*#12.*#7' "$tmp/err" || fail "duplicate id not reported with both issue numbers: $(cat "$tmp/err")"
+[ "$(jq -r '.features[] | select(.id == "M3-001") | .title' "$r/FEATURES.json")" = "Reminders" ] || fail "a duplicated id must be skipped"
 [ "$(jq -r '.features[] | select(.id == "M1-001") | .title' "$r/FEATURES.json")" = "Old title" ] || fail "the broken issue must be skipped"
 
 t "M55-001.3 a features repo is left alone"
@@ -118,7 +131,7 @@ issue 1 "[M1-001] Book a session" OPEN "$owner"
 body="$(jq -r '.[] | select(.number == 1) | .body' "$FAKE_GH_DIR/issues.json")"
 [ "$(awk '/^<!-- harness:details:start/{exit} {print}' <<< "$body" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')" = "$owner" ] || fail "owner text changed:
 $body"
-[ "$(grep -c '^<!-- harness:details:start' <<< "$body")" = 1 ] && [ "$(grep -c '^<!-- harness:details:end' <<< "$body")" = 1 ] || fail "want exactly one marked block:
+{ [ "$(grep -c '^<!-- harness:details:start' <<< "$body")" = 1 ] && [ "$(grep -c '^<!-- harness:details:end' <<< "$body")" = 1 ]; } || fail "want exactly one marked block:
 $body"
 blk="$(sed -n '/^<!-- harness:details:start/,/^<!-- harness:details:end/p' <<< "$body")"
 # shellcheck disable=SC2016 # literal backticks
@@ -131,6 +144,19 @@ grep -qF 'Cancel.' <<< "$blk" && fail "plan section must stop at the next featur
 : > "$FAKE_GH_DIR/log"
 (cd "$r" && bash "$ISS" sync >/dev/null) || fail "second sync exited non-zero"
 [ "$(writes)" = 0 ] || fail "second sync must make no write call: $(cat "$FAKE_GH_DIR/log")"
+jq --arg add "
+
+Owner note written below the block.
+
+### M1-001.2 — Toast shows
+- **Critical:** no
+- **Steps:**
+  1. Confirm a booking
+- **Pass if:** a toast says Booked
+- **Evidence:** test" 'map(if .number == 1 then .body += $add else . end)' "$FAKE_GH_DIR/issues.json" > "$FAKE_GH_DIR/x" && mv "$FAKE_GH_DIR/x" "$FAKE_GH_DIR/issues.json"
+(cd "$r" && bash "$ISS" sync >/dev/null) || fail "sync after an edit below the block failed"
+grep -qF 'Owner note written below the block.' <<< "$(jq -r '.[] | select(.number == 1) | .body' "$FAKE_GH_DIR/issues.json")" || fail "text below the block was deleted"
+[ "$(jq -r '[.features[] | select(.id == "M1-001") | .checks[].id] | join(",")' "$r/FEATURES.json")" = "M1-001.1,M1-001.2" ] || fail "a check written below the block was not pulled"
 jq '.features[0].status = "review"' "$r/FEATURES.json" > "$r/x" && mv "$r/x" "$r/FEATURES.json"
 (cd "$r" && bash "$ISS" sync >/dev/null)
 grep -qF '**Status:** review' <<< "$(jq -r '.[] | select(.number == 1) | .body' "$FAKE_GH_DIR/issues.json")" || fail "a status change must rewrite the block"

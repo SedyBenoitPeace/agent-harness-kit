@@ -22,8 +22,15 @@ Newest-first session log. One entry per working session. Read this (plus
   empty (decision 11, from an automated security review); live run data
   (gate, time, cost) is local to `.harness-run/` and not pushed; issues
   without an `[id]` title are ignored (no id assignment yet).
-- Gate: GREEN (bash scripts/e2e.sh).
-- Next: fresh-session evaluation; phase 2 (automerge flag, safe list,
+- Evaluation: a fresh evaluator session passed M55-001 and M55-003 and
+  sent back M55-002 (text below the block was deleted). Fixed test-first
+  with its other findings: duplicate ids in two issues are reported and
+  skipped, only `[M<n>-<nnn>]` titles count, new features get a `verify`
+  line (harness-audit requires one), an issue without `## Checks` keeps the
+  feature's checks, no false "would update", unknown flags exit 2, labels
+  created only when missing.
+- Gate: GREEN (bash scripts/e2e.sh; ci-local.sh CI-LOCAL GREEN).
+- Next: phase 2 (automerge flag, safe list,
   qa.yml).
 
 ## 2026-11-20 -- session 93 (M53-001..005 acceptance checks, zero-touch QA phase 1)

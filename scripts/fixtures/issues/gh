@@ -35,6 +35,8 @@ case "$1 ${2:-}" in
     echo "WRITE issue create $n $t milestone=$m labels=$l" >> "$d/log"
     save --argjson n "$n" --arg t "$t" --arg b "$b" --arg l "$l" --arg m "$m" '. + [{number: $n, title: $t, body: $b, state: "OPEN", labels: ($l | split(",") | map(select(. != ""))), milestone: $m}]'
     echo "https://github.com/owner/repo/issues/$n" ;;
+  "label list")
+    echo "READ label list" >> "$d/log"; grep '^WRITE label create' "$d/log" | awk '{print $4}' || true ;;
   "label create")
     echo "WRITE label create $3" >> "$d/log" ;;
   "api "*)
