@@ -3,7 +3,7 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
-## 2026-11-20 -- session 92 (M53-001..005 acceptance checks, zero-touch QA phase 1)
+## 2026-11-20 -- session 93 (M53-001..005 acceptance checks, zero-touch QA phase 1)
 
 - Branch: `qa-checks`. Owner decisions in `docs/decisions.md` (new file).
 - Done: M53-001 `read-checks.sh`, one reader with FEATURES.json, issue
@@ -18,7 +18,7 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: issue-backed repos keep a committed FEATURES.json mirror synced
   by a script (agents never read issues live: offline agents, no per-read
   tokens; the reader's `--issue N` is for that sync script, untested live);
-  rejected one PR for sync and migration (M54, second PR); check-coverage and
+  rejected one PR for sync and migration (M55, second PR); check-coverage and
   the reader are installed into repos (CI runs them on a clean clone),
   unlike M52's kit-only scripts; vague-word list is mechanical, the reviewer
   catches the rest; upgrade.sh does not yet copy the three scripts (manual
@@ -33,8 +33,28 @@ Newest-first session log. One entry per working session. Read this (plus
   are ignored). Ceilings kept: coverage is textual (a `test.todo` counts);
   an escaped quote inside a title ends it early.
 - Gate: GREEN (bash scripts/e2e.sh; ci-local.sh CI-LOCAL GREEN).
-- Next: M54 sync-issues (with the board's details block, decision 10) and
+- Next: M55 sync-issues (with the board's details block, decision 10) and
   migrate-to-issues.
+
+## 2026-11-20 -- session 92 (M54-001 run board marks dead runs stalled)
+
+- Branch: `board-stale-runs`.
+- Trigger: a mac-window-tabber run died after M6-008 without `run-end`;
+  43 minutes later its board still showed a live run with a Stop button.
+  Cause: board.sh's only end signal is `run-end` in events.log, and
+  status.sh/context.sh keep refreshing it, so "updated 0s ago" stays fresh.
+- Done: M54-001. board.sh takes the newest mtime of events.log, results
+  and quiet.sh logs (main and lanes); no `run-end` and older than
+  `HARNESS_BOARD_STALE` (default 1800s) = stalled rows, `run stalled`
+  header, no Stop button. test-board.sh proves stall, recovery on a fresh
+  log, the override and that run-end still wins. Checked on the real
+  mac-window-tabber run state: header now reads stalled.
+- Decisions: a time heuristic, not a PID check: builders are agent
+  subagents with no PID on disk, and the orchestrator is a CLI session. 30
+  minutes because builders write quiet.sh logs every few minutes; a builder
+  silent longer reads stalled until it writes again. Patch release
+  (3.22.2), no plan file ("just build it" scale). M54 skips M53, which a
+  concurrent branch uses.
 
 ## 2026-11-19 -- session 91 (M52-001, M52-002 onboarding installs what its docs reference)
 

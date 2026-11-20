@@ -43,4 +43,4 @@ low-risk PRs merge themselves.
     and checks: Done when (`verify`), `paths`, model and effort, `depends_on`,
     the plan section, `notes`, Needs a human, and live status. Sync rewrites only
     that block; edits inside it are overwritten (change the plan or
-    FEATURES.json instead). Built with `sync-issues` (M54).
+    FEATURES.json instead). Built with `sync-issues` (M55).

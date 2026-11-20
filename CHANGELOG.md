@@ -45,6 +45,21 @@ Upgrade:
   `step check-coverage "bash scripts/check-coverage.sh <test folders>"` to
   `scripts/e2e.sh`. Features without `checks` are unaffected.
 
+## 3.22.2 — 2026-11-20
+
+- The run board no longer shows a dead run as live (M54-001). A run that
+  ends without `run-end` (the orchestrator crashed or its conversation
+  closed) kept its Stop button and `building` rows forever, because
+  harness-status and context.sh still refresh the board. With no `run-end`
+  and no activity on disk (events.log, results, quiet.sh logs here and in
+  lanes) for `HARNESS_BOARD_STALE` seconds (default 1800), those rows show
+  `stalled` and the header says `run stalled`.
+
+README: none (board stage detail lives in the run-board brief)
+
+Upgrade:
+- Update the plugin (`claude plugin update`); nothing else to do (board.sh ships with the plugin).
+
 ## 3.22.1 — 2026-11-19
 
 Fixes found by a PR review of a real onboarding:
