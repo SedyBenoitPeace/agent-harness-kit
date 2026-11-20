@@ -32,7 +32,11 @@ entries plus a plan section (protocol 1.1), then go to harness-run.
    Done when (each line a backticked command plus its expected result) ·
    Quality bar (a fetchable reference, or "gate is sufficient") ·
    Needs a human (actions the run must stop for) · Budget and stop
-   condition · Open questions (must end up empty; only the
+   condition · Checks (the acceptance checks, written now, before any code:
+   one `### C<n> — title` per behaviour with Critical yes/no, numbered Steps,
+   a Pass if a stranger can judge, and Evidence test, screenshot or human;
+   planning copies each into its feature's `checks` as `<feature id>.<n>`) ·
+   Open questions (must end up empty; only the
    reviewer's `- NOTE: ` lines may stay).
 4. **Stranger test, before saving:** could someone build this without
    asking anything? If not, ask the human instead of saving — that is a

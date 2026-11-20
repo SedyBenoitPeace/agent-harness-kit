@@ -18,7 +18,10 @@ A finding is a gap only if it is BLOCKING:
 - the brief contradicts itself;
 - a Done-when line cannot be run or observed (no command, no expected
   result, or a result nobody can see);
-- a Needs-a-human item is missing that a plan would hit.
+- a Needs-a-human item is missing that a plan would hit;
+- a Deliverable has no check in `## Checks`, or a check's Pass if is one a
+  stranger could not judge by looking ("it works", "looks right", no
+  observable result).
 
 Everything else is a NOTE and does not prevent `READY`: wording, style,
 shell details a builder would handle (where a `cd` leaves the shell,

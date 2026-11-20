@@ -49,5 +49,10 @@ step analyzers "{{ANALYZER_COMMAND}}"
 # binary for CLIs). Delete only if this project truly has no user surface.
 step e2e-proof "{{E2E_PROOF_COMMAND}}"
 
+# Acceptance checks: every check in FEATURES.json has exactly one test titled
+# with its id, @critical when critical (e.g. "bash scripts/check-coverage.sh
+# tests/ e2e/", naming the folders where tests live).
+step check-coverage "{{CHECK_COVERAGE_COMMAND}}"
+
 echo "GATE GREEN"
 echo "FULL_LOG: $LOG"

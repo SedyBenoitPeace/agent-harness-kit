@@ -1,0 +1,5 @@
+{
+ "number": 13,
+ "title": "[M1-001] Book a session",
+ "body": "Booking a session from the client app.  \r\n\r\n### Background\r\nOld flow.\r\n\r\n```md\r\n### M1-001.9 \u2014 inside a fence\r\n```\r\n\r\n## Checks\r\n\r\n### M1-001.1 - Book a future session  \r\n- **Critical:** yes \r\n- **Accounts:** client\r\n- **Steps:**\r\n1. Open Book\r\n2. Pick a future session and confirm   \r\n- **Pass if:** Booking confirmed appears and the session is listed\r\n  under My bookings\r\n- **Evidence:** Test\r\n\r\n### M1-001.2 \u2014 Booked screen looks right\r\n- **Critical:** no\r\n- **Steps:**\r\n  1. Open My bookings\r\n- **Pass if:** A screenshot in English and Italian shows the session card\r\n- **Evidence:** screenshot\r\n\r\n## Notes\r\n\r\n### Not a check\r\nNothing else.\r\n"
+}

@@ -12,6 +12,39 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.23.0 — 2026-11-20
+
+Acceptance checks, phase 1 of the zero-touch QA chain (M53; decisions in
+`docs/decisions.md`):
+
+- A feature can carry `checks`: `{id, title, critical, steps, pass_if,
+  evidence}`, ids `<feature id>.<n>`, evidence `test`, `screenshot` or
+  `human`. The same check reads as markdown (`### <id> — title` with
+  Critical, Steps, Pass if, Evidence), for a brief or a GitHub issue body.
+- `read-checks.sh` is the one reader: FEATURES.json, an issue
+  (`--issue-json` fixture or `--issue N` through `gh`) or markdown, the
+  same normalized lines from each, malformed checks named.
+- harness-brief writes a `## Checks` section; `check-brief.sh` fails a
+  brief without checks, with a malformed check or a vague Pass if; the
+  brief reviewer blocks them. harness-builder writes one test per check,
+  titled with its id, `@critical` when critical.
+- `check-coverage.sh` fails a passing or review feature's check with no
+  test, a check with two tests, an unknown id or a mistagged test. Setup
+  installs it with the reader and `acceptance-verdict.sh` into `scripts/`;
+  `e2e.sh.tmpl` runs it.
+- harness-evaluator writes one row per check (covered, partial, missing,
+  unrequested) and `acceptance-verdict.sh` turns the table into PASS or
+  NEEDS_WORK: the script decides, not the model.
+
+README: `## Acceptance checks`, `read-checks.sh`, `check-coverage.sh`, `acceptance-verdict.sh`
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`, then
+  copy `check-coverage.sh`, `read-checks.sh` and `acceptance-verdict.sh`
+  from the kit's `skills/harness-session/scripts/` into `scripts/` and add
+  `step check-coverage "bash scripts/check-coverage.sh <test folders>"` to
+  `scripts/e2e.sh`. Features without `checks` are unaffected.
+
 ## 3.22.2 — 2026-11-20
 
 - The run board no longer shows a dead run as live (M54-001). A run that

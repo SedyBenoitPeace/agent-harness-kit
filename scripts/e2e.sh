@@ -411,7 +411,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.22.2" ] || fail "plugin version must be 3.22.2"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.23.0" ] || fail "plugin version must be 3.23.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"
@@ -719,6 +719,11 @@ bash scripts/test-check-readme.sh
 # --- onboarded docs name only files that exist where they say (M52-002) ------
 shellcheck scripts/check-doc-refs.sh scripts/test-check-doc-refs.sh
 bash scripts/test-check-doc-refs.sh
+
+# --- acceptance checks (M53): one reader, coverage, script verdict --------------
+shellcheck skills/harness-session/scripts/read-checks.sh skills/harness-session/scripts/check-coverage.sh skills/harness-session/scripts/acceptance-verdict.sh scripts/test-checks.sh
+bash scripts/test-checks.sh
+bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"

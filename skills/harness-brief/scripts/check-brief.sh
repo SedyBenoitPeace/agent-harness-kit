@@ -63,4 +63,29 @@ else
   pass "Done when lines all carry a command"
 fi
 
+# Checks (M53-002): acceptance checks are written now, before any code, in the
+# kit's one check format; read-checks.sh validates them, this adds vague words
+READER="$(cd "$(dirname "$0")/../../harness-session/scripts" && pwd)/read-checks.sh"
+if ! grep -qx '## Checks' "$brief"; then
+  failc "section missing: Checks (one ### C<n> check per behaviour, before any code)"
+else
+  sect="$(mktemp)"
+  awk '/^## /{on = ($0 == "## Checks"); next} on' "$brief" > "$sect"
+  if ! rows="$(bash "$READER" --md "$sect" 2>"$sect.err")"; then
+    while IFS= read -r p; do failc "Checks: $p"; done < "$sect.err"
+  elif [ -z "$rows" ]; then
+    failc "Checks has no check: add ### C1 — <title> with Critical, Steps, Pass if, Evidence"
+  else
+    vague="$(printf '%s\n' "$rows" | jq -r '
+      (.pass_if | ascii_downcase | [match("\\b(works|working|correctly|properly|as expected|fine|good|nice|looks right|appropriate(ly)?|should)\\b"; "g").string] | unique) as $w
+      | select($w | length > 0) | "\(.id): Pass if is vague (\($w | join(", "))): say what a stranger would see"')"
+    if [ -n "$vague" ]; then
+      while IFS= read -r v; do failc "Checks: $v"; done <<< "$vague"
+    else
+      pass "Checks: $(printf '%s\n' "$rows" | wc -l | tr -d ' ') checks"
+    fi
+  fi
+  rm -f "$sect" "$sect.err"
+fi
+
 [ "$fails" -eq 0 ]

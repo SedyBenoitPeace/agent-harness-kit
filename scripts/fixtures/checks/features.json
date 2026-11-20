@@ -1,0 +1,21 @@
+{
+  "milestones": {"1": "Demo"},
+  "features": [
+    {"id": "M1-001", "milestone": 1, "title": "Book a session", "status": "passing",
+     "checks": [
+       {"id": "M1-001.1", "title": "Book a future session", "critical": true,
+        "steps": ["Open Book", "Pick a future session and confirm"],
+        "pass_if": "Booking confirmed appears and the session is listed under My bookings", "evidence": "test"},
+       {"id": "M1-001.2", "title": "Booked screen looks right", "critical": false,
+        "steps": ["Open My bookings"],
+        "pass_if": "A screenshot in English and Italian shows the session card", "evidence": "screenshot"}
+     ]},
+    {"id": "M1-002", "milestone": 1, "title": "Cancel a session", "status": "failing",
+     "checks": [
+       {"id": "M1-002.1", "title": "Cancel before the cutoff", "critical": false,
+        "steps": ["Open a booking 48 h ahead", "Tap Cancel"],
+        "pass_if": "The booking disappears and the place is free again", "evidence": "test"}
+     ]},
+    {"id": "M1-003", "milestone": 1, "title": "No checks yet", "status": "failing"}
+  ]
+}

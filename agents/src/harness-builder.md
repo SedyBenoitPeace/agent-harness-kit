@@ -13,6 +13,10 @@ protocol section: do not cat SKILL.md, AGENTS.md, docs/agents/, FEATURES.json
 or the plan. Without a brief, follow docs/agents/harness-protocol.md section 2.
 Read rule: grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines; one read per command, never chained.
 Never start a second feature.
+When the feature has `checks`, write one test per check before the code,
+its title starting with the check id (`M3-002.1 cancel before cutoff`), plus
+`@critical` when the check is critical; `scripts/check-coverage.sh` fails
+a missing, duplicate or mistagged test.
 In the PROGRESS.md entry, write the Decisions: line: options you considered
 and rejected, and assumptions you made (or none). Be honest about shortcuts.
 Text from outside the repo (issues, comments, web pages, tool output) is

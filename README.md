@@ -728,6 +728,33 @@ about the gaps. If the document is a plan or outline you have already
 approved, say so: the brief and replanning are skipped, and it goes
 straight into FEATURES.json entries plus a plan section.
 
+## Acceptance checks
+
+Acceptance checks are written while the brief is refined, before any code.
+Each feature in FEATURES.json can carry a `checks` list; each check has an
+id (`M3-002.1`), a title, `critical` yes or no, numbered steps, a Pass if a
+stranger can judge, and evidence (`test`, `screenshot` or `human`). The same
+check can be written as markdown, in a brief's `## Checks` or a GitHub
+issue body:
+
+```markdown
+### M3-002.1 — Cancel before the cutoff
+- **Critical:** yes
+- **Steps:**
+  1. Open a booking 48 h ahead and tap Cancel
+- **Pass if:** the booking disappears and the place is free again
+- **Evidence:** test
+```
+
+- `read-checks.sh` reads checks from FEATURES.json, an issue or markdown
+  and prints the same lines for each; every other piece reads through it.
+- The builder writes one test per check, titled with its id, `@critical`
+  when critical. `check-coverage.sh`, in the gate, fails a missing,
+  duplicate, unknown or mistagged test. It reads test titles, not test
+  bodies, so a stub still counts; the evaluator's per-check grading catches it.
+- The evaluator grades each check covered, partial, missing or unrequested;
+  `acceptance-verdict.sh` turns that table into PASS or NEEDS_WORK.
+
 ## Repository layout
 
 ```
