@@ -725,7 +725,7 @@ shellcheck skills/harness-session/scripts/read-checks.sh skills/harness-session/
 bash scripts/test-checks.sh
 
 # --- GitHub issues as the place to write features (M55), against a fake gh -----
-shellcheck skills/harness-session/scripts/issues.sh scripts/test-issues.sh scripts/fixtures/issues/gh
+shellcheck skills/harness-issues/scripts/issues.sh scripts/test-issues.sh scripts/fixtures/issues/gh
 bash scripts/test-issues.sh
 bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh
 

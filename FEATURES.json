@@ -337,7 +337,7 @@
       "model": "medium",
       "depends_on": [],
       "paths": [
-        "skills/harness-session/scripts/issues.sh",
+        "skills/harness-issues/scripts/issues.sh",
         "scripts/test-issues.sh",
         "scripts/fixtures/issues",
         "scripts/e2e.sh"
@@ -388,7 +388,7 @@
         "M55-001"
       ],
       "paths": [
-        "skills/harness-session/scripts/issues.sh",
+        "skills/harness-issues/scripts/issues.sh",
         "scripts/test-issues.sh"
       ],
       "checks": [
@@ -426,7 +426,7 @@
         "M55-002"
       ],
       "paths": [
-        "skills/harness-session/scripts/issues.sh",
+        "skills/harness-issues/scripts/issues.sh",
         "scripts/test-issues.sh",
         "skills/harness-initial-setup/templates/harness-protocol-planning.md",
         "README.md",
@@ -452,6 +452,38 @@
             "Run issues.sh migrate twice"
           ],
           "pass_if": "The dry run prints the issues it would create and makes no gh write call; the second real run creates nothing",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M55-004",
+      "milestone": 55,
+      "title": "harness-issues skill: /agent-harness-kit:harness-issues sync and migrate as a command instead of a script path; migrate always previews with --dry-run and asks before the real run",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-issues.sh proving the check below",
+      "model": "low",
+      "depends_on": [
+        "M55-003"
+      ],
+      "paths": [
+        "skills/harness-issues/SKILL.md",
+        "skills/harness-issues/scripts/issues.sh",
+        "scripts/test-issues.sh",
+        "scripts/e2e.sh",
+        "README.md",
+        "AGENTS.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M55-004.1",
+          "title": "Sync and migrate are a harness command",
+          "critical": false,
+          "steps": [
+            "Read skills/harness-issues/SKILL.md and README.md"
+          ],
+          "pass_if": "SKILL.md is the harness-issues skill running issues.sh sync and migrate, migrate runs --dry-run first and asks the human before the real run, and README names /agent-harness-kit:harness-issues",
           "evidence": "test"
         }
       ]

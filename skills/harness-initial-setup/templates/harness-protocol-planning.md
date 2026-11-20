@@ -188,8 +188,8 @@ and validates them; `bar` stays as the live proof.
 
 Features can instead be written as GitHub issues, titled `[<feature id>]
 <title>` with the checks in the body: set `"source": "issues"` at the top of
-FEATURES.json (the kit's `issues.sh migrate` moves failing and deferred
-features to issues and sets it). FEATURES.json stays the committed mirror
+FEATURES.json (the kit's harness-issues command, `issues.sh migrate`,
+moves failing and deferred features to issues and sets it). FEATURES.json stays the committed mirror
 every agent reads; `issues.sh sync` (gh + jq, no model) pulls each issue's
 title and checks, and writes status, a label and the feature's details back.
 Run it at session start and after close-out when `gh` works; without

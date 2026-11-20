@@ -12,7 +12,7 @@ FEATURES.json / PROGRESS.md / plans / e2e gate), consumable by any AI agent.
 4. Gate: `bash scripts/e2e.sh` (exit 0 = green; run at session start and end)
 5. Deliverables: `.claude-plugin/` (manifests), `skills/` (harness-initial-setup, harness-audit,
    harness-session, harness-run, harness-continuous, harness-upgrade-structure,
-   harness-status, harness-handoff), README.
+   harness-status, harness-handoff, harness-issues), README.
 
 Any agent can build this repo: plans and FEATURES.json are agent-neutral. If
 the harness-session skill is available, use it; otherwise follow

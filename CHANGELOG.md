@@ -26,17 +26,19 @@ GitHub issues as the place to write features (M55; decisions 4–7, 10, 11):
   and closes passing issues. Only that block is rewritten; a second run
   with nothing new makes no call. Issues from people without write access
   are skipped.
+- Both run as a command: `/agent-harness-kit:harness-issues sync` and
+  `/agent-harness-kit:harness-issues migrate` (new harness-issues skill;
+  migrate previews with `--dry-run` and asks before creating issues).
 - `issues.sh migrate` moves failing and deferred features to issues (ids
   kept, checks as markdown, GitHub milestones `M<n> <name>`) and sets the
   source. Passing and superseded features, the archive and PROGRESS.md stay
   in git. Safe to re-run; `--dry-run` writes nothing.
 
-README: `issues.sh sync`, `issues.sh migrate`, `"source": "issues"`
+README: `issues.sh migrate`, `"source": "issues"`, `/agent-harness-kit:harness-issues`
 
 Upgrade:
-- Nothing to do for FEATURES.json repos. To move one to issues: run the
-  kit's `skills/harness-session/scripts/issues.sh migrate --dry-run`, then
-  without `--dry-run`, and commit FEATURES.json.
+- Nothing to do for FEATURES.json repos. To move one to issues:
+  `/agent-harness-kit:harness-issues migrate` (it previews first).
 
 ## 3.23.0 — 2026-11-20
 

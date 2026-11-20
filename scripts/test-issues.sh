@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 KIT="$PWD"
-ISS="$KIT/skills/harness-session/scripts/issues.sh"
+ISS="$KIT/skills/harness-issues/scripts/issues.sh"
 READ="$KIT/skills/harness-session/scripts/read-checks.sh"
 fail() { echo "ISSUES TEST FAIL: $*" >&2; exit 1; }
 t() { echo "-- $1"; }
@@ -198,5 +198,15 @@ cmp -s "$r/FEATURES.json" "$tmp/F0" || fail "dry run changed FEATURES.json"
 (cd "$r" && bash "$ISS" migrate >/dev/null) || fail "second migrate exited non-zero"
 grep -q 'WRITE issue create' "$FAKE_GH_DIR/log" && fail "second migrate created issues: $(cat "$FAKE_GH_DIR/log")"
 [ "$(jq length "$FAKE_GH_DIR/issues.json")" = 2 ] || fail "want 2 issues after two runs"
+
+t "M55-004.1 sync and migrate are a harness command"
+SK="$KIT/skills/harness-issues/SKILL.md"
+[ -f "$SK" ] || fail "skills/harness-issues/SKILL.md missing"
+{ [ "$(head -1 "$SK")" = "---" ] && grep -qx 'name: harness-issues' "$SK" && grep -q '^description: Use when' "$SK"; } || fail "harness-issues SKILL.md: frontmatter name/description wrong"
+for w in 'scripts/issues.sh sync' 'scripts/issues.sh migrate --dry-run' 'scripts/issues.sh migrate'; do
+  grep -qF "$w" "$SK" || fail "harness-issues SKILL.md must run: $w"
+done
+grep -qi 'ask the human' "$SK" || fail "harness-issues SKILL.md: migrate must ask the human before the real run"
+grep -qF '/agent-harness-kit:harness-issues' "$KIT/README.md" || fail "README must name /agent-harness-kit:harness-issues"
 
 echo "ISSUES TESTS GREEN"

@@ -15,7 +15,7 @@
 # (issues from non-writers are reported, exit 0); 2 = usage or tools.
 # shellcheck disable=SC2016 # single-quoted jq programs use jq variables
 set -euo pipefail
-here="$(cd "$(dirname "$0")" && pwd)"
+here="$(cd "$(dirname "$0")/../../harness-session/scripts" && pwd)"  # read-checks.sh
 cmd="${1:-}"; shift || true
 dry=0
 for a in "$@"; do

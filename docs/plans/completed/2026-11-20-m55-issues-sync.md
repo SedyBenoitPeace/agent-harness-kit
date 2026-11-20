@@ -1,7 +1,7 @@
 # M55: GitHub issues as the place to write features (zero-touch QA phase 1, part 2)
 
 Decisions 4–7 and 10 in `docs/decisions.md`. One script,
-`skills/harness-session/scripts/issues.sh`, two commands. Agents and every
+`skills/harness-issues/scripts/issues.sh`, two commands. Agents and every
 other kit script keep reading FEATURES.json; `issues.sh` is the only thing
 that talks to GitHub, through `gh`, and spends no model tokens.
 

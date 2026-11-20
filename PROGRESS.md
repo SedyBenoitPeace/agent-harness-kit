@@ -6,7 +6,7 @@ Newest-first session log. One entry per working session. Read this (plus
 ## 2026-11-20 -- session 94 (M55-001..003 GitHub issues as the place to write features)
 
 - Branch: `issues-sync`.
-- Done: `skills/harness-session/scripts/issues.sh`. M55-001 `sync` pulls
+- Done: `skills/harness-issues/scripts/issues.sh`. M55-001 `sync` pulls
   `[id]` issues' title and checks into FEATURES.json (new ids become
   failing features). M55-002 `sync` writes back a generated details block
   (the board's fields plus the plan section), a `harness:<status>` label,
@@ -29,6 +29,9 @@ Newest-first session log. One entry per working session. Read this (plus
   line (harness-audit requires one), an issue without `## Checks` keeps the
   feature's checks, no false "would update", unknown flags exit 2, labels
   created only when missing.
+- M55-004 (owner ask): the script is a command, the new harness-issues
+  skill (`/agent-harness-kit:harness-issues sync|migrate`); `issues.sh`
+  moved to `skills/harness-issues/scripts/`; migrate previews and asks.
 - Gate: GREEN (bash scripts/e2e.sh; ci-local.sh CI-LOCAL GREEN).
 - Next: phase 2 (automerge flag, safe list,
   qa.yml).
