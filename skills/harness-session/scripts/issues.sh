@@ -38,9 +38,12 @@ gh issue list --state all --limit 1000 --json number,title,body,state,labels,aut
 # anyone can open "[M9-001] …", and an unattended run would build it.
 # (Only the author or a collaborator can edit an issue body afterwards.)
 gh api 'repos/{owner}/{repo}/collaborators?per_page=100' --jq '.[] | select(.permissions.push) | .login' > "$tmp/writers"
-jq -r --rawfile w "$tmp/writers" '.[] | select((.title | test("^\\[[^]]+\\] ")) and ((.author.login // "") | IN($w | split("\n")[]) | not))
+[ -s "$tmp/writers" ] || { echo "ERROR: could not list collaborators with write access; nothing synced" >&2; exit 2; }
+# shellcheck disable=SC2016
+WRITER='($w | split("\n") | map(select(length > 0))) as $ws | (.author.login // "") as $a | $a != "" and ($ws | index([$a]) != null)'
+jq -r --rawfile w "$tmp/writers" '.[] | select((.title | test("^\\[[^]]+\\] ")) and ('"$WRITER"' | not))
   | "issue #\(.number): opened by \(.author.login // "unknown"), who has no write access; skipped"' "$tmp/all.json" >&2
-jq --rawfile w "$tmp/writers" '[.[] | select((.author.login // "") | IN($w | split("\n")[]))]' "$tmp/all.json" > "$tmp/issues.json"
+jq --rawfile w "$tmp/writers" '[.[] | select('"$WRITER"')]' "$tmp/all.json" > "$tmp/issues.json"
 
 # --- pull: issues -> FEATURES.json (title and checks only) -------------------
 pull() {
@@ -130,5 +133,33 @@ write() {  # write <gh args...>: a gh write call, skipped on --dry-run
   if [ "$dry" = 1 ]; then echo "would: gh $*"; else gh "$@" >/dev/null; fi
 }
 
-if [ "$cmd" = sync ]; then pull; push; fi
+# --- migrate: open features -> new issues; history stays in git --------------
+migrate() {
+  gh api 'repos/{owner}/{repo}/milestones?state=all&per_page=100' | jq -r '.[].title' > "$tmp/milestones"
+  jq -c '.milestones as $ms | .features[] | select(.status == "failing" or .status == "deferred")
+         | . + {ms: ("M\(.milestone)" + (if $ms[(.milestone | tostring)] then " " + $ms[(.milestone | tostring)] else "" end))}' FEATURES.json \
+  | while IFS= read -r feat; do
+    id="$(jq -r .id <<< "$feat")"
+    jq -e --arg id "$id" 'any(.[]; .title | startswith("[" + $id + "] "))' "$tmp/issues.json" >/dev/null && continue
+    title="[$id] $(jq -r .title <<< "$feat")"; st="$(jq -r .status <<< "$feat")"; ms="$(jq -r .ms <<< "$feat")"
+    {
+      jq -r '.title, "",
+        (if (.checks // []) != [] then "## Checks", "",
+          (.checks[] | "### \(.id) — \(.title)", "- **Critical:** \(if .critical then "yes" else "no" end)", "- **Steps:**",
+            (.steps | to_entries[] | "  \(.key + 1). \(.value)"), "- **Pass if:** \(.pass_if)", "- **Evidence:** \(.evidence)", "")
+         else empty end)' <<< "$feat" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'
+      printf '\n'; block "$feat"
+    } > "$tmp/body.$id"
+    if ! grep -qxF "$ms" "$tmp/milestones"; then
+      write api --method POST 'repos/{owner}/{repo}/milestones' -f "title=$ms"; echo "$ms" >> "$tmp/milestones"
+    fi
+    write label create "harness:$st" --force --color ededed
+    write issue create --title "$title" --body-file "$tmp/body.$id" --label "harness:$st" --milestone "$ms"
+    if [ "$dry" = 1 ]; then echo "issues.sh: would create $title ($ms)"; else echo "issues.sh: created $title ($ms)"; fi
+  done
+  if [ "$dry" = 1 ]; then echo "would set \"source\": \"issues\" in FEATURES.json"
+  else jq '{source: "issues"} + del(.source)' FEATURES.json > "$tmp/F.json" && cp "$tmp/F.json" FEATURES.json; fi
+}
+
+if [ "$cmd" = sync ]; then pull; push; else migrate; fi
 exit "$rc"

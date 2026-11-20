@@ -755,6 +755,27 @@ issue body:
 - The evaluator grades each check covered, partial, missing or unrequested;
   `acceptance-verdict.sh` turns that table into PASS or NEEDS_WORK.
 
+## Features in GitHub issues
+
+A repo can keep its features in GitHub issues instead of only in
+FEATURES.json, so you can write and read them from your phone. Set
+`"source": "issues"` at the top of FEATURES.json, or let migrate do it:
+
+```bash
+bash <kit>/skills/harness-session/scripts/issues.sh migrate --dry-run
+bash <kit>/skills/harness-session/scripts/issues.sh migrate
+```
+
+`issues.sh migrate` creates one issue per failing or deferred feature
+(`[M12-003] title`, checks in the body, GitHub milestone `M12 <name>`);
+passing features, the archive and PROGRESS.md stay in git. After that,
+`issues.sh sync` pulls each issue's title and checks into FEATURES.json and
+writes back a details block (status, Done when, paths, model and effort,
+plan section), a `harness:<status>` label, and closes issues that pass.
+Agents always read the committed FEATURES.json, so an agent without GitHub
+access still works; sync is a script and spends no model tokens. Only
+issues opened by people with write access count.
+
 ## Repository layout
 
 ```

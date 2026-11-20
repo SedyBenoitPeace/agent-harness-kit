@@ -3,6 +3,29 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-20 -- session 94 (M55-001..003 GitHub issues as the place to write features)
+
+- Branch: `issues-sync`.
+- Done: `skills/harness-session/scripts/issues.sh`. M55-001 `sync` pulls
+  `[id]` issues' title and checks into FEATURES.json (new ids become
+  failing features). M55-002 `sync` writes back a generated details block
+  (the board's fields plus the plan section), a `harness:<status>` label,
+  close/reopen; idempotent. M55-003 `migrate` creates issues for failing and
+  deferred features only (ids kept, GitHub milestones), sets
+  `"source": "issues"`; `--dry-run` writes nothing. Tested against a
+  stateful fake `gh` (`scripts/fixtures/issues/gh`). Plan:
+  `docs/plans/completed/2026-11-20-m55-issues-sync.md`.
+- Decisions: one script with two commands, not two scripts (shared block
+  renderer); status is never pulled from issues (closing an issue by hand
+  does not pass a feature; sync reopens it); issues from authors without
+  write access are skipped, failing closed when the collaborator list is
+  empty (decision 11, from an automated security review); live run data
+  (gate, time, cost) is local to `.harness-run/` and not pushed; issues
+  without an `[id]` title are ignored (no id assignment yet).
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: fresh-session evaluation; phase 2 (automerge flag, safe list,
+  qa.yml).
+
 ## 2026-11-20 -- session 93 (M53-001..005 acceptance checks, zero-touch QA phase 1)
 
 - Branch: `qa-checks`. Owner decisions in `docs/decisions.md` (new file).

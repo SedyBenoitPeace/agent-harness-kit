@@ -44,7 +44,7 @@ J
 
 - Cancel.
 P
-  echo '{"archive": true}' > "$r/archive.json"
+  echo '{"archive": true}' > "$r/docs/features-archive.json"; echo "# PROGRESS" > "$r/PROGRESS.md"
   : > "$r/gh/log"
 }
 writes() { grep -c '^WRITE' "$FAKE_GH_DIR/log" || true; }
@@ -96,6 +96,10 @@ jq 'map(if .number == 9 then .author = "stranger" else . end)' "$FAKE_GH_DIR/iss
 (cd "$r" && bash "$ISS" sync >/dev/null 2>"$tmp/err") || true
 jq -e '.features[] | select(.id == "M4-001")' "$r/FEATURES.json" >/dev/null && fail "an issue by someone without write access became a feature"
 grep -q '#9.*stranger' "$tmp/err" || fail "the skipped outsider issue must be reported: $(cat "$tmp/err")"
+issue 10 "[M4-002] Ghost" OPEN "From a deleted account."
+jq 'map(if .number == 10 then .author = "" else . end)' "$FAKE_GH_DIR/issues.json" > "$FAKE_GH_DIR/x" && mv "$FAKE_GH_DIR/x" "$FAKE_GH_DIR/issues.json"
+(cd "$r" && bash "$ISS" sync >/dev/null 2>"$tmp/err") || true
+jq -e '.features[] | select(.id == "M4-002")' "$r/FEATURES.json" >/dev/null && fail "an issue with no author login became a feature"
 [ "$(jq -r '.features[] | select(.id == "M1-001") | .title' "$r/FEATURES.json")" = "Old title" ] || fail "the broken issue must be skipped"
 
 t "M55-001.3 a features repo is left alone"
@@ -139,5 +143,34 @@ jq 'map(if .number == 1 then .labels = ["harness:passing", "bug"] else . end)' "
 (cd "$r" && bash "$ISS" sync >/dev/null) || fail "sync exited non-zero"
 jq -e '.[] | select(.number == 2) | .state == "CLOSED" and (.labels | index("harness:passing"))' "$FAKE_GH_DIR/issues.json" >/dev/null || fail "passing issue must be closed and labelled: $(jq -c '.[] | select(.number == 2) | {state, labels}' "$FAKE_GH_DIR/issues.json")"
 jq -e '.[] | select(.number == 1) | .state == "OPEN" and (.labels | sort) == ["bug", "harness:failing"]' "$FAKE_GH_DIR/issues.json" >/dev/null || fail "failing issue must be reopened with only harness:failing: $(jq -c '.[] | select(.number == 1) | {state, labels}' "$FAKE_GH_DIR/issues.json")"
+
+t "M55-003.1 migrate creates issues for open features only @critical"
+repo mig; echo '[]' > "$FAKE_GH_DIR/issues.json"
+jq 'del(.source)' "$r/FEATURES.json" > "$r/x" && mv "$r/x" "$r/FEATURES.json"
+before="$(cd "$r" && cat docs/features-archive.json PROGRESS.md)"
+(cd "$r" && bash "$ISS" migrate >/dev/null) || fail "migrate exited non-zero"
+titles="$(jq -r '[.[].title] | sort | join(",")' "$FAKE_GH_DIR/issues.json")"
+[ "$titles" = "[M1-001] Old title,[M2-001] Export" ] || fail "want issues for M1-001 and M2-001 only, got: $titles"
+jq -e '.[] | select(.title == "[M2-001] Export") | .milestone == "M2 Admin" and (.labels | index("harness:deferred"))' "$FAKE_GH_DIR/issues.json" >/dev/null || fail "M2-001 issue: milestone or label wrong: $(jq -c '.[] | select(.title == "[M2-001] Export") | {milestone, labels}' "$FAKE_GH_DIR/issues.json")"
+grep -q '^WRITE api milestone M1 Booking$' "$FAKE_GH_DIR/log" || fail "GitHub milestone M1 Booking not created"
+jq '.[] | select(.title == "[M2-001] Export") | {number, title, body}' "$FAKE_GH_DIR/issues.json" > "$tmp/m2.json"
+[ "$(bash "$READ" --issue-json "$tmp/m2.json")" = "$(cd "$r" && bash "$READ" | grep '"feature":"M2-001"')" ] || fail "migrated checks do not read back identical"
+grep -q 'harness-feature: M1-001' <<< "$(jq -r '.[] | select(.title == "[M1-001] Old title") | .body' "$FAKE_GH_DIR/issues.json")" || fail "migrated issue lacks the details block"
+[ "$(jq -r .source "$r/FEATURES.json")" = issues ] || fail "source must be issues after migrate"
+[ "$(cd "$r" && cat docs/features-archive.json PROGRESS.md)" = "$before" ] || fail "archive or PROGRESS.md changed"
+jq -e '[.features[] | select(.id == "M1-002" or .id == "M1-003")] | length == 2' "$r/FEATURES.json" >/dev/null || fail "passing and superseded features must stay"
+
+t "M55-003.2 migrate is safe to re-run and to preview"
+repo dry; echo '[]' > "$FAKE_GH_DIR/issues.json"
+jq 'del(.source)' "$r/FEATURES.json" > "$r/x" && mv "$r/x" "$r/FEATURES.json"; cp "$r/FEATURES.json" "$tmp/F0"
+out="$(cd "$r" && bash "$ISS" migrate --dry-run)" || fail "dry run exited non-zero"
+{ grep -qF '[M1-001] Old title' <<< "$out" && grep -qF '[M2-001] Export' <<< "$out"; } || fail "dry run must print the issues it would create: $out"
+[ "$(writes)" = 0 ] || fail "dry run made write calls: $(grep WRITE "$FAKE_GH_DIR/log")"
+cmp -s "$r/FEATURES.json" "$tmp/F0" || fail "dry run changed FEATURES.json"
+(cd "$r" && bash "$ISS" migrate >/dev/null) || fail "migrate exited non-zero"
+: > "$FAKE_GH_DIR/log"
+(cd "$r" && bash "$ISS" migrate >/dev/null) || fail "second migrate exited non-zero"
+grep -q 'WRITE issue create' "$FAKE_GH_DIR/log" && fail "second migrate created issues: $(cat "$FAKE_GH_DIR/log")"
+[ "$(jq length "$FAKE_GH_DIR/issues.json")" = 2 ] || fail "want 2 issues after two runs"
 
 echo "ISSUES TESTS GREEN"

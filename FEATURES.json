@@ -419,7 +419,7 @@
       "id": "M55-003",
       "milestone": 55,
       "title": "issues.sh migrate moves only open work to GitHub issues (failing and deferred, ids kept, checks as markdown, GitHub milestones) and switches the repo to source issues; history stays in git; idempotent, --dry-run writes nothing",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-issues.sh proving each check below",
       "model": "medium",
       "depends_on": [
