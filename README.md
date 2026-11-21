@@ -429,6 +429,12 @@ bash ~/.claude/plugins/cache/agent-harness-kit/agent-harness-kit/<version>/skill
 run the script from a clone of this repository.) Review `git diff`, then
 commit it as its own commit.
 
+**Domain-driven design (opt-in):** setup asks once, "Use domain-driven
+design (glossary + ADRs)?", default no. Yes adds `GLOSSARY.md` (term,
+definition, words to avoid), `docs/adr/0000-template.md` and one AGENTS.md
+map line; no adds nothing. An existing repo opts in with `upgrade.sh --ddd .`;
+without `--ddd` the upgrade never adds them.
+
 **Upgrading to 3.0.0:** `harness-setup` was renamed
 `harness-initial-setup`; the old slash command no longer exists.
 
@@ -815,6 +821,7 @@ your GitHub token, so the rules stop accidents, not a determined agent.
 skills/
 ├── harness-initial-setup/
 │   ├── SKILL.md        planning/scaffolding orchestration (thin)
+│   ├── scripts/add-ddd.sh        opt-in glossary + ADR folder (domain-driven design)
 │   └── templates/
 │       ├── harness-protocol.md   ★ the agent-neutral manual: session core + index
 │       ├── harness-protocol-{planning,runs,maintenance}.md  read only when needed
@@ -824,6 +831,7 @@ skills/
 │       ├── ARCHITECTURE.md.tmpl  system diagram + invariants (living doc)
 │       ├── dev.sh.tmpl           dev-environment boot
 │       ├── e2e.sh.tmpl           the gate
+│       ├── GLOSSARY.md.tmpl, adr-template.md  only with domain-driven design
 │       └── pointer.md.tmpl       one-line CLAUDE.md/GEMINI.md pointer
 ├── harness-audit/
 │   ├── SKILL.md        audit orchestration: report + offer fixes

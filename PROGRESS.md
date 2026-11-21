@@ -3,6 +3,34 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 97 (M57-002 domain-driven design opt-in)
+
+- Branch: `m57`.
+- Done: M57-002. Setup asks once, default no, "Use domain-driven design
+  (glossary + ADRs)?"; yes runs the new `harness-initial-setup/scripts/add-ddd.sh`
+  (idempotent, never overwrites): `GLOSSARY.md` from `GLOSSARY.md.tmpl`
+  (term | definition | avoid), `docs/adr/0000-template.md` from
+  `adr-template.md`, one AGENTS.md map line under `scripts/e2e.sh`.
+  `upgrade.sh --ddd` calls the same script; without the flag nothing DDD
+  is added. AGENTS.md.tmpl rewrapped one rule (3 lines to 2) so the
+  template plus pointer stays at 70; upgrade.sh rewraps the unedited old
+  rule the same way (the 3.16.0 fixture test requires template equality).
+  Tests M57-002.1..3 in test-upgrade.sh, now in the gate's check-coverage
+  line. README (upgrade section, layout) and CHANGELOG (crediting Matt
+  Pocock's `domain-modeling` skill) updated.
+- Decisions: one script shared by setup and upgrade (rejected: setup
+  copying by hand from a table, which a test cannot run, and running
+  upgrade.sh at setup, which refuses a dirty tree and branches); pointer
+  placed in the Map, appended at the end when the repo has no e2e.sh map
+  line; M57-002.1 is a fixture copy of the template plus greps on SKILL.md
+  for the question and "default no", so it proves the wording and that the
+  template carries no DDD text, not an agent's behaviour; the DDD templates
+  are written in the kit's own words, nothing copied; the external
+  agent-harness-template mirror is now stale (one AGENTS.md line wrap),
+  left for the release sync; no version bump.
+- Gate: GREEN (run-gate.sh final). ci-local.sh not run (no push).
+- Next: M57-003.
+
 ## 2026-11-21 -- session 96 (M57-001 harness-brief grills until nothing is open)
 
 - Branch: `m57`.

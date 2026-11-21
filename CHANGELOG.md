@@ -21,6 +21,15 @@ agent-harness-template>` and open a PR there; gate green; PR.
   are looked up, never asked; the brief is saved only when no open decision
   remains. A human who says not to ask gets the recommended answers as
   visible defaults.
+- Domain-driven design as a setup opt-in, off by default (M57-002; idea from
+  Matt Pocock's `domain-modeling` skill, github.com/mattpocock/skills, MIT):
+  setup asks "Use domain-driven design (glossary + ADRs)?"; yes runs
+  `add-ddd.sh`, which adds `GLOSSARY.md` (term, definition, avoid),
+  `docs/adr/0000-template.md` and one AGENTS.md map line. AGENTS.md.tmpl
+  rewraps one rule to keep room for that line within 70 lines.
+  Upgrade: optional; `upgrade.sh --ddd .` opts an existing repo in (without
+  the flag nothing DDD is added); a plain upgrade rewraps the unedited
+  "Add a rule here" rule to the template's two lines.
 
 ## 3.25.0 — 2026-11-21
 

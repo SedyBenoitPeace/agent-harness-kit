@@ -680,7 +680,7 @@
       "id": "M57-002",
       "milestone": 57,
       "title": "Domain-driven design as a setup opt-in, off by default: yes adds GLOSSARY.md (ubiquitous language), docs/adr/ with an ADR template and one AGENTS.md pointer line; no leaves the repo exactly as today",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with a setup test proving the checks below",
       "model": "medium",
       "depends_on": [
