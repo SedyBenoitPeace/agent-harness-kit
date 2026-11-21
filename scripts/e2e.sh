@@ -654,7 +654,7 @@ for f in skills/harness-run/SKILL.md skills/harness-continuous/SKILL.md; do
   ! grep -qiE '^[0-9]+\. .*\b(cat|read) +(PROGRESS\.md|FEATURES\.json)' "$f" || fail "$f: an orchestrator step reads a repo file whole (M34-007)"
 done
 grep -qF 'SKILL.md, PROGRESS.md, FEATURES.json or a plan whole' "$TMPL_DIR/harness-protocol-runs.md" || fail "protocol 2.7: no-whole-file-reads rule missing (M34-007)"
-shellcheck skills/harness-run/scripts/wait-result.sh
+shellcheck skills/harness-run/scripts/wait-result.sh skills/harness-run/scripts/wizard.sh
 
 # --- session budget: 60 tool calls or about 150k context (M34-011) ------------------
 for w in '60 tool calls' '150k' 'resume point' 'session budget'; do
@@ -731,7 +731,7 @@ bash scripts/test-issues.sh
 # --- the agent merges its own PR when the rules allow (M56), against a fake gh --
 shellcheck skills/harness-session/scripts/can-merge.sh scripts/test-merge.sh scripts/fixtures/merge/gh
 bash scripts/test-merge.sh
-bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh
+bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh scripts/test-run.sh
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"

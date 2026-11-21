@@ -21,6 +21,12 @@ agent-harness-template>` and open a PR there; gate green; PR.
   are looked up, never asked; the brief is saved only when no open decision
   remains. A human who says not to ask gets the recommended answers as
   visible defaults.
+- harness-run writes a wizard for Needs a human (M60-003; idea from Matt
+  Pocock's `wizard` skill, github.com/mattpocock/skills, MIT): on a
+  `Needs a human:` block or a plan's `Before the run` step,
+  `skills/harness-run/scripts/wizard.sh` writes `scripts/wizard-<id>.sh`
+  from `templates/wizard.sh.tmpl`: one prompt per step, then a check
+  (default: the gate). It refuses a step that looks like a secret value.
 
 ## 3.25.0 — 2026-11-21
 

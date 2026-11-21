@@ -411,4 +411,35 @@ grep -qF "never the plan's path" "$run" || fail "harness-run SKILL.md: brief mus
 grep -qF 'do not cat SKILL.md, AGENTS.md' "$run" || fail "harness-run SKILL.md: brief must tell the builder not to cat SKILL.md/AGENTS.md"
 grep -qF 'harness session for <id>' "$run" || fail "harness-run SKILL.md: brief must keep 'harness session for <id>' (Claude edition hook parses it)"
 
+# M60-003: a Needs-a-human item becomes scripts/wizard-<id>.sh (idea from Matt Pocock's `wizard` skill)
+t() { echo "-- $1"; }
+t "M60-003.1 wizard generated for a blocked feature @critical"
+WIZ="skills/harness-run/scripts/wizard.sh"
+W="$(mktemp -d)"
+cat > "$W/FEATURES.json" <<'JSON'
+{"features":[{"id":"M1-001","status":"deferred","notes":"Needs a human: add STRIPE_KEY secret"}]}
+JSON
+STRIPE_KEY=sk_test_FAKEVALUE123456 bash "$WIZ" "$W" M1-001 --check 'test -n "${STRIPE_KEY:-}"' >/dev/null || fail "wizard.sh: generation failed"
+wf="$W/scripts/wizard-M1-001.sh"
+[ -f "$wf" ] || fail "wizard.sh: scripts/wizard-M1-001.sh not written"
+bash -n "$wf" || fail "wizard: does not pass bash -n"
+grep -qF 'add STRIPE_KEY secret' "$wf" || fail "wizard: the Needs-a-human note must be a step"
+! grep -qE 'sk_test_|FAKEVALUE' "$wf" || fail "wizard: holds a secret value"
+out="$(printf '\n' | STRIPE_KEY=x bash "$wf" 2>&1)" || fail "wizard: check failed with STRIPE_KEY set: $out"
+echo "$out" | grep -qF 'Step 1 of 1: add STRIPE_KEY secret' || fail "wizard: must prompt the step"
+echo "$out" | tail -1 | grep -qF 'WIZARD M1-001: DONE' || fail "wizard: must end with the check passing"
+if printf '\n' | env -u STRIPE_KEY bash "$wf" >/dev/null 2>&1; then fail "wizard: check must fail without STRIPE_KEY"; fi
+# several steps: one prompt each, in order, then the check (default: the gate)
+bash "$WIZ" "$W" M1-001 'open the dashboard' "create the key (it's under API keys & tokens)" >/dev/null
+bash -n "$wf" || fail "wizard: a step with a quote or & breaks bash -n"
+out="$(printf '\n\n' | bash "$wf" 2>&1 || true)"
+echo "$out" | awk '/Step 1 of 2: open the dashboard/{a=NR} /Step 2 of 2: create the key/{b=NR} /Checking: bash scripts\/e2e.sh/{c=NR} END{exit !(a && a<b && b<c)}' \
+  || fail "wizard: steps must prompt one by one, then run the check: $out"
+echo "$out" | grep -qF "create the key (it's under API keys & tokens)" || fail "wizard: a quoted step must print as written"
+if bash "$WIZ" "$W" M1-001 'paste sk_live_abcdef12345678' >/dev/null 2>&1; then fail "wizard.sh: must refuse a step holding a secret value"; fi
+if bash "$WIZ" "$W" M9-999 >/dev/null 2>&1; then fail "wizard.sh: unknown id with no steps must fail"; fi
+rm -rf "$W"
+grep -qF 'scripts/wizard.sh' "$run" || fail "harness-run SKILL.md: must name scripts/wizard.sh (M60-003)"
+grep -qF 'Before the run' "$run" || fail "harness-run SKILL.md: wizard must cover a plan's Before the run items"
+
 echo "RUN TESTS GREEN"

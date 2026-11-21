@@ -135,6 +135,18 @@ set; absent means no evaluation and today's flow):
 6. `eval_attempts` reaching 2 → relay the findings to the human and STOP.
    Any other first line counts as `NEEDS_WORK`.
 
+## Wizard for Needs a human
+
+When a builder ends `blocked` with a `Needs a human:` note, or a plan's
+`Before the run` lists a step only the human can do, write the human a
+wizard before you relay or stop: `bash scripts/wizard.sh <target> <id>
+[--check <cmd>] [step...]` (path relative to this skill) writes
+`scripts/wizard-<id>.sh`: one prompt per step (no steps: the note itself),
+then a check (default: the gate). Name a check that proves the step, such
+as `test -n "${STRIPE_KEY:-}"`. Steps name a secret and where it goes,
+never its value; the script refuses one that looks like a secret. Tell the
+human to run it; do not commit it unless they ask.
+
 ## Parallel lanes
 
 When `context.sh` prints `PARALLEL: <id> <id> …` (instead of
