@@ -24,6 +24,11 @@ agent-harness-template>` and open a PR there; gate green; PR.
 - Features can be `"kind": "bug"` (M59-001): status.sh and context.sh show
   `kind: bug` under the next feature, and context.sh prints a `SKIP_BRIEF`
   hint, since a bug's checks are the reported symptom.
+- Bug intake from GitHub (M59-002; idea from Matt Pocock's `triage` skill,
+  github.com/mattpocock/skills, MIT): `issues.sh sync` turns an open issue
+  labelled `bug` with no `[id]` title into a failing `kind: bug` feature
+  with the next id in the lowest milestone with failing work, and retitles
+  the issue `[id] title`. Re-running changes nothing.
 
 ## 3.25.0 — 2026-11-21
 

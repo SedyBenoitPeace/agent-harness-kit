@@ -785,7 +785,10 @@ writes back a details block (status, Done when, paths, model and effort,
 plan section), a `harness:<status>` label, and closes issues that pass.
 Agents always read the committed FEATURES.json, so an agent without GitHub
 access still works; sync is a script and spends no model tokens. Only
-issues opened by people with write access count.
+issues opened by people with write access count. An open issue labelled
+`bug` without an `[id]` gets the next id in the lowest milestone with
+failing work, is retitled `[M12-004] title`, and lands as a failing
+`"kind": "bug"` feature.
 
 ## The agent merges its own PR
 
