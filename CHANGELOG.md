@@ -1,8 +1,8 @@
 # Changelog
 
 Newest first. Every release has an **Upgrade:** block: what a repo that
-already has a harness must do. The standard upgrade (README, "Upgrading after
-every release") prints these blocks for every release newer than the one the
+already has a harness must do. The standard upgrade (docs/guide/upgrading.md, "Upgrading
+after every release") prints these blocks for every release newer than the one the
 repo was last upgraded to, so keep each line short and actionable.
 
 Release checklist (kit maintainers): bump `package.json`, both
@@ -14,6 +14,11 @@ agent-harness-template>` and open a PR there; gate green; PR.
 
 ## Unreleased
 
+- The README is a guide (M60-004): it opens with a "What do I run when"
+  table naming every skill, then one short section per skill, under 400
+  lines; the deep detail moved verbatim to `docs/guide/` (eight pages,
+  linked from the README). `check-readme.sh` finds release phrases in
+  README.md or `docs/guide/`, and the gate's README content checks read both.
 - harness-retro skill (M60-002): runs `retro-facts.sh`, reads only its
   page (never raw session logs or whole files), and offers at most 5 fixes
   ranked by severity in fixed categories (navigation, automated check, tool

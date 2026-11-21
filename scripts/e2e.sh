@@ -72,6 +72,8 @@ done
 grep -q "MIT License" LICENSE 2>/dev/null || fail "LICENSE missing or not MIT"
 [ -f .gitignore ] || fail ".gitignore missing"
 [ -f README.md ] || fail "README.md missing"
+# README content checks read the README plus docs/guide/ (M60-004: detail moved there)
+GUIDE="$(cat README.md docs/guide/*.md)"
 grep -q 'harness-session' ARCHITECTURE.md || fail "ARCHITECTURE.md: harness-session dogfood coverage missing"
 
 # --- plugin packaging -------------------------------------------------------
@@ -244,8 +246,8 @@ grep -q 'Paths touched' "$PROTO" || fail "protocol: paths planning question miss
 grep -q '### 2.7 Orchestrated runs' "$PROTO" || fail "protocol: orchestrated-runs section (2.7) missing"
 grep -q 'depends_on' "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: optional lane fields undocumented"
 grep -q 'harness-run' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl does not mention harness-run"
-grep -q 'harness-run' README.md || fail "README: harness-run skill missing"
-grep -q 'absent fields stay sequential' README.md || fail "README: upgrade note for lane fields missing"
+grep -q 'harness-run' <<< "$GUIDE" || fail "README: harness-run skill missing"
+grep -q 'absent fields stay sequential' <<< "$GUIDE" || fail "README: upgrade note for lane fields missing"
 grep -q 'depends_on' skills/harness-audit/SKILL.md || fail "harness-audit SKILL.md: lane-field suggestion missing"
 grep -qi 'never touch FEATURES.json or PROGRESS.md' "$SESSION_SKILL_MD" || fail "harness-session SKILL.md: lane rule must forbid FEATURES.json/PROGRESS.md writes"
 grep -q 'harness-run line' skills/harness-upgrade-structure/SKILL.md || fail "harness-upgrade-structure SKILL.md: upgrade must add the harness-run line to AGENTS.md"
@@ -265,26 +267,26 @@ while read -r ref; do
 done < <(grep -oE 'templates/[A-Za-z0-9._-]+' "$SKILL" | sort -u)
 
 # README: all three quickstarts present
-grep -q '/plugin marketplace add' README.md || fail "README: plugin install quickstart missing"
-grep -q '\.claude/skills' README.md || fail "README: manual copy fallback missing"
-grep -q 'harness-protocol.md' README.md || fail "README: non-Claude quickstart missing"
-grep -q 'PRD' README.md || fail "README: PRD-input section missing"
-grep -q 'Using the skills' README.md || fail "README: using-the-skills prompts section missing"
-grep -q 'harness-status' README.md || fail "README: harness-status skill missing"
-grep -q '/agent-harness-kit:harness-initial-setup' README.md || fail "README: slash-command forms missing"
-grep -q '## Lifecycle' README.md || fail "README: lifecycle section missing"
-grep -q 'harness-handoff' README.md || fail "README: harness-handoff skill missing"
-grep -q 'Switching agents' README.md || fail "README: switching-agents section missing"
-grep -q 'codex plugin marketplace add' README.md || fail "README: Codex quickstart missing"
-grep -q 'claude plugin update' README.md || fail "README: Claude update command missing"
-grep -q 'ARCHITECTURE.md' README.md || fail "README: ARCHITECTURE.md coverage missing"
-grep -qi 'logging/observability' README.md || fail "README: logging/observability coverage missing"
-grep -q 'harness-session' README.md || fail "README: harness-session skill missing"
-grep -q 'run-gate.sh' README.md || fail "README: run-gate.sh coverage missing"
-grep -q 'native plan mode' README.md || fail "README: native plan mode coverage missing"
-grep -q 'humanlayer.com/blog/show-me-skill' README.md || fail "README: show-me credit missing"
+grep -q '/plugin marketplace add' <<< "$GUIDE" || fail "README: plugin install quickstart missing"
+grep -q '\.claude/skills' <<< "$GUIDE" || fail "README: manual copy fallback missing"
+grep -q 'harness-protocol.md' <<< "$GUIDE" || fail "README: non-Claude quickstart missing"
+grep -q 'PRD' <<< "$GUIDE" || fail "README: PRD-input section missing"
+grep -q 'Using the skills' <<< "$GUIDE" || fail "README: using-the-skills prompts section missing"
+grep -q 'harness-status' <<< "$GUIDE" || fail "README: harness-status skill missing"
+grep -q '/agent-harness-kit:harness-initial-setup' <<< "$GUIDE" || fail "README: slash-command forms missing"
+grep -q '## Lifecycle' <<< "$GUIDE" || fail "README: lifecycle section missing"
+grep -q 'harness-handoff' <<< "$GUIDE" || fail "README: harness-handoff skill missing"
+grep -q 'Switching agents' <<< "$GUIDE" || fail "README: switching-agents section missing"
+grep -q 'codex plugin marketplace add' <<< "$GUIDE" || fail "README: Codex quickstart missing"
+grep -q 'claude plugin update' <<< "$GUIDE" || fail "README: Claude update command missing"
+grep -q 'ARCHITECTURE.md' <<< "$GUIDE" || fail "README: ARCHITECTURE.md coverage missing"
+grep -qi 'logging/observability' <<< "$GUIDE" || fail "README: logging/observability coverage missing"
+grep -q 'harness-session' <<< "$GUIDE" || fail "README: harness-session skill missing"
+grep -q 'run-gate.sh' <<< "$GUIDE" || fail "README: run-gate.sh coverage missing"
+grep -q 'native plan mode' <<< "$GUIDE" || fail "README: native plan mode coverage missing"
+grep -q 'humanlayer.com/blog/show-me-skill' <<< "$GUIDE" || fail "README: show-me credit missing"
 # no third-party workflow plugin is ever required to plan or execute
-! grep -rqi 'superpowers' skills README.md || fail "a skill/template/README references a third-party workflow plugin"
+! grep -rqi 'superpowers' skills README.md docs/guide || fail "a skill/template/README references a third-party workflow plugin"
 
 # --- harness-audit skill ----------------------------------------------------
 
@@ -334,7 +336,7 @@ grep -qF 'reused' <<< "$(sed -n '/^### 2\.3 Confirm a green baseline/,/^### 2\.4
 grep -q 'run-gate.sh' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: does not reference run-gate.sh"
 grep -qi 'delegated' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: execution-mode proposal missing"
 grep -q 'UPGRADE: offer' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: upgrade-offer step missing"
-grep -q 'UPGRADE: offer' README.md || fail "README: plugin-upgrade notice coverage missing"
+grep -q 'UPGRADE: offer' <<< "$GUIDE" || fail "README: plugin-upgrade notice coverage missing"
 [ -f "$SESSION_SKILL/SKILL.md" ] || fail "harness-session SKILL.md missing"
 [ "$(head -1 "$SESSION_SKILL/SKILL.md")" = "---" ] || fail "harness-session SKILL.md: missing frontmatter"
 grep -q '^name: harness-session$' "$SESSION_SKILL/SKILL.md" || fail "harness-session SKILL.md: frontmatter name wrong"
@@ -391,7 +393,7 @@ for w in review evaluate bar; do
   grep -q "$w" "$TMPL_DIR/FEATURES.json.tmpl" || fail "FEATURES.json.tmpl: $w undocumented"
 done
 grep -q 'harness-evaluator' skills/harness-audit/scripts/check.sh || fail "harness-audit: missing-agent-files WARN missing"
-grep -qi 'independent evaluator' README.md || fail "README: evaluator missing"
+grep -qi 'independent evaluator' <<< "$GUIDE" || fail "README: evaluator missing"
 grep -q 'gen-agents.sh' skills/harness-initial-setup/SKILL.md || fail "harness-initial-setup SKILL.md: gen-agents step missing"
 
 # --- harness-brief skill (M19) ---------------------------------------------
@@ -406,15 +408,15 @@ grep -q '^## Needs a human' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: 
 for w in 'deploy or publish' 'push to' 'production data' 'adding dependencies' 'auth' 'deleting or renumbering'; do
   grep -qi "$w" "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: Needs a human default missing: $w"
 done
-grep -q 'harness-brief' README.md || fail "README: harness-brief missing"
-grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief -> plan -> run"
+grep -q 'harness-brief' <<< "$GUIDE" || fail "README: harness-brief missing"
+grep -Eq 'brief.*plan.*run' <<< "$GUIDE" || fail "README: lifecycle must show brief -> plan -> run"
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
 [ "$(jq -r .version .claude-plugin/plugin.json)" = "3.25.0" ] || fail "plugin version must be 3.25.0"
 # --- model sizes documented and released (M33-005) ----------------------------
-grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
-grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"
+grep -q '^## Choosing a model size' <<< "$GUIDE" || fail "README: 'Choosing a model size' section missing (M33-005)"
+grep -qF 'docs/agents/model-sizes.json' <<< "$GUIDE" || fail "README: size map path missing (M33-005)"
 awk '/^## 3\.11\.0 /{on=1; next} on && /^## [0-9]/{exit} on' CHANGELOG.md | grep -q '^Upgrade:' \
   || fail "CHANGELOG: 3.11.0 entry needs an Upgrade: block (M33-005)"
 # --- M34 release notes name every M34 change (M34-013) ------------------------
@@ -428,13 +430,13 @@ for w in 'harness-continuous' 'git stash push -u' 'Question for the human' '.har
   grep -qF -- "$w" <<< "$(sed -n '/^### 2\.8 Continuous runs/,/^### 2\.9/p' "$PROTO")" || fail "protocol 2.8: '$w' missing"
 done
 grep -q 'do not wait for the PR to merge' "$PROTO" || fail "protocol 2.5: plan must move to completed/ in the last feature's commit"
-grep -q 'harness-continuous' README.md || fail "README: harness-continuous missing from the skills"
-grep -q '^## Unattended runs' README.md || fail "README: 'Unattended runs' section missing"
-grep -q '^## Upgrading a repo and running continuously' README.md || fail "README: upgrade-and-run walkthrough missing"
-if grep -qE -- '--yolo|--dangerously-skip-permissions|--allow-all' README.md; then
+grep -q 'harness-continuous' <<< "$GUIDE" || fail "README: harness-continuous missing from the skills"
+grep -q '^## Unattended runs' <<< "$GUIDE" || fail "README: 'Unattended runs' section missing"
+grep -q '^## Upgrading a repo and running continuously' <<< "$GUIDE" || fail "README: upgrade-and-run walkthrough missing"
+if grep -qE -- '--yolo|--dangerously-skip-permissions|--allow-all' <<< "$GUIDE"; then
   fail "README: must not suggest skip-all-permissions flags"
 fi
-walk="$(sed -n '/^## Upgrading a repo and running continuously/,/^## /p' README.md)"
+walk="$(sed -n '/^## Upgrading a repo and running continuously/,/^## /p' <<< "$GUIDE")"
 grep -qF 'a skipped feature stops the run' <<< "$walk" || fail "README walkthrough: must say that without depends_on a skipped feature stops the run"
 grep -qF 'harness-run skip <id>' <<< "$walk" || fail "README walkthrough: stash recovery hint missing"
 last=0
@@ -460,8 +462,8 @@ grep -q '^description: .*harness-upgrade-structure' skills/harness-initial-setup
 
 shellcheck skills/harness-upgrade-structure/scripts/upgrade.sh
 bash scripts/test-upgrade.sh
-grep -q '^## Upgrading existing repos' README.md || fail "README: 'Upgrading existing repos' section missing"
-grep -q 'harness-upgrade-structure/scripts/upgrade.sh' README.md || fail "README: by-hand upgrade.sh command missing"
+grep -q '^## Upgrading existing repos' <<< "$GUIDE" || fail "README: 'Upgrading existing repos' section missing"
+grep -q 'harness-upgrade-structure/scripts/upgrade.sh' <<< "$GUIDE" || fail "README: by-hand upgrade.sh command missing"
 grep -q 'harness-upgrade-structure' <<< "$walk" || fail "README walkthrough: upgrade step must use harness-upgrade-structure"
 
 # --- strict-YAML-safe frontmatter (M22) ----------------------------------------
@@ -535,9 +537,9 @@ shellcheck skills/harness-run/scripts/feature.sh
 [ "$(wc -l < "$CORE")" -le 150 ] || fail "harness-protocol.md (session core) exceeds 150 lines — move text to a part read only when needed, or cut"
 [ "$(wc -l < "$TMPL_DIR/AGENTS.md.tmpl")" -le 70 ] || fail "AGENTS.md.tmpl exceeds 70 lines"
 grep -qF 'model-tagged' skills/harness-audit/scripts/check.sh || fail "harness-audit: model-tagged WARN missing"
-grep -q '^## Decision notes, effort and model-tagged rules' README.md || fail "README: M23 section missing"
+grep -q '^## Decision notes, effort and model-tagged rules' <<< "$GUIDE" || fail "README: M23 section missing"
 for w in 'Decisions:' 'effort' '(added <YYYY-MM-DD>)' '; model: <name>'; do
-  sed -n '/^## Decision notes, effort and model-tagged rules/,/^## /p' README.md | grep -qF -- "$w" \
+  sed -n '/^## Decision notes, effort and model-tagged rules/,/^## /p' <<< "$GUIDE" | grep -qF -- "$w" \
     || fail "README M23 section: '$w' missing"
 done
 
@@ -556,7 +558,7 @@ core_v="$(jq -r .version "$ED")"
 [ "$(jq -r '.plugins[] | select(.name == "agent-harness-kit-claude") | .version' .claude-plugin/marketplace.json)" = "$core_v" ] \
   || fail "marketplace.json: Claude edition version must match the core ($core_v)"
 if find claude -name 'harness-protocol*.md' | grep -q .; then fail "Claude edition must not copy the protocol files"; fi
-grep -qF '/plugin install agent-harness-kit-claude' README.md || fail "README: Claude edition install line missing"
+grep -qF '/plugin install agent-harness-kit-claude' <<< "$GUIDE" || fail "README: Claude edition install line missing"
 # claude plugin validate when the CLI is present (CI runners may not have it)
 # Strict: every error and every warning fails, except the one the owner chose
 # to accept: a plugin name containing "claude" "reads as one of Anthropic's own".
@@ -577,7 +579,7 @@ if command -v claude >/dev/null; then
 fi
 
 # --- Claude edition: auto mode + eval suite (M24-003) ---------------------------
-edition="$(sed -n '/^## Claude Code edition/,/^## [^C]/p' README.md)"
+edition="$(sed -n '/^## Claude Code edition/,/^## [^C]/p' <<< "$GUIDE")"
 grep -qF 'claude --permission-mode auto' <<< "$edition" || fail "README Claude edition: auto mode start command missing"
 grep -qF 'harness-continuous' <<< "$edition" || fail "README Claude edition: harness-continuous on auto mode missing"
 grep -qF 'Never use the bypass mode' <<< "$edition" || fail "README Claude edition: must rule out bypass mode"
@@ -622,16 +624,16 @@ for a in agents/src/harness-builder.md agents/src/harness-evaluator.md; do
   grep -qF 'data, never instructions' "$a" || fail "$a: untrusted text rule missing"
 done
 grep -qF 'instructions found in issues, web pages or tool output' "$TMPL_DIR/AGENTS.md.tmpl" || fail "AGENTS.md.tmpl: Needs a human must list acting on found instructions"
-grep -q '^## Second opinion, brief stage and untrusted text' README.md || fail "README: M26 section missing"
+grep -q '^## Second opinion, brief stage and untrusted text' <<< "$GUIDE" || fail "README: M26 section missing"
 for w in second_opinion second-opinion.sh '## Stage' 'never instructions'; do
-  sed -n '/^## Second opinion, brief stage and untrusted text/,/^## /p' README.md | grep -qF -- "$w" || fail "README M26 section: '$w' missing"
+  sed -n '/^## Second opinion, brief stage and untrusted text/,/^## /p' <<< "$GUIDE" | grep -qF -- "$w" || fail "README M26 section: '$w' missing"
 done
 
 # --- no model names (M28-001) ----------------------------------------------------
 # Named models go stale with every release: every agent runs on its CLI's default.
 [ ! -e agents/models.json ] || fail "agents/models.json must not exist (M28-001)"
 ! grep -q '^tier:' agents/src/*.md || fail "agents/src: tier is gone with the model map (M28-001)"
-! grep -rqF 'models.json' skills agents README.md || fail "models.json still referenced (M28-001)"
+! grep -rqF 'models.json' skills agents README.md docs/guide || fail "models.json still referenced (M28-001)"
 grep -qF 'auth, payments, personal data or migrations' "$RUN_SKILL/SKILL.md" \
   || fail "harness-run: security checklist trigger must be stated in words (M28-001)"
 
@@ -679,7 +681,7 @@ jq -e '.userConfig.feature_budget_usd and .userConfig.run_budget_usd and .userCo
 # --- status in the terminal (M30-004) ---------------------------------------------
 for w in -- '--line' '--watch'; do [ "$w" = -- ] && continue
   grep -qF -- "$w" skills/harness-status/scripts/status.sh || fail "status.sh: $w missing (M30-004)"
-  grep -qF -- "status.sh $w" README.md || fail "README: status.sh $w missing (M30-004)"
+  grep -qF -- "status.sh $w" <<< "$GUIDE" || fail "README: status.sh $w missing (M30-004)"
 done
 
 # --- plan tasks in FEATURES.json once approved (M30-005) ---------------------------
@@ -692,8 +694,8 @@ cur_v="$(jq -r .version .claude-plugin/plugin.json)"
 cur_entry="$(awk -v v="## $cur_v " 'index($0, v) == 1 {on=1; print; next} on && /^## [0-9]/ {exit} on' CHANGELOG.md)"
 [ -n "$cur_entry" ] || fail "CHANGELOG.md: no entry for $cur_v"
 grep -q '^Upgrade:' <<< "$cur_entry" || fail "CHANGELOG.md: the $cur_v entry needs an Upgrade: block"
-grep -q '^## Upgrading after every release' README.md || fail "README: 'Upgrading after every release' checklist missing"
-up="$(sed -n '/^## Upgrading after every release/,/^## /p' README.md)"
+grep -q '^## Upgrading after every release' <<< "$GUIDE" || fail "README: 'Upgrading after every release' checklist missing"
+up="$(sed -n '/^## Upgrading after every release/,/^## /p' <<< "$GUIDE")"
 last=0
 for w in 'Update the plugins' 'branch' 'harness-upgrade-structure' 'UPGRADE-NOTE' 'harness-audit' 'scripts/e2e.sh' 'commit' 'pull request'; do
   n="$(grep -nF -m1 -- "$w" <<< "$up" | cut -d: -f1)"
@@ -738,7 +740,7 @@ shellcheck skills/harness-retro/scripts/retro-facts.sh scripts/test-retro.sh; ba
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
 ! grep -q "ui.render" claude/hooks/register.tsx || fail "Claude edition: the next-steps band was removed (M28-004)"
 [ ! -e claude/tests/band.test.tsx ] || fail "Claude edition: band test must go with the band (M28-004)"
-! grep -qi 'next-steps band' README.md || fail "README: next-steps band was removed (M28-004)"
+! grep -qi 'next-steps band' <<< "$GUIDE" || fail "README: next-steps band was removed (M28-004)"
 jq -e '.modules == ["./register.tsx"]' claude/hooks/hooks.json >/dev/null || fail "Claude edition: hooks.json must load ./register.tsx"
 grep -qF '.harness-run/decisions/<id>.md' "$SESSION_SKILL_MD" || fail "harness-session: must fold .harness-run/decisions/<id>.md into Decisions:"
 git check-ignore -q claude/.claude-plugin/types/x || fail ".gitignore: claude/.claude-plugin/types/ (engine-written) must be ignored"

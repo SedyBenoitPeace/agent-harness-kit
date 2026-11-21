@@ -5,7 +5,7 @@ Code has, on top of the core `agent-harness-kit` plugin, which it depends on.
 The protocol, templates and skills all live in the core plugin; this folder
 never copies them.
 
-What it adds (see the repo README, "Claude Code edition"):
+What it adds (see the repo guide, docs/guide/claude-code-edition.md):
 
 - agent effort for the builder and evaluator (M24-002);
 - an eval suite for the core skills, run with `claude plugin eval` (M24-003);
