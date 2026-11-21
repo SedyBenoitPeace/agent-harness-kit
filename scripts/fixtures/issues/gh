@@ -18,6 +18,7 @@ case "$1 ${2:-}" in
     n="$3"; shift 3; echo "WRITE issue edit $n $*" >> "$d/log"
     while [ $# -gt 0 ]; do
       case "$1" in
+        --title) save --argjson n "$n" --arg t "$2" 'map(if .number == $n then .title = $t else . end)' ;;
         --body-file) save --argjson n "$n" --rawfile b "$2" 'map(if .number == $n then .body = $b else . end)' ;;
         --add-label) save --argjson n "$n" --arg l "$2" 'map(if .number == $n then .labels = (.labels + ($l | split(",")) | unique) else . end)' ;;
         --remove-label) save --argjson n "$n" --arg l "$2" 'map(if .number == $n then .labels -= ($l | split(",")) else . end)' ;;

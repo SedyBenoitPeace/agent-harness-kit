@@ -1,0 +1,12 @@
+1761991200 dispatch M1-001 claude harness-builder medium
+1761991500 gate M1-001 baseline green
+1761991800 gate M1-001 final green
+1761992000 dispatch M1-002 claude harness-builder medium
+1761992400 gate M1-002 final red
+1761992700 gate M1-002 final green
+1761992800 opinion M1-002 codex NEEDS_WORK
+1761993000 dispatch M1-002 claude harness-builder large
+1761993600 gate M1-002 final green
+1761993700 opinion M1-002 codex PASS
+1761994000 dispatch M1-003 claude harness-builder medium
+1761994800 run-end - run budget reached

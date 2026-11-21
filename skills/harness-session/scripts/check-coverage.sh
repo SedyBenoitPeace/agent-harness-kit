@@ -24,11 +24,11 @@ idre="[\"'\`][A-Z][A-Za-z0-9]*-[A-Za-z0-9-]*\.[0-9]+ "
 texts="$(grep -rIlE --exclude-dir=node_modules --exclude-dir=.git "$idre" "$@" 2>/dev/null \
   | while IFS= read -r f; do { grep -vE '^\s*(//|#|\*|/\*)' "$f" || true; } | jq -Rs .; done | jq -s .)"
 
-gaps="$(jq -rn --argjson texts "$texts" --argjson all "$all" --argjson req "$req" '
+gaps="$(jq -rn --slurpfile texts <(printf "%s" "$texts") --argjson all "$all" --argjson req "$req" '
   ($all | map(.feature) | unique) as $features
   # the title runs to its matching closing quote; @critical in the title, or
   # in a tag option (tag: '\''@critical'\'' or tag: [..]) before the test body (=>)
-  | [$texts[] | . as $text
+  | [$texts[0][] | . as $text
       | [match("([\"'\''`])([A-Z][A-Za-z0-9]*-[A-Za-z0-9-]*\\.[0-9]+ [^\"'\''`\\n]*(?:(?!\\1)[\"'\''`][^\"'\''`\\n]*)*)\\1"; "g")] as $ms
       | range(0; $ms | length) as $k
       | $ms[$k] as $m

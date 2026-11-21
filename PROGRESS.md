@@ -3,6 +3,146 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 102 (M59-003 reproduce before fixing, lane merged)
+
+- Branch: `m57`.
+- Done: M59-003. For `kind: bug` the builder first writes a test that fails
+  on the reported symptom (in isolation; a nearby failure does not count;
+  a flaky bug is looped until it reproduces), then one hypothesis at a
+  time and one root-cause fix; after 3 failed fixes it stops blocked with
+  `Needs a human:`; the entry ends with one `Lesson:` line. Evaluator step
+  10 runs the repro on the commit before the fix (must fail) and after
+  (must pass); no repro test is NEEDS_WORK. Test M59-003.1 in
+  test-agents.sh; CHANGELOG credits the owner's lean-debugging skill and
+  Matt Pocock's `diagnosing-bugs`.
+- Decisions: protocol core unchanged (at its 150-line cap, no room in
+  2.4); the rule lives in the builder and evaluator agent files only.
+- Gate: GREEN (bash scripts/e2e.sh after the merge and the flip).
+
+## 2026-11-21 -- session 101 (M60-004 README as a guide, lane merged)
+
+- Branch: `m57`.
+- Done: M60-004. README 934 → 210 lines: "What do I run when" table first
+  (every skill in skills/), one short section per skill; the rest moved
+  verbatim to eight `docs/guide/` pages. `check-readme.sh` also searches
+  `docs/guide/`; the gate's README content checks read README plus the
+  guide pages. Tests M60-004.1, M60-004.2 in test-check-readme.sh.
+- Decisions: moved text verbatim (headings kept, links fixed) rather than
+  rewriting it; e2e.sh changed outside the feature's paths because ~45
+  checks grepped README only; claude/README.md pointer updated.
+- Gate: GREEN (bash scripts/e2e.sh after the merge and the flip).
+
+## 2026-11-21 -- session 100 (M58-002 one check at a time, lane merged)
+
+- Branch: `m57`.
+- Done: M58-002. harness-builder and protocol 2.4 say one check per
+  red-green cycle (test one check, watch it fail, make it pass, next);
+  protocol stays at 150 lines. Test M58-002.1 in test-agents.sh; CHANGELOG
+  credits Matt Pocock's `tdd` skill. README untouched (M60-004 rewrites it).
+- Decisions: reworded inside 2.4's two lines, keeping "before the code" and
+  "starting with the check id" that M53-003.1 asserts.
+- Gate: GREEN (bash scripts/e2e.sh after the merge and the flip).
+
+## 2026-11-21 -- session 99 (parallel lanes M57-004, M58-001, M59-001, M59-002, M60-001, M60-002, M60-003 merged)
+
+- Branch: `m57` (one branch for M57–M60 on the owner's request to run in
+  parallel; lanes in `../agent-harness-kit-<id>` worktrees, merged
+  `--no-ff`).
+- Done: M59-001 `kind: bug` shown by status.sh and context.sh (SKIP_BRIEF
+  hint). M59-002 `issues.sh sync` turns a `bug`-labelled issue into a
+  failing kind-bug feature and retitles it `[id] title`. M60-001
+  `retro-facts.sh` (one page, at most 80 lines, TDD-order check). M60-002
+  harness-retro skill (at most 5 ranked fixes, offers, never applies).
+  M60-003 `wizard.sh` writes `scripts/wizard-<id>.sh` for Needs-a-human
+  items, no secrets. M57-004 README credit to mattpocock/skills and the
+  recommended local skills section. M58-001 evaluator standards pass
+  (NOTE lines only; acceptance-verdict.sh still decides).
+- Decisions: per lane commit bodies. M59-002: bugs go to the lowest
+  milestone with failing work; bug issues from non-writers are ignored.
+  M60-001: facts from events.log (Claude evaluator NEEDS_WORK verdicts are
+  not logged there, a known gap). M60-002 credits no outside skill (none
+  named in the plan). M60-003: generator script, wizard left uncommitted
+  unless asked. Merge conflicts were all additive (CHANGELOG entries and
+  the one check-coverage line in e2e.sh), resolved by keeping both sides.
+- Follow-ups: FEATURES.json.tmpl `_instructions` does not mention `kind`;
+  harness-issues SKILL.md does not describe bug intake; harness-retro and
+  harness-brief are missing from the AGENTS.md deliverables list.
+- Gate: GREEN after the flip. First red: M59-001.1 was titled "-- M59-001.1 …", which check-coverage does not count (title must start with the id); the lane gate missed it because lanes never flip FEATURES.json. Fixed the title in test-session.sh. Lanes should run check-coverage against a copy of FEATURES.json with their feature flipped.
+
+## 2026-11-21 -- session 98 (M57-003 glossary used when present)
+
+- Branch: `m57`.
+- Done: M57-003. One conditional "if GLOSSARY.md exists" paragraph each in
+  harness-brief SKILL.md (word questions in glossary terms, add each newly
+  settled term, offer an ADR from `docs/adr/0000-template.md` for a rejected
+  option later work must keep), harness-builder (glossary terms in test
+  titles and new names, never an avoid word) and harness-evaluator (step 8:
+  a contradicting term is a NOTE, never NEEDS_WORK alone). Test M57-003.1
+  in test-brief.sh; README DDD paragraph and CHANGELOG (crediting Matt
+  Pocock's `domain-modeling` skill) updated.
+- Decisions: test placed in test-brief.sh, already on the gate's
+  check-coverage line, rather than test-agents.sh, which is not, so
+  e2e.sh stays untouched for the parallel lanes; harness-protocol.md left
+  unchanged (it is at exactly 150 lines, and the agents carry the rule;
+  rejected: rewrapping protocol text to make room); the test greps wording
+  (every GLOSSARY.md mention line is conditional, ADR offer, test titles,
+  NOTE), so it proves the instructions, not an agent's behaviour; NOTE
+  chosen over NEEDS_WORK so a naming slip never blocks a feature; no
+  version bump.
+- Gate: GREEN (run-gate.sh final). ci-local.sh not run (no push).
+- Next: M57-004.
+
+## 2026-11-21 -- session 97 (M57-002 domain-driven design opt-in)
+
+- Branch: `m57`.
+- Done: M57-002. Setup asks once, default no, "Use domain-driven design
+  (glossary + ADRs)?"; yes runs the new `harness-initial-setup/scripts/add-ddd.sh`
+  (idempotent, never overwrites): `GLOSSARY.md` from `GLOSSARY.md.tmpl`
+  (term | definition | avoid), `docs/adr/0000-template.md` from
+  `adr-template.md`, one AGENTS.md map line under `scripts/e2e.sh`.
+  `upgrade.sh --ddd` calls the same script; without the flag nothing DDD
+  is added. AGENTS.md.tmpl rewrapped one rule (3 lines to 2) so the
+  template plus pointer stays at 70; upgrade.sh rewraps the unedited old
+  rule the same way (the 3.16.0 fixture test requires template equality).
+  Tests M57-002.1..3 in test-upgrade.sh, now in the gate's check-coverage
+  line. README (upgrade section, layout) and CHANGELOG (crediting Matt
+  Pocock's `domain-modeling` skill) updated.
+- Decisions: one script shared by setup and upgrade (rejected: setup
+  copying by hand from a table, which a test cannot run, and running
+  upgrade.sh at setup, which refuses a dirty tree and branches); pointer
+  placed in the Map, appended at the end when the repo has no e2e.sh map
+  line; M57-002.1 is a fixture copy of the template plus greps on SKILL.md
+  for the question and "default no", so it proves the wording and that the
+  template carries no DDD text, not an agent's behaviour; the DDD templates
+  are written in the kit's own words, nothing copied; the external
+  agent-harness-template mirror is now stale (one AGENTS.md line wrap),
+  left for the release sync; no version bump.
+- Gate: GREEN (run-gate.sh final). ci-local.sh not run (no push).
+- Next: M57-003.
+
+## 2026-11-21 -- session 96 (M57-001 harness-brief grills until nothing is open)
+
+- Branch: `m57`.
+- Done: M57-001. harness-brief step 2 rewritten: facts come from the repo,
+  decisions from the human, asked in numbered rounds (every question whose
+  prerequisites are settled in one round, each with a recommended answer
+  worded so "yes" accepts it), no question cap, saved only when no open
+  decision remains; the "fourth question" red flag replaced by two new
+  ones. README lifecycle step 0 and CHANGELOG (Unreleased, crediting Matt
+  Pocock's `grilling` skill) updated. test-brief.sh carries one test per
+  check (M57-001.1..3); the gate's check-coverage line now includes
+  test-brief.sh (it did not, so the checks read as untested).
+- Decisions: a human who says "don't ask" gets the recommended answers as
+  visible defaults (keeps the brief-from-rough-prompt eval valid; rejected:
+  refusing to save, which would fail that eval and unattended use); eval
+  files left unchanged (their graders already require named defaults and
+  no blocking questions; not re-run, LLM eval); tests are phrase greps on
+  SKILL.md, so they prove the wording, not the agent's behaviour; no
+  version bump (left for the milestone release); stranger test,
+  check-brief.sh and the 2-round reviewer cap untouched.
+- Gate: GREEN (run-gate.sh final). ci-local.sh not run (no push).
+- Next: M57-002.
+
 ## 2026-11-21 -- session 95 (M56-001, M56-002 the agent merges its own PR when the rules allow)
 
 - Branch: `automerge`. Owner decisions 12–15 (`docs/decisions.md`).

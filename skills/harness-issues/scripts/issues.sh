@@ -10,7 +10,8 @@
 # An issue is a feature when its title is "[<feature id>] <title>". The issue
 # owns title and checks; the repo owns every other field (decisions 5-7, 10).
 # Issues opened by someone without write access to the repo are skipped.
-# Titles must match [M<n>-<nnn>]; other issues are ignored. Run in the repo
+# Titles must match [M<n>-<nnn>]; other issues are ignored, except open ones
+# labelled bug, which sync gives the next id (bug intake). Run in the repo
 # root. Exit 1 when an issue was skipped as broken or as a duplicate id
 # (issues from non-writers are reported, exit 0); 2 = usage or tools.
 # shellcheck disable=SC2016 # single-quoted jq programs use jq variables
@@ -33,6 +34,9 @@ if [ "$cmd" = sync ] && [ "$(jq -r '.source // "features"' FEATURES.json)" != is
   exit 0
 fi
 
+write() {  # write <gh args...>: a gh write call, skipped on --dry-run
+  if [ "$dry" = 1 ]; then echo "would: gh $*"; else gh "$@" >/dev/null; fi
+}
 TRIM_END() { sed -e :a -e '/^\n*$/{$d;N;ba' -e '}'; }
 # stdin: issue body -> the owner's text above (before) or below (after) the
 # generated block; the block itself is the only part sync ever rewrites
@@ -51,6 +55,23 @@ gh api 'repos/{owner}/{repo}/collaborators?per_page=100' --jq '.[] | select(.per
 WRITER='(($w | split("\n") | map(select(length > 0))) as $ws | (.author.login // "") as $a | $a != "" and ($ws | index([$a]) != null))'
 jq -r --rawfile w "$tmp/writers" '.[] | select((.title | test("'"$FEAT"'")) and ('"$WRITER"' | not))
   | "issue #\(.number): opened by \(.author.login // "unknown"), who has no write access; skipped"' "$tmp/all.json" >&2
+# bug intake (M59): an open issue labelled bug, from a writer, with no [id] title
+# gets the next id in the lowest milestone with failing work (else the highest)
+# and is retitled "[id] title"; pull then adds it as a kind bug feature.
+if [ "$cmd" = sync ]; then
+  jq -c --rawfile w "$tmp/writers" '.[] | select(.state == "OPEN" and any(.labels[]; .name == "bug")
+    and (.title | test("'"$FEAT"'") | not) and '"$WRITER"') | {number, title}' "$tmp/all.json" > "$tmp/bugs"
+  if [ -s "$tmp/bugs" ]; then
+    m="$(jq '[.features[] | select(.status == "failing") | .milestone | numbers] | min // ([.features[].milestone | numbers] | max) // 1' FEATURES.json)"
+    next="$(jq -r --arg m "$m" --slurpfile a "$tmp/all.json" '[(.features[].id), ($a[0][].title | capture("^\\[(?<id>[^]]+)\\]").id? // empty)
+      | capture("^M" + $m + "-(?<n>[0-9]+)$").n? | tonumber] | max // 0' FEATURES.json)"
+    while IFS= read -r b; do
+      n="$(jq -r .number <<< "$b")"; next=$((next + 1)); title="$(printf '[M%s-%03d] %s' "$m" "$next" "$(jq -r .title <<< "$b")")"
+      write issue edit "$n" --title "$title"; echo "issues.sh: bug issue #$n is now $title"
+      jq --argjson n "$n" --arg t "$title" 'map(if .number == $n then .title = $t else . end)' "$tmp/all.json" > "$tmp/x" && mv "$tmp/x" "$tmp/all.json"
+    done < "$tmp/bugs"
+  fi
+fi
 jq --rawfile w "$tmp/writers" '[.[] | select((.title | test("'"$FEAT"'")) and '"$WRITER"')
   | . + {id: (.title | capture("^\\[(?<id>[^]]+)\\]").id)}]' "$tmp/all.json" > "$tmp/feat.json"
 # one feature id in two issues: report both numbers, skip the id both ways
@@ -69,7 +90,7 @@ pull() {
       sed "s/^/issue #$n: /" "$tmp/err" >&2; echo skip >> "$tmp/pulled"; continue
     fi
     jq -c --argjson c "$checks" '(.title | capture("^\\[(?<id>[^]]+)\\] (?<t>.*)$")) as $m
-      | {id: $m.id, title: $m.t, number, has: ($b | test("(^|\\n)## Checks\\s*(\\n|$)")), checks: ($c | map(del(.feature)))}' --rawfile b "$tmp/owner" <<< "$iss" >> "$tmp/pulled"
+      | {id: $m.id, title: $m.t, number, bug: any(.labels[]; .name == "bug"), has: ($b | test("(^|\\n)## Checks\\s*(\\n|$)")), checks: ($c | map(del(.feature)))}' --rawfile b "$tmp/owner" <<< "$iss" >> "$tmp/pulled"
   done
   grep -q '^skip$' "$tmp/pulled" && rc=1
   grep -v '^skip$' "$tmp/pulled" | jq -s . > "$tmp/pulled.json" || echo '[]' > "$tmp/pulled.json"
@@ -83,7 +104,8 @@ pull() {
                        title: $i.title, status: "failing",
                        verify: (if ($i.checks | length) > 0 then "Every check passes: each has its test and scripts/e2e.sh is green"
                                 else "TODO: plan this feature (from issue #\($i.number))" end)}
-                      + (if ($i.checks | length) > 0 then {checks: $i.checks} else {} end)]
+                      + (if ($i.checks | length) > 0 then {checks: $i.checks} else {} end)
+                      + (if $i.bug then {kind: "bug"} else {} end)]
       end)' FEATURES.json > "$tmp/F.json"
   if [ "$(jq -S . FEATURES.json)" != "$(jq -S . "$tmp/F.json")" ]; then
     if [ "$dry" = 1 ]; then echo "would update FEATURES.json"; else cp "$tmp/F.json" FEATURES.json; fi
@@ -150,9 +172,6 @@ ensure_label() {  # create a label only when the repo lacks it (keeps its colour
   [ -f "$tmp/labels" ] || gh label list --limit 1000 --json name --jq '.[].name' > "$tmp/labels"
   grep -qxF "$1" "$tmp/labels" && return 0
   write label create "$1" --color ededed; echo "$1" >> "$tmp/labels"
-}
-write() {  # write <gh args...>: a gh write call, skipped on --dry-run
-  if [ "$dry" = 1 ]; then echo "would: gh $*"; else gh "$@" >/dev/null; fi
 }
 
 # --- migrate: open features -> new issues; history stays in git --------------

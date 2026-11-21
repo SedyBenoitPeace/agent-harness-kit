@@ -80,6 +80,12 @@ them cannot run (M39-001).
 Also create the empty `docs/plans/active/` and `docs/plans/completed/`
 directories (the first plan from step 2 goes in `active/`).
 
+Ask once, default no: "Use domain-driven design (glossary + ADRs)?" Only on
+yes, run `scripts/add-ddd.sh <target-repo>` (path relative to this skill): it
+adds `GLOSSARY.md` (term, definition, words to avoid), `docs/adr/0000-template.md`
+and one AGENTS.md map line pointing at both. No leaves the scaffold as above.
+An existing repo opts in later with `upgrade.sh --ddd`.
+
 ### 4. Retrofit rules (existing codebases)
 
 - Existing `AGENTS.md` / `CLAUDE.md` content is **preserved and linked**,

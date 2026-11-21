@@ -109,6 +109,43 @@ echo "$out" | grep -q '^OK: docs/agents/harness-protocol-runs.md' || fail "secon
 [ "$(git -C "$R" branch --show-current)" = harness-upgrade ] || fail "second run: must stay on the current branch"
 [ -z "$(git -C "$R" status --short)" ] || fail "second run: must leave the tree clean"
 
+# 4a. domain-driven design opt-in (M57-002): off by default, add-ddd.sh adds
+#     GLOSSARY.md, docs/adr/0000-template.md and one AGENTS.md pointer line
+ADD_DDD="$PWD/skills/harness-initial-setup/scripts/add-ddd.sh"
+AGENTS_TMPL="$PWD/skills/harness-initial-setup/templates/AGENTS.md.tmpl"
+SETUP="$PWD/skills/harness-initial-setup/SKILL.md"
+t() { echo "-- $1"; }
+t "M57-002.1 off by default changes nothing @critical"
+grep -qF 'Use domain-driven design (glossary + ADRs)?' "$SETUP" || fail "M57-002.1: setup must ask the DDD question"
+grep -qiF 'default no' "$SETUP" || fail "M57-002.1: setup must default the DDD question to no"
+D0="$WORK/ddd-off"; mkdir -p "$D0"; cp "$AGENTS_TMPL" "$D0/AGENTS.md"
+[ ! -e "$D0/GLOSSARY.md" ] && [ ! -e "$D0/docs/adr" ] || fail "M57-002.1: DDD off must add no glossary or ADR folder"
+cmp -s "$AGENTS_TMPL" "$D0/AGENTS.md" || fail "M57-002.1: DDD off must leave AGENTS.md as the template"
+grep -qiE 'GLOSSARY|docs/adr' "$AGENTS_TMPL" && fail "M57-002.1: the template itself must not mention the glossary or ADRs"
+
+t "M57-002.2 on adds glossary, ADR folder and one pointer @critical"
+D1="$WORK/ddd-on"; mkdir -p "$D1"; cp "$AGENTS_TMPL" "$D1/AGENTS.md"
+out="$(bash "$ADD_DDD" "$D1")" || fail "M57-002.2: add-ddd.sh failed: $out"
+[ -s "$D1/GLOSSARY.md" ] && [ -s "$D1/docs/adr/0000-template.md" ] || fail "M57-002.2: GLOSSARY.md or docs/adr/0000-template.md missing"
+grep -qE '^\| *Term *\| *Definition *\| *Avoid *\|' "$D1/GLOSSARY.md" || fail "M57-002.2: GLOSSARY.md needs a term | definition | avoid table"
+added="$(diff "$AGENTS_TMPL" "$D1/AGENTS.md" | grep -c '^>' || true)"
+removed="$(diff "$AGENTS_TMPL" "$D1/AGENTS.md" | grep -c '^<' || true)"
+[ "$added" -eq 1 ] && [ "$removed" -eq 0 ] || fail "M57-002.2: AGENTS.md must gain exactly one line (added $added, removed $removed)"
+{ grep -q 'GLOSSARY.md' "$D1/AGENTS.md" && grep -q 'docs/adr/' "$D1/AGENTS.md"; } || fail "M57-002.2: the pointer must name GLOSSARY.md and docs/adr/"
+[ "$(wc -l < "$D1/AGENTS.md")" -le 70 ] || fail "M57-002.2: AGENTS.md with the pointer exceeds 70 lines"
+out="$(bash "$ADD_DDD" "$D1")"
+echo "$out" | grep -q '^CHANGED:' && fail "M57-002.2: a second add-ddd.sh run must change nothing"
+[ "$(grep -c 'GLOSSARY.md' "$D1/AGENTS.md")" -eq 1 ] || fail "M57-002.2: second run duplicated the pointer"
+
+t "M57-002.3 existing repos opt in explicitly"
+[ ! -e "$R/GLOSSARY.md" ] && [ ! -e "$R/docs/adr" ] || fail "M57-002.3: upgrade without --ddd must add no DDD files"
+grep -q 'GLOSSARY.md' "$R/AGENTS.md" && fail "M57-002.3: upgrade without --ddd must not add the pointer"
+out="$(bash "$UPGRADE" --ddd "$R" 2>&1)" || fail "M57-002.3: upgrade --ddd failed: $out"
+[ -s "$R/GLOSSARY.md" ] && [ -s "$R/docs/adr/0000-template.md" ] || fail "M57-002.3: upgrade --ddd must add the same files as setup"
+{ cmp -s "$D1/GLOSSARY.md" "$R/GLOSSARY.md" && cmp -s "$D1/docs/adr/0000-template.md" "$R/docs/adr/0000-template.md"; } || fail "M57-002.3: upgrade --ddd files differ from setup's"
+[ "$(grep -c 'GLOSSARY.md' "$R/AGENTS.md")" -eq 1 ] || fail "M57-002.3: upgrade --ddd must add the pointer once"
+g checkout -q -- . && g clean -qfd
+
 # 4b. stale generated agents (M27-001): any harness agent file present →
 #     every role is regenerated for each CLI the repo already has, nothing
 #     for the others; a second run changes no agent file

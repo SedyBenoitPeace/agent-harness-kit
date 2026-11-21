@@ -148,4 +148,39 @@ for f in "$t/.claude/agents/harness-builder.md" "$t/.github/agents/harness-build
   grep -qF 'one read per command, never chained' "$f" || fail "$f: read rule must forbid chained reads (M44-001)"
 done
 
+chk="M58-001.1 standards findings are NOTE-only @critical"
+for f in agents/src/harness-evaluator.md "$t/.claude/agents/harness-evaluator.md" "$t/.codex/agents/harness-evaluator.toml"; do
+  for w in CODING_STANDARDS.md CONTRIBUTING.md 'mysterious name' 'duplicated code' 'feature envy' 'data clumps' \
+           'primitive obsession' 'speculative generality' 'shotgun surgery' 'NOTE: <file:line>' 'never changes the verdict'; do
+    grep -qF "$w" "$f" || fail "$chk: $f must name '$w'"
+  done
+done
+fx="scripts/fixtures/checks/features.json" v="skills/harness-session/scripts/acceptance-verdict.sh"
+notes=$'NOTE: src/a.ts:3 mysterious name `d`\nNOTE: CONTRIBUTING.md rule 2 not followed in src/b.ts:9'
+for rows in $'| M1-001.1 | covered | ok |\n| M1-001.2 | covered | ok |' $'| M1-001.1 | covered | ok |\n| M1-001.2 | missing | none |'; do
+  a="$(bash "$v" --features "$fx" M1-001 - <<< "$rows" 2>&1)" || true
+  b="$(bash "$v" --features "$fx" M1-001 - <<< "$rows"$'\n'"$notes" 2>&1)" || true
+  [ "$a" = "$b" ] || fail "$chk: NOTE lines changed the verdict: '$a' vs '$b'"
+done
+
+chk="M58-002.1 one check per red-green cycle @critical"
+pr="skills/harness-initial-setup/templates/harness-protocol.md"
+for f in agents/src/harness-builder.md "$t/.claude/agents/harness-builder.md" "$pr"; do
+  grep -qiF 'one check per red-green cycle' "$f" || fail "$chk: $f must say one check per red-green cycle"
+done
+[ "$(wc -l < "$pr")" -le 150 ] || fail "$chk: protocol core over 150 lines"
+
+chk="M59-003.1 repro first, lesson after @critical"
+for f in agents/src/harness-builder.md "$t/.claude/agents/harness-builder.md" "$t/.codex/agents/harness-builder.toml"; do
+  for w in '"kind": "bug"' 'fails on the reported symptom' 'before any fix or hypothesis' 'one hypothesis at a time' \
+           'root cause' 'loop it until' 'Lesson:' 'After 3 failed fixes' 'Needs a human'; do
+    grep -qF "$w" "$f" || fail "$chk: $f must say '$w'"
+  done
+done
+for f in agents/src/harness-evaluator.md "$t/.claude/agents/harness-evaluator.md" "$t/.codex/agents/harness-evaluator.toml"; do
+  for w in '"kind": "bug"' 'no repro test' 'failed before the fix' 'NEEDS_WORK'; do
+    grep -qF "$w" "$f" || fail "$chk: $f must say '$w'"
+  done
+done
+
 echo "AGENTS TESTS GREEN"

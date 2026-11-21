@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# wizard-{{ID}}.sh: walks you through the steps an agent cannot do for {{ID}},
+# then runs one check. Written by harness-run (scripts/wizard.sh).
+# It holds no secret values: enter each secret where its step says (your
+# shell, the provider's dashboard, the CI settings), never in this file.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+steps=(
+{{STEPS}}
+)
+check={{CHECK}}
+for i in "${!steps[@]}"; do
+  printf '\nStep %d of %d: %s\n' "$((i + 1))" "${#steps[@]}" "${steps[$i]}"
+  read -r -p "Press Enter when done (Ctrl-C to stop) " _ || true
+done
+printf '\nChecking: %s\n' "$check"
+if bash -c "$check"; then
+  echo "WIZARD {{ID}}: DONE (tell the agent {{ID}} can resume)"
+else
+  echo "WIZARD {{ID}}: CHECK FAILED (redo the steps above)" >&2
+  exit 1
+fi

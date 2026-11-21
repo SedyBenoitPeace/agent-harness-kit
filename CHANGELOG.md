@@ -1,8 +1,8 @@
 # Changelog
 
 Newest first. Every release has an **Upgrade:** block: what a repo that
-already has a harness must do. The standard upgrade (README, "Upgrading after
-every release") prints these blocks for every release newer than the one the
+already has a harness must do. The standard upgrade (docs/guide/upgrading.md, "Upgrading
+after every release") prints these blocks for every release newer than the one the
 repo was last upgraded to, so keep each line short and actionable.
 
 Release checklist (kit maintainers): bump `package.json`, both
@@ -14,14 +14,92 @@ agent-harness-template>` and open a PR there; gate green; PR.
 
 ## Unreleased
 
+- A bug session reproduces before it fixes (M59-003; based on the owner's
+  lean-debugging skill, plus Matt Pocock's `diagnosing-bugs` skill,
+  github.com/mattpocock/skills, MIT): for `"kind": "bug"` the builder's
+  first step is a test failing on the reported symptom (a flaky bug is
+  looped until it reproduces), then one hypothesis at a time and one
+  root-cause fix; after 3 failed fixes it stops blocked with
+  `Needs a human`; the entry ends with a one-line `Lesson:`. The evaluator
+  returns NEEDS_WORK when no repro test exists or it never failed before
+  the fix.
+- Builders work one check per red-green cycle (M58-002; idea from Matt
+  Pocock's `tdd` skill, github.com/mattpocock/skills, MIT): one check's
+  test, watch it fail, make it pass, then the next check, instead of
+  writing every check's test before any code. Builder agent and protocol
+  section 2.4 say so.
+- The README is a guide (M60-004): it opens with a "What do I run when"
+  table naming every skill, then one short section per skill, under 400
+  lines; the deep detail moved verbatim to `docs/guide/` (eight pages,
+  linked from the README). `check-readme.sh` finds release phrases in
+  README.md or `docs/guide/`, and the gate's README content checks read both.
+- harness-retro skill (M60-002): runs `retro-facts.sh`, reads only its
+  page (never raw session logs or whole files), and offers at most 5 fixes
+  ranked by severity in fixed categories (navigation, automated check, tool
+  economy, no-op rule, missing information), each a gate check or a dated
+  AGENTS.md rule. It never applies them.
+- harness-brief grills until nothing is open (M57-001; idea from Matt
+  Pocock's `grilling` skill, github.com/mattpocock/skills, MIT): no
+  three-question cap; decisions come in numbered rounds, each question with
+  a recommended answer worded so "yes" accepts it; facts the repo can answer
+  are looked up, never asked; the brief is saved only when no open decision
+  remains. A human who says not to ask gets the recommended answers as
+  visible defaults.
+- Domain-driven design as a setup opt-in, off by default (M57-002; idea from
+  Matt Pocock's `domain-modeling` skill, github.com/mattpocock/skills, MIT):
+  setup asks "Use domain-driven design (glossary + ADRs)?"; yes runs
+  `add-ddd.sh`, which adds `GLOSSARY.md` (term, definition, avoid),
+  `docs/adr/0000-template.md` and one AGENTS.md map line. AGENTS.md.tmpl
+  rewraps one rule to keep room for that line within 70 lines.
+  Upgrade: optional; `upgrade.sh --ddd .` opts an existing repo in (without
+  the flag nothing DDD is added); a plain upgrade rewraps the unedited
+  "Add a rule here" rule to the template's two lines.
+- The glossary is used when present (M57-003; idea from Matt Pocock's
+  `domain-modeling` skill, github.com/mattpocock/skills, MIT): if
+  `GLOSSARY.md` exists, harness-brief words its questions in its terms, adds
+  each newly settled term and offers an ADR for a rejected option later work
+  must keep; the builder uses its terms in test titles and new names; the
+  evaluator reports a contradicting term as a NOTE. Without a glossary
+  nothing changes. Upgrade: `upgrade.sh .` regenerates the builder and
+  evaluator agent files.
+- Features can be `"kind": "bug"` (M59-001): status.sh and context.sh show
+  `kind: bug` under the next feature, and context.sh prints a `SKIP_BRIEF`
+  hint, since a bug's checks are the reported symptom.
+- Bug intake from GitHub (M59-002; idea from Matt Pocock's `triage` skill,
+  github.com/mattpocock/skills, MIT): `issues.sh sync` turns an open issue
+  labelled `bug` with no `[id]` title into a failing `kind: bug` feature
+  with the next id in the lowest milestone with failing work, and retitles
+  the issue `[id] title`. Re-running changes nothing.
+- harness-run writes a wizard for Needs a human (M60-003; idea from Matt
+  Pocock's `wizard` skill, github.com/mattpocock/skills, MIT): on a
+  `Needs a human:` block or a plan's `Before the run` step,
+  `skills/harness-run/scripts/wizard.sh` writes `scripts/wizard-<id>.sh`
+  from `templates/wizard.sh.tmpl`: one prompt per step, then a check
+  (default: the gate). It refuses a step that looks like a secret value.
+- README credits github.com/mattpocock/skills (MIT) and adds "Recommended
+  local skills": Matt Pocock's `grilling`, `improve-codebase-architecture`,
+  `prototype`, `codebase-design` and `teach`, one line each on when to call
+  them and why they are not in the kit (M57-004). The kit never invokes them.
+- The evaluator adds a standards pass (M58-001; idea from Matt Pocock's
+  `code-review` skill, github.com/mattpocock/skills, MIT): it reads
+  `CODING_STANDARDS.md` and `CONTRIBUTING.md` when present, plus a fixed
+  smell baseline (mysterious name, duplicated code, feature envy, data
+  clumps, primitive obsession, speculative generality, shotgun surgery), and
+  writes findings as `NOTE:` lines; acceptance-verdict.sh still decides.
+  Upgrade: `upgrade.sh .` regenerates the evaluator agent files.
 - Board fix (M54-002): a passing row's time column shows how long the
   feature took (dispatch to result) and stops; it no longer ticks on as if
   the feature were still running.
 
-README: none (board display fix)
+README: `What do I run when`, `GLOSSARY.md`, `kind: bug`, `harness-retro`, `wizard`, `mattpocock/skills`
 
 Upgrade:
-- none
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`
+  (`upgrade.sh .`): it regenerates the builder and evaluator agent files
+  (glossary use, standards pass, one check per cycle, bug repro) and
+  rewraps the unedited "Add a rule here" AGENTS.md rule.
+- Optional: `upgrade.sh --ddd .` opts an existing repo into domain-driven
+  design (GLOSSARY.md, docs/adr/); without the flag nothing is added.
 
 ## 3.25.0 — 2026-11-21
 

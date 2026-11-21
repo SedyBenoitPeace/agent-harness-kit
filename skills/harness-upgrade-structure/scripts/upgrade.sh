@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # harness-upgrade-structure: bring a repo that ALREADY has a harness up to the
 # structure the installed plugin ships. Idempotent; stages and commits nothing.
-# Usage: upgrade.sh [TARGET_DIR]    (default: current directory)
+# Usage: upgrade.sh [--ddd] [TARGET_DIR]    (default: current directory)
+# --ddd: also opt in to domain-driven design (GLOSSARY.md, docs/adr/), M57-002.
 # Prints OK: / CHANGED: / TODO: lines. TODO lines need a human or an agent.
 # Exit codes: 0 done; 2 refused (not a git repo, dirty tree, branch taken);
 # 3 no harness here (use harness-initial-setup).
@@ -12,7 +13,9 @@ SKILLS="$HERE/../.."
 TEMPLATES="$SKILLS/harness-initial-setup/templates"
 GEN_AGENTS="$SKILLS/../scripts/gen-agents.sh"
 
-cd "${1:-.}"
+ddd=0; args=()
+for a in "$@"; do if [ "$a" = --ddd ]; then ddd=1; else args+=("$a"); fi; done
+cd "${args[0]:-.}"
 if [ ! -f FEATURES.json ] || [ ! -f PROGRESS.md ]; then
   echo "HARNESS NOT INITIALIZED: FEATURES.json and/or PROGRESS.md missing."
   echo "This command is for repos that already have a harness; use the harness-initial-setup skill here."
@@ -261,6 +264,12 @@ if [ -f AGENTS.md ]; then
   OLD="- The repo is the only interface: if it's not committed here, it doesn't
   exist for the next session." \
   NEW="$(grep '^- The repo is the only interface' "$TEMPLATES/AGENTS.md.tmpl")" blk_replace AGENTS.md
+  # M57-002: rewrapped to free the line the optional DDD pointer takes
+  # shellcheck disable=SC2016 # the backticks are literal markdown
+  OLD='- Add a rule here only for a failure seen more than once. End it with
+  `(added <YYYY-MM-DD>)`, plus `; model: <name>` when it fixes one model'"'"'s
+  failure; maintenance re-tests old ones and deletes what is no longer needed.' \
+  NEW="$(grep -A1 '^- Add a rule here only' "$TEMPLATES/AGENTS.md.tmpl")" blk_replace AGENTS.md
 fi
 
 # generated agent files (M27-001): a repo that has any harness agent file
@@ -372,5 +381,6 @@ if [ -n "$no_model" ]; then
 else
   echo "OK: open features declare model"
 fi
+[ "$ddd" -eq 0 ] || bash "$SKILLS/harness-initial-setup/scripts/add-ddd.sh" .
 rm -rf "$gen"
 echo "NEXT: review git diff and every UPGRADE-NOTE line above, then commit the upgrade as its own commit."

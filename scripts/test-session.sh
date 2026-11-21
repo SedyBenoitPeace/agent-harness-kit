@@ -401,4 +401,19 @@ out="$(bash "$CONTEXT" --brief --outline "$WORK/outline.md" --skip /dev/null "$W
 echo "$out" | grep -q '^SKIP_BRIEF: ' || fail "--outline with --brief --skip: hint missing"
 echo "$out" | grep -q '== Session protocol ==' || fail "--outline with --brief --skip: card missing"
 
+# 13. "kind": "bug" (M59-001): status and context show it; no brief needed
+printf -- "-- %s\n" "M59-001.1 Bug kind shown and accepted @critical"
+make_repo "$WORK/bug"
+jq '.features[1].kind = "bug"' "$WORK/bug/FEATURES.json" > "$WORK/bug.json" && mv "$WORK/bug.json" "$WORK/bug/FEATURES.json"
+out="$(bash skills/harness-status/scripts/status.sh "$WORK/bug")" || fail "bug kind: status.sh must accept it"
+echo "$out" | grep -q '^  kind: bug$' || fail "bug kind: status.sh must show it under NEXT"
+for o in "" --brief; do
+  out="$(bash "$CONTEXT" ${o:+"$o"} "$WORK/bug")" || fail "bug kind $o: context.sh must accept it"
+  echo "$out" | grep -q '^  kind: bug$' || fail "bug kind $o: context.sh must show it"
+  hint="$(echo "$out" | grep '^SKIP_BRIEF: ')" || fail "bug kind $o: SKIP_BRIEF hint missing"
+  echo "$hint" | grep -qF 'harness-brief' || fail "bug kind $o: hint must name harness-brief"
+done
+out="$(bash "$CONTEXT" "$WORK/repo")"
+if echo "$out" | grep -qE '^(  kind:|SKIP_BRIEF)'; then fail "no kind: must print no kind line or skip hint"; fi
+
 echo "SESSION TESTS GREEN"

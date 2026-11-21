@@ -134,7 +134,9 @@ echo
 echo "== Next feature (lowest milestone, then lowest id, among failing) =="
 # Effort (low|medium|high|max; required since M36-001) and optional model size (M33-001): one indented line each under NEXT.
 # paths (M29-003): where the feature works, so a builder starts reading there.
-EFFORT_DEF='def effort_line: (if (.effort | type) == "string" and .effort != "" then "\n  effort: \(.effort)" else "" end)
+# kind (M59-001): "bug" marks a reported bug; its checks are the symptom.
+EFFORT_DEF='def effort_line: (if .kind == "bug" then "\n  kind: bug" else "" end)
+  + (if (.effort | type) == "string" and .effort != "" then "\n  effort: \(.effort)" else "" end)
   + (if (.model | type) == "string" and .model != "" then "\n  model: \(.model)" else "" end)
   + (if (.paths | type) == "array" and (.paths | length) > 0 then "\n  paths: \(.paths | join(", "))" else "" end); '
 
