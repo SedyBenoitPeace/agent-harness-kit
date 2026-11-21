@@ -63,6 +63,16 @@ else
   pass "Done when lines all carry a command"
 fi
 
+# Automerge (M56-002): the owner grants or refuses the agent merging its own PR
+am="$(section 'Automerge' | head -1)"
+if ! grep -qx '## Automerge' "$brief"; then
+  failc "section missing: Automerge (yes or no: may the agent merge its own PR?)"
+elif ! printf '%s\n' "$am" | grep -Eqi '^(yes|no)\b'; then
+  failc "Automerge must start with yes or no, got: $am"
+else
+  pass "Automerge: $(printf '%s' "$am" | awk '{print tolower($1)}')"
+fi
+
 # Checks (M53-002): acceptance checks are written now, before any code, in the
 # kit's one check format; read-checks.sh validates them, this adds vague words
 READER="$(cd "$(dirname "$0")/../../harness-session/scripts" && pwd)/read-checks.sh"

@@ -3,6 +3,27 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 95 (M56-001, M56-002 the agent merges its own PR when the rules allow)
+
+- Branch: `automerge`. Owner decisions 12–15 (`docs/decisions.md`).
+- Done: M56-001 `skills/harness-session/scripts/can-merge.sh` (MERGE, WAIT,
+  HOLD; `--merge`, `--list`), tested against a fake gh
+  (`scripts/fixtures/merge/gh`). M56-002 briefs carry `## Automerge`
+  (check-brief.sh), planning copies it to `automerge`; protocol 2.6 and the
+  builder: label `harness:agent`, check `--list` first, run
+  `can-merge.sh <pr> --merge` once green, never merge otherwise. 3.25.0.
+- Decisions: the agent merges (owner can't enable GitHub auto-merge on
+  free private repos); no CI templates or sync Action in the kit (it serves
+  people outside the owner's setup); agent PRs only (label, since agents
+  run under the owner's GitHub account). After an automated security
+  review: grants and protected list read from the base branch (a PR cannot
+  grant itself; first-time grants made in the same PR wait for the owner),
+  merge pinned with `--match-head-commit`, changed paths from the PR files
+  API (exact names, renames, deletions) instead of diff headers, the gate
+  and QA scripts always protected.
+- Gate: GREEN (bash scripts/e2e.sh).
+- Next: fresh-session evaluation; first real use on one repo.
+
 ## 2026-11-20 -- session 94 (M55-001..003 GitHub issues as the place to write features)
 
 - Branch: `issues-sync`.

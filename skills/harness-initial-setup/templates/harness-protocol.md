@@ -137,10 +137,9 @@ resume point in PROGRESS.md, end `SESSION: <id> · blocked · gate <green|red> �
 - Branch off the default branch. Never branch off another feature branch.
 - One branch per milestone-chunk of work; small, focused commits within it
   (ideally one per feature).
-- Integrate via pull request, not local fast-forward. After merge, update
-  the local default branch before cutting the next branch. If the repo has
-  no remote yet, merge locally with `--no-ff` and note the deviation in
-  PROGRESS.md.
+- Integrate via pull request (label `harness:agent` on yours), never a local
+  fast-forward; no remote yet: merge `--no-ff`, note it in PROGRESS.md. Once
+  green, run `can-merge.sh <pr> --merge`; on HOLD or WAIT the owner merges.
 - Stage explicit paths; avoid `git add -A` (it picks up stray build output).
 
 Copy-paste session prompt:

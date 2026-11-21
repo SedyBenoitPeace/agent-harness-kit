@@ -10,7 +10,8 @@ t() { echo "-- $1"; }
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 export PATH="$KIT/scripts/fixtures/merge:$PATH"
 
-# repo <name>: a git repo with FEATURES.json, a passing gate and a fake PR #7
+# repo <name>: a git repo (its own origin) with FEATURES.json on the base
+# branch, a passing gate, and a fake PR #7 from an agent
 repo() {
   r="$tmp/$1"; mkdir -p "$r/scripts" "$r/gh"; export FAKE_GH_DIR="$r/gh"; : > "$r/gh/log"
   cat > "$r/FEATURES.json" <<'J'
@@ -20,10 +21,12 @@ repo() {
 ]}
 J
   printf '#!/usr/bin/env bash\nexit 0\n' > "$r/scripts/e2e.sh"
-  (cd "$r" && git init -q && git add -A && git -c user.name=t -c user.email=t@t commit -qm init)
-  jq -n --arg sha "$(git -C "$r" rev-parse HEAD)" '{number: 7, state: "OPEN", mergeable: "MERGEABLE",
-    title: "Book a session (M1-001)", body: "Builds M1-001 test-first.", labels: [{name: "harness:agent"}],
-    headRefOid: $sha, statusCheckRollup: [{name: "gate", status: "COMPLETED", conclusion: "SUCCESS"}]}' > "$r/gh/pr.json"
+  (cd "$r" && git init -q && git add -A && git -c user.name=t -c user.email=t@t commit -qm init \
+    && git remote add origin "$r" && git fetch -q origin)
+  jq -n --arg sha "$(git -C "$r" rev-parse HEAD)" --arg base "$(git -C "$r" branch --show-current)" '{number: 7, state: "OPEN",
+    mergeable: "MERGEABLE", title: "Book a session (M1-001)", body: "Builds M1-001 test-first.", labels: [{name: "harness:agent"}],
+    baseRefName: $base, headRefOid: $sha, statusCheckRollup: [{name: "gate", status: "COMPLETED", conclusion: "SUCCESS"}]}' > "$r/gh/pr.json"
+  echo '[{"filename": "src/book.ts", "status": "modified"}, {"filename": "e2e/booking.spec.ts", "status": "added"}]' > "$r/gh/files.json"
   cat > "$r/gh/pr.diff" <<'D'
 diff --git a/src/book.ts b/src/book.ts
 index 1..2 100644
@@ -40,6 +43,12 @@ new file mode 100644
 +test('first booking', () => {});
 D
 }
+files() { jq "$1" "$FAKE_GH_DIR/files.json" > "$FAKE_GH_DIR/x" && mv "$FAKE_GH_DIR/x" "$FAKE_GH_DIR/files.json"; }
+base() {  # base <jq expr>: change FEATURES.json on the base branch (the owner's policy)
+  jq "$1" "$r/FEATURES.json" > "$r/x" && mv "$r/x" "$r/FEATURES.json"
+  (cd "$r" && git -c user.name=t -c user.email=t@t commit -qam policy && git fetch -q origin)
+  pr ".headRefOid = \"$(git -C "$r" rev-parse HEAD)\""
+}
 pr() { jq "$1" "$FAKE_GH_DIR/pr.json" > "$FAKE_GH_DIR/x" && mv "$FAKE_GH_DIR/x" "$FAKE_GH_DIR/pr.json"; }
 run() { (cd "$r" && bash "$CM" 7 "$@" 2>&1); }
 merges() { grep -c '^WRITE pr merge' "$FAKE_GH_DIR/log" || true; }
@@ -48,7 +57,7 @@ t "M56-001.1 a granted, green, agent PR inside the rules merges @critical"
 repo ok
 out="$(run --merge)" || fail "exit non-zero: $out"
 [ "$(head -1 <<< "$out")" = MERGE ] || fail "first line must be MERGE: $out"
-{ [ "$(merges)" = 1 ] && grep -q '^WRITE pr merge 7 ' "$FAKE_GH_DIR/log"; } || fail "want one gh pr merge 7 call: $(cat "$FAKE_GH_DIR/log")"
+{ [ "$(merges)" = 1 ] && grep -q "^WRITE pr merge 7 .*--match-head-commit $(jq -r .headRefOid "$FAKE_GH_DIR/pr.json")" "$FAKE_GH_DIR/log"; } || fail "want one gh pr merge 7 pinned to the checked head: $(cat "$FAKE_GH_DIR/log")"
 
 t "M56-001.2 each broken rule holds the PR with its reason @critical"
 hold() {  # hold <name> <reason text> <setup command>
@@ -63,13 +72,17 @@ hold not-granted 'M1-002: not granted automerge' "pr '.title = \"Cancel (M1-002)
 hold no-id 'names no feature' "pr '.title = \"Tidy\" | .body = \"\"'"
 hold unknown-id 'M9-001: no such feature' "pr '.body += \" Also M9-001.\"'"
 hold no-label 'not labelled harness:agent' "pr '.labels = []'"
-hold off 'automerge is off for this repo' "jq '. + {automerge: {enabled: false}}' \"\$r/FEATURES.json\" > \"\$r/x\" && mv \"\$r/x\" \"\$r/FEATURES.json\""
+hold off 'automerge is off for this repo' "base '. + {automerge: {enabled: false}}'"
+hold self-grant 'M1-002: not granted automerge' "pr '.title = \"Cancel (M1-002)\" | .body = \"\"'; jq '.features[1].automerge = true' \"\$r/FEATURES.json\" > \"\$r/x\" && mv \"\$r/x\" \"\$r/FEATURES.json\""
 hold red-check 'check gate: FAILURE' "pr '.statusCheckRollup[0].conclusion = \"FAILURE\"'"
 hold conflict 'not mergeable (CONFLICTING)' "pr '.mergeable = \"CONFLICTING\"'"
-hold workflow 'protected path: .github/workflows/ci.yml' "sed -i.b 's#src/book.ts#.github/workflows/ci.yml#g' \"\$FAKE_GH_DIR/pr.diff\""
-hold deps 'protected path: package.json' "sed -i.b 's#src/book.ts#package.json#g' \"\$FAKE_GH_DIR/pr.diff\""
-hold migration 'protected path: db/migrations/002_add.sql' "sed -i.b 's#src/book.ts#db/migrations/002_add.sql#g' \"\$FAKE_GH_DIR/pr.diff\""
-hold deleted-test 'test deleted: e2e/old.spec.ts' "printf 'diff --git a/e2e/old.spec.ts b/e2e/old.spec.ts\ndeleted file mode 100644\n--- a/e2e/old.spec.ts\n+++ /dev/null\n@@ -1 +0,0 @@\n-x\n' >> \"\$FAKE_GH_DIR/pr.diff\""
+hold workflow 'protected path: .github/workflows/ci.yml' "files '.[0].filename = \".github/workflows/ci.yml\"'"
+hold deps 'protected path: package.json' "files '.[0].filename = \"package.json\"'"
+hold migration 'protected path: db/migrations/002_add.sql' "files '.[0].filename = \"db/migrations/002_add.sql\"'"
+hold spaced 'protected path: config/secrets file.json' "files '.[0].filename = \"config/secrets file.json\"'"
+hold gate-file 'protected path: scripts/e2e.sh' "base '. + {automerge: {protected: [\"^docs/\"]}}'; files '.[0].filename = \"scripts/e2e.sh\"'"
+hold deleted-test 'test deleted: e2e/old.spec.ts' "files '. + [{filename: \"e2e/old.spec.ts\", status: \"removed\"}]'"
+hold renamed-test 'test deleted: e2e/old.spec.ts' "files '. + [{filename: \"src/old.ts\", previous_filename: \"e2e/old.spec.ts\", status: \"renamed\"}]'"
 hold skipped-test 'test weakened in e2e/booking.spec.ts' "sed -i.b 's#^+test(#+test.skip(#' \"\$FAKE_GH_DIR/pr.diff\""
 
 t "M56-001.3 running checks wait; no checks fall back to the local gate"
@@ -91,9 +104,43 @@ t "M56-001.4 the protected list is printable and overridable"
 repo list
 out="$(cd "$r" && bash "$CM" --list)" || fail "--list failed"
 for w in '.github/' 'migrations' 'auth' 'secret' 'package-lock' 'Dockerfile'; do grep -qF -- "$w" <<< "$out" || fail "default list lacks $w: $out"; done
-jq '. + {automerge: {protected: ["^docs/legal/"]}}' "$r/FEATURES.json" > "$r/x" && mv "$r/x" "$r/FEATURES.json"
-[ "$(cd "$r" && bash "$CM" --list)" = '^docs/legal/' ] || fail "a configured list must replace the default"
-sed -i.b 's#src/book.ts#package.json#g' "$FAKE_GH_DIR/pr.diff"
+base '. + {automerge: {protected: ["^docs/legal/"]}}'
+out="$(cd "$r" && bash "$CM" --list)"
+{ grep -qxF '^docs/legal/' <<< "$out" && ! grep -qF 'package' <<< "$out"; } || fail "a configured list must replace the default: $out"
+grep -qF 'e2e' <<< "$out" || fail "the gate and merge scripts stay protected under any list: $out"
+files '.[0].filename = "package.json"'
 out="$(run)" || fail "package.json is not protected under the configured list: $out"
+
+BRIEF="$KIT/skills/harness-brief/scripts/check-brief.sh"
+t "M56-002.1 the brief asks for the merge grant @critical"
+cp "$KIT/scripts/fixtures/brief/nits-only.md" "$tmp/b.md"
+grep -qx '## Automerge' "$tmp/b.md" || fail "fixture brief must carry ## Automerge"
+bash "$BRIEF" "$tmp/b.md" >/dev/null || fail "the fixture brief must pass"
+for v in yes no; do
+  sed "/^## Automerge$/{n;s/.*/$v/;}" "$tmp/b.md" > "$tmp/$v.md"
+  bash "$BRIEF" "$tmp/$v.md" >/dev/null || fail "Automerge: $v must pass"
+done
+sed "/^## Automerge$/{n;s/.*/maybe/;}" "$tmp/b.md" > "$tmp/maybe.md"
+out="$(bash "$BRIEF" "$tmp/maybe.md")" && fail "Automerge: maybe passed"
+grep -q '^FAIL.*Automerge' <<< "$out" || fail "no FAIL naming Automerge: $out"
+sed '/^## Automerge$/,/^$/d' "$tmp/b.md" > "$tmp/none.md"
+out="$(bash "$BRIEF" "$tmp/none.md")" && fail "a brief without ## Automerge passed"
+grep -q '^FAIL.*Automerge' <<< "$out" || fail "no FAIL naming a missing Automerge: $out"
+
+t "M56-002.2 agents are told the merge rules"
+TM="$KIT/skills/harness-initial-setup/templates"
+# shellcheck disable=SC2016 # literal backticks
+{ grep -qF '`automerge`' "$TM/harness-protocol-planning.md" && grep -qF '## Automerge' "$TM/harness-protocol-planning.md"; } || fail "planning must record automerge from the brief's ## Automerge"
+sec26="$(sed -n '/^### 2\.6/,/^Copy-paste/p' "$TM/harness-protocol.md")"
+mkdir -p "$tmp/gen" && bash "$KIT/scripts/gen-agents.sh" "$tmp/gen" >/dev/null
+n=0
+while IFS= read -r f; do
+  n=$((n + 1))
+  for w in 'harness:agent' 'can-merge.sh --list' 'can-merge.sh <pr> --merge' 'never merge'; do
+    grep -qF -- "$w" "$f" || fail "$f: must say $w"
+  done
+done < <({ echo "$KIT/agents/src/harness-builder.md"; find "$tmp/gen" -type f -name 'harness-builder*'; })
+[ "$n" -ge 4 ] || fail "expected the source plus generated builders, found $n"
+for w in 'harness:agent' 'can-merge.sh <pr> --merge'; do grep -qF -- "$w" <<< "$sec26" || fail "protocol 2.6 must say $w"; done
 
 echo "MERGE TESTS GREEN"

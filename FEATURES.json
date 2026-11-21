@@ -553,7 +553,7 @@
       "id": "M56-002",
       "milestone": 56,
       "title": "Agents and the brief know the merge rules: the brief asks Automerge yes or no, planning records automerge, agent PRs get harness:agent, the builder checks protected paths first and runs can-merge.sh --merge after a green PR",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-merge.sh and test-brief.sh proving each check below",
       "model": "low",
       "depends_on": [

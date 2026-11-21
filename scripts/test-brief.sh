@@ -41,6 +41,9 @@ Gate is sufficient.
 ## Budget and stop condition
 Stop after 5 features or the first red gate.
 
+## Automerge
+no — the owner merges this one.
+
 ## Checks
 ### C1 — Weather for a named city
 - **Critical:** yes

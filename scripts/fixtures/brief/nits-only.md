@@ -29,6 +29,9 @@ Gate is sufficient.
 ## Budget and stop condition
 One feature; stop at the first red gate.
 
+## Automerge
+no — the owner merges this one.
+
 ## Checks
 ### C1 — List only notes with the tag
 - **Critical:** yes
