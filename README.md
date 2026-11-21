@@ -891,8 +891,36 @@ and a lint gate in [`scripts/e2e.sh`](scripts/e2e.sh) that validates the
 templates themselves (JSON-after-substitution, shellcheck, agent-neutrality,
 line budgets).
 
+## Recommended local skills
+
+These skills from [mattpocock/skills](https://github.com/mattpocock/skills)
+work well beside the harness. Install them yourself and call them by hand;
+the kit never invokes them, because a harness run must not change with what
+happens to be installed (builders follow kit files only).
+
+- **grilling** — before a brief or a big decision, to be questioned until
+  every branch is settled. Not in the kit: harness-brief already grills in
+  numbered rounds; this is the free-standing version for any plan.
+- **improve-codebase-architecture** — between milestones, to find shallow
+  modules worth deepening. Not in the kit: it is open-ended review, not one
+  bounded feature with a gate.
+- **prototype** — when a state model or UI is unclear, to build a throwaway
+  answer before planning. Not in the kit: throwaway code has no place in a
+  test-first, committed feature.
+- **codebase-design** — when designing a module's interface or choosing
+  where a seam goes. Not in the kit: it is design vocabulary, and the kit
+  keeps only the rules a builder must follow.
+- **teach** — when you want to learn a concept or the code itself, not
+  change it. Not in the kit: the harness builds features; teaching is for
+  the human.
+
 ## Credits
 
+- **mattpocock/skills** — Matt Pocock's skills,
+  <https://github.com/mattpocock/skills> (MIT), inspired the brief grilling,
+  the domain-driven design opt-in and the recommended local skills above.
+  The kit writes those ideas in its own words and depends on none of his
+  skills.
 - **show-me** — the visual-explanation skill by Dex Horthy / HumanLayer:
   <https://www.humanlayer.com/blog/show-me-skill>. The harness asks agents
   to use it, when installed, for explanations and summaries (status

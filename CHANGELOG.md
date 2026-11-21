@@ -57,6 +57,10 @@ agent-harness-template>` and open a PR there; gate green; PR.
   `skills/harness-run/scripts/wizard.sh` writes `scripts/wizard-<id>.sh`
   from `templates/wizard.sh.tmpl`: one prompt per step, then a check
   (default: the gate). It refuses a step that looks like a secret value.
+- README credits github.com/mattpocock/skills (MIT) and adds "Recommended
+  local skills": Matt Pocock's `grilling`, `improve-codebase-architecture`,
+  `prototype`, `codebase-design` and `teach`, one line each on when to call
+  them and why they are not in the kit (M57-004). The kit never invokes them.
 
 ## 3.25.0 — 2026-11-21
 
