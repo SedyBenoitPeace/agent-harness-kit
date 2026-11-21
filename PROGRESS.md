@@ -3,6 +3,17 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 100 (M58-002 one check at a time, lane merged)
+
+- Branch: `m57`.
+- Done: M58-002. harness-builder and protocol 2.4 say one check per
+  red-green cycle (test one check, watch it fail, make it pass, next);
+  protocol stays at 150 lines. Test M58-002.1 in test-agents.sh; CHANGELOG
+  credits Matt Pocock's `tdd` skill. README untouched (M60-004 rewrites it).
+- Decisions: reworded inside 2.4's two lines, keeping "before the code" and
+  "starting with the check id" that M53-003.1 asserts.
+- Gate: GREEN (bash scripts/e2e.sh after the merge and the flip).
+
 ## 2026-11-21 -- session 99 (parallel lanes M57-004, M58-001, M59-001, M59-002, M60-001, M60-002, M60-003 merged)
 
 - Branch: `m57` (one branch for M57–M60 on the owner's request to run in

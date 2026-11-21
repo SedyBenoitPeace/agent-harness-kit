@@ -818,7 +818,7 @@
       "id": "M58-002",
       "milestone": 58,
       "title": "Builders work one check at a time: test for one check, watch it fail, make it pass, then the next check (no writing every check's test before any code)",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-agents.sh proving the check below",
       "model": "low",
       "depends_on": [],
