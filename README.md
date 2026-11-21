@@ -5,6 +5,27 @@ FEATURES.json / PROGRESS.md / execution plans / e2e gate into any project,
 and audit repos for harness-readiness. Ships as a Claude Code plugin plus a
 portable protocol usable by any AI agent.
 
+## What do I run when
+
+| Situation | Run |
+| --- | --- |
+| A rough idea, not yet a plan | `/agent-harness-kit:harness-brief` |
+| A repo with no harness (new or existing code, or a PRD) | `/agent-harness-kit:harness-initial-setup` |
+| Build the next feature, or one named feature | `/agent-harness-kit:harness-session` |
+| Build a milestone or many features, stop at the first problem | `/agent-harness-kit:harness-run` |
+| Build unattended, skip what cannot finish, report at the end | `/agent-harness-kit:harness-continuous` |
+| Where does the project stand, what is next | `/agent-harness-kit:harness-status` (terminal: `status.sh --line`, `status.sh --watch`) |
+| Is this repo harness-ready | `/agent-harness-kit:harness-audit` |
+| The plugin was updated (`UPGRADE: offer`) | `/agent-harness-kit:harness-upgrade-structure` |
+| End a session or switch to another agent | `/agent-harness-kit:harness-handoff` |
+| Features or bugs live in GitHub issues | `/agent-harness-kit:harness-issues` |
+| A run finished, find what slowed it | `/agent-harness-kit:harness-retro` |
+| Is the repo healthy right now | `bash scripts/e2e.sh` (exit 0 = green) |
+| Not on Claude Code | [Other agents](docs/guide/other-agents.md) |
+
+Each skill also answers to plain English; see
+[Using the skills](#using-the-skills--copy-paste-prompts).
+
 ## What is the harness approach?
 
 AI coding sessions are short; projects are long. Plans left in chat
@@ -22,615 +43,102 @@ The approach distills two published practices:
 [Anthropic — Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
 and [OpenAI — Harness engineering](https://openai.com/index/harness-engineering/).
 
-## Quickstart — Claude Code (plugin, recommended)
+
+## Install
+
+Claude Code (recommended):
 
 ```
 /plugin marketplace add SedyBenoitPeace/agent-harness-kit
 /plugin install agent-harness-kit
 ```
 
-These skills come with it — invoke each as a slash command or in plain
-English:
-
-- **harness-initial-setup** — interview → PRODUCT.md + FEATURES.json → scaffold the
-  whole harness. `/agent-harness-kit:harness-initial-setup` or _"set up the agent
-  harness in this repo"_.
-- **harness-session** — run one coding session with bounded, non-mutating
-  context recovery and a concise gate report. `/agent-harness-kit:harness-session`,
-  _"Implement M1-004 following the harness."_, or _"Continue the current
-  harness feature."_ Only feature work runs the session: moving a file,
-  formatting or an ordinary doc edit is a small task the agent does,
-  checks once and stops (AGENTS.md says what counts). The session starts from a short brief (`context.sh`:
-  the current milestone, the next feature's full entry and plan section,
-  the newest PROGRESS entry, under 80 lines); FEATURES.json, PROGRESS.md,
-  plans and docs are then read on demand with `grep` or `sed -n`, never
-  whole. One read rule for every file: `grep -n` first, then `sed -n` ≤80
-  lines; never `cat` a source file over 200 lines; one read per command, never
-  chained. Builds, simulators and tests run through `quiet.sh <name> --
-  <command>`, which keeps the full log in `.harness-run/logs/` and prints
-  only the exit code, the log path, up to 40 error/fail/warning lines and
-  the last 20 lines; `run-gate.sh` prints the same shape. A session that
-  passes about 60 tool calls or 150k tokens of context commits what is
-  safe, notes where to resume and ends `blocked · session budget`.
-  Project-specific readiness checks are optional and live in the target
-  repo's own `scripts/preflight.sh`.
-- **harness-run** — work through many features in one conversation
-  without its context growing: each feature runs as a harness-session in
-  a fresh subagent, verified from the repo before the next starts;
-  script-proven independent features run as parallel lanes. A step only
-  you can do (a `Needs a human` note, a plan's `Before the run`) comes
-  back as `scripts/wizard-<id>.sh`: it walks you through each step, then
-  runs a check; it names secrets, never holds them.
-  `/agent-harness-kit:harness-run` or _"Run the rest of milestone 3."_
-- **harness-upgrade-structure** — for repos that already have a harness:
-  bring them up to the structure the installed plugin ships, in one
-  deterministic step. `/agent-harness-kit:harness-upgrade-structure`. See
-  [Upgrading existing repos](#upgrading-existing-repos).
-- **harness-continuous** — an unattended run: like harness-run, but a
-  feature it cannot finish is skipped (work stashed, question recorded)
-  instead of ending the run, and it finishes with a report in
-  `docs/runs/`. Invoked by name: `/agent-harness-kit:harness-continuous`.
-  See [Unattended runs](#unattended-runs).
-  Both run skills open a live run board (`.harness-run/board.html`, the
-  `BOARD:` line they print): one row per open feature with stage, agent, gate,
-  time and cost. `HARNESS_BOARD_OPEN=0` stops it opening;
-  `HARNESS_BOARD_OPEN_CMD` sets the opener. Click a row to expand it: its
-  "Done when" (`verify`), `depends_on`, `paths`, effort and model, the
-  feature's plan section (cut at 40 lines) and links to that plan and the
-  briefs it mentions, then **All fields**: every key of the feature's
-  FEATURES.json entry as written. A queued row's agent column shows its
-  planned model and effort. The board can also talk back: it
-  copies a `touch .harness-run/STOP` command (stop after the current feature;
-  both run skills honour it) and, per open feature, a command that saves a
-  hint to `.harness-run/hints/<id>.md`, which the next builder brief prints
-  under `== Human hint ==`.
-- **Independent evaluator** — features that opt in (`evaluate: "ui"` and a
-  `bar` in FEATURES.json) end their session in `review`; harness-run then
-  dispatches a separate, read-only `harness-evaluator` agent that returns
-  `PASS` or `NEEDS_WORK` with evidence before the feature can become
-  `passing`, and records `docs/verification/<id>.md`. It also checks the
-  diff against `CODING_STANDARDS.md` / `CONTRIBUTING.md` when present and a
-  fixed code-smell list, as `NOTE:` lines that never change the verdict.
-  The builder and evaluator agents are generated for Claude Code, Copilot
-  CLI and Codex CLI by `scripts/gen-agents.sh` from one source in
-  `agents/`, at setup and by the upgrade; harness-run dispatches the builder by name, never a stand-in.
-- **harness-issues** — GitHub issues as the place to write features:
-  `/agent-harness-kit:harness-issues migrate` moves open features to issues,
-  `… sync` brings them back into FEATURES.json (see Features in GitHub issues).
-- **harness-status** — where the project stands: progress per milestone,
-  last session, exact next feature. `/agent-harness-kit:harness-status` or
-  _"what's the harness status?"_.
-- **harness-retro** — after a run, one page of facts from
-  `retro-facts.sh` and at most 5 ranked fixes (a gate check or a dated
-  AGENTS.md rule), offered, never applied. _"retro the last run"_.
-- **harness-audit** — check any repo's harness-readiness.
-  `/agent-harness-kit:harness-audit` or _"audit this repo's harness"_.
-  It also warns when a failing feature's `verify` needs something only you
-  can give (a live session, your machine, a device, a push, a PR, an
-  answer: that belongs in the plan's `## Before the run`), when a failing
-  feature lacks `depends_on` or `paths` (it can never run as a parallel
-  lane; the WARN names each one), and, for information only, when your global Codex, Claude
-  Code or Copilot setup has a memory or workflow server or plugin that may
-  add its own instructions to every session. It never edits your setup.
-- **harness-handoff** — verify the session-end ritual (clean tree, gate
-  status, logged session) and get a paste-ready prompt for the next agent,
-  any vendor. It reuses the last green gate run (`GATE: green (last green
-  run, unchanged)`), notes when the tree changed since, and runs the full
-  gate only with `--run-gate`. `/agent-harness-kit:harness-handoff` or _"prepare the
-  handoff for the next agent"_.
-
-Update to the latest release:
-
-```
-claude plugin update agent-harness-kit
-```
-
-After an update, the next harness-session context report checks the
-target repo against the shipped templates: an unbounded gate
-(`GATE_OUTPUT: unbounded`) or an older protocol copy (`PROTOCOL: outdated`)
-ends the report with `UPGRADE: offer`, and the agent proposes the
-five-minute upgrade as its own commit before starting the feature.
-Recopying the protocol brings in the orchestrated-run rules (§2.7), and
-the same commit adds the harness-run line to AGENTS.md. The new
-`depends_on` / `paths` fields in FEATURES.json are optional — absent fields stay sequential,
-so existing repos keep working unchanged; harness-audit can propose
-values for the remaining failing features, applied only on approval.
-Give every feature both, with `paths` as narrow as you can: only a file
-both features name (or one inside the other's folder or glob) keeps two
-features out of parallel lanes, so a shared folder such as `test/` no
-longer blocks them.
-The evaluator is opt-in too: `evaluate` / `bar` are optional, and
-harness-audit warns when features opt in but no evaluator agent file
-exists (run `scripts/gen-agents.sh` to create them).
-
+Update with `claude plugin update agent-harness-kit`; the next session
+offers the repo upgrade itself ([Upgrading](docs/guide/upgrading.md)).
 Manual fallback (no plugin): copy `skills/harness-initial-setup` into
-`~/.claude/skills/`.
-
-## Quickstart — Codex (plugin)
-
-Codex CLI installs the same plugin — the skills work there unchanged:
-
-```
-codex plugin marketplace add https://github.com/SedyBenoitPeace/agent-harness-kit
-codex plugin add agent-harness-kit@agent-harness-kit
-```
-
-Update to the latest release:
-
-```
-codex plugin marketplace upgrade agent-harness-kit
-```
-
-Start each kit run in a fresh Codex session. The kit spawns every builder,
-evaluator and reviewer with `fork_turns: "none"`, so they start clean
-instead of inheriting the orchestrator's history.
-
-## Quickstart - Pi Coding Agent
-
-```
-pi install git:github.com/SedyBenoitPeace/agent-harness-kit
-```
-
-Update to latest
-
-```
-pi update --extensions
-
-```
-## Quickstart - Copilot CLI (plugin)
-
-```
-copilot plugin marketplace add https://github.com/SedyBenoitPeace/agent-harness-kit
-```
-
-```
-copilot plugin install agent-harness-kit                                                     
-```
-
-Update to latest
-
-```
-copilot plugin update agent-harness-kit
-```
-
-## Lifecycle — how the pieces fit
-
-0. **Brief (optional)** — `/agent-harness-kit:harness-brief` turns a
-   rough prompt into `docs/briefs/<date>-<slug>.md`: it looks up facts in
-   the repo, asks the decisions as questions in numbered rounds (each with
-   a recommended answer, so "yes" accepts it) until none is open, then
-   runs a mechanical check and an independent read-only reviewer
-   (`READY`/`GAPS`). Review stops after 2 rounds: `GAPS` is only for
-   blocking findings (at most 5), and the rest become `NOTE:` lines under
-   Open questions. Lifecycle: brief → plan → run. Setup then interviews
-   only the gaps. Already have a plan or outline you approved in another
-   workflow? Skip the brief: the agent turns it into FEATURES.json entries
-   and a plan section, keeping its phases and checks, then runs.
-   Reporting a bug? Add a feature with `"kind": "bug"` whose checks are
-   the symptom: it needs no brief, and status shows `kind: bug`.
-1. **Set up once** — `/agent-harness-kit:harness-initial-setup`. Expect an
-   interview about the product before anything is written; it ends with
-   the full scaffold (AGENTS.md, FEATURES.json, PROGRESS.md,
-   ARCHITECTURE.md, docs/plans/, the protocol in docs/agents/,
-   scripts/e2e.sh). Repos that are already harnessed are detected and
-   left alone.
-2. **Build one feature per session** — say _"Read AGENTS.md, then
-   docs/agents/harness-protocol.md section 2, and perform exactly one
-   coding session."_ With the plugin installed, `/agent-harness-kit:harness-session`
-   (or _"Implement M1-004 following the harness."_ / _"Continue the
-   current harness feature."_) runs the same protocol with bounded
-   context recovery and a concise gate report. The session proposes an
-   execution mode — inline (default) or delegated to the agent's own
-   built-in subagents — and never loads a third-party workflow plugin;
-   plans are written with the agent's native plan mode (protocol §1.5).
-   Repeat until the milestone is done — or let
-   `/agent-harness-kit:harness-run` repeat it for you: one fresh subagent
-   per feature, stopping at a blocker, the milestone boundary, or a cap
-   of 10, and running independent features (declared `depends_on` /
-   `paths`) as parallel lanes, up to 3 at once. Lanes roll: when one
-   finishes (built, or passed its evaluator) it merges and its slot takes
-   the next ready feature, so a slow review never holds unrelated builds,
-   and a feature waiting on a running one starts once that one lands. To
-   walk away entirely, invoke
-   `/agent-harness-kit:harness-continuous` instead (see
-   [Unattended runs](#unattended-runs)).
-3. **Check where you are** — `/agent-harness-kit:harness-status` any
-   time: progress per milestone, what the last session did, and exactly
-   which feature the next session will pick. If the harness isn't set up
-   yet, it says so and points you to setup.
-4. **Hand off cleanly** — `/agent-harness-kit:harness-handoff` when a
-   session ends or you switch agents. It refuses to hand off a dirty tree
-   or a red gate, and prints the exact one-feature prompt the next agent
-   should be given.
-5. **Keep it honest** — `/agent-harness-kit:harness-audit` when a repo
-   drifts or before working in an unfamiliar one, plus a periodic
-   maintenance pass (protocol section 3).
-
-## Decision notes, effort and model-tagged rules
-
-Three small habits from Anthropic's Claude Code team, built into the
-protocol so every agent follows them:
-
-- **Decision notes.** Every PROGRESS.md entry has a `Decisions:` line:
-  the options the session considered and rejected, and the assumptions it
-  made. Most wrong results are a right answer the agent thought of and
-  turned down; written down, you (or the evaluator) can ask for the skipped
-  option instead of rediscovering it. The evaluator reads the line as
-  leads, never as evidence.
-- **Per-feature effort.** A feature may carry `"effort":
-  "low" | "medium" | "high" | "max"`: how much verification and edge-case
-  testing it deserves. It is optional: without it the agent runs at its
-  CLI's default effort and the model decides per step.
-  UI work rarely gains from high effort; APIs, data and security do.
-  `harness-status` prints it under `NEXT:`, sessions scale their checking
-  to it, and `harness-run` passes it to the agent it dispatches (as the
-  CLI's own effort setting where there is one). The evaluator always runs
-  at high or above. The kit names no
-  models: every agent runs on its CLI's default. Pick your strongest model
-  for hard features and reviews, a cheaper one for implementation.
-- **Rules that expire.** Start lean: add an AGENTS.md rule only for a
-  failure you have seen more than once, and end it with
-  `(added <YYYY-MM-DD>)`, plus `; model: <name>` when it fixes one model's
-  failure. `harness-audit` flags rules older than 90 days, and model-tagged
-  ones to re-test when you change models: drop each, run a session or two,
-  delete it if nothing breaks. The kit holds itself to the same standard:
-  the gate caps the protocol's session core at 150 lines and the AGENTS.md
-  template at 70.
-
-## Choosing a model size
-
-Every feature still to build carries `"model": "small" | "medium" |
-"large"`: which size of model builds it. It is required:
-`harness-audit` fails a failing, review or deferred feature without it, and
-`harness-upgrade-structure` lists the ones an older repo is missing. It is separate from `effort`, which only sets how hard the
-model checks its own work. Any size works with any effort.
-
-| Size | Use it for |
-|---|---|
-| `small` | Narrow, well-specified work that follows a pattern already in the repo, checked by one command: scaffolds, docs, CHANGELOG and version bumps, config, renames, fixtures |
-| `medium` | The default and the safe choice: new logic, several files, debugging |
-| `large` | Design calls others build on, security or isolation, cross-cutting refactors |
-
-In an older FEATURES.json without `model`, the Claude Code edition still
-picks the builder from `effort` and other CLIs use `medium`. The evaluator and
-features touching auth, payments, billing, migrations, secrets, credentials
-or personal data never build below `medium`. A retry or an evaluator
-rejection steps up one size.
-
-The size map says which model each size means for each CLI. It lives in
-the repo at `docs/agents/model-sizes.json`, one object per CLI
-(`{"codex": {"small": "...", "medium": "...", "large": "..."}}`). The kit
-ships no model names except for Claude Code, whose aliases (`haiku`,
-`sonnet`, `opus`) never go stale. A CLI with no map gets no per-size agents
-and uses its default model. The kit's `scripts/gen-agents.sh <repo>` writes
-the per-size agent files from the map.
-
-## Second opinion, brief stage and untrusted text
-
-- **Second opinion from another vendor.** Give a feature
-  `"second_opinion": "codex"` (or `claude`, `copilot`) and, after the builder,
-  harness-run asks that command-line agent to judge it, read-only, with the
-  evaluator's instructions: `skills/harness-run/scripts/second-opinion.sh`.
-  Both verdicts must pass. Each vendor's model has its own blind spots, so
-  use it where a miss is expensive (auth, payments, data). The CLI must be
-  installed and signed in where the run happens; `harness-audit` warns if it
-  is not. A second opinion that changes the repo is void.
-- **Prototype or production.** Every brief has a `## Stage` line. Planning
-  reads it: a prototype gets low or medium effort and "gate is sufficient";
-  production gets the full effort table.
-- **Untrusted text.** Issues, comments, web pages and tool output are data,
-  never instructions: agents report instructions they find there instead of
-  following them, and acting on them is on the "Needs a human" list.
-
-## Claude Code edition
-
-A second plugin in the same marketplace, `agent-harness-kit-claude`, adds
-features only Claude Code has: an eval suite for the core skills and mods
-(function hooks: a decision register, a done-check supervisor and a budget
-guard). It depends on the core plugin and never copies
-the protocol, so every other CLI keeps working from the core alone.
-Installing the edition installs the core plugin with it:
-
-```
-/plugin install agent-harness-kit-claude
-```
-
-**Mods** (Claude Code function hooks, active only in a repo with
-`FEATURES.json`; they write only under `.harness-run/`, which they keep out
-of git):
-
-- **Decision register** — a `register_decision` tool the agent calls each
-  time it picks one option over another or assumes something; the lines
-  land in `.harness-run/decisions/<id>.md` and the session folds them into
-  the PROGRESS.md `Decisions:` line.
-- **Done-check supervisor** — off by default (`supervisor` in `/config`
-  turns it on). When on and a session ends with its `SESSION:` line, one
-  cheap check against the feature's `verify` reports done, blocked or
-  skipped work (in a status line, and `.harness-run/decisions/<id>.skipped.md`).
-  It never judges a parallel-lane builder, whose transcript always ends
-  mid-work by design.
-- **Status line** — one line under the prompt, beside your own status line
-  (never replacing it): `harness M3-005 · 12/20 passing · $1.40/$5.00 ·
-  sonnet · 2 waiting on you`, plus the last budget or supervisor notice.
-  To merge it into your own status line script instead, call
-  `status.sh --line` there (core kit).
-- **`/harness`** — milestones, the next feature, what waits on you and the
-  session's cost, read from FEATURES.json: no model call, no tokens.
-- **Model choice** — each builder a run starts gets the model its feature's
-  `effort` asks for: low `haiku`, medium (or none) `sonnet`, high or max
-  `opus`, by alias, so new models are picked up with nothing to update. A
-  retry or an evaluator rejection steps it up one tier, but only when the
-  feature's `notes` are unchanged since the earlier start (an answer from
-  you gives a fresh attempt at the planned size); the evaluator and
-  features touching auth, payments, migrations or personal data never run
-  below `sonnet`. Set `model_floor` in `/config` to raise the minimum, or
-  turn `route_models` off. Your own session's model is never changed; the
-  choices land in `.harness-run/models.log` and the run report.
-- **Budget guard** — budgets in dollars, from Claude Code's own cost
-  figure (subagents included; on a subscription it is the list-price
-  equivalent, still right for comparing and capping). Over
-  `feature_budget_usd` (default $5) or `run_budget_usd` (default $50) during
-  an unattended run it writes `.harness-run/STOP`, so the run ends after the
-  current feature, and logs why in `.harness-run/budget.log`; 0 turns a
-  budget off. Each feature's cost lands in `.harness-run/cost.log` and the
-  run report. Features built in parallel share one figure. The cost
-  split, budgets and pending usage reset when a new run starts
-  (`.harness-run/start` changes), so each run reports alone.
-- **Session budget notice** — at 80% of `session_budget_tokens` (default
-  150000, 0 turns it off) of a builder's context, the status line shows
-  `session budget: Nk of Mk tokens, wrap up`.
-- **Orchestration cost** — the run's total is split into time a builder or
-  evaluator was running and time the orchestrator ran alone (dispatching,
-  verifying, merging lanes, gates), counted once even with parallel lanes,
-  in `.harness-run/run-cost`. The run report's Summary shows that split and
-  the feature dollars per model, so a heavy `opus` share is easy to spot.
-- **Token usage** — where the CLI exposes token usage, the run report shows
-  tokens per feature (input, cached, output), the run's tokens split into
-  feature agents and orchestration, and tokens by model. Claude Code, Codex
-  and Copilot each log their own usage to `.harness-run/usage.log`; a CLI
-  with no usage shows no token lines.
-
-Upgrading from 3.2.0: the edition was briefly named `agent-harness-kit-mods`;
-run `/plugin uninstall agent-harness-kit-mods`, then install
-`agent-harness-kit-claude`.
-
-**Unattended runs on auto mode.** Start Claude Code with
-`claude --permission-mode auto` and invoke `harness-continuous`. Auto mode
-checks each action against what you actually allowed (writing to a
-database, issuing keys, using the computer) instead of asking you, so the
-run keeps going without unchecked access. Never use the bypass mode or a
-skip-all-permissions flag.
-
-**Evals for the core skills.** `claude/evals/` holds an eval suite for
-`harness-brief` and `harness-session`: each case seeds a small repo, runs
-the prompt with and without the plugin, and grades the files it leaves
-behind. Run it from the repo root (it costs model usage, about $2 for the
-suite at 3 runs per case):
-
-```
-claude plugin eval . --eval-dir claude/evals --scaffold --allow-tools Write Bash Edit
-```
-
-Run it after changing a skill or its description, and after a model
-change. A `skill-fired` indicator that fails means the description did not
-trigger the skill.
-
-## Upgrading existing repos
-
-After updating the plugin, bring each repo that already has a harness up to
-date with `harness-upgrade-structure` (new repos use
-`harness-initial-setup`); the full checklist is in "Upgrading after every
-release" below. It recopies the protocol, adds the missing harness-run line
-to `AGENTS.md`, regenerates your agent files, adds `.harness-run/` to
-`.gitignore`, prints the release notes you still need, and lists what still
-needs you (an unbounded gate,
-`depends_on`/`paths`). It refuses a dirty tree, creates `harness-upgrade`
-when you are on the default branch, and commits nothing.
-
-With the plugin: `/agent-harness-kit:harness-upgrade-structure`. Or by
-hand, no agent needed, from your repo (adjust the plugin folder to your
-CLI and version):
-
-```
-bash ~/.claude/plugins/cache/agent-harness-kit/agent-harness-kit/<version>/skills/harness-upgrade-structure/scripts/upgrade.sh .
-```
-
-(Codex keeps its copy under `~/.codex/plugins/cache/agent-harness-kit/`; or
-run the script from a clone of this repository.) Review `git diff`, then
-commit it as its own commit.
-
-**Domain-driven design (opt-in):** setup asks once, "Use domain-driven
-design (glossary + ADRs)?", default no. Yes adds `GLOSSARY.md` (term,
-definition, words to avoid), `docs/adr/0000-template.md` and one AGENTS.md
-map line; no adds nothing. An existing repo opts in with `upgrade.sh --ddd .`;
-without `--ddd` the upgrade never adds them. Once `GLOSSARY.md` exists, the brief adds
-settled terms and offers an ADR for a rejected option that must hold, the
-builder names tests and code with its terms, and the evaluator notes a
-term that contradicts it.
-
-**Upgrading to 3.0.0:** `harness-setup` was renamed
-`harness-initial-setup`; the old slash command no longer exists.
-
-## Upgrading after every release
-
-Do this in every harnessed repo each time the kit releases (watch the repo or
-read [CHANGELOG.md](CHANGELOG.md)). It takes a few minutes and is the same
-every time:
-
-1. **Update the plugins**: `claude plugin update agent-harness-kit` (and
-   `agent-harness-kit-claude` if you use it), `codex plugin marketplace
-   upgrade agent-harness-kit`, or `copilot plugin update agent-harness-kit`.
-2. In the repo, start from a clean default branch; the upgrade makes its own
-   branch, `harness-upgrade`.
-3. Run **harness-upgrade-structure** (or `upgrade.sh` by hand, above). It
-   recopies the protocol, regenerates your agent files, records the kit
-   version in `docs/agents/harness-kit-version`, and lists what is left.
-   It also re-checks plans not yet built against the current protocol:
-   open features missing `depends_on` or `paths`, and a chain where each
-   open feature depends only on the one before it
-   (`depends_on may be order only`), so a plan written under an older copy
-   is fixed before a run, not after.
-4. Read every `UPGRADE-NOTE: <version>: …` line it prints: the Upgrade steps
-   from the CHANGELOG for each release since your last upgrade, oldest first.
-   Do them.
-5. Run **harness-audit** and fix any FAIL.
-6. Run the gate: `bash scripts/e2e.sh` must be green.
-7. Review `git diff`, then commit the upgrade as its own commit.
-8. Open a pull request and merge it before the next feature.
-
-## Unattended runs
-
-`harness-continuous` is its own command: invoke it and walk away. It
-builds feature after feature — one fresh subagent each, like harness-run —
-but a feature it cannot finish (a blocked session, a red gate, or two
-evaluator `NEEDS_WORK` verdicts) is **skipped** instead of ending the run,
-and it never asks you anything. It ends with a report.
-
-Invoke it by name, with the options in the same message:
-
-- Claude Code: `/agent-harness-kit:harness-continuous`
-- any other agent with the plugin: ask for it by name, e.g. _"Run
-  harness-continuous."_
-- options: `cap 20` (default cap is 10 features) and/or `through M22`
-  (cross milestone boundaries up to M22; without it the run stops at the
-  first boundary).
-
-Permissions are yours: it needs nothing beyond what a normal
-harness-session already needs (run the gate, edit files, `git commit`), the
-plugin never configures your agent's permissions, and it never needs a
-skip-all-permissions flag. Anything your agent still refuses becomes a skip
-with the reason in the report.
-
-What it does, so nothing surprises you:
-
-- **Skip, don't stop.** Leftover changes are stashed (`git stash push -u`,
-  labelled `harness-run skip <id>`), never discarded; the feature's `notes`
-  get the reason and one question for you; only FEATURES.json is committed.
-  Skipping also excludes features that `depends_on` the skipped one — and,
-  for features with no declared `depends_on`, every feature after it.
-- **Waiting on a human.** A feature that needs you (an approval,
-  credentials, production access) is `deferred` with `notes` starting
-  `Needs a human: <question>`: planning asks for it, and a session that
-  hits such a blocker defers its own feature that way. Status and the report
-  list these questions; features whose `depends_on` reaches one are held,
-  so no run spends time rediscovering the blocker. Answer, then set the
-  feature back to `failing`.
-- **Reused baseline.** A builder whose tree is identical (PROGRESS.md and
-  plans aside) to the last green gate run in this clone skips its baseline
-  gate: `GATE: green (baseline reused …)`. `HARNESS_GATE_REUSE=0` turns it off.
-- **Stops** when nothing eligible is left, at the cap, when you create
-  `.harness-run/STOP`, on a baseline problem (dirty tree, `UPGRADE: offer`,
-  a red gate), or when a dispatch produced neither a commit nor a skip.
-- **Run state** lives in `.harness-run/` (start commit, skip list, stop
-  file). `run-start.sh` begins each run: it adds `.harness-run/` to
-  `.gitignore` in its own commit if needed, and moves the previous run's
-  logs and results into `.harness-run/previous/<old start>/` (kept, never
-  deleted), so a report only ever sees its own run.
-- **One wait per builder.** Each builder's last act writes
-  `.harness-run/results/<id>.txt` (its `SESSION:` line and a short
-  summary); the orchestrator blocks once per builder (the CLI's own wait,
-  or `wait-result.sh <id>`), never polls or steers a running builder, and
-  reads only script output, never whole skills, plans, PROGRESS.md or
-  FEATURES.json.
-- **Briefed builders.** The orchestrator pastes `feature.sh <id>` (the
-  feature entry and its plan section) into each builder's prompt instead of
-  the plan's path, and the builder starts from `context.sh --brief`, which
-  adds the protocol card (§2.9) and the repo's AGENTS.md Rules and Needs a
-  human sections. A briefed builder never reads SKILL.md, AGENTS.md, the
-  protocol files, FEATURES.json or the plan.
-- **Session budget.** A builder that stops on its session budget is
-  retried once in a fresh session at the same size; a second budget stop
-  is a skip.
-- **Shared resources.** Features that set the same `exclusive` value (e.g.
-  `simulator`, `device`, `database`) never run as parallel lanes at the same time;
-  others still can.
-- **Never pushes.** With `through M<n>` it creates one stacked branch per
-  milestone and leaves them local.
-- **The report**, `docs/runs/<date>.md`, is built by `run-report.sh` from
-  git and FEATURES.json (no model calls) and committed: done (with minutes
-  per feature, and dollars and the model with the Claude Code edition, plus
-  the run's cost split into feature agents and orchestration, and by model;
-  tokens per feature and by model where the CLI exposes them; each
-  feature's `Decisions:` comes from its own commit or the PROGRESS entry
-  that commit added, never from a planning entry), skipped (with each
-  question), waiting on a human, not started and why, branches used.
-- **Archive.** After the report, `archive-features.sh` moves every
-  milestone whose features are all `passing` or `superseded` from
-  FEATURES.json to `docs/features-archive.json` (same schema, appended).
-  Status, the session brief, the report and the audit still resolve
-  archived ids, so FEATURES.json stays small.
-- **Watching it from a terminal.** In a second tab, run
-  `bash <kit>/skills/harness-status/scripts/status.sh --watch` in the repo:
-  the status report redrawn every 5 seconds (`--watch 30` for every 30),
-  no model calls, any agent. For one line in your own status line script,
-  add the output of `status.sh --line`, e.g.
-  `harness M3-005 · 12/20 passing · 2 waiting on you · $4.10 this run`; it
-  prints nothing outside a harnessed repo, so your line stays as it was
-  there.
-- **Builders start from the feature's `paths`**, when FEATURES.json has
-  them, instead of searching the repo for their files.
-
-## Upgrading a repo and running continuously
-
-Do the steps in order. The upgrade is once per repo.
-
-**Upgrade**
-
-1. Update the plugin (`claude plugin update agent-harness-kit`,
-   `codex plugin marketplace upgrade agent-harness-kit`, or
-   `copilot plugin update agent-harness-kit`). In your repo, create a
-   branch (`git checkout -b harness-upgrade`) and confirm a green gate:
-   `bash scripts/e2e.sh`.
-2. Run `/agent-harness-kit:harness-upgrade-structure` (a harness session
-   points you to it with an `UPGRADE: offer`; see
-   [Upgrading existing repos](#upgrading-existing-repos)). This release
-   adds the continuous-run rules to protocol section 2.8, so every existing
-   repo's protocol copy is outdated; the upgrade is its own small commit.
-3. Run `/agent-harness-kit:harness-audit` and approve its `depends_on` and
-   `paths` proposals. This step is essential: without declared `depends_on`,
-   a skipped feature stops the run instead of letting it continue.
-4. The upgrade already generated the builder and evaluator agent files
-   (`scripts/gen-agents.sh <repo>` regenerates them); restart Copilot CLI
-   afterwards if you use it, so it loads them.
-
-**Run**
-
-5. Make sure the tree is clean on the branch you want built, then invoke
-   `/agent-harness-kit:harness-continuous` (or ask your agent to run
-   harness-continuous), adding `cap 20` and/or `through M22` if you want
-   them. See [Unattended runs](#unattended-runs) for what it does.
-6. To stop early: `mkdir -p .harness-run && touch .harness-run/STOP`. It
-   finishes the current feature, writes the report and stops.
-
-**Afterwards**
-
-7. Read `docs/runs/<date>.md`: what was done, skipped and not started.
-8. For each skipped feature, answer the question recorded in its `notes`
-   in FEATURES.json (fix the cause, or reword the feature). A later run
-   starts with an empty skip list and retries them.
-9. `git stash list` shows any stashed work, labelled
-   `harness-run skip <id>`; `git stash show -p stash@{n}` to inspect,
-   `git stash pop` to resume it.
-10. Review the branch — or branches, if the run crossed milestones.
-    Nothing is pushed; merging is yours.
-
-## Switching agents (e.g. Claude Code ↔ Codex)
-
-The harness keeps all state in the repo, so agents from different vendors
-can work the same project in shifts — plan and review with one, grind
-features with another when you hit a usage limit. The ritual:
-
-1. End the session with `/agent-harness-kit:harness-handoff` (or _"prepare
-   the handoff"_). Blocked = fix first; ready = copy the printed prompt.
-2. Feed the prompt to the next agent: paste it into the chat, or from a
-   terminal `codex "<prompt>"` (interactive) / `codex exec "<prompt>"`
-   (non-interactive). Codex, Cursor, and Gemini CLI read `AGENTS.md`
-   natively, so the prompt plus the repo is the entire handoff.
-3. When you come back, `/agent-harness-kit:harness-status` shows what the
-   other agent did; review its diff before continuing.
-
-One branch, one agent at a time — never point two agents at the same
-branch concurrently.
+`~/.claude/skills/`. Codex, Pi, Copilot CLI, the template repository and
+any other agent: [Other agents](docs/guide/other-agents.md). The optional
+Claude Code edition (`/plugin install agent-harness-kit-claude`, safe
+unattended runs on auto mode, budgets):
+[Claude Code edition](docs/guide/claude-code-edition.md).
+
+## The skills
+
+One short section each; the full behaviour of every skill is in
+[Claude Code plugin in depth](docs/guide/claude-code.md).
+
+### harness-brief
+
+Turns a rough prompt into `docs/briefs/<date>-<slug>.md`. It looks up what
+the repo already answers, asks the rest as questions in numbered rounds
+(each with a recommended answer) until nothing is open, then an
+independent reviewer returns `READY` or `GAPS`. Lifecycle: brief → plan →
+run ([Workflow](docs/guide/workflow.md)).
+
+### harness-initial-setup
+
+Interviews you about the product, then scaffolds the whole harness:
+AGENTS.md, PRODUCT.md, FEATURES.json, PROGRESS.md, ARCHITECTURE.md,
+`docs/plans/`, the protocol in `docs/agents/` and `scripts/e2e.sh`. Works
+from scratch, on an existing codebase, or from a PRD
+([Planning](docs/guide/planning.md)).
+
+### harness-session
+
+One bounded coding session for one feature: a short brief from
+`context.sh`, a green baseline, the failing check first, the code, the
+final gate, a commit and a PROGRESS.md entry with a `Decisions:` line.
+Builds and tests run through `quiet.sh`; the gate through `run-gate.sh`.
+
+### harness-run
+
+Many features in one conversation: each runs as a harness-session in a
+fresh subagent, independent features run as parallel lanes, and an
+opt-in independent evaluator judges UI work. It stops at the first
+problem. A live run board shows every open feature.
+
+### harness-continuous
+
+An unattended run: a feature it cannot finish is skipped (work stashed,
+question recorded) instead of ending the run, and a report lands in
+`docs/runs/`. `touch .harness-run/STOP` ends it after the current feature
+([Unattended runs](docs/guide/unattended-runs.md)).
+
+### harness-status
+
+Progress per milestone, the last session and the exact next feature. In a
+terminal, `status.sh --line` prints one line and `status.sh --watch`
+keeps it current.
+
+### harness-audit
+
+Checks any repo's harness-readiness with a deterministic script and
+offers fixes without applying them. It warns about features only a human
+can verify and features that can never run as a parallel lane.
+
+### harness-upgrade-structure
+
+Brings a repo that already has a harness up to the structure the
+installed plugin ships, in one deterministic step
+([Upgrading](docs/guide/upgrading.md)).
+
+### harness-handoff
+
+Verifies the session-end ritual (clean tree, gate status, logged session)
+and prints a paste-ready prompt naming the one feature the next agent,
+of any vendor, should build.
+
+### harness-issues
+
+GitHub issues as the place to write features:
+`/agent-harness-kit:harness-issues migrate` moves open features to issues,
+`… sync` brings them back into FEATURES.json; a `bug` issue becomes a
+failing `kind: bug` feature ([Planning](docs/guide/planning.md)).
+
+### harness-retro
+
+After a run, one page of facts from `retro-facts.sh` and at most 5 ranked
+fixes (a gate check or a dated AGENTS.md rule), offered, never applied.
 
 ## Using the skills — copy-paste prompts
 
@@ -647,251 +155,19 @@ branch concurrently.
 | End a session / switch agents | _"Prepare the handoff for the next agent."_                                                                 |
 | Periodic cleanup              | _"Read AGENTS.md, then docs/agents/harness-protocol-maintenance.md, and perform one maintenance pass."_       |
 
-## Quickstart — template repository
 
-Prefer starting a project from a ready-made scaffold? Instantiate
-[agent-harness-template](https://github.com/SedyBenoitPeace/agent-harness-template)
-(_Use this template_ on GitHub), open it with any agent, and say _"Read
-AGENTS.md and follow its initialization instructions."_ The template mirrors
-`skills/harness-initial-setup/templates/` — this repo stays the canonical source.
+## The guide
 
-## Quickstart — any other agent
+The deep detail lives in `docs/guide/`:
 
-You need the four protocol files in
-[`skills/harness-initial-setup/templates/`](skills/harness-initial-setup/templates/):
-`harness-protocol.md` (the session core every session reads) and the parts
-read only when needed, `harness-protocol-planning.md`,
-`harness-protocol-runs.md` and `harness-protocol-maintenance.md`.
-
-Copy them into your repo's `docs/agents/` (bring the rest of `templates/`
-too if you want the ready-made scaffolds), then tell your agent:
-
-```
-Read docs/agents/harness-protocol-planning.md and run the planning
-protocol for this repository. Interview me before writing anything.
-```
-
-The protocol is plain markdown with zero vendor-specific instructions — it
-works as a Codex/Cursor rules file or pasted straight into a chat model.
-
-A harnessed repo declares itself, so agents without the plugin (an ADE
-built on Claude Code, Gemini CLI, Cursor) follow it unprompted: `AGENTS.md`
-says the harness applies plugin or not, and `CLAUDE.md` / `GEMINI.md` import
-it with `@AGENTS.md` (a link in words is not loaded). The plugin only makes
-the same steps faster. To skip the harness for one change, say "just build
-it": no brief or plan, but FEATURES.json is still updated.
-
-Script and template names in the protocol (`quiet.sh`, `context.sh`,
-`FEATURES.json.tmpl`) are kit files, not files in your repo, and each doc
-says where they live; without the plugin each rule says what to do instead.
-The gate's `scripts/check-doc-refs.sh` fails if an onboarded doc names a
-file that is neither installed in the repo nor shipped by the kit.
-
-## Start a repo from scratch — just chat
-
-You don't need a requirements file to get a clean harness. Describe the
-project in the chat and tell the agent to use the plugin; the planning
-interview is answered from what you wrote and only the gaps are asked.
-
-1. **Install the plugin** for your agent (see the quickstarts above) and open
-   an empty directory in it.
-2. **Say what you're building, and name the harness.** Cover the six
-   questions from the planning protocol (§1.1) in your own words: the
-   product and who it's for, the one end-to-end walkthrough that proves v1,
-   the stack and what already exists, what is out of scope, how to run and
-   test it locally, and what "done" means for the first milestone. Also say
-   which parts need you (signing, permissions, real devices) and that
-   nothing may claim to run in the background unless it is scheduled.
-3. **Review what comes back.** The agent writes the plan, then scaffolds.
-
-Example:
-
-```
-Use the agent-harness-kit plugin to create an execution-ready plan for a
-habit-tracker web app, starting with a daily check-in page that stores
-streaks, then reminders and a weekly summary. Node and Playwright are
-installed on my machine. Inspect the available project context and use the
-harness planning workflow; determine what can run unattended locally versus
-what needs me (accounts, API keys, deploys, real-device checks). Do not claim
-background execution without a scheduled task. Ask only for truly blocking
-details.
-```
-
-What you get, in one commit-ready scaffold:
-
-| Output | Where it comes from |
-| --- | --- |
-| `docs/PRODUCT.md`, the first plan in `docs/plans/active/`, `ARCHITECTURE.md`, and any extra docs the project needs | written for your project from the interview |
-| `AGENTS.md`, `CLAUDE.md` / `GEMINI.md` (`@AGENTS.md` imports), `FEATURES.json`, `PROGRESS.md`, `scripts/e2e.sh`, `scripts/dev.sh` | shipped templates, placeholders filled in |
-| `docs/agents/harness-protocol*.md` | copied unchanged from the plugin |
-| `.claude/agents/`, `.codex/agents/`, `.github/agents/` | generated by `scripts/gen-agents.sh` (builder, evaluator, brief reviewer) |
-
-Then run _"Audit this repo's harness."_ It reports what is missing and offers
-fixes without applying them. Typical first findings: the first feature is
-`failing` although it waits on your approval (should be `deferred` with
-`Needs a human: ...`), nothing is committed yet, and `evaluate`/`bar` or
-`paths` are not set. Approve the fixes, commit the scaffold, and start with
-_"Implement M1-001 following the harness."_
-
-Why this stays clean: the protocol forbids a feature without a falsifiable
-`verify`, forbids marking device or UI acceptance passing on unit tests, and
-the audit checks the protocol docs byte-for-byte against the shipped copy.
-
-## Already have requirements?
-
-You don't have to start the planning interview from zero. Put your
-existing requirements in the repo — markdown preferred (`docs/PRD.md` is a
-good spot), but PDF or HTML work too, agents read those — and say:
-
-```
-Set up the harness using docs/PRD.md as the product requirements.
-```
-
-The interview extracts what it can from the document and only asks you
-about the gaps. If the document is a plan or outline you have already
-approved, say so: the brief and replanning are skipped, and it goes
-straight into FEATURES.json entries plus a plan section.
-
-## Acceptance checks
-
-Acceptance checks are written while the brief is refined, before any code.
-Each feature in FEATURES.json can carry a `checks` list; each check has an
-id (`M3-002.1`), a title, `critical` yes or no, numbered steps, a Pass if a
-stranger can judge, and evidence (`test`, `screenshot` or `human`). The same
-check can be written as markdown, in a brief's `## Checks` or a GitHub
-issue body:
-
-```markdown
-### M3-002.1 — Cancel before the cutoff
-- **Critical:** yes
-- **Steps:**
-  1. Open a booking 48 h ahead and tap Cancel
-- **Pass if:** the booking disappears and the place is free again
-- **Evidence:** test
-```
-
-- `read-checks.sh` reads checks from FEATURES.json, an issue or markdown
-  and prints the same lines for each; every other piece reads through it.
-- The builder writes one test per check, titled with its id, `@critical`
-  when critical. `check-coverage.sh`, in the gate, fails a missing,
-  duplicate, unknown or mistagged test. It reads test titles, not test
-  bodies, so a stub still counts; the evaluator's per-check grading catches it.
-- The evaluator grades each check covered, partial, missing or unrequested;
-  `acceptance-verdict.sh` turns that table into PASS or NEEDS_WORK.
-
-## Features in GitHub issues
-
-A repo can keep its features in GitHub issues instead of only in
-FEATURES.json, so you can write and read them from your phone. Set
-`"source": "issues"` at the top of FEATURES.json, or let migrate do it:
-
-```text
-/agent-harness-kit:harness-issues migrate
-/agent-harness-kit:harness-issues sync
-```
-
-`migrate` previews with `--dry-run` and asks you before creating anything.
-Without the plugin, run `bash <kit>/skills/harness-issues/scripts/issues.sh
-migrate --dry-run`, then `migrate`, and `sync` the same way.
-
-`issues.sh migrate` creates one issue per failing or deferred feature
-(`[M12-003] title`, checks in the body, GitHub milestone `M12 <name>`);
-passing features, the archive and PROGRESS.md stay in git. After that,
-`issues.sh sync` pulls each issue's title and checks into FEATURES.json and
-writes back a details block (status, Done when, paths, model and effort,
-plan section), a `harness:<status>` label, and closes issues that pass.
-Agents always read the committed FEATURES.json, so an agent without GitHub
-access still works; sync is a script and spends no model tokens. Only
-issues opened by people with write access count. An open issue labelled
-`bug` without an `[id]` gets the next id in the lowest milestone with
-failing work, is retitled `[M12-004] title`, and lands as a failing
-`"kind": "bug"` feature.
-
-## The agent merges its own PR
-
-GitHub's auto-merge needs a paid plan on private repos, so the agent merges
-its own PR, and a script decides whether it may. When you refine a brief,
-it asks `## Automerge`: yes or no. A yes becomes `"automerge": true` on the
-feature. After the agent's PR is green it runs `can-merge.sh <pr> --merge`,
-which merges only when all of these hold, and otherwise leaves the PR for
-you with the reasons:
-
-- the PR is labelled `harness:agent` (a PR you open by hand never merges itself);
-- every feature it names is granted on the default branch (a PR cannot grant itself);
-- the local gate (`scripts/e2e.sh`) passes on the PR head in a clean tree,
-  or the CI checks you name in FEATURES.json `"automerge": {"required_checks": [...]}`
-  passed (any other failed check still holds; running ones wait);
-- no protected path is touched: `.github/`, auth, migrations, secrets,
-  dependency files, deploy config, the gate and the kit's QA scripts
-  (`can-merge.sh --list`; replace the list with FEATURES.json
-  `"automerge": {"protected": [...]}`, switch it off with `"enabled": false`);
-- no test is deleted, renamed, shrunk or skipped.
-
-It is a guardrail against an agent's mistakes, not a wall: agents run with
-your GitHub token, so the rules stop accidents, not a determined agent.
-
-## Repository layout
-
-```
-.claude-plugin/         plugin + marketplace manifests
-skills/
-├── harness-initial-setup/
-│   ├── SKILL.md        planning/scaffolding orchestration (thin)
-│   ├── scripts/add-ddd.sh        opt-in glossary + ADR folder (domain-driven design)
-│   └── templates/
-│       ├── harness-protocol.md   ★ the agent-neutral manual: session core + index
-│       ├── harness-protocol-{planning,runs,maintenance}.md  read only when needed
-│       ├── AGENTS.md.tmpl        entry point scaffold (≤100-line map)
-│       ├── FEATURES.json.tmpl    scope/status source of truth
-│       ├── PROGRESS.md.tmpl      session log
-│       ├── ARCHITECTURE.md.tmpl  system diagram + invariants (living doc)
-│       ├── dev.sh.tmpl           dev-environment boot
-│       ├── e2e.sh.tmpl           the gate
-│       ├── GLOSSARY.md.tmpl, adr-template.md  only with domain-driven design
-│       └── pointer.md.tmpl       one-line CLAUDE.md/GEMINI.md pointer
-├── harness-audit/
-│   ├── SKILL.md        audit orchestration: report + offer fixes
-│   └── scripts/check.sh          deterministic readiness checker
-├── harness-issues/
-│   └── scripts/issues.sh
-├── harness-status/
-│   ├── SKILL.md        status orchestration: read-only report
-│   └── scripts/
-│       ├── status.sh              deterministic progress/next-feature report
-│       └── archive-features.sh    moves fully done milestones to the archive
-├── harness-handoff/
-│   ├── SKILL.md        handoff orchestration: ritual check + prompt relay
-│   └── scripts/handoff.sh        session-end checks + next-agent prompt
-├── harness-session/
-│   ├── SKILL.md        session orchestration: bounded recovery + gate
-│   └── scripts/
-│       ├── context.sh             short session brief + PARALLEL lanes (--brief: protocol card)
-│       ├── run-gate.sh            concise gate wrapper, full log retained
-│       └── quiet.sh               any build/test command: log on disk, capped summary
-├── harness-run/
-│   ├── SKILL.md        multi-feature orchestrator: one subagent per feature
-│   └── scripts/
-│       ├── feature.sh             one feature's entry + plan section, pasted into the brief
-│       ├── run-report.sh          end-of-run report from git + FEATURES.json
-│       ├── run-start.sh           fresh run state, previous run archived
-│       └── wait-result.sh         one blocking wait for a builder's result
-├── harness-continuous/
-│   └── SKILL.md        unattended run: skip what it cannot finish, then report
-└── harness-upgrade-structure/
-    ├── SKILL.md        runs upgrade.sh, explains, commits as its own commit
-    └── scripts/upgrade.sh         idempotent upgrade of an existing harness
-agents/
-└── src/                neutral harness-builder / harness-evaluator roles
-scripts/gen-agents.sh   emits the roles as Claude / Copilot / Codex agent files
-```
-
-## Dogfood
-
-This repo is built with its own harness: scope in [`FEATURES.json`](FEATURES.json),
-sessions in [`PROGRESS.md`](PROGRESS.md), plans in [`docs/plans/`](docs/plans/),
-and a lint gate in [`scripts/e2e.sh`](scripts/e2e.sh) that validates the
-templates themselves (JSON-after-substitution, shellcheck, agent-neutrality,
-line budgets).
+- [Claude Code plugin in depth](docs/guide/claude-code.md) — every skill, the run board, the evaluator.
+- [Workflow, models and decisions](docs/guide/workflow.md) — lifecycle, decision notes, model sizes, second opinion.
+- [Planning and acceptance checks](docs/guide/planning.md) — start from scratch, PRDs, checks, GitHub issues, merging PRs.
+- [Unattended runs](docs/guide/unattended-runs.md) — harness-continuous, stopping, run reports.
+- [Upgrading](docs/guide/upgrading.md) — existing repos, every release, upgrade then run continuously.
+- [Other agents](docs/guide/other-agents.md) — Codex, Pi, Copilot CLI, template repository, any agent, switching agents.
+- [Claude Code edition](docs/guide/claude-code-edition.md) — auto mode, budgets, mods.
+- [Repository layout](docs/guide/repository-layout.md) — what is where in this repo, dogfood.
 
 ## Recommended local skills
 

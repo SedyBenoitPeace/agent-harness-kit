@@ -3,10 +3,11 @@
 # README coverage per release (M50-001). Every CHANGELOG release from
 # 3.17.0 on carries one line `README: `phrase`, `phrase`` naming phrases the
 # README uses to document it, or `README: none (<reason>)` for a release with
-# nothing user-facing. Each phrase must appear verbatim in README.md.
-# Usage: check-readme.sh [CHANGELOG.md] [README.md]   exit 0 = covered
+# nothing user-facing. Each phrase must appear verbatim in README.md or in a
+# docs/guide/ page (M60-004: deep detail moved out of the README).
+# Usage: check-readme.sh [CHANGELOG.md] [README.md] [docs/guide]   exit 0 = covered
 set -euo pipefail
-changelog="${1:-CHANGELOG.md}"; readme="${2:-README.md}"
+changelog="${1:-CHANGELOG.md}"; readme="${2:-README.md}"; guide="${3:-docs/guide}"
 MIN="3.17.0"
 [ -f "$changelog" ] || { echo "check-readme: no $changelog" >&2; exit 2; }
 [ -f "$readme" ] || { echo "check-readme: no $readme" >&2; exit 2; }
@@ -24,7 +25,8 @@ while IFS="$(printf '\t')" read -r ver line; do
   terms="$(printf '%s\n' "$line" | grep -oE '`[^`]+`' | sed 's/^`//; s/`$//' || true)"
   if [ -z "$terms" ]; then echo "README-CHECK: $ver 'README:' line names no \`phrase\`"; bad=1; continue; fi
   while IFS= read -r t; do
-    grep -qF -- "$t" "$readme" || { echo "README-CHECK: $ver: README.md never says '$t'"; bad=1; }
+    { grep -qF -- "$t" "$readme" || { [ -d "$guide" ] && grep -rqF -- "$t" "$guide"; }; } \
+      || { echo "README-CHECK: $ver: README.md (or $guide/) never says '$t'"; bad=1; }
   done <<< "$terms"
 done < <(awk '
   /^## [0-9]+\.[0-9]+\.[0-9]+/ { if (v != "") print v "\t" r; v = $2; r = ""; next }
