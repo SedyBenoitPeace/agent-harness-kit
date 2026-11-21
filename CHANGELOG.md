@@ -12,6 +12,17 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## Unreleased
+
+- Board fix (M54-002): a passing row's time column shows how long the
+  feature took (dispatch to result) and stops; it no longer ticks on as if
+  the feature were still running.
+
+README: none (board display fix)
+
+Upgrade:
+- none
+
 ## 3.25.0 — 2026-11-21
 
 The agent merges its own PR when the rules allow (M56; decisions 12–15):
