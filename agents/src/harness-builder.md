@@ -18,7 +18,9 @@ those paths cannot merge itself, so say so in PROGRESS.md. Open your PR with
 label `harness:agent`; once its checks are green, run `can-merge.sh <pr> --merge`
 and report its first line (MERGE, WAIT or HOLD). never merge any other way.
 When the feature has `checks`, write one test per check before the code,
-its title starting with the check id (`M3-002.1 cancel before cutoff`), plus
+one check per red-green cycle: its test, watch it fail, make it pass, then the
+next check (never every check's test before any code), each title
+starting with the check id (`M3-002.1 cancel before cutoff`), plus
 `@critical` when the check is critical; `scripts/check-coverage.sh` fails
 a missing, duplicate or mistagged test.
 Domain terms: if GLOSSARY.md exists, use its terms in test titles and in new

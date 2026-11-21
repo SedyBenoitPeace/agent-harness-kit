@@ -163,4 +163,11 @@ for rows in $'| M1-001.1 | covered | ok |\n| M1-001.2 | covered | ok |' $'| M1-0
   [ "$a" = "$b" ] || fail "$chk: NOTE lines changed the verdict: '$a' vs '$b'"
 done
 
+chk="M58-002.1 one check per red-green cycle @critical"
+pr="skills/harness-initial-setup/templates/harness-protocol.md"
+for f in agents/src/harness-builder.md "$t/.claude/agents/harness-builder.md" "$pr"; do
+  grep -qiF 'one check per red-green cycle' "$f" || fail "$chk: $f must say one check per red-green cycle"
+done
+[ "$(wc -l < "$pr")" -le 150 ] || fail "$chk: protocol core over 150 lines"
+
 echo "AGENTS TESTS GREEN"
