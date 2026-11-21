@@ -24,6 +24,7 @@ DEFAULT_PROTECTED='(^|/)migrations?/
 (^|/)db/(migrate/|schema\.(rb|sql|prisma))
 (^|/)alembic/
 (^|/)auth[^/]*(/|$)
+(oauth|login|jwt|passport)
 (^|/)\.env
 secret
 \.(pem|key|p12|keystore|jks)$
@@ -31,17 +32,24 @@ secret
 (^|/)(Dockerfile[^/]*|docker-compose[^/]*|fly\.toml|vercel\.json|netlify\.toml|railway\.(json|toml)|wrangler\.toml|Procfile|app\.yaml|render\.yaml|\.gitlab-ci\.yml)$
 \.tf$
 (^|/)(deploy|infra|terraform|k8s|helm)/
-(^|/)(playwright|jest|vitest|cypress|karma)\.config\.|(^|/)(pytest\.ini|conftest\.py|\.mocharc[^/]*)$'
-# never overridable: CI, the gate, the kit's QA scripts, agent instructions
+(^|/)(playwright|jest|vitest|cypress|karma)\.conf(ig)?\.|(^|/)(pytest\.ini|conftest\.py|tox\.ini|setup\.cfg|phpunit\.xml(\.dist)?|Makefile|\.mocharc[^/]*)$'
+# never overridable: CI of any system, the gate, the kit's scripts, agent
+# instructions and agent configuration (they steer the next agent)
 ALWAYS_PROTECTED='^\.github/
-^\.claude/
+^\.(circleci|buildkite)/
+(^|/)Jenkinsfile$
+(^|/)(azure-pipelines|bitbucket-pipelines|\.travis|\.gitlab-ci)\.ya?ml$
+^\.(claude|cursor|codex|gemini)/
+^\.(mcp\.json|cursorrules)$
 (^|/)CODEOWNERS$
-^(AGENTS|CLAUDE|GEMINI)\.md$
+(^|/)(AGENTS|CLAUDE|GEMINI)\.md$
 ^docs/agents/
 ^scripts/e2e\.sh$
-(^|/)(can-merge|check-coverage|read-checks|acceptance-verdict)\.sh$'
-TEST_FILE='(^|/)(tests?|e2e|spec|__tests__)/|\.(spec|test)\.[A-Za-z]+$|_test\.[A-Za-z]+$|(^|/)test_[^/]*\.py$|Tests?\.swift$|_spec\.rb$'
-WEAKEN='\.(skip|only|fixme|todo)\b|\[.(skip|only|fixme|todo).\]|(^|[^A-Za-z])(xit|xdescribe|xtest|xcontext)\b|@pytest\.mark\.(skip|xfail)|t\.Skip(Now|f)?\(|XCTSkip|#\[ignore\]|@(Disabled|Ignore)\b|\bpending\b'
+(^|/)(can-merge|check-coverage|read-checks|acceptance-verdict|run-gate|quiet|context)\.sh$'
+TEST_FILE='(^|/)(tests?|e2e|spec|__tests__)/|(^|/)[^/]*\.Tests?/|\.(spec|test)\.[A-Za-z]+$|_test\.[A-Za-z]+$|(^|/)test_[^/]*\.py$|(^|/)test-[^/]*\.sh$|Tests?\.(swift|cs|java|kt)$|_spec\.rb$'
+# added lines that switch a test off: anywhere (unambiguous) / in test files
+SKIP_ANY='#\[ignore\]|@(Disabled|Ignore)\b|XCTSkip|markTestSkipped|skipTest\(|unittest\.skip|@pytest\.mark\.(skip|xfail)|t\.Skip(Now|f)?\(|@tag :skip'
+SKIP_TEST='\.(skip|only|fixme|todo|fail)(\.|\()|\[.(skip|only|fixme|todo).\]|(^|[^A-Za-z])(xit|xdescribe|xtest|xcontext)\b|^\+[[:space:]]*skip\b|skip: *true'
 
 say() { printf '%s\n' "$@"; }
 die_hold() { say HOLD "- $1"; exit 1; }
@@ -51,7 +59,15 @@ protected_from() {  # protected_from <FEATURES.json>: configured or default list
   local p; p="$(jq -r '.automerge.protected // empty | .[]' "$1")"
   printf '%s\n%s\n' "${p:-$DEFAULT_PROTECTED}" "$ALWAYS_PROTECTED"
 }
-if [ "${1:-}" = "--list" ]; then protected_from FEATURES.json; exit 0; fi
+base_features() {  # base_features <ref> > file: FEATURES.json from the PR's repo on GitHub
+  gh api "repos/{owner}/{repo}/contents/FEATURES.json?ref=$1" 2>/dev/null | jq -er '.content | gsub("\n"; "") | @base64d'
+}
+if [ "${1:-}" = "--list" ]; then
+  # what is enforced: the default branch's policy when GitHub answers, else this checkout's
+  f="$(mktemp)"; d="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name 2>/dev/null || true)"
+  { [ -n "$d" ] && base_features "$d" > "$f"; } || cp FEATURES.json "$f"
+  protected_from "$f"; rm -f "$f"; exit 0
+fi
 
 pr="${1:-}"; merge=0
 case "$pr" in '' | *[!0-9]*) echo "usage: can-merge.sh <pr number> [--merge] | --list" >&2; exit 2 ;; esac
@@ -59,18 +75,21 @@ case "${2:-}" in '') ;; --merge) merge=1 ;; *) echo "usage: can-merge.sh <pr num
 command -v gh >/dev/null || { echo "ERROR: gh is required" >&2; exit 2; }
 
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
-gh pr view "$pr" --json number,state,isDraft,mergeable,title,body,labels,baseRefName,headRefOid,statusCheckRollup \
-  > "$tmp/pr.json" 2>/dev/null || die_hold "could not read PR #$pr"
+if ! gh pr view "$pr" --json number,state,isDraft,mergeable,title,body,labels,baseRefName,headRefOid,statusCheckRollup \
+     > "$tmp/pr.json" 2>/dev/null || ! jq -e 'type == "object"' "$tmp/pr.json" >/dev/null 2>&1; then
+  die_hold "could not read PR #$pr"
+fi
 head="$(jq -r .headRefOid "$tmp/pr.json")"; baseref="$(jq -r .baseRefName "$tmp/pr.json")"
 default="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name 2>/dev/null)" || die_hold "could not read the default branch"
 holds=()
 hold() { holds+=("$1"); }
 
 [ "$baseref" = "$default" ] || die_hold "base is $baseref, not the default branch ($default)"
-# the owner's policy: FEATURES.json as it is on the base branch, not in the PR
+# the owner's policy: FEATURES.json on the base branch of the PR's own repo
 P="$tmp/base.json"
-{ git fetch -q origin "$baseref" 2>/dev/null && git show "origin/$baseref:FEATURES.json" > "$P" 2>/dev/null; } \
-  || die_hold "cannot read FEATURES.json on origin/$baseref (the grants and protected list live there)"
+if ! base_features "$baseref" > "$P" || ! jq -e . "$P" >/dev/null 2>&1; then
+  die_hold "cannot read FEATURES.json on $baseref (the grants and protected list live there)"
+fi
 protected="$(protected_from "$P")"
 while IFS= read -r re; do
   [ -z "$re" ] && continue
@@ -105,41 +124,62 @@ while IFS=$'\x1f' read -r status file prev adds dels; do
     done <<< "$protected"
   done
   if [ "$file" = FEATURES.json ]; then
+    # the PR's own change: head against where it branched off (not today's base)
     if { git cat-file -e "$head^{commit}" 2>/dev/null || git fetch -q origin "$head" 2>/dev/null; } \
-       && git show "$head:FEATURES.json" > "$tmp/head.json" 2>/dev/null; then
-      q='[.automerge, (.features[]? | {id, automerge})]'
-      [ "$(jq -c "$q" "$P")" = "$(jq -c "$q" "$tmp/head.json")" ] || hold "PR changes automerge settings in FEATURES.json (only the owner grants)"
+       && git fetch -q origin "$baseref" 2>/dev/null && mb="$(git merge-base "$head" "origin/$baseref" 2>/dev/null)" \
+       && git show "$head:FEATURES.json" > "$tmp/head.json" 2>/dev/null && git show "$mb:FEATURES.json" > "$tmp/mb.json" 2>/dev/null; then
+      q='[.automerge, (.features[]? | select(.automerge != null) | {id, automerge})]'
+      [ "$(jq -c "$q" "$tmp/mb.json")" = "$(jq -c "$q" "$tmp/head.json")" ] || hold "PR changes automerge settings in FEATURES.json (only the owner grants)"
     else
-      hold "cannot read FEATURES.json at the PR head"
+      hold "cannot compare FEATURES.json between the PR head and where it branched"
     fi
   fi
   if matches "$file" "$TEST_FILE"; then
     [ "$status" != removed ] || hold "test deleted: $file"
-    if [ "$status" = modified ] && [ "${dels:-0}" -gt "${adds:-0}" ]; then hold "test shrank: $file (+$adds -$dels)"; fi
+    if [ "$status" != added ] && [ "${dels:-0}" -gt "${adds:-0}" ]; then hold "test shrank: $file (+$adds -$dels)"; fi
   fi
-  if [ -n "$prev" ] && matches "$prev" "$TEST_FILE" && ! matches "$file" "$TEST_FILE"; then
-    hold "test deleted: $prev (renamed to $file)"
+  if [ -n "$prev" ] && matches "$prev" "$TEST_FILE"; then
+    if matches "$file" "$TEST_FILE"; then hold "test renamed: $prev -> $file (a runner may stop collecting it)"
+    else hold "test deleted: $prev (renamed to $file)"; fi
   fi
 done < <(jq -r '.[] | [.status, .filename, (.previous_filename // ""), (.additions // 0 | tostring), (.deletions // 0 | tostring)] | join("\u001f")' "$tmp/f.json")
+if jq -e 'any(.[]; (.filename + (.previous_filename // "")) | test("[\u0000-\u001f\u007f]"))' "$tmp/f.json" >/dev/null; then
+  hold "control character in a file name"
+fi
 n="$(jq length "$tmp/f.json")"
 for ((k = 0; k < n; k++)); do
   file="$(jq -r ".[$k].filename" "$tmp/f.json")"
-  matches "$file" "$TEST_FILE" || continue
   [ "$(jq -r ".[$k].status" "$tmp/f.json")" != removed ] || continue
+  intest=0; matches "$file" "$TEST_FILE" && intest=1
   if ! jq -e ".[$k] | has(\"patch\")" "$tmp/f.json" >/dev/null; then
-    hold "test $file: GitHub sent no patch (too large); the owner reviews it"; continue
+    # no patch: binary or too large; only a changed test file matters
+    if [ "$intest" = 1 ] && [ "$(jq -r ".[$k].status" "$tmp/f.json")" = modified ] \
+       && [ "$(jq -r ".[$k] | (.additions // 0) + (.deletions // 0)" "$tmp/f.json")" -gt 0 ]; then
+      hold "test $file: GitHub sent no patch (too large); the owner reviews it"
+    fi
+    continue
   fi
-  if jq -r ".[$k].patch" "$tmp/f.json" | grep '^+' | grep -qE -- "$WEAKEN"; then hold "test weakened in $file"; fi
+  jq -r ".[$k].patch" "$tmp/f.json" | grep '^+' > "$tmp/added" || true
+  if grep -qE -- "$SKIP_ANY" "$tmp/added" || { [ "$intest" = 1 ] && grep -qE -- "$SKIP_TEST" "$tmp/added"; }; then
+    hold "test weakened in $file"
+  fi
 done
 
 # checks: failed ones hold, running ones wait; no passing check -> the local gate
 checks="$(jq -c '[.statusCheckRollup[]? | {name: (.name // .context // "check"),
   state: (if has("status") then (if .status != "COMPLETED" then "PENDING" else (.conclusion // "PENDING") end) else (.state // "PENDING") end)}]' "$tmp/pr.json")"
+# a passing check counts as the gate only when the owner named it in
+# FEATURES.json automerge.required_checks; otherwise the local gate always runs
+required="$(jq -r '.automerge.required_checks // [] | .[]' "$P")"
 pending=0; passed=0
+while IFS= read -r rq; do
+  [ -n "$rq" ] || continue
+  st="$(jq -r --arg n "$rq" 'first(.[] | select(.name == $n) | .state) // "MISSING"' <<< "$checks")"
+  case "$st" in SUCCESS) passed=1 ;; MISSING) hold "required check $rq was not reported" ;; *) ;; esac
+done <<< "$required"
 while IFS=$'\t' read -r name st; do
   case "$st" in
-    SUCCESS) passed=1 ;;
-    NEUTRAL | SKIPPED) ;;
+    SUCCESS | NEUTRAL | SKIPPED) ;;
     PENDING | EXPECTED | QUEUED | IN_PROGRESS | WAITING | REQUESTED) pending=1 ;;
     *) hold "check $name: $st" ;;
   esac

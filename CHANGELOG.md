@@ -20,7 +20,7 @@ The agent merges its own PR when the rules allow (M56; decisions 12–15):
   with reasons. MERGE needs: the PR labelled `harness:agent` (agent PRs
   only), every feature it names granted `"automerge": true`, checks green
   (or, with no CI, the local gate green on the PR head), no protected path
-  touched, and no test deleted, renamed away or skipped. `--merge` merges
+  touched, and no test deleted, renamed, shrunk or skipped. `--merge` merges
   pinned to the checked head commit. Grants and the protected list are read
   from the base branch, so a PR cannot grant itself; the gate and the kit's
   QA scripts are always protected. `--list` prints the protected patterns.
@@ -29,7 +29,11 @@ The agent merges its own PR when the rules allow (M56; decisions 12–15):
   `can-merge.sh --list` before editing, and run `can-merge.sh <pr> --merge`
   once green.
 - Per repo, FEATURES.json `"automerge": {"enabled": false}` switches it off;
-  `"protected": [...]` replaces the default list.
+  `"protected": [...]` replaces the default list (CI files, agent
+  instructions and the kit's scripts stay protected); `"required_checks"`
+  names the CI checks that count as the gate, otherwise the local gate runs.
+- A guardrail against agent mistakes, not a security wall: agents run with
+  the owner's GitHub token.
 
 README: `can-merge.sh`, `## Automerge`, `harness:agent`
 

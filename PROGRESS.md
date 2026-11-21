@@ -32,8 +32,19 @@ Newest-first session log. One entry per working session. Read this (plus
   MERGE prints only after GitHub accepts the pinned merge; a moved head
   holds; added lines come from the files API patches (no diff parsing).
   Protocol 2.6 regains "update the local default branch".
+- Second evaluation: M56-002 PASS, M56-001 NEEDS_WORK. Fixed test-first:
+  a passing check counts as the gate only when named in
+  `automerge.required_checks` (else the local gate runs); the base policy
+  is read from the PR's repo through the contents API, not git's origin;
+  automerge changes are compared against the merge-base (no false holds on
+  status flips or new features); renamed tests hold; skip forms per
+  language (some anywhere, some in test files only; `pending` and
+  `.skip-link` no longer hold); more always-protected paths (CI systems,
+  agent configs, nested AGENTS/CLAUDE.md, kit scripts); control
+  characters in names hold. Framed as a guardrail, not a wall (agents hold
+  the owner's token); option B (a bot account) put to the owner.
 - Gate: GREEN (bash scripts/e2e.sh).
-- Next: second evaluation; first real use on one repo.
+- Next: owner's A/B answer; first real use on one repo.
 
 ## 2026-11-20 -- session 94 (M55-001..003 GitHub issues as the place to write features)
 
