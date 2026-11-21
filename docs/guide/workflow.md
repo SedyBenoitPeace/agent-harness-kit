@@ -36,10 +36,16 @@ Part of the [agent-harness-kit guide](../../README.md).
    `/agent-harness-kit:harness-run` repeat it for you: one fresh subagent
    per feature, stopping at a blocker, the milestone boundary, or a cap
    of 10, and running independent features (declared `depends_on` /
-   `paths`) as parallel lanes, up to 3 at once. Lanes roll: when one
-   finishes (built, or passed its evaluator) it merges and its slot takes
-   the next ready feature, so a slow review never holds unrelated builds,
-   and a feature waiting on a running one starts once that one lands. To
+   `paths`) as parallel lanes, up to 5 at once (`max_lanes` in
+   FEATURES.json). Lanes roll: when one finishes (built, or passed its
+   evaluator) it merges and its slot takes the next ready feature, so a
+   slow review never holds unrelated builds, and a feature waiting on a
+   running one starts once that one lands. Lanes follow dependencies, not
+   milestones: a run "through M21" builds a later milestone's independent
+   feature early and merges it in milestone order. Files every feature
+   touches (README, changelog) go in `shared_paths` and never keep lanes
+   apart. Each waiting feature prints `not a lane: <id> — <reason>`, so you
+   can see why the run is sequential. To
    walk away entirely, invoke
    `/agent-harness-kit:harness-continuous` instead (see
    [Unattended runs](unattended-runs.md#unattended-runs)).

@@ -2104,3 +2104,10 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: hints read in one grep like results (rejected: per-feature file tests); quoting tested by extracting the page's own two JS lines and running them with node, with a jq mirror as fallback when node is absent (the fallback branch is not exercised where node exists); commands built at click time from `data-root`, not pre-rendered per row; the STOP sentence went in step 2 beside the cap rule, since step 1 has no stop rule; typed text is not cleared after copying (assumption: losing a hint is worse than a duplicate); zsh not run in the test, only bash.
 - Gate: GREEN (bash scripts/ci-local.sh prints CI-LOCAL GREEN).
 - Next: none in M49; open the PR for `run-board`.
+
+## 2026-11-21 — M61 lanes by dependency (thread "Fix board timer and harness parallelism")
+- Branch: `parallel-by-dependency`.
+- Done: M61-001..004. context.sh `--through N`, `shared_paths`, `max_lanes` (default 5), `<id> ready` busy lines, `not a lane:` reasons, `--unattended`; merge-lane.sh with union merge of shared paths; harness-run/continuous, protocol planning/runs, FEATURES template, guide and CHANGELOG updated. The kit's own FEATURES.json declares README.md and CHANGELOG.md shared.
+- Decisions: union merge (git merge-file --union) instead of changelog fragments, because it also covers README and needs no assembler; a later-milestone lane merges only once its milestone branch exists, so each milestone keeps its own PR; "Needs a human: verify" counts as met only with --unattended (owner decision A), any other deferred dependency still blocks; reasons are capped at 6 lines and hidden in builder briefs.
+- Evidence: live M57–M60 plan gave PARALLEL none; with the fix it gives 3 lanes. quick-calories transcript: PARALLEL none 6 of 7 checks before the owner overruled the harness.
+- Gate: GREEN (bash scripts/ci-local.sh).

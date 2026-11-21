@@ -2,7 +2,7 @@
 # harness-session: bounded, read-only "what do I need to start?" report.
 # Bundles harness-status's report with the git/plan facts a coding session
 # also needs, so an agent can start from one call instead of several.
-# Usage: context.sh [--skip FILE] [--busy FILE] [--through N] [--brief] [--outline FILE] [TARGET_DIR]
+# Usage: context.sh [--skip FILE] [--busy FILE] [--through N] [--unattended] [--brief] [--outline FILE] [TARGET_DIR]
 #        (TARGET_DIR defaults to the current directory)
 # --skip FILE is passed to harness-status (see status.sh) so NEXT, PLAN and
 # PARALLEL all follow the first feature that is not skipped.
@@ -15,6 +15,9 @@
 # lanes); PARALLEL then lists only lanes that can start beside them.
 # --through N (M61-001): lanes may come from later milestones up to N (the
 # run's range); without it, only NEXT's milestone.
+# --unattended (M61-004, harness-continuous): a dependency that is deferred
+# with notes starting "Needs a human: verify" (built, merged, gate green, only
+# a human check left) counts as met for lanes.
 # --outline FILE: the task points to an approved plan or outline from another
 # workflow (M43-001). Prints its path and a SKIP_BRIEF hint (protocol 1.1);
 # a path that does not exist prints "not found" and no hint.
@@ -24,12 +27,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STATUS="$SCRIPT_DIR/../../harness-status/scripts/status.sh"
-SKIP=(); BRIEF=0; OUTLINE=""; BUSY=/dev/null; THROUGH=""
+SKIP=(); BRIEF=0; OUTLINE=""; BUSY=/dev/null; THROUGH=""; UNATTENDED=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip) SKIP=(--skip "${2:?--skip needs a file}"); shift 2 ;;
     --busy) BUSY="${2:?--busy needs a file}"; shift 2 ;;
     --through) THROUGH="${2:?--through needs a milestone}"; shift 2 ;;
+    --unattended) UNATTENDED=1; shift ;;
     --brief) BRIEF=1; shift ;;
     --outline) OUTLINE="${2:?--outline needs a file}"; shift 2 ;;
     *) break ;;
@@ -154,14 +158,14 @@ fi
 # Archived ids (docs/features-archive.json, M34-010) count as passing.
 ARCH=docs/features-archive.json; [ -f "$ARCH" ] || ARCH=/dev/null
 [ -e "$BUSY" ] || { echo "context: --busy file not found: $BUSY" >&2; exit 2; }
-jq -r --arg ex "$SKIPPED_IDS" --arg busy "$(cat "$BUSY")" --arg through "${THROUGH#[Mm]}" --argjson why "$((1 - BRIEF))" --slurpfile arc "$ARCH" '
+jq -r --arg ex "$SKIPPED_IDS" --arg busy "$(cat "$BUSY")" --arg through "${THROUGH#[Mm]}" --argjson why "$((1 - BRIEF))" --argjson un "$UNATTENDED" --slurpfile arc "$ARCH" '
   def entry: {s: sub("[*?\\[].*$"; ""), d: (test("[*?\\[]") or endswith("/"))};
   def hit($x; $y): ($x.d and $y.d | not) and (($x.s | startswith($y.s)) or ($y.s | startswith($x.s)));
   def clash($a; $b): first($a[] as $x | $b[] as $y | select(hit($x; $y)) | if $x.d then $y.s else $x.s end) // null;
   (.max_lanes // 5 | if type == "number" and . >= 1 then floor else 5 end) as $cap
   | (.shared_paths // []) as $shared
   | def ents: (.paths // []) | map(select(. as $p | $shared | index([$p]) | not)) | map(entry);
-  ([$arc[].features[]?, .features[]] | map({key: .id, value: .status}) | from_entries) as $st
+  ([$arc[].features[]?, .features[]] | map({key: .id, value: (if $un == 1 and .status == "deferred" and ((.notes // "") | startswith("Needs a human: verify")) then "passing" else .status end)}) | from_entries) as $st
   | ([.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]
       | sort_by(.milestone, .id)) as $f
   | if ($f | length) == 0 then "PARALLEL: none" else

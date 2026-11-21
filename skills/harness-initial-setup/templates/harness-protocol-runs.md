@@ -40,8 +40,9 @@ the repo — not the subagent's word — before starting the next. Rules:
   (§1.4) prove them independent, computed by script, never guessed. Each
   lane works in its own worktree and never touches FEATURES.json or
   PROGRESS.md; it puts its `Decisions:` line in its commit message body.
-  Lanes roll: up to 3 run at once, and as each finishes (built, or passed
-  its evaluator inside the lane) the orchestrator merges it, runs the full
+  Lanes roll: up to `max_lanes` (default 5) run at once, and as each
+  finishes (built, or passed its evaluator inside the lane) the
+  orchestrator merges it (`merge-lane.sh`), runs the full
   gate, flips its status, writes its PROGRESS.md entry with its
   `Decisions:` line, and starts the next ready lane in its slot. A merge
   conflict means that feature is redone sequentially once no other lane
@@ -152,6 +153,9 @@ the scripts named here are in its `SCRIPTS:` folder.
   FEATURES.json or PROGRESS.md: `Decisions:` goes in the commit body.
 - Needs a human (the list printed below the card): feature `deferred`, notes
   `Needs a human: <question>`, commit FEATURES.json only, report `blocked`.
+  Built with the gate green and only a human check left: `deferred`, notes
+  `Needs a human: verify — <the check>`; an unattended run builds its
+  dependents on it.
 - Budget: past 60 tool calls or about 150k of context, commit what is safe,
   leave a resume point, report `blocked` with reason `session budget`.
 - Last act: write the SESSION line plus ≤10 summary lines to

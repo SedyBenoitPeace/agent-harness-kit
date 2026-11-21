@@ -181,6 +181,14 @@ make_lanes_repo "$WORK/m-dep" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1
 why "$WORK/m-dep" | grep -q 'M1-002 — depends on M1-001 (failing)' || fail "M61-001: a dependency must be named as the reason"
 why "$WORK/m-dep" | grep -q 'M1-003 — no depends_on' || fail "M61-001: a missing depends_on must be named as the reason"
 out="$(bash "$CONTEXT" --brief "$WORK/m-dep")"; grep -q "not a lane" <<<"$out" && fail "M61-001: a briefed builder gets no lane reasons"
+# M61-004: on an unattended run, a dependency that is built and green and
+# only waits for a human check (deferred, notes "Needs a human: verify") is met;
+# any other deferred dependency still blocks, and an interactive run waits.
+make_lanes_repo "$WORK/m-park" "[$(f M1-001 1 deferred '[]' '["a/"]' | sed 's/}$/,"notes":"Needs a human: verify — owner checks the layout"}/'),$(f M1-002 1 deferred '[]' '["b/"]' | sed 's/}$/,"notes":"Needs a human: which provider?"}/'),$(f M1-003 1 failing '["M1-001"]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]'),$(f M1-005 1 failing '["M1-002"]' '["e/"]')]"
+[ "$(lanes "$WORK/m-park")" = 'PARALLEL: none' ] || fail "M61-004: an interactive run waits on a parked dependency"
+out="$(bash "$CONTEXT" --unattended "$WORK/m-park")"
+grep -qx 'PARALLEL: M1-003 M1-004' <<<"$out" || fail "M61-004: unattended, a dependency awaiting only a human check is met"
+grep -q 'not a lane: M1-005 — depends on M1-002 (deferred)' <<<"$out" || fail "M61-004: a dependency with an open question still blocks"
 printf 'M1-001 ready\nM1-002\nM1-003\n' > "$WORK/r-cap/busy.ids"
 [ "$(bash "$CONTEXT" --busy "$WORK/r-cap/busy.ids" "$WORK/r-cap" | grep '^PARALLEL:')" = 'PARALLEL: M1-004' ] || fail "M61-001: a ready lane must not take a slot"
 printf 'M1-001 ready\n' > "$WORK/r-one/busy.ids"

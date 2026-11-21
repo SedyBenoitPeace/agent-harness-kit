@@ -175,10 +175,15 @@ run's first lane. Instead of Workflow steps 3–5:
      branch) and dispatch the rework builder into the same lane, with
      `retries` = `eval_attempts` and `feature.sh` run against the current
      branch, so it carries the notes. Its slot stays busy.
-   - `passing` (or evaluator `PASS`) → merge it (`git merge --no-ff
-     lane/<id>`); conflict → `git merge --abort`, keep its id in
-     `.harness-run/busy` (so refills skip it), and redo it sequentially once
-     it is the only id left. Run the full gate
+   - `passing` (or evaluator `PASS`) from a later milestone than the
+     current branch's → mark it `<id> ready` in `.harness-run/busy` (it
+     keeps its files, frees its slot) and merge it once the run reaches
+     that milestone's branch.
+   - `passing` (or evaluator `PASS`) → merge it with `bash
+     scripts/merge-lane.sh <target> <id>` (conflicts only in
+     `shared_paths` keep both sides); exit 1 (`CONFLICT:`) → the merge is
+     aborted: keep its id in `.harness-run/busy` (so refills skip it), and
+     redo it sequentially once it is the only id left. Run the full gate
      (`bash ../harness-session/scripts/run-gate.sh final <target>`).
      Green → flip the id to `passing` (with `docs/verification/<id>.md`
      when evaluated), add its `PROGRESS.md` entry (its `Decisions:` line
@@ -190,8 +195,8 @@ run's first lane. Instead of Workflow steps 3–5:
    Once its flip is committed, remove the id from `.harness-run/busy`, its
    worktree and its branch.
 3. **Refill.** Run `context.sh --busy .harness-run/busy` (from the repo
-   root). It lists only lanes that can start beside the running ones:
-   their files, `exclusive` value and the cap of 3 are already taken, and a
+   root; a run over a range adds `--through <last milestone>`). It lists only lanes that can start beside the running ones:
+   their files, `exclusive` value and the `max_lanes` cap (default 5) are already taken, and a
    feature waiting on a running one appears once that one is merged and
    `passing`. Any ids → step 1. `PARALLEL: none` with lanes still busy →
    step 2. Nothing busy → Workflow step 1 (status.sh + clean tree, then the
