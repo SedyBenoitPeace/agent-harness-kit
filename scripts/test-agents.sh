@@ -170,4 +170,17 @@ for f in agents/src/harness-builder.md "$t/.claude/agents/harness-builder.md" "$
 done
 [ "$(wc -l < "$pr")" -le 150 ] || fail "$chk: protocol core over 150 lines"
 
+chk="M59-003.1 repro first, lesson after @critical"
+for f in agents/src/harness-builder.md "$t/.claude/agents/harness-builder.md" "$t/.codex/agents/harness-builder.toml"; do
+  for w in '"kind": "bug"' 'fails on the reported symptom' 'before any fix or hypothesis' 'one hypothesis at a time' \
+           'root cause' 'loop it until' 'Lesson:' 'After 3 failed fixes' 'Needs a human'; do
+    grep -qF "$w" "$f" || fail "$chk: $f must say '$w'"
+  done
+done
+for f in agents/src/harness-evaluator.md "$t/.claude/agents/harness-evaluator.md" "$t/.codex/agents/harness-evaluator.toml"; do
+  for w in '"kind": "bug"' 'no repro test' 'failed before the fix' 'NEEDS_WORK'; do
+    grep -qF "$w" "$f" || fail "$chk: $f must say '$w'"
+  done
+done
+
 echo "AGENTS TESTS GREEN"
