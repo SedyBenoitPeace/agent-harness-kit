@@ -91,3 +91,9 @@ Under the reviewer's BLOCKING bar it must get `READY` plus NOTEs, never `GAPS`.
 Synthetic features and a `gh issue view N --json number,title,body` issue for
 `read-checks.sh`, `check-coverage.sh` and `acceptance-verdict.sh`. Never a
 live repo: the issue backend is tested only against `issue.json`.
+
+## merge/ — fake gh for can-merge.sh (M56)
+
+`gh` here answers `gh pr view` from `$FAKE_GH_DIR/pr.json`, `gh pr diff`
+from `$FAKE_GH_DIR/pr.diff`, and logs `gh pr merge` as a WRITE line, so
+`scripts/test-merge.sh` proves the merge rules without a live repo.

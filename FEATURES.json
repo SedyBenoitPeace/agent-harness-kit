@@ -5,7 +5,8 @@
     "51": "Upgrade re-checks open plans; board shows every field",
     "52": "Onboarding installs what its docs reference",
     "53": "Acceptance checks (zero-touch QA phase 1)",
-    "55": "GitHub issues as the place to write features"
+    "55": "GitHub issues as the place to write features",
+    "56": "The agent merges its own PR when the rules allow"
   },
   "features": [
     {
@@ -484,6 +485,111 @@
             "Read skills/harness-issues/SKILL.md and README.md"
           ],
           "pass_if": "SKILL.md is the harness-issues skill running issues.sh sync and migrate, migrate runs --dry-run first and asks the human before the real run, and README names /agent-harness-kit:harness-issues",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M56-001",
+      "milestone": 56,
+      "title": "can-merge.sh: the agent merges its own PR only when the gate is green, every named feature is granted automerge, the PR is labelled harness:agent and no protected path or test is touched; prints MERGE, WAIT or HOLD with reasons; --merge merges only on MERGE",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-merge.sh proving each check below against a fake gh",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/scripts/can-merge.sh",
+        "scripts/test-merge.sh",
+        "scripts/fixtures/merge",
+        "scripts/e2e.sh"
+      ],
+      "checks": [
+        {
+          "id": "M56-001.1",
+          "title": "A granted, green, agent PR inside the rules merges",
+          "critical": true,
+          "steps": [
+            "Fake gh serves an open mergeable PR labelled harness:agent naming M1-001 (automerge true) with passing checks and a diff touching src/ and a new test",
+            "Run can-merge.sh 7 --merge"
+          ],
+          "pass_if": "First line MERGE, exit 0, and exactly one gh pr merge 7 call",
+          "evidence": "test"
+        },
+        {
+          "id": "M56-001.2",
+          "title": "Each broken rule holds the PR with its reason",
+          "critical": true,
+          "steps": [
+            "Run can-merge.sh on variants: feature not granted, no feature id, unknown id, no harness:agent label, repo switched off, a failed check, not mergeable, a protected path (.github/, package.json, migrations), a deleted test file, an added test.skip"
+          ],
+          "pass_if": "Each prints HOLD first, names its reason, exits 1, and --merge makes no merge call",
+          "evidence": "test"
+        },
+        {
+          "id": "M56-001.3",
+          "title": "Running checks wait; no checks fall back to the local gate",
+          "critical": false,
+          "steps": [
+            "Run it with a pending check",
+            "Run it with no checks, the PR head checked out and scripts/e2e.sh passing, then failing, then with a different HEAD"
+          ],
+          "pass_if": "Pending prints WAIT and exits 3; no checks merges only when the local gate passes on the PR head, otherwise HOLD naming the gate or the head",
+          "evidence": "test"
+        },
+        {
+          "id": "M56-001.4",
+          "title": "The protected list is printable and overridable",
+          "critical": false,
+          "steps": [
+            "Run can-merge.sh --list with no config",
+            "Run it with automerge.protected set in FEATURES.json"
+          ],
+          "pass_if": "The default list names .github/, migrations, auth, secrets, lockfiles and deploy config; a configured list replaces it",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M56-002",
+      "milestone": 56,
+      "title": "Agents and the brief know the merge rules: the brief asks Automerge yes or no, planning records automerge, agent PRs get harness:agent, the builder checks protected paths first and runs can-merge.sh --merge after a green PR",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-merge.sh and test-brief.sh proving each check below",
+      "model": "low",
+      "depends_on": [
+        "M56-001"
+      ],
+      "paths": [
+        "skills/harness-brief/templates/brief.md.tmpl",
+        "skills/harness-brief/scripts/check-brief.sh",
+        "skills/harness-brief/SKILL.md",
+        "skills/harness-initial-setup/templates/harness-protocol.md",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "agents/src/harness-builder.md",
+        "scripts/test-merge.sh",
+        "scripts/test-brief.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M56-002.1",
+          "title": "The brief asks for the merge grant",
+          "critical": true,
+          "steps": [
+            "Run check-brief.sh on a brief without ## Automerge, and with Automerge: maybe"
+          ],
+          "pass_if": "Both fail naming Automerge; yes and no pass",
+          "evidence": "test"
+        },
+        {
+          "id": "M56-002.2",
+          "title": "Agents are told the merge rules",
+          "critical": false,
+          "steps": [
+            "Read harness-protocol.md 2.6, harness-protocol-planning.md and every generated builder agent"
+          ],
+          "pass_if": "Planning records automerge from the brief; protocol and builder say: label harness:agent, check can-merge.sh --list before editing, run can-merge.sh <pr> --merge after a green PR and never merge otherwise",
           "evidence": "test"
         }
       ]

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Fake gh for test-merge.sh: serves $FAKE_GH_DIR/pr.json for `gh pr view`,
+# $FAKE_GH_DIR/pr.diff for `gh pr diff`, and logs every call to
+# $FAKE_GH_DIR/log (`gh pr merge` as a WRITE line). Never a live repo.
+set -euo pipefail
+d="${FAKE_GH_DIR:?FAKE_GH_DIR not set}"
+case "$1 ${2:-}" in
+  "pr view") echo "READ pr view $3" >> "$d/log"; cat "$d/pr.json" ;;
+  "pr diff") echo "READ pr diff $3" >> "$d/log"; cat "$d/pr.diff" ;;
+  "pr merge") echo "WRITE pr merge ${*:3}" >> "$d/log" ;;
+  *) echo "fake gh: unsupported: $*" >&2; exit 2 ;;
+esac
