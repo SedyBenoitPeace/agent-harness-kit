@@ -13,7 +13,7 @@ export PATH="$KIT/scripts/fixtures/merge:$PATH"
 # repo <name>: a git repo (its own origin) with FEATURES.json on the base
 # branch, a passing gate, and a fake PR #7 from an agent
 repo() {
-  r="$tmp/$1"; mkdir -p "$r/scripts" "$r/gh"; export FAKE_GH_DIR="$r/gh"; : > "$r/gh/log"
+  r="$tmp/$1"; G="$tmp/$1.gh"; mkdir -p "$r/scripts" "$G"; export FAKE_GH_DIR="$G"; : > "$G/log"
   cat > "$r/FEATURES.json" <<'J'
 {"features": [
   {"id": "M1-001", "milestone": 1, "title": "Book", "status": "passing", "automerge": true},
@@ -25,25 +25,18 @@ J
     && git remote add origin "$r" && git fetch -q origin)
   jq -n --arg sha "$(git -C "$r" rev-parse HEAD)" --arg base "$(git -C "$r" branch --show-current)" '{number: 7, state: "OPEN",
     mergeable: "MERGEABLE", title: "Book a session (M1-001)", body: "Builds M1-001 test-first.", labels: [{name: "harness:agent"}],
-    baseRefName: $base, headRefOid: $sha, statusCheckRollup: [{name: "gate", status: "COMPLETED", conclusion: "SUCCESS"}]}' > "$r/gh/pr.json"
-  echo '[{"filename": "src/book.ts", "status": "modified"}, {"filename": "e2e/booking.spec.ts", "status": "added"}]' > "$r/gh/files.json"
-  cat > "$r/gh/pr.diff" <<'D'
-diff --git a/src/book.ts b/src/book.ts
-index 1..2 100644
---- a/src/book.ts
-+++ b/src/book.ts
-@@ -1 +1,2 @@
- x
-+y
-diff --git a/e2e/booking.spec.ts b/e2e/booking.spec.ts
-new file mode 100644
---- /dev/null
-+++ b/e2e/booking.spec.ts
-@@ -0,0 +1 @@
-+test('first booking', () => {});
-D
+    baseRefName: $base, headRefOid: $sha, statusCheckRollup: [{name: "gate", status: "COMPLETED", conclusion: "SUCCESS"}]}' > "$G/pr.json"
+  jq -n '[{filename: "src/book.ts", status: "modified", additions: 1, deletions: 0, patch: "@@ -1 +1,2 @@\n x\n+y"},
+    {filename: "e2e/booking.spec.ts", status: "added", additions: 1, deletions: 0, patch: "@@ -0,0 +1 @@\n+test(\u0027first booking\u0027, () => {});"}]' > "$G/files.json"
+  git -C "$r" branch --show-current > "$G/default"
 }
 files() { jq "$1" "$FAKE_GH_DIR/files.json" > "$FAKE_GH_DIR/x" && mv "$FAKE_GH_DIR/x" "$FAKE_GH_DIR/files.json"; }
+pr_head() {  # pr_head <jq expr>: the PR's own commit changes FEATURES.json (base unchanged)
+  (cd "$r" && git checkout -qb pr && jq "$1" FEATURES.json > x && mv x FEATURES.json \
+    && git -c user.name=t -c user.email=t@t commit -qam pr && git checkout -q -)
+  pr ".headRefOid = \"$(git -C "$r" rev-parse pr)\""
+  files '. + [{filename: "FEATURES.json", status: "modified", additions: 1, deletions: 1}]'
+}
 base() {  # base <jq expr>: change FEATURES.json on the base branch (the owner's policy)
   jq "$1" "$r/FEATURES.json" > "$r/x" && mv "$r/x" "$r/FEATURES.json"
   (cd "$r" && git -c user.name=t -c user.email=t@t commit -qam policy && git fetch -q origin)
@@ -83,7 +76,20 @@ hold spaced 'protected path: config/secrets file.json' "files '.[0].filename = \
 hold gate-file 'protected path: scripts/e2e.sh' "base '. + {automerge: {protected: [\"^docs/\"]}}'; files '.[0].filename = \"scripts/e2e.sh\"'"
 hold deleted-test 'test deleted: e2e/old.spec.ts' "files '. + [{filename: \"e2e/old.spec.ts\", status: \"removed\"}]'"
 hold renamed-test 'test deleted: e2e/old.spec.ts' "files '. + [{filename: \"src/old.ts\", previous_filename: \"e2e/old.spec.ts\", status: \"renamed\"}]'"
-hold skipped-test 'test weakened in e2e/booking.spec.ts' "sed -i.b 's#^+test(#+test.skip(#' \"\$FAKE_GH_DIR/pr.diff\""
+hold skipped-test 'test weakened in e2e/booking.spec.ts' "files '.[1].patch |= sub(\"test\\\\(\"; \"test.skip(\")'"
+for w in "t.SkipNow()" "xit \\\"books\\\" do" "#[ignore]" "@Disabled" "it.skip.each(rows)"; do
+  hold "weak-$(printf '%s' "$w" | tr -cd 'a-zA-Z')" 'test weakened in e2e/booking.spec.ts' "files '.[1].patch += \"\\n+$w\"'"
+done
+hold gutted-test 'test shrank: e2e/booking.spec.ts' "files '.[1].status = \"modified\" | .[1].deletions = 5'"
+hold grant-in-pr 'PR changes automerge settings in FEATURES.json' "pr_head '.features[1].automerge = true'"
+hold policy-in-pr 'PR changes automerge settings in FEATURES.json' "pr_head '. + {automerge: {protected: [\"^\$\"]}}'"
+for f in .claude/settings.json AGENTS.md CLAUDE.md docs/agents/harness-protocol.md CODEOWNERS .npmrc db/migrate/001_init.rb db/schema.rb alembic/versions/1.py uv.lock src/Auth/login.ts config/Secrets.yml wrangler.toml .gitlab-ci.yml playwright.config.ts; do
+  hold "prot-$(printf '%s' "$f" | tr -cd 'a-zA-Z')" "protected path: $f" "files '.[0].filename = \"$f\"'"
+done
+hold bad-regex 'invalid protected pattern' "base '. + {automerge: {protected: [\"^infra/(\"]}}'"
+hold draft 'PR is a draft' "pr '.isDraft = true'"
+hold other-base 'base is evil, not the default branch' "pr '.baseRefName = \"evil\"'"
+hold merge-refused 'GitHub refused the merge' "printf 'FAIL\\n' > \"\$FAKE_GH_DIR/merge-fails\""
 
 t "M56-001.3 running checks wait; no checks fall back to the local gate"
 repo pending; pr '.statusCheckRollup[0].status = "IN_PROGRESS" | .statusCheckRollup[0].conclusion = null'
@@ -94,11 +100,21 @@ repo local; pr '.statusCheckRollup = []'
 out="$(run --merge)" || fail "no checks, local gate green: must merge: $out"
 [ "$(merges)" = 1 ] || fail "no checks, local gate green: no merge call"
 repo localred; pr '.statusCheckRollup = []'; printf '#!/usr/bin/env bash\nexit 1\n' > "$r/scripts/e2e.sh"
+(cd "$r" && git -c user.name=t -c user.email=t@t commit -qam red); pr ".headRefOid = \"$(git -C "$r" rev-parse HEAD)\""
 out="$(run --merge)" && fail "red local gate merged"
 grep -qF 'local gate (scripts/e2e.sh) failed' <<< "$out" || fail "red local gate reason missing: $out"
 repo otherhead; pr '.statusCheckRollup = [] | .headRefOid = "0000000"'
 out="$(run --merge)" && fail "gate on another HEAD merged"
 grep -qF 'check out the PR head' <<< "$out" || fail "HEAD mismatch reason missing: $out"
+repo dirty; pr '.statusCheckRollup = []'; printf '#!/usr/bin/env bash\nexit 1\n' > "$r/scripts/e2e.sh"
+(cd "$r" && git -c user.name=t -c user.email=t@t commit -qam red); pr ".headRefOid = \"$(git -C "$r" rev-parse HEAD)\""
+printf '#!/usr/bin/env bash\nexit 0\n' > "$r/scripts/e2e.sh"
+out="$(run --merge)" && fail "a green uncommitted gate over a red committed one merged"
+grep -qF 'working tree is not clean' <<< "$out" || fail "dirty tree reason missing: $out"
+repo skipped; pr '.statusCheckRollup[0].conclusion = "SKIPPED"'; printf '#!/usr/bin/env bash\nexit 1\n' > "$r/scripts/e2e.sh"
+(cd "$r" && git -c user.name=t -c user.email=t@t commit -qam red); pr ".headRefOid = \"$(git -C "$r" rev-parse HEAD)\""
+out="$(run --merge)" && fail "only skipped checks and a red gate merged"
+grep -qF 'local gate (scripts/e2e.sh) failed' <<< "$out" || fail "skipped-only checks must fall back to the local gate: $out"
 
 t "M56-001.4 the protected list is printable and overridable"
 repo list
@@ -141,6 +157,6 @@ while IFS= read -r f; do
   done
 done < <({ echo "$KIT/agents/src/harness-builder.md"; find "$tmp/gen" -type f -name 'harness-builder*'; })
 [ "$n" -ge 4 ] || fail "expected the source plus generated builders, found $n"
-for w in 'harness:agent' 'can-merge.sh <pr> --merge'; do grep -qF -- "$w" <<< "$sec26" || fail "protocol 2.6 must say $w"; done
+for w in 'harness:agent' 'can-merge.sh --list' 'can-merge.sh <pr> --merge' 'never merge otherwise' 'update the local default branch'; do grep -qF -- "$w" <<< "$sec26" || fail "protocol 2.6 must say $w"; done
 
 echo "MERGE TESTS GREEN"

@@ -94,6 +94,6 @@ live repo: the issue backend is tested only against `issue.json`.
 
 ## merge/ — fake gh for can-merge.sh (M56)
 
-`gh` here answers `gh pr view` from `$FAKE_GH_DIR/pr.json`, `gh pr diff`
-from `$FAKE_GH_DIR/pr.diff`, and logs `gh pr merge` as a WRITE line, so
+`gh` here answers `gh pr view` from `$FAKE_GH_DIR/pr.json`, the PR files
+API from `files.json`, `gh repo view` from `default`, and logs `gh pr merge` as a WRITE line, so
 `scripts/test-merge.sh` proves the merge rules without a live repo.

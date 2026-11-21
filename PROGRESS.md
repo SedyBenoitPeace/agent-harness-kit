@@ -21,8 +21,19 @@ Newest-first session log. One entry per working session. Read this (plus
   merge pinned with `--match-head-commit`, changed paths from the PR files
   API (exact names, renames, deletions) instead of diff headers, the gate
   and QA scripts always protected.
+- Evaluation: a fresh evaluator session sent both back. Fixed test-first:
+  a PR changing any automerge setting in FEATURES.json holds (it could
+  rewrite the owner's policy for later PRs); the local gate needs a clean
+  tree on the PR head; only-skipped checks fall back to it; invalid
+  patterns hold; protected paths add agent instructions (.claude/,
+  AGENTS.md, docs/agents/, CODEOWNERS), Rails/alembic migrations, uv.lock,
+  wrangler, GitLab CI, test-runner configs, all case-insensitive; more skip
+  forms and shrunk test files hold; drafts and non-default bases hold;
+  MERGE prints only after GitHub accepts the pinned merge; a moved head
+  holds; added lines come from the files API patches (no diff parsing).
+  Protocol 2.6 regains "update the local default branch".
 - Gate: GREEN (bash scripts/e2e.sh).
-- Next: fresh-session evaluation; first real use on one repo.
+- Next: second evaluation; first real use on one repo.
 
 ## 2026-11-20 -- session 94 (M55-001..003 GitHub issues as the place to write features)
 
