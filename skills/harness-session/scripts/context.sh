@@ -54,6 +54,10 @@ printf '%s\n' "$report" | awk '
     if (a[1] == a[2]) { if (done == 0) first = k; last = k; done++; next }
   }
   { print }'
+# Bug kind (M59-001): the reported symptom is the spec; never brief it.
+if printf '%s\n' "$report" | grep -q '^  kind: bug$'; then
+  echo 'SKIP_BRIEF: bug — do not run harness-brief; its checks are the reported symptom'
+fi
 SKIPPED_IDS=""
 if [ ${#SKIP[@]} -gt 0 ]; then
   skip_report="$(bash "$STATUS" "${SKIP[@]}" "$TARGET")"

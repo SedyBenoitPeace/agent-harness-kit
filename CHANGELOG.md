@@ -21,6 +21,9 @@ agent-harness-template>` and open a PR there; gate green; PR.
   are looked up, never asked; the brief is saved only when no open decision
   remains. A human who says not to ask gets the recommended answers as
   visible defaults.
+- Features can be `"kind": "bug"` (M59-001): status.sh and context.sh show
+  `kind: bug` under the next feature, and context.sh prints a `SKIP_BRIEF`
+  hint, since a bug's checks are the reported symptom.
 
 ## 3.25.0 — 2026-11-21
 
