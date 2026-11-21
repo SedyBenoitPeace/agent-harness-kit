@@ -3,6 +3,29 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 96 (M57-001 harness-brief grills until nothing is open)
+
+- Branch: `m57`.
+- Done: M57-001. harness-brief step 2 rewritten: facts come from the repo,
+  decisions from the human, asked in numbered rounds (every question whose
+  prerequisites are settled in one round, each with a recommended answer
+  worded so "yes" accepts it), no question cap, saved only when no open
+  decision remains; the "fourth question" red flag replaced by two new
+  ones. README lifecycle step 0 and CHANGELOG (Unreleased, crediting Matt
+  Pocock's `grilling` skill) updated. test-brief.sh carries one test per
+  check (M57-001.1..3); the gate's check-coverage line now includes
+  test-brief.sh (it did not, so the checks read as untested).
+- Decisions: a human who says "don't ask" gets the recommended answers as
+  visible defaults (keeps the brief-from-rough-prompt eval valid; rejected:
+  refusing to save, which would fail that eval and unattended use); eval
+  files left unchanged (their graders already require named defaults and
+  no blocking questions; not re-run, LLM eval); tests are phrase greps on
+  SKILL.md, so they prove the wording, not the agent's behaviour; no
+  version bump (left for the milestone release); stranger test,
+  check-brief.sh and the 2-round reviewer cap untouched.
+- Gate: GREEN (run-gate.sh final). ci-local.sh not run (no push).
+- Next: M57-002.
+
 ## 2026-11-21 -- session 95 (M56-001, M56-002 the agent merges its own PR when the rules allow)
 
 - Branch: `automerge`. Owner decisions 12–15 (`docs/decisions.md`).

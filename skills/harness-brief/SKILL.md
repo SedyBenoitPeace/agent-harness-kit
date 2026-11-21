@@ -20,11 +20,18 @@ entries plus a plan section (protocol 1.1), then go to harness-run.
 1. Read the rough prompt and, if a repo exists, skim `README.md`,
    `AGENTS.md` and the files it names. Look before asking: never ask
    what the repo already answers.
-2. Ask at most three questions, one at a time, only about real
-   ambiguities that would change what gets built or how it is proven
-   (scope, a Done-when you cannot express as a command, a Needs-a-human
-   action). No questions about things you can default; state the default
-   in the brief instead.
+2. **Grill until nothing is open.** Facts come from the repo,
+   decisions from the human: look up what the code, docs or git history
+   can answer (stack, commands, file layout) and never ask it. Put each decision that
+   would change what gets built or how it is proven (scope, a Done-when
+   you cannot express as a command, a Needs-a-human action) to the human
+   in numbered rounds: every question whose prerequisites are settled goes
+   in the same round, numbered, each with a recommended answer worded so
+   "yes" accepts it ("1. Export only paid invoices? Recommended: yes, drafts
+   stay out."). The human may answer by number. Each answer can open new
+   decisions; ask those next round. There is no question cap: keep going
+   until no open decision remains. If the human says not to ask, take each
+   recommended answer as a visible default in the brief.
 3. Fill `templates/brief.md.tmpl` (path relative to this skill). Sections:
    Objective (one sentence) · Stage (prototype or production, and why in one
    line: it decides how much effort and checking the work deserves; when the
@@ -70,6 +77,7 @@ entries plus a plan section (protocol 1.1), then go to harness-run.
 | Thought | Reality |
 |---|---|
 | "I'll park the unclear bit under Open questions" | Open questions must be empty; ask, or default it visibly. |
-| "A fourth question would help" | At most three. Default the rest and say so in the brief. |
+| "I'll ask which test runner they use" | That is a fact: read the repo. Ask only decisions. |
+| "Enough questions, I'll guess the rest" | Save only when no open decision remains; ask another round. |
 | "Done when: it works" | Every line is a command and its expected result. |
 | "The check passed, so the brief is good" | The check is mechanical; the stranger test is yours. |

@@ -188,8 +188,10 @@ copilot plugin update agent-harness-kit
 ## Lifecycle — how the pieces fit
 
 0. **Brief (optional)** — `/agent-harness-kit:harness-brief` turns a
-   rough prompt into `docs/briefs/<date>-<slug>.md`: at most three
-   questions, a mechanical check, and an independent read-only reviewer
+   rough prompt into `docs/briefs/<date>-<slug>.md`: it looks up facts in
+   the repo, asks the decisions as questions in numbered rounds (each with
+   a recommended answer, so "yes" accepts it) until none is open, then
+   runs a mechanical check and an independent read-only reviewer
    (`READY`/`GAPS`). Review stops after 2 rounds: `GAPS` is only for
    blocking findings (at most 5), and the rest become `NOTE:` lines under
    Open questions. Lifecycle: brief → plan → run. Setup then interviews

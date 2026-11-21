@@ -632,7 +632,7 @@
       "id": "M57-001",
       "milestone": 57,
       "title": "harness-brief grills until nothing is open: no question cap; questions come in numbered rounds, each with a recommended answer worded so yes accepts it; facts the repo can answer are looked up, never asked; the brief is saved only when no open decision remains",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-brief.sh proving the checks below",
       "model": "medium",
       "depends_on": [],

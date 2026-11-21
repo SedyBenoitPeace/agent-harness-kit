@@ -12,6 +12,16 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## Unreleased
+
+- harness-brief grills until nothing is open (M57-001; idea from Matt
+  Pocock's `grilling` skill, github.com/mattpocock/skills, MIT): no
+  three-question cap; decisions come in numbered rounds, each question with
+  a recommended answer worded so "yes" accepts it; facts the repo can answer
+  are looked up, never asked; the brief is saved only when no open decision
+  remains. A human who says not to ask gets the recommended answers as
+  visible defaults.
+
 ## 3.25.0 — 2026-11-21
 
 The agent merges its own PR when the rules allow (M56; decisions 12–15):
