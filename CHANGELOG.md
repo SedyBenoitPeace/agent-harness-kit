@@ -91,10 +91,15 @@ agent-harness-template>` and open a PR there; gate green; PR.
   feature took (dispatch to result) and stops; it no longer ticks on as if
   the feature were still running.
 
-README: none (board display fix)
+README: `What do I run when`, `GLOSSARY.md`, `kind: bug`, `harness-retro`, `wizard`, `mattpocock/skills`
 
 Upgrade:
-- none
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`
+  (`upgrade.sh .`): it regenerates the builder and evaluator agent files
+  (glossary use, standards pass, one check per cycle, bug repro) and
+  rewraps the unedited "Add a rule here" AGENTS.md rule.
+- Optional: `upgrade.sh --ddd .` opts an existing repo into domain-driven
+  design (GLOSSARY.md, docs/adr/); without the flag nothing is added.
 
 ## 3.25.0 — 2026-11-21
 
