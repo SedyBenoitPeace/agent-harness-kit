@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 102 (M59-003 reproduce before fixing, lane merged)
+
+- Branch: `m57`.
+- Done: M59-003. For `kind: bug` the builder first writes a test that fails
+  on the reported symptom (in isolation; a nearby failure does not count;
+  a flaky bug is looped until it reproduces), then one hypothesis at a
+  time and one root-cause fix; after 3 failed fixes it stops blocked with
+  `Needs a human:`; the entry ends with one `Lesson:` line. Evaluator step
+  10 runs the repro on the commit before the fix (must fail) and after
+  (must pass); no repro test is NEEDS_WORK. Test M59-003.1 in
+  test-agents.sh; CHANGELOG credits the owner's lean-debugging skill and
+  Matt Pocock's `diagnosing-bugs`.
+- Decisions: protocol core unchanged (at its 150-line cap, no room in
+  2.4); the rule lives in the builder and evaluator agent files only.
+- Gate: GREEN (bash scripts/e2e.sh after the merge and the flip).
+
 ## 2026-11-21 -- session 101 (M60-004 README as a guide, lane merged)
 
 - Branch: `m57`.
