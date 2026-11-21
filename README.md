@@ -57,7 +57,10 @@ English:
 - **harness-run** — work through many features in one conversation
   without its context growing: each feature runs as a harness-session in
   a fresh subagent, verified from the repo before the next starts;
-  script-proven independent features run as parallel lanes.
+  script-proven independent features run as parallel lanes. A step only
+  you can do (a `Needs a human` note, a plan's `Before the run`) comes
+  back as `scripts/wizard-<id>.sh`: it walks you through each step, then
+  runs a check; it names secrets, never holds them.
   `/agent-harness-kit:harness-run` or _"Run the rest of milestone 3."_
 - **harness-upgrade-structure** — for repos that already have a harness:
   bring them up to the structure the installed plugin ships, in one

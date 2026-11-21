@@ -46,6 +46,12 @@ agent-harness-template>` and open a PR there; gate green; PR.
   labelled `bug` with no `[id]` title into a failing `kind: bug` feature
   with the next id in the lowest milestone with failing work, and retitles
   the issue `[id] title`. Re-running changes nothing.
+- harness-run writes a wizard for Needs a human (M60-003; idea from Matt
+  Pocock's `wizard` skill, github.com/mattpocock/skills, MIT): on a
+  `Needs a human:` block or a plan's `Before the run` step,
+  `skills/harness-run/scripts/wizard.sh` writes `scripts/wizard-<id>.sh`
+  from `templates/wizard.sh.tmpl`: one prompt per step, then a check
+  (default: the gate). It refuses a step that looks like a secret value.
 
 ## 3.25.0 — 2026-11-21
 
