@@ -148,7 +148,9 @@ def tok: if . >= 1000000 then "\(. / 100000 | floor / 10)M tok" elif . >= 1000 t
       + "<span><b>\(.id | h)</b> \(.title // "" | h)</span>"
       + "<span class=\"st st-\(.st | split(" ")[0])\">\(.st | h)\(if .hint then " <span class=\"tag\">hint</span>" else "" end)\(if .lane and (.st == "building" or .st == "gate running") then " <em>lane</em>" else "" end)</span>"
       + "<span>\(.agent | h)</span><span>\(.gate | h)</span>"
-      + (if .since then "<span class=\"tick\" data-since=\"\(.since)\">\($now - .since | dur)</span>" else "<span>—</span>" end)
+      # a passing row is done: its time is frozen (dispatch to result), never a ticking clock
+      + (if .st == "passing" then "<span>\(if .dp != null and .res != null then (.res.m - .dp.ts | if . < 0 then 0 else . end | dur) else "—" end)</span>"
+         elif .since then "<span class=\"tick\" data-since=\"\(.since)\">\($now - .since | dur)</span>" else "<span>—</span>" end)
       + "<span>\(.cost | h)</span></summary><div class=\"more\">"
       + (if .verify then "<p><b>Done when</b> \(.verify | h)</p>" else "" end)
       + (if (.depends_on // []) != [] then "<p>depends on: \(.depends_on | join(", ") | h)</p>" else "" end)

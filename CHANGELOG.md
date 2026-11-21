@@ -87,6 +87,14 @@ agent-harness-template>` and open a PR there; gate green; PR.
   clumps, primitive obsession, speculative generality, shotgun surgery), and
   writes findings as `NOTE:` lines; acceptance-verdict.sh still decides.
   Upgrade: `upgrade.sh .` regenerates the evaluator agent files.
+- Board fix (M54-002): a passing row's time column shows how long the
+  feature took (dispatch to result) and stops; it no longer ticks on as if
+  the feature were still running.
+
+README: none (board display fix)
+
+Upgrade:
+- none
 
 ## 3.25.0 — 2026-11-21
 
