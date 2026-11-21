@@ -13,6 +13,10 @@ protocol section: do not cat SKILL.md, AGENTS.md, docs/agents/, FEATURES.json
 or the plan. Without a brief, follow docs/agents/harness-protocol.md section 2.
 Read rule: grep -n first, then sed -n ≤80 lines; never cat a source file over 200 lines; one read per command, never chained.
 Never start a second feature.
+Before editing, run `can-merge.sh --list` (the kit's harness-session script, never a copy in the repo): a feature that must touch one of
+those paths cannot merge itself, so say so in PROGRESS.md. Open your PR with
+label `harness:agent`; once its checks are green, run `can-merge.sh <pr> --merge`
+and report its first line (MERGE, WAIT or HOLD). never merge any other way.
 When the feature has `checks`, write one test per check before the code,
 its title starting with the check id (`M3-002.1 cancel before cutoff`), plus
 `@critical` when the check is critical; `scripts/check-coverage.sh` fails

@@ -411,7 +411,7 @@ grep -Eq 'brief.*plan.*run' README.md || fail "README: lifecycle must show brief
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.24.0" ] || fail "plugin version must be 3.24.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.25.0" ] || fail "plugin version must be 3.25.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' README.md || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' README.md || fail "README: size map path missing (M33-005)"
@@ -727,7 +727,11 @@ bash scripts/test-checks.sh
 # --- GitHub issues as the place to write features (M55), against a fake gh -----
 shellcheck skills/harness-issues/scripts/issues.sh scripts/test-issues.sh scripts/fixtures/issues/gh
 bash scripts/test-issues.sh
-bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh
+
+# --- the agent merges its own PR when the rules allow (M56), against a fake gh --
+shellcheck skills/harness-session/scripts/can-merge.sh scripts/test-merge.sh scripts/fixtures/merge/gh
+bash scripts/test-merge.sh
+bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"

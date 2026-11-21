@@ -12,6 +12,42 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.25.0 — 2026-11-21
+
+The agent merges its own PR when the rules allow (M56; decisions 12–15):
+
+- `can-merge.sh <pr> [--merge]` prints MERGE, WAIT (checks running) or HOLD
+  with reasons. MERGE needs: the PR labelled `harness:agent` (agent PRs
+  only), every feature it names granted `"automerge": true`, checks green
+  (or, with no CI, the local gate green on the PR head), no protected path
+  touched, and no test deleted, renamed, shrunk or skipped. `--merge` merges
+  pinned to the checked head commit. Grants and the protected list are read
+  from the base branch, so a PR cannot grant itself; the gate and the kit's
+  QA scripts are always protected. `--list` prints the protected patterns.
+- Briefs carry `## Automerge` (yes or no, asked, never defaulted to yes);
+  planning copies it to `automerge`. Builders label their PR, check
+  `can-merge.sh --list` before editing, and run `can-merge.sh <pr> --merge`
+  once green.
+- The evaluator runs only the kit's own `acceptance-verdict.sh`, never a
+  repo copy, and a PR touching the repo's QA scripts is NEEDS_WORK, so a PR
+  cannot rewrite its own verdict (M56-003).
+- Per repo, FEATURES.json `"automerge": {"enabled": false}` switches it off;
+  `"protected": [...]` replaces the default list (CI files, agent
+  instructions and the kit's scripts stay protected); `"required_checks"`
+  names the CI checks that count as the gate, otherwise the local gate runs.
+- A guardrail against agent mistakes, not a security wall: agents run with
+  the owner's GitHub token.
+
+README: `can-merge.sh`, `## Automerge`, `harness:agent`
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure` (recopies
+  the protocol). Nothing merges itself until a feature has
+  `"automerge": true` on the default branch.
+- Delete `scripts/acceptance-verdict.sh` if 3.23.0 copied it in: the
+  evaluator now runs only the kit's own copy, and a PR touching the repo's
+  QA scripts is NEEDS_WORK (a PR could otherwise rewrite its own verdict).
+
 ## 3.24.0 — 2026-11-20
 
 GitHub issues as the place to write features (M55; decisions 4–7, 10, 11):

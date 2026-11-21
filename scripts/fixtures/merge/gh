@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Fake gh for test-merge.sh: serves $FAKE_GH_DIR/pr.json for `gh pr view`,
+# files.json for `gh api …/files`, default for `gh repo view` (the default
+# branch name), base.json for the base branch's FEATURES.json (contents API),
+# and logs every call to
+# $FAKE_GH_DIR/log (`gh pr merge` as a WRITE line). Never a live repo.
+set -euo pipefail
+d="${FAKE_GH_DIR:?FAKE_GH_DIR not set}"
+# honour --jq like gh does
+q=""; prev=""; for a in "$@"; do [ "$prev" = --jq ] && q="$a"; prev="$a"; done
+out() { if [ -n "$q" ]; then jq -r "$q"; else cat; fi; }
+case "$1 ${2:-}" in
+  "pr view") echo "READ pr view $3" >> "$d/log"; out < "$d/pr.json" ;;
+  "repo view") echo "READ repo view" >> "$d/log"; jq -n --arg b "$(cat "$d/default")" '{defaultBranchRef: {name: $b}}' | out ;;
+  "pr merge") [ -f "$d/merge-fails" ] && { echo "GraphQL: merge refused" >&2; exit 1; }
+    echo "WRITE pr merge ${*:3}" >> "$d/log" ;;
+  "api "*) echo "READ api $2" >> "$d/log"
+    case "$2" in
+      *contents/FEATURES.json*) jq -n --rawfile f "$d/base.json" '{content: ($f | @base64)}' | out ;;
+      *) cat "$d/files.json" ;;
+    esac ;;
+  *) echo "fake gh: unsupported: $*" >&2; exit 2 ;;
+esac

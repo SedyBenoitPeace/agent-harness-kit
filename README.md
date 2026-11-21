@@ -783,6 +783,29 @@ Agents always read the committed FEATURES.json, so an agent without GitHub
 access still works; sync is a script and spends no model tokens. Only
 issues opened by people with write access count.
 
+## The agent merges its own PR
+
+GitHub's auto-merge needs a paid plan on private repos, so the agent merges
+its own PR, and a script decides whether it may. When you refine a brief,
+it asks `## Automerge`: yes or no. A yes becomes `"automerge": true` on the
+feature. After the agent's PR is green it runs `can-merge.sh <pr> --merge`,
+which merges only when all of these hold, and otherwise leaves the PR for
+you with the reasons:
+
+- the PR is labelled `harness:agent` (a PR you open by hand never merges itself);
+- every feature it names is granted on the default branch (a PR cannot grant itself);
+- the local gate (`scripts/e2e.sh`) passes on the PR head in a clean tree,
+  or the CI checks you name in FEATURES.json `"automerge": {"required_checks": [...]}`
+  passed (any other failed check still holds; running ones wait);
+- no protected path is touched: `.github/`, auth, migrations, secrets,
+  dependency files, deploy config, the gate and the kit's QA scripts
+  (`can-merge.sh --list`; replace the list with FEATURES.json
+  `"automerge": {"protected": [...]}`, switch it off with `"enabled": false`);
+- no test is deleted, renamed, shrunk or skipped.
+
+It is a guardrail against an agent's mistakes, not a wall: agents run with
+your GitHub token, so the rules stop accidents, not a determined agent.
+
 ## Repository layout
 
 ```

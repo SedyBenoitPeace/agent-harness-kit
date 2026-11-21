@@ -186,6 +186,12 @@ Record the acceptance checks as `checks`: one entry per behaviour,
 (`@critical` in the title when `critical`). The kit's `read-checks.sh` reads
 and validates them; `bar` stays as the live proof.
 
+Copy the brief's `## Automerge` into each of its features as `automerge`:
+`true` only on the owner's yes. A granted feature's PR merges itself once
+green via the kit's `can-merge.sh` (agent PRs only; protected paths and
+weakened tests always wait for the owner; FEATURES.json `automerge` holds
+the repo's off-switch and protected list).
+
 Features can instead be written as GitHub issues, titled `[<feature id>]
 <title>` with the checks in the body: set `"source": "issues"` at the top of
 FEATURES.json (the kit's harness-issues command, `issues.sh migrate`,

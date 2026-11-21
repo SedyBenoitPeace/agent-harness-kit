@@ -134,13 +134,13 @@ resume point in PROGRESS.md, end `SESSION: <id> · blocked · gate <green|red> �
 
 ### 2.6 Branch discipline
 
-- Branch off the default branch. Never branch off another feature branch.
-- One branch per milestone-chunk of work; small, focused commits within it
-  (ideally one per feature).
-- Integrate via pull request, not local fast-forward. After merge, update
-  the local default branch before cutting the next branch. If the repo has
-  no remote yet, merge locally with `--no-ff` and note the deviation in
-  PROGRESS.md.
+- Branch off the default branch, never another feature branch; one branch per
+  milestone-chunk, small commits (ideally one per feature).
+- Run harness-session's `can-merge.sh --list` before editing: a feature that
+  touches those paths waits for the owner (say so in PROGRESS.md).
+- PR labelled `harness:agent`, never a local fast-forward (no remote: merge
+  `--no-ff`, note it). Once green: `can-merge.sh <pr> --merge`; never merge otherwise.
+  After a merge, update the local default branch first.
 - Stage explicit paths; avoid `git add -A` (it picks up stray build output).
 
 Copy-paste session prompt:

@@ -81,6 +81,9 @@ Gate is sufficient.
 ## Budget and stop condition
 Stop after 5 features.
 
+## Automerge
+no — the owner merges this one.
+
 B
   printf '%s\n\n## Open questions\n' "$1"
 }

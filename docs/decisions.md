@@ -48,3 +48,26 @@ low-risk PRs merge themselves.
     skips (and reports) any `[<id>]` issue opened by someone without push
     access: on a public repo anyone can open an issue, and an unattended run
     would build it. Only the author or a collaborator can edit a body later.
+
+## 2026-11-21 — Zero-touch QA phase 2 (merge)
+
+12. **Only agent-opened PRs merge automatically.** A PR the owner opens by hand
+    never merges by itself, even when its feature is granted.
+13. **The agent merges its own PR; a script decides.** GitHub's auto-merge needs a
+    paid plan on private repos, and the kit adds no CI files (it serves people
+    who don't use the owner's agents). After its PR is green, the agent runs
+    `can-merge.sh <pr> --merge`: it merges only when the gate is green, every
+    feature the PR names is granted `automerge`, the PR carries the agent's
+    `harness:agent` label, and no protected path is touched (deleted or
+    weakened tests included). Anything else stays for the owner, with reasons.
+    Supersedes decisions 2-3 (a CI merge job with write permissions).
+14. **Agents are told the safe list.** The brief and builder say that touching a
+    safe-list path means the PR waits for the owner; the script still enforces it.
+15. **No CI templates and no issue-sync Action in the kit.** It stays generic;
+    sync already runs at session start and close-out and as a command.
+16. **Guardrail, not a wall (owner, 2026-11-21: option A).** can-merge.sh stops
+    agent mistakes; agents hold the owner's token, so it cannot stop a
+    determined agent. No separate bot account.
+17. **Verdict scripts run from the kit, never the repo.** The evaluator runs
+    the kit's acceptance-verdict.sh; a PR touching the repo's QA scripts is
+    NEEDS_WORK, and setup no longer copies the verdict script into repos.

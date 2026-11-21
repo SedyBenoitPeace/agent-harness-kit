@@ -3,6 +3,52 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 95 (M56-001, M56-002 the agent merges its own PR when the rules allow)
+
+- Branch: `automerge`. Owner decisions 12–15 (`docs/decisions.md`).
+- Done: M56-001 `skills/harness-session/scripts/can-merge.sh` (MERGE, WAIT,
+  HOLD; `--merge`, `--list`), tested against a fake gh
+  (`scripts/fixtures/merge/gh`). M56-002 briefs carry `## Automerge`
+  (check-brief.sh), planning copies it to `automerge`; protocol 2.6 and the
+  builder: label `harness:agent`, check `--list` first, run
+  `can-merge.sh <pr> --merge` once green, never merge otherwise. 3.25.0.
+- Decisions: the agent merges (owner can't enable GitHub auto-merge on
+  free private repos); no CI templates or sync Action in the kit (it serves
+  people outside the owner's setup); agent PRs only (label, since agents
+  run under the owner's GitHub account). After an automated security
+  review: grants and protected list read from the base branch (a PR cannot
+  grant itself; first-time grants made in the same PR wait for the owner),
+  merge pinned with `--match-head-commit`, changed paths from the PR files
+  API (exact names, renames, deletions) instead of diff headers, the gate
+  and QA scripts always protected.
+- Evaluation: a fresh evaluator session sent both back. Fixed test-first:
+  a PR changing any automerge setting in FEATURES.json holds (it could
+  rewrite the owner's policy for later PRs); the local gate needs a clean
+  tree on the PR head; only-skipped checks fall back to it; invalid
+  patterns hold; protected paths add agent instructions (.claude/,
+  AGENTS.md, docs/agents/, CODEOWNERS), Rails/alembic migrations, uv.lock,
+  wrangler, GitLab CI, test-runner configs, all case-insensitive; more skip
+  forms and shrunk test files hold; drafts and non-default bases hold;
+  MERGE prints only after GitHub accepts the pinned merge; a moved head
+  holds; added lines come from the files API patches (no diff parsing).
+  Protocol 2.6 regains "update the local default branch".
+- Second evaluation: M56-002 PASS, M56-001 NEEDS_WORK. Fixed test-first:
+  a passing check counts as the gate only when named in
+  `automerge.required_checks` (else the local gate runs); the base policy
+  is read from the PR's repo through the contents API, not git's origin;
+  automerge changes are compared against the merge-base (no false holds on
+  status flips or new features); renamed tests hold; skip forms per
+  language (some anywhere, some in test files only; `pending` and
+  `.skip-link` no longer hold); more always-protected paths (CI systems,
+  agent configs, nested AGENTS/CLAUDE.md, kit scripts); control
+  characters in names hold. Framed as a guardrail, not a wall (agents hold
+  the owner's token); option B (a bot account) put to the owner.
+- Gate: GREEN (bash scripts/e2e.sh).
+- M56-003 (owner's security review): the evaluator runs the kit's own
+  acceptance-verdict.sh, never a repo copy; a PR touching the repo's QA
+  scripts is NEEDS_WORK; setup stops copying it. Owner chose A (guardrail).
+- Next: first real use on one repo.
+
 ## 2026-11-20 -- session 94 (M55-001..003 GitHub issues as the place to write features)
 
 - Branch: `issues-sync`.
