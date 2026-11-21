@@ -599,6 +599,36 @@
       ]
     },
     {
+      "id": "M56-003",
+      "milestone": 56,
+      "title": "The evaluator's verdict cannot be rewritten by the PR it judges: it runs the kit's acceptance-verdict.sh, never a repo copy; a PR touching the repo's QA scripts is NEEDS_WORK; setup no longer copies acceptance-verdict.sh",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-merge.sh proving the check below",
+      "model": "low",
+      "depends_on": [
+        "M56-002"
+      ],
+      "paths": [
+        "agents/src/harness-evaluator.md",
+        "skills/harness-initial-setup/SKILL.md",
+        "scripts/test-merge.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M56-003.1",
+          "title": "The verdict script is the kit's own",
+          "critical": true,
+          "steps": [
+            "Read agents/src/harness-evaluator.md, every generated evaluator and harness-initial-setup SKILL.md"
+          ],
+          "pass_if": "Evaluators run the kit's harness-session acceptance-verdict.sh, never scripts/acceptance-verdict.sh, and call a diff touching the repo's acceptance-verdict.sh, read-checks.sh or check-coverage.sh NEEDS_WORK; setup's scaffold table copies check-coverage.sh and read-checks.sh only",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
       "id": "M57-001",
       "milestone": 57,
       "title": "harness-brief grills until nothing is open: no question cap; questions come in numbered rounds, each with a recommended answer worded so yes accepts it; facts the repo can answer are looked up, never asked; the brief is saved only when no open decision remains",

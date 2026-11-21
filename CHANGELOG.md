@@ -28,6 +28,9 @@ The agent merges its own PR when the rules allow (M56; decisions 12–15):
   planning copies it to `automerge`. Builders label their PR, check
   `can-merge.sh --list` before editing, and run `can-merge.sh <pr> --merge`
   once green.
+- The evaluator runs only the kit's own `acceptance-verdict.sh`, never a
+  repo copy, and a PR touching the repo's QA scripts is NEEDS_WORK, so a PR
+  cannot rewrite its own verdict (M56-003).
 - Per repo, FEATURES.json `"automerge": {"enabled": false}` switches it off;
   `"protected": [...]` replaces the default list (CI files, agent
   instructions and the kit's scripts stay protected); `"required_checks"`
@@ -41,6 +44,9 @@ Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure` (recopies
   the protocol). Nothing merges itself until a feature has
   `"automerge": true` on the default branch.
+- Delete `scripts/acceptance-verdict.sh` if 3.23.0 copied it in: the
+  evaluator now runs only the kit's own copy, and a PR touching the repo's
+  QA scripts is NEEDS_WORK (a PR could otherwise rewrite its own verdict).
 
 ## 3.24.0 — 2026-11-20
 

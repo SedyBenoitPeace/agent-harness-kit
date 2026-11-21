@@ -63,7 +63,7 @@ Copy each template and substitute every `{{PLACEHOLDER}}`:
 | `templates/ARCHITECTURE.md.tmpl` | `ARCHITECTURE.md` (content from §1.8, not placeholders) |
 | `templates/dev.sh.tmpl` | `scripts/dev.sh` (chmod +x) |
 | `templates/e2e.sh.tmpl` | `scripts/e2e.sh` (chmod +x) |
-| `../harness-session/scripts/check-coverage.sh`, `../harness-session/scripts/read-checks.sh`, `../harness-session/scripts/acceptance-verdict.sh` | `scripts/`, same names (CI's check-coverage step and the evaluator run them, so they live in the repo) |
+| `../harness-session/scripts/check-coverage.sh`, `../harness-session/scripts/read-checks.sh` | `scripts/`, same names (CI's check-coverage step runs them on a clean clone, so they live in the repo; the evaluator's verdict script stays in the kit: a PR could rewrite its own verdict) |
 | `templates/harness-protocol.md`, `templates/harness-protocol-planning.md`, `templates/harness-protocol-runs.md`, `templates/harness-protocol-maintenance.md` | `docs/agents/`, same names — **copied whole, never generated or summarized** |
 
 Append `.harness-run/` to `.gitignore` (create it if missing): run state and

@@ -65,3 +65,9 @@ low-risk PRs merge themselves.
     safe-list path means the PR waits for the owner; the script still enforces it.
 15. **No CI templates and no issue-sync Action in the kit.** It stays generic;
     sync already runs at session start and close-out and as a command.
+16. **Guardrail, not a wall (owner, 2026-11-21: option A).** can-merge.sh stops
+    agent mistakes; agents hold the owner's token, so it cannot stop a
+    determined agent. No separate bot account.
+17. **Verdict scripts run from the kit, never the repo.** The evaluator runs
+    the kit's acceptance-verdict.sh; a PR touching the repo's QA scripts is
+    NEEDS_WORK, and setup no longer copies the verdict script into repos.

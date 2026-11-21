@@ -190,4 +190,15 @@ done < <({ echo "$KIT/agents/src/harness-builder.md"; find "$tmp/gen" -type f -n
 [ "$n" -ge 4 ] || fail "expected the source plus generated builders, found $n"
 for w in 'harness:agent' 'can-merge.sh --list' 'can-merge.sh <pr> --merge' 'never merge otherwise' 'update the local default branch'; do grep -qF -- "$w" <<< "$sec26" || fail "protocol 2.6 must say $w"; done
 
+t "M56-003.1 the verdict script is the kit's own @critical"
+grep -E '^\| `\.\./harness-session/scripts/' "$KIT/skills/harness-initial-setup/SKILL.md" | grep -qF 'acceptance-verdict.sh' && fail "setup must not copy acceptance-verdict.sh into repos"
+n=0
+while IFS= read -r f; do
+  n=$((n + 1))
+  grep -qF 'scripts/acceptance-verdict.sh' "$f" && fail "$f: must not run the repo's scripts/acceptance-verdict.sh"
+  grep -qF "kit's own" "$f" || fail "$f: must say it runs the kit's own acceptance-verdict.sh"
+  { grep -qF 'NEEDS_WORK' "$f" && grep -qF 'read-checks.sh' "$f" && grep -qF 'check-coverage.sh' "$f"; } || fail "$f: a PR touching the QA scripts must be NEEDS_WORK"
+done < <({ echo "$KIT/agents/src/harness-evaluator.md"; find "$tmp/gen" -type f -name 'harness-evaluator*'; })
+[ "$n" -ge 3 ] || fail "expected the source plus generated evaluators, found $n"
+
 echo "MERGE TESTS GREEN"

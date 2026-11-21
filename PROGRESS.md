@@ -44,7 +44,10 @@ Newest-first session log. One entry per working session. Read this (plus
   characters in names hold. Framed as a guardrail, not a wall (agents hold
   the owner's token); option B (a bot account) put to the owner.
 - Gate: GREEN (bash scripts/e2e.sh).
-- Next: owner's A/B answer; first real use on one repo.
+- M56-003 (owner's security review): the evaluator runs the kit's own
+  acceptance-verdict.sh, never a repo copy; a PR touching the repo's QA
+  scripts is NEEDS_WORK; setup stops copying it. Owner chose A (guardrail).
+- Next: first real use on one repo.
 
 ## 2026-11-20 -- session 94 (M55-001..003 GitHub issues as the place to write features)
 
