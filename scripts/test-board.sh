@@ -118,6 +118,12 @@ res M1-007 passing green; expect_after M1-007 merging; res M1-007 blocked red
 echo M1-008 >> "$H/skip"; expect_after M1-008 skipped
 jq '(.features[] | select(.id == "M1-009")) |= (.status = "passing")' "$R/FEATURES.json" > "$WORK/f" && mv "$WORK/f" "$R/FEATURES.json"
 expect_after M1-009 passing
+# a passing feature is done: its time is frozen (dispatch to result), never a ticking clock
+echo "$((now - 300)) dispatch M1-009 claude harness-builder -" >> "$H/events.log"
+res M1-009 passing green; touch -t "$(date -r "$((now - 60))" +%Y%m%d%H%M.%S 2>/dev/null || date -d "@$((now - 60))" +%Y%m%d%H%M.%S)" "$H/results/M1-009.txt"
+expect_after M1-009 passing
+row M1-009 | grep -q 'class="tick"' && fail "a passing row must not tick"
+row M1-009 | grep -q '<span>4m 0s</span>' || fail "a passing row shows its frozen build time (dispatch to result)"
 grep -q 'data-id="M1-000"' "$HTML" && fail "a feature passing at run start must not be shown"
 
 # --- cost and tokens; header --------------------------------------------------

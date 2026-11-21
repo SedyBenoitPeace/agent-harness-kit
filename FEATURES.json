@@ -334,6 +334,22 @@
       ]
     },
     {
+      "id": "M54-002",
+      "milestone": 54,
+      "title": "A passing row on the run board shows its build time frozen (dispatch to result) instead of a clock that keeps ticking",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-board.sh proving a passing row has no ticking timer and shows dispatch-to-result time",
+      "model": "small",
+      "depends_on": [
+        "M54-001"
+      ],
+      "paths": [
+        "skills/harness-run/scripts/board.sh",
+        "scripts/test-board.sh",
+        "CHANGELOG.md"
+      ]
+    },
+    {
       "id": "M55-001",
       "milestone": 55,
       "title": "issues.sh sync pulls GitHub issues into FEATURES.json: the issue owns title and checks, the repo owns everything else; new [id] issues become failing features; broken issues are reported and skipped",
