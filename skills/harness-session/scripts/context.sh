@@ -2,7 +2,7 @@
 # harness-session: bounded, read-only "what do I need to start?" report.
 # Bundles harness-status's report with the git/plan facts a coding session
 # also needs, so an agent can start from one call instead of several.
-# Usage: context.sh [--skip FILE] [--busy FILE] [--brief] [--outline FILE] [TARGET_DIR]
+# Usage: context.sh [--skip FILE] [--busy FILE] [--through N] [--brief] [--outline FILE] [TARGET_DIR]
 #        (TARGET_DIR defaults to the current directory)
 # --skip FILE is passed to harness-status (see status.sh) so NEXT, PLAN and
 # PARALLEL all follow the first feature that is not skipped.
@@ -13,6 +13,8 @@
 # SKILL.md, AGENTS.md or the protocol files.
 # --busy FILE: ids whose parallel lane is still running (M46-001, rolling
 # lanes); PARALLEL then lists only lanes that can start beside them.
+# --through N (M61-001): lanes may come from later milestones up to N (the
+# run's range); without it, only NEXT's milestone.
 # --outline FILE: the task points to an approved plan or outline from another
 # workflow (M43-001). Prints its path and a SKIP_BRIEF hint (protocol 1.1);
 # a path that does not exist prints "not found" and no hint.
@@ -22,11 +24,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 STATUS="$SCRIPT_DIR/../../harness-status/scripts/status.sh"
-SKIP=(); BRIEF=0; OUTLINE=""; BUSY=/dev/null
+SKIP=(); BRIEF=0; OUTLINE=""; BUSY=/dev/null; THROUGH=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip) SKIP=(--skip "${2:?--skip needs a file}"); shift 2 ;;
     --busy) BUSY="${2:?--busy needs a file}"; shift 2 ;;
+    --through) THROUGH="${2:?--through needs a milestone}"; shift 2 ;;
     --brief) BRIEF=1; shift ;;
     --outline) OUTLINE="${2:?--outline needs a file}"; shift 2 ;;
     *) break ;;
@@ -131,44 +134,65 @@ else
 fi
 
 # Parallel lanes for harness-run: declared at planning time, never inferred.
-# Eligible = failing, in NEXT's milestone, declares depends_on (all passing)
-# and non-empty paths. Greedy from NEXT, max 3, never two with the same
-# optional exclusive value; fewer than 2 lanes, or NEXT itself ineligible → sequential.
+# Eligible = failing, in NEXT's milestone (or up to --through N, M61-001),
+# declares depends_on (all passing) and non-empty paths. Greedy from NEXT,
+# max 5 (max_lanes in FEATURES.json, M61-001), never two with the same optional exclusive value; fewer than 2
+# lanes, or NEXT itself ineligible → sequential.
 # --busy (M46-001): running lanes keep their files, exclusive value and cap
-# slots; then one new lane is enough, and an ineligible NEXT waits.
+# slots; then one new lane is enough, and an ineligible NEXT waits. A line
+# "<id> ready" (M61-001) is a finished lane waiting for its milestone: it
+# keeps its files and exclusive value but frees its slot.
 # Overlap (M45-002): only a named file blocks — a file both features list, or one
 # inside the other's directory/glob. Two directories never block: disjoint
 # files in a shared folder merge cleanly, and a real conflict is caught at
-# merge (lane dropped, redone sequentially).
+# merge (lane dropped, redone sequentially). Paths listed in the top-level
+# shared_paths (M61-001: README, changelog) never block; merge-lane.sh
+# resolves their conflicts.
+# Without --brief, each open feature in range that is not a lane prints
+# "  not a lane: <id> — <reason>" (at most 6 lines).
 # ponytail: a conflicting lane is rebuilt from scratch; resolve-in-lane if that gets common.
 # Archived ids (docs/features-archive.json, M34-010) count as passing.
 ARCH=docs/features-archive.json; [ -f "$ARCH" ] || ARCH=/dev/null
 [ -e "$BUSY" ] || { echo "context: --busy file not found: $BUSY" >&2; exit 2; }
-jq -r --arg ex "$SKIPPED_IDS" --arg busy "$(cat "$BUSY")" --slurpfile arc "$ARCH" '
+jq -r --arg ex "$SKIPPED_IDS" --arg busy "$(cat "$BUSY")" --arg through "${THROUGH#[Mm]}" --argjson why "$((1 - BRIEF))" --slurpfile arc "$ARCH" '
   def entry: {s: sub("[*?\\[].*$"; ""), d: (test("[*?\\[]") or endswith("/"))};
-  def overlaps($a; $b): any($a[]; . as $x | any($b[]; . as $y
-    | ($x.d and $y.d | not)
-      and (($x.s | startswith($y.s)) or ($y.s | startswith($x.s)))));
+  def hit($x; $y): ($x.d and $y.d | not) and (($x.s | startswith($y.s)) or ($y.s | startswith($x.s)));
+  def clash($a; $b): first($a[] as $x | $b[] as $y | select(hit($x; $y)) | if $x.d then $y.s else $x.s end) // null;
+  (.max_lanes // 5 | if type == "number" and . >= 1 then floor else 5 end) as $cap
+  | (.shared_paths // []) as $shared
+  | def ents: (.paths // []) | map(select(. as $p | $shared | index([$p]) | not)) | map(entry);
   ([$arc[].features[]?, .features[]] | map({key: .id, value: .status}) | from_entries) as $st
   | ([.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]
       | sort_by(.milestone, .id)) as $f
   | if ($f | length) == 0 then "PARALLEL: none" else
-      [ $f[] | select(.milestone == $f[0].milestone
-          and (.depends_on | type) == "array" and all(.depends_on[]; $st[.] == "passing")
-          and (.paths | type) == "array" and (.paths | length) > 0) ] as $el
-      | ($busy | split("\n") | map(select(length > 0))) as $b
-      | if ($b | length) == 0 and (($el | length) == 0 or $el[0].id != $f[0].id) then "PARALLEL: none" else
-          reduce ($el[] | select(.id as $i | $b | index($i) | not)) as $e (
-            [ $f[] | select(.id as $i | $b | index($i)) | {id, p: ((.paths // []) | map(entry)), x: (.exclusive // null), busy: true} ];
-            ($e.paths | map(entry)) as $p
-            | ($e.exclusive // null) as $x
-            | if length < 3 and all(.[]; overlaps(.p; $p) | not)
-                and ($x == null or all(.[]; .x != $x))
-              then . + [{id: $e.id, p: $p, x: $x}] else . end)
-          | map(select(.busy | not)) as $new
-          | if ($new | length) >= (if ($b | length) > 0 then 1 else 2 end)
-            then "PARALLEL: " + ($new | map(.id) | join(" ")) else "PARALLEL: none" end
-        end
+      ($f[0].milestone) as $m0
+      | (($through | tonumber? // $m0) | if . < $m0 then $m0 else . end) as $mx
+      | def why: if .milestone > $mx then "milestone \(.milestone) is outside this run (--through)"
+          elif (.depends_on | type) != "array" then "no depends_on"
+          elif (.paths | type) != "array" or (.paths | length) == 0 then "no paths"
+          else ([.depends_on[] | select($st[.] != "passing")]) as $d
+            | if $d != [] then "depends on \($d | map("\(.) (\($st[.] // "missing"))") | join(", "))" else null end end;
+      [ $f[] | select(why == null) ] as $el
+      | ($busy | split("\n") | map(select(length > 0) | split(" ") | {id: .[0], ready: (.[1] == "ready")})) as $b
+      | ($b | map(.id)) as $bid
+      | ([ $f[] | .id as $i | ($b[] | select(.id == $i)) as $bb | {id, p: ents, x: (.exclusive // null), busy: true, ready: $bb.ready} ]) as $seed
+      | (if ($b | length) == 0 and (($el | length) == 0 or $el[0].id != $f[0].id) then {l: $seed, r: {}, seq: true}
+         else reduce ($el[] | select(.id as $i | $bid | index($i) | not)) as $e ({l: $seed, r: {}, seq: false};
+            ($e | ents) as $p | ($e.exclusive // null) as $x
+            | ([.l[] | {id, c: clash(.p; $p)} | select(.c != null)] | first) as $c
+            | ([.l[] | select($x != null and .x == $x) | .id] | first) as $xc
+            | if $c != null then .r[$e.id] = "shares \($c.c) with \($c.id)"
+              elif $xc != null then .r[$e.id] = "exclusive \($x) with \($xc)"
+              elif ([.l[] | select(.ready | not)] | length) >= $cap then .r[$e.id] = "cap of \($cap) lanes reached"
+              else .l += [{id: $e.id, p: $p, x: $x, ready: false}] end) end) as $res
+      | ([$res.l[] | select(.busy | not)]) as $new
+      | ($new | length) as $nn
+      | (if $res.seq | not and $nn >= (if ($b | length) > 0 then 1 else 2 end) then "PARALLEL: " + ($new | map(.id) | join(" ")) else "PARALLEL: none" end),
+        (if $why == 1 then
+          [ $f[] | . as $g | select(($bid | index($g.id) | not) and (if ($nn >= (if ($b | length) > 0 then 1 else 2 end)) and ($res.seq | not) then ($new | map(.id) | index($g.id) | not) else true end))
+            | (why // $res.r[.id] // (if $res.seq and .id != $f[0].id then "NEXT \($f[0].id) is not a lane (\($f[0] | why // "nothing to pair with")), so the run is sequential" elif .id == $f[0].id and ($nn < 2) then null else null end)) as $w
+            | select($w != null) | "  not a lane: \(.id) — \($w)" ] | .[:6][]
+         else empty end)
     end
 ' FEATURES.json
 

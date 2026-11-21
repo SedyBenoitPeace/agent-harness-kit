@@ -375,6 +375,9 @@ bash scripts/test-run.sh
 # M47-001: the live run board (run-id, events.log, board.sh)
 shellcheck skills/harness-run/scripts/board.sh skills/harness-run/scripts/run-start.sh scripts/test-board.sh
 bash scripts/test-board.sh
+# M61-002: lanes merge with shared_paths conflicts resolved by union
+shellcheck skills/harness-run/scripts/merge-lane.sh scripts/test-merge-lane.sh
+bash scripts/test-merge-lane.sh
 # M32: every CLI's usage collector test (added by its own feature)
 for t in scripts/test-usage-*.sh; do
   [ -f "$t" ] || continue
