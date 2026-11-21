@@ -402,7 +402,7 @@ echo "$out" | grep -q '^SKIP_BRIEF: ' || fail "--outline with --brief --skip: hi
 echo "$out" | grep -q '== Session protocol ==' || fail "--outline with --brief --skip: card missing"
 
 # 13. "kind": "bug" (M59-001): status and context show it; no brief needed
-echo "-- M59-001.1 Bug kind shown and accepted @critical"
+printf -- "-- %s\n" "M59-001.1 Bug kind shown and accepted @critical"
 make_repo "$WORK/bug"
 jq '.features[1].kind = "bug"' "$WORK/bug/FEATURES.json" > "$WORK/bug.json" && mv "$WORK/bug.json" "$WORK/bug/FEATURES.json"
 out="$(bash skills/harness-status/scripts/status.sh "$WORK/bug")" || fail "bug kind: status.sh must accept it"

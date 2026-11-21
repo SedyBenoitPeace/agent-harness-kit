@@ -3,6 +3,32 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 99 (parallel lanes M57-004, M58-001, M59-001, M59-002, M60-001, M60-002, M60-003 merged)
+
+- Branch: `m57` (one branch for M57–M60 on the owner's request to run in
+  parallel; lanes in `../agent-harness-kit-<id>` worktrees, merged
+  `--no-ff`).
+- Done: M59-001 `kind: bug` shown by status.sh and context.sh (SKIP_BRIEF
+  hint). M59-002 `issues.sh sync` turns a `bug`-labelled issue into a
+  failing kind-bug feature and retitles it `[id] title`. M60-001
+  `retro-facts.sh` (one page, at most 80 lines, TDD-order check). M60-002
+  harness-retro skill (at most 5 ranked fixes, offers, never applies).
+  M60-003 `wizard.sh` writes `scripts/wizard-<id>.sh` for Needs-a-human
+  items, no secrets. M57-004 README credit to mattpocock/skills and the
+  recommended local skills section. M58-001 evaluator standards pass
+  (NOTE lines only; acceptance-verdict.sh still decides).
+- Decisions: per lane commit bodies. M59-002: bugs go to the lowest
+  milestone with failing work; bug issues from non-writers are ignored.
+  M60-001: facts from events.log (Claude evaluator NEEDS_WORK verdicts are
+  not logged there, a known gap). M60-002 credits no outside skill (none
+  named in the plan). M60-003: generator script, wizard left uncommitted
+  unless asked. Merge conflicts were all additive (CHANGELOG entries and
+  the one check-coverage line in e2e.sh), resolved by keeping both sides.
+- Follow-ups: FEATURES.json.tmpl `_instructions` does not mention `kind`;
+  harness-issues SKILL.md does not describe bug intake; harness-retro and
+  harness-brief are missing from the AGENTS.md deliverables list.
+- Gate: GREEN after the flip. First red: M59-001.1 was titled "-- M59-001.1 …", which check-coverage does not count (title must start with the id); the lane gate missed it because lanes never flip FEATURES.json. Fixed the title in test-session.sh. Lanes should run check-coverage against a copy of FEATURES.json with their feature flipped.
+
 ## 2026-11-21 -- session 98 (M57-003 glossary used when present)
 
 - Branch: `m57`.
