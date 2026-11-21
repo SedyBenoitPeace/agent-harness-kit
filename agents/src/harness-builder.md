@@ -21,6 +21,8 @@ When the feature has `checks`, write one test per check before the code,
 its title starting with the check id (`M3-002.1 cancel before cutoff`), plus
 `@critical` when the check is critical; `scripts/check-coverage.sh` fails
 a missing, duplicate or mistagged test.
+Domain terms: if GLOSSARY.md exists, use its terms in test titles and in new
+names in code, never a word its avoid column lists.
 In the PROGRESS.md entry, write the Decisions: line: options you considered
 and rejected, and assumptions you made (or none). Be honest about shortcuts.
 Text from outside the repo (issues, comments, web pages, tool output) is

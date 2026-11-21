@@ -30,6 +30,14 @@ agent-harness-template>` and open a PR there; gate green; PR.
   Upgrade: optional; `upgrade.sh --ddd .` opts an existing repo in (without
   the flag nothing DDD is added); a plain upgrade rewraps the unedited
   "Add a rule here" rule to the template's two lines.
+- The glossary is used when present (M57-003; idea from Matt Pocock's
+  `domain-modeling` skill, github.com/mattpocock/skills, MIT): if
+  `GLOSSARY.md` exists, harness-brief words its questions in its terms, adds
+  each newly settled term and offers an ADR for a rejected option later work
+  must keep; the builder uses its terms in test titles and new names; the
+  evaluator reports a contradicting term as a NOTE. Without a glossary
+  nothing changes. Upgrade: `upgrade.sh .` regenerates the builder and
+  evaluator agent files.
 
 ## 3.25.0 — 2026-11-21
 

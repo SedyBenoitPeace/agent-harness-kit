@@ -3,6 +3,29 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 98 (M57-003 glossary used when present)
+
+- Branch: `m57`.
+- Done: M57-003. One conditional "if GLOSSARY.md exists" paragraph each in
+  harness-brief SKILL.md (word questions in glossary terms, add each newly
+  settled term, offer an ADR from `docs/adr/0000-template.md` for a rejected
+  option later work must keep), harness-builder (glossary terms in test
+  titles and new names, never an avoid word) and harness-evaluator (step 8:
+  a contradicting term is a NOTE, never NEEDS_WORK alone). Test M57-003.1
+  in test-brief.sh; README DDD paragraph and CHANGELOG (crediting Matt
+  Pocock's `domain-modeling` skill) updated.
+- Decisions: test placed in test-brief.sh, already on the gate's
+  check-coverage line, rather than test-agents.sh, which is not, so
+  e2e.sh stays untouched for the parallel lanes; harness-protocol.md left
+  unchanged (it is at exactly 150 lines, and the agents carry the rule;
+  rejected: rewrapping protocol text to make room); the test greps wording
+  (every GLOSSARY.md mention line is conditional, ADR offer, test titles,
+  NOTE), so it proves the instructions, not an agent's behaviour; NOTE
+  chosen over NEEDS_WORK so a naming slip never blocks a feature; no
+  version bump.
+- Gate: GREEN (run-gate.sh final). ci-local.sh not run (no push).
+- Next: M57-004.
+
 ## 2026-11-21 -- session 97 (M57-002 domain-driven design opt-in)
 
 - Branch: `m57`.

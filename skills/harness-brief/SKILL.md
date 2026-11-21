@@ -32,6 +32,10 @@ entries plus a plan section (protocol 1.1), then go to harness-run.
    decisions; ask those next round. There is no question cap: keep going
    until no open decision remains. If the human says not to ask, take each
    recommended answer as a visible default in the brief.
+   Domain terms: if GLOSSARY.md exists, word questions and the brief in its
+   terms, add each new term as soon as its meaning is settled (term |
+   definition | avoid), and when the human rejects an option for a reason
+   later work must keep, offer an ADR in `docs/adr/` (copy `0000-template.md`).
 3. Fill `templates/brief.md.tmpl` (path relative to this skill). Sections:
    Objective (one sentence) · Stage (prototype or production, and why in one
    line: it decides how much effort and checking the work deserves; when the

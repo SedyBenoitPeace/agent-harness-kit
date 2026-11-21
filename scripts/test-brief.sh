@@ -105,6 +105,15 @@ grep -qi 'decisions from the human' "$md" || fail "SKILL.md: only decisions go t
 t "M57-001.3 README describes the new brief"
 ! grep -qi 'at most three' README.md || fail "README: still says at most three questions"
 grep -qi 'questions in numbered rounds' README.md || fail "README: brief must describe grilling in rounds"
+t "M57-003.1 glossary used only when present @critical"
+for f in "$md" agents/src/harness-builder.md agents/src/harness-evaluator.md; do
+  grep -qi 'if GLOSSARY.md exists' "$f" || fail "$f: must name GLOSSARY.md conditionally (if GLOSSARY.md exists)"
+  ! grep -i 'GLOSSARY.md' "$f" | grep -vqi 'if GLOSSARY.md exists' || fail "$f: every GLOSSARY.md mention must be conditional"
+done
+grep -qi 'offer an ADR' "$md" || fail "SKILL.md: must offer an ADR for a load-bearing decision"
+grep -qi 'test titles' agents/src/harness-builder.md || fail "builder: must name tests with glossary terms"
+tr '\n' ' ' < agents/src/harness-evaluator.md | grep -qiE 'contradicts +the glossary: report it as a NOTE' || fail "evaluator: a contradicting term must be a NOTE"
+[ "$(wc -l < skills/harness-initial-setup/templates/harness-protocol.md)" -le 150 ] || fail "protocol core over 150 lines"
 grep -qi 'stranger test' "$md" || fail "SKILL.md: stranger test missing"
 grep -q 'check-brief.sh' "$md" || fail "SKILL.md: does not run check-brief.sh"
 grep -q 'templates/brief.md.tmpl' "$md" || fail "SKILL.md: template not referenced"

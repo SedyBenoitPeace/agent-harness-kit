@@ -731,7 +731,7 @@
       "id": "M57-003",
       "milestone": 57,
       "title": "When GLOSSARY.md exists, the brief, builders and evaluator use its terms: the brief adds new terms as they are settled and offers an ADR for a load-bearing decision; the builder names tests and code with glossary terms; the evaluator flags a term that contradicts the glossary as a NOTE",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with test-brief.sh and test-agents.sh proving the checks below",
       "model": "medium",
       "depends_on": [
