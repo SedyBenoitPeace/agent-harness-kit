@@ -14,6 +14,11 @@ agent-harness-template>` and open a PR there; gate green; PR.
 
 ## Unreleased
 
+- harness-retro skill (M60-002): runs `retro-facts.sh`, reads only its
+  page (never raw session logs or whole files), and offers at most 5 fixes
+  ranked by severity in fixed categories (navigation, automated check, tool
+  economy, no-op rule, missing information), each a gate check or a dated
+  AGENTS.md rule. It never applies them.
 - harness-brief grills until nothing is open (M57-001; idea from Matt
   Pocock's `grilling` skill, github.com/mattpocock/skills, MIT): no
   three-question cap; decisions come in numbered rounds, each question with
