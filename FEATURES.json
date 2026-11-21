@@ -907,8 +907,8 @@
       "id": "M59-003",
       "milestone": 59,
       "title": "A bug session reproduces before it fixes: the builder's first commit-worthy step is a test that fails on the reported symptom, no fix or hypothesis before it; after the fix the PROGRESS entry carries a one-line Lesson; the evaluator checks the repro test exists and failed first",
-      "status": "deferred",
-      "notes": "Needs a human: compare with Stefano's own lean debugging skill (he will link it) before writing the rule.",
+      "status": "failing",
+      "notes": "Base the rule on Stefano's lean-debugging skill (sedybenoitpeace-skills, lean-skills plugin): reproduce in isolation, one hypothesis at a time, failing regression test before the single root-cause fix, verify. Add from Pocock's diagnosing-bugs: the repro must fail on the reported symptom, not a nearby failure; a flaky bug is looped until it reproduces often enough to debug. Unattended: after 3 failed fixes the session stops blocked with Needs a human instead of asking.",
       "verify": "bash scripts/e2e.sh exits 0 with test-agents.sh proving the check below",
       "model": "high",
       "depends_on": [
