@@ -14,6 +14,11 @@ agent-harness-template>` and open a PR there; gate green; PR.
 
 ## Unreleased
 
+- Builders work one check per red-green cycle (M58-002; idea from Matt
+  Pocock's `tdd` skill, github.com/mattpocock/skills, MIT): one check's
+  test, watch it fail, make it pass, then the next check, instead of
+  writing every check's test before any code. Builder agent and protocol
+  section 2.4 say so.
 - harness-retro skill (M60-002): runs `retro-facts.sh`, reads only its
   page (never raw session logs or whole files), and offers at most 5 fixes
   ranked by severity in fixed categories (navigation, automated check, tool
