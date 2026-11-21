@@ -88,10 +88,12 @@ English:
   `bar` in FEATURES.json) end their session in `review`; harness-run then
   dispatches a separate, read-only `harness-evaluator` agent that returns
   `PASS` or `NEEDS_WORK` with evidence before the feature can become
-  `passing`, and records `docs/verification/<id>.md`. The builder and
-  evaluator agents are generated for Claude Code, Copilot CLI and Codex CLI
-  by `scripts/gen-agents.sh` from one source in `agents/`, at setup and by
-  the upgrade; harness-run dispatches the builder by name, never a stand-in.
+  `passing`, and records `docs/verification/<id>.md`. It also checks the
+  diff against `CODING_STANDARDS.md` / `CONTRIBUTING.md` when present and a
+  fixed code-smell list, as `NOTE:` lines that never change the verdict.
+  The builder and evaluator agents are generated for Claude Code, Copilot
+  CLI and Codex CLI by `scripts/gen-agents.sh` from one source in
+  `agents/`, at setup and by the upgrade; harness-run dispatches the builder by name, never a stand-in.
 - **harness-issues** — GitHub issues as the place to write features:
   `/agent-harness-kit:harness-issues migrate` moves open features to issues,
   `… sync` brings them back into FEATURES.json (see Features in GitHub issues).
