@@ -104,6 +104,11 @@ done
 for f in .circleci/config.yml Jenkinsfile azure-pipelines.yml bitbucket-pipelines.yml .travis.yml .buildkite/pipeline.yml .mcp.json src/AGENTS.md packages/web/CLAUDE.md .cursor/rules/a.md .cursorrules .codex/config.toml .gemini/settings.json tox.ini setup.cfg karma.conf.js phpunit.xml Makefile skills/harness-session/scripts/run-gate.sh src/login/oauth.ts; do
   hold "prot2-$(printf '%s' "$f" | tr -cd 'a-zA-Z')" "protected path: $f" "files '.[0].filename = \"$f\"'"
 done
+hold nested-claude 'protected path: packages/web/.claude/settings.json' "files '.[0].filename = \"packages/web/.claude/settings.json\"'"
+hold windsurf 'protected path: .windsurfrules' "files '.[0].filename = \".windsurfrules\"'"
+hold pending-call 'test weakened in e2e/booking.spec.ts' "files '.[1].patch += \"\\n+  pending(\\\"later\\\")\"'"
+hold spaced-skip 'test weakened in e2e/booking.spec.ts' "files '.[1].patch += \"\\n+  test.skip (\\\"x\\\")\"'"
+hold renamed-nopatch 'GitHub sent no patch' "files '. + [{filename: \"e2e/big.spec.ts\", status: \"modified\", additions: 0, deletions: 0}]'"
 hold merge-refused 'GitHub refused the merge' "printf 'FAIL\\n' > \"\$FAKE_GH_DIR/merge-fails\""
 
 # routine PRs must still merge (no false holds)

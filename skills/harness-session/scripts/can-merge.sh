@@ -39,8 +39,8 @@ ALWAYS_PROTECTED='^\.github/
 ^\.(circleci|buildkite)/
 (^|/)Jenkinsfile$
 (^|/)(azure-pipelines|bitbucket-pipelines|\.travis|\.gitlab-ci)\.ya?ml$
-^\.(claude|cursor|codex|gemini)/
-^\.(mcp\.json|cursorrules)$
+(^|/)\.(claude|cursor|codex|gemini|windsurf|clinerules)/
+(^|/)\.(mcp\.json|cursorrules|windsurfrules|clinerules)$
 (^|/)CODEOWNERS$
 (^|/)(AGENTS|CLAUDE|GEMINI)\.md$
 ^docs/agents/
@@ -49,7 +49,7 @@ ALWAYS_PROTECTED='^\.github/
 TEST_FILE='(^|/)(tests?|e2e|spec|__tests__)/|(^|/)[^/]*\.Tests?/|\.(spec|test)\.[A-Za-z]+$|_test\.[A-Za-z]+$|(^|/)test_[^/]*\.py$|(^|/)test-[^/]*\.sh$|Tests?\.(swift|cs|java|kt)$|_spec\.rb$'
 # added lines that switch a test off: anywhere (unambiguous) / in test files
 SKIP_ANY='#\[ignore\]|@(Disabled|Ignore)\b|XCTSkip|markTestSkipped|skipTest\(|unittest\.skip|@pytest\.mark\.(skip|xfail)|t\.Skip(Now|f)?\(|@tag :skip'
-SKIP_TEST='\.(skip|only|fixme|todo|fail)(\.|\()|\[.(skip|only|fixme|todo).\]|(^|[^A-Za-z])(xit|xdescribe|xtest|xcontext)\b|^\+[[:space:]]*skip\b|skip: *true'
+SKIP_TEST='\.(skip|only|fixme|todo|fail)[[:space:]]*[.(]|^\+[[:space:]]*pending\b|(^|[^A-Za-z_.])pending[[:space:]]*\(|\[.(skip|only|fixme|todo).\]|(^|[^A-Za-z])(xit|xdescribe|xtest|xcontext)\b|^\+[[:space:]]*skip\b|skip: *true'
 
 say() { printf '%s\n' "$@"; }
 die_hold() { say HOLD "- $1"; exit 1; }
@@ -152,9 +152,8 @@ for ((k = 0; k < n; k++)); do
   [ "$(jq -r ".[$k].status" "$tmp/f.json")" != removed ] || continue
   intest=0; matches "$file" "$TEST_FILE" && intest=1
   if ! jq -e ".[$k] | has(\"patch\")" "$tmp/f.json" >/dev/null; then
-    # no patch: binary or too large; only a changed test file matters
-    if [ "$intest" = 1 ] && [ "$(jq -r ".[$k].status" "$tmp/f.json")" = modified ] \
-       && [ "$(jq -r ".[$k] | (.additions // 0) + (.deletions // 0)" "$tmp/f.json")" -gt 0 ]; then
+    # no patch: binary or too large; an existing test file changed unseen waits
+    if [ "$intest" = 1 ] && [ "$(jq -r ".[$k].status" "$tmp/f.json")" != added ]; then
       hold "test $file: GitHub sent no patch (too large); the owner reviews it"
     fi
     continue
