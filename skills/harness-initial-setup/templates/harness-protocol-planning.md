@@ -84,6 +84,11 @@ falsifiable `verify` per feature, `effort`, and the gate. Ask the human
 only where it leaves one of those open. `context.sh --outline <path>`
 prints this as a `SKIP_BRIEF` hint.
 
+**Reporting a bug?** Add it as a feature with `"kind": "bug"`: its `checks`
+are the reported symptom (steps to reproduce, what should happen instead),
+so it needs no brief. Status reports show `kind: bug` and `context.sh`
+prints a `SKIP_BRIEF` hint for it.
+
 If an answer is vague, push back once with a concrete alternative ("do you
 mean X or Y?"). Ambiguity you accept here becomes an unfalsifiable feature
 later.

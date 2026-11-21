@@ -198,6 +198,8 @@ copilot plugin update agent-harness-kit
    only the gaps. Already have a plan or outline you approved in another
    workflow? Skip the brief: the agent turns it into FEATURES.json entries
    and a plan section, keeping its phases and checks, then runs.
+   Reporting a bug? Add a feature with `"kind": "bug"` whose checks are
+   the symptom: it needs no brief, and status shows `kind: bug`.
 1. **Set up once** — `/agent-harness-kit:harness-initial-setup`. Expect an
    interview about the product before anything is written; it ends with
    the full scaffold (AGENTS.md, FEATURES.json, PROGRESS.md,
@@ -792,7 +794,10 @@ writes back a details block (status, Done when, paths, model and effort,
 plan section), a `harness:<status>` label, and closes issues that pass.
 Agents always read the committed FEATURES.json, so an agent without GitHub
 access still works; sync is a script and spends no model tokens. Only
-issues opened by people with write access count.
+issues opened by people with write access count. An open issue labelled
+`bug` without an `[id]` gets the next id in the lowest milestone with
+failing work, is retitled `[M12-004] title`, and lands as a failing
+`"kind": "bug"` feature.
 
 ## The agent merges its own PR
 
