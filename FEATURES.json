@@ -6,7 +6,11 @@
     "52": "Onboarding installs what its docs reference",
     "53": "Acceptance checks (zero-touch QA phase 1)",
     "55": "GitHub issues as the place to write features",
-    "56": "The agent merges its own PR when the rules allow"
+    "56": "The agent merges its own PR when the rules allow",
+    "57": "Brief grills; domain-driven design opt-in",
+    "58": "Evaluator checks standards; one check at a time",
+    "59": "Bug intake",
+    "60": "Lean retro, wizard, README as a guide"
   },
   "features": [
     {
@@ -590,6 +594,443 @@
             "Read harness-protocol.md 2.6, harness-protocol-planning.md and every generated builder agent"
           ],
           "pass_if": "Planning records automerge from the brief; protocol and builder say: label harness:agent, check can-merge.sh --list before editing, run can-merge.sh <pr> --merge after a green PR and never merge otherwise",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M57-001",
+      "milestone": 57,
+      "title": "harness-brief grills until nothing is open: no question cap; questions come in numbered rounds, each with a recommended answer worded so yes accepts it; facts the repo can answer are looked up, never asked; the brief is saved only when no open decision remains",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-brief.sh proving the checks below",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-brief/SKILL.md",
+        "scripts/test-brief.sh",
+        "claude/evals/brief-from-rough-prompt",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M57-001.1",
+          "title": "No question cap, rounds with recommended answers",
+          "critical": true,
+          "steps": [
+            "Read skills/harness-brief/SKILL.md"
+          ],
+          "pass_if": "SKILL.md has no 'at most three' (or any number) question cap, asks in numbered rounds where each question carries a recommended answer worded so yes accepts it, and ends only when no open decision remains",
+          "evidence": "test"
+        },
+        {
+          "id": "M57-001.2",
+          "title": "Facts are looked up, decisions are asked",
+          "critical": false,
+          "steps": [
+            "Read skills/harness-brief/SKILL.md"
+          ],
+          "pass_if": "SKILL.md tells the agent to find facts in the repo itself and only put decisions to the human",
+          "evidence": "test"
+        },
+        {
+          "id": "M57-001.3",
+          "title": "README describes the new brief",
+          "critical": false,
+          "steps": [
+            "Read README.md"
+          ],
+          "pass_if": "README no longer says 'at most three' questions and describes grilling in rounds",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M57-002",
+      "milestone": 57,
+      "title": "Domain-driven design as a setup opt-in, off by default: yes adds GLOSSARY.md (ubiquitous language), docs/adr/ with an ADR template and one AGENTS.md pointer line; no leaves the repo exactly as today",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with a setup test proving the checks below",
+      "model": "medium",
+      "depends_on": [
+        "M57-001"
+      ],
+      "paths": [
+        "skills/harness-initial-setup/SKILL.md",
+        "skills/harness-initial-setup/templates/",
+        "skills/harness-upgrade-structure/scripts/upgrade.sh",
+        "scripts/test-upgrade.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M57-002.1",
+          "title": "Off by default changes nothing",
+          "critical": true,
+          "steps": [
+            "Scaffold a fixture repo with DDD off"
+          ],
+          "pass_if": "No GLOSSARY.md, no docs/adr/, and AGENTS.md identical to the template without DDD",
+          "evidence": "test"
+        },
+        {
+          "id": "M57-002.2",
+          "title": "On adds glossary, ADR folder and one pointer",
+          "critical": true,
+          "steps": [
+            "Scaffold a fixture repo with DDD on"
+          ],
+          "pass_if": "GLOSSARY.md and docs/adr/0000-template.md exist, AGENTS.md gains exactly one pointer line and stays within its 70-line cap",
+          "evidence": "test"
+        },
+        {
+          "id": "M57-002.3",
+          "title": "Existing repos opt in explicitly",
+          "critical": false,
+          "steps": [
+            "Run upgrade.sh on a 3.24.0 fixture with and without the DDD flag"
+          ],
+          "pass_if": "Without the flag the repo is unchanged; with it, the same files as M57-002.2 appear",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M57-003",
+      "milestone": 57,
+      "title": "When GLOSSARY.md exists, the brief, builders and evaluator use its terms: the brief adds new terms as they are settled and offers an ADR for a load-bearing decision; the builder names tests and code with glossary terms; the evaluator flags a term that contradicts the glossary as a NOTE",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-brief.sh and test-agents.sh proving the checks below",
+      "model": "medium",
+      "depends_on": [
+        "M57-002"
+      ],
+      "paths": [
+        "skills/harness-brief/SKILL.md",
+        "agents/src/harness-builder.md",
+        "agents/src/harness-evaluator.md",
+        "skills/harness-initial-setup/templates/harness-protocol.md",
+        "scripts/test-agents.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M57-003.1",
+          "title": "Glossary used only when present",
+          "critical": true,
+          "steps": [
+            "Read harness-brief SKILL.md, harness-builder.md and harness-evaluator.md"
+          ],
+          "pass_if": "Each names GLOSSARY.md conditionally (if it exists); none requires it; protocol core stays at or under 150 lines",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M57-004",
+      "milestone": 57,
+      "title": "README credits mattpocock/skills as inspiration and lists recommended local skills to install separately (grilling, improve-codebase-architecture, prototype, codebase-design, teach), with why each is not in the kit",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with check-readme.sh green",
+      "model": "low",
+      "depends_on": [
+        "M57-001"
+      ],
+      "paths": [
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M57-004.1",
+          "title": "Credit and local skills list",
+          "critical": false,
+          "steps": [
+            "Read README.md Credits and the recommended local skills section"
+          ],
+          "pass_if": "Credits links github.com/mattpocock/skills (MIT) as inspiration, and a section lists the five skills with one line each on when to use them",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M58-001",
+      "milestone": 58,
+      "title": "harness-evaluator adds a standards pass: it reads CODING_STANDARDS.md or CONTRIBUTING.md when present plus a fixed code-smell baseline, and reports findings as NOTE lines that never change the verdict (acceptance-verdict.sh still decides)",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-agents.sh proving the check below",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "agents/src/harness-evaluator.md",
+        "scripts/test-agents.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M58-001.1",
+          "title": "Standards findings are NOTE-only",
+          "critical": true,
+          "steps": [
+            "Read agents/src/harness-evaluator.md",
+            "Run acceptance-verdict.sh on a table plus NOTE lines"
+          ],
+          "pass_if": "The evaluator names the standards files and the smell baseline, writes findings as NOTE lines, and the verdict is the same with or without them",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M58-002",
+      "milestone": 58,
+      "title": "Builders work one check at a time: test for one check, watch it fail, make it pass, then the next check (no writing every check's test before any code)",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-agents.sh proving the check below",
+      "model": "low",
+      "depends_on": [],
+      "paths": [
+        "agents/src/harness-builder.md",
+        "skills/harness-initial-setup/templates/harness-protocol.md",
+        "scripts/test-agents.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M58-002.1",
+          "title": "One check per red-green cycle",
+          "critical": true,
+          "steps": [
+            "Read harness-builder.md and protocol section 2.4"
+          ],
+          "pass_if": "Both say one check per red-green cycle; protocol core stays at or under 150 lines",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M59-001",
+      "milestone": 59,
+      "title": "Features can be kind bug: FEATURES.json accepts \"kind\": \"bug\", status and context.sh show it, and a bug feature needs no brief",
+      "status": "deferred",
+      "notes": "Actionable when zero-touch QA phase 2 (issue mode, PR checklist) has merged to master.",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving the check below",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-status/scripts/status.sh",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "scripts/test-session.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M59-001.1",
+          "title": "Bug kind shown and accepted",
+          "critical": true,
+          "steps": [
+            "Add a kind bug feature to a fixture",
+            "Run status.sh and context.sh"
+          ],
+          "pass_if": "Both print the feature as a bug; no brief is required",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M59-002",
+      "milestone": 59,
+      "title": "Bug intake from GitHub: issues.sh sync turns an issue labelled bug with no [id] title into a kind bug failing feature with the next id, and retitles the issue [id] title",
+      "status": "deferred",
+      "notes": "Actionable when zero-touch QA phase 2 has merged to master.",
+      "verify": "bash scripts/e2e.sh exits 0 with test-issues.sh proving the checks below",
+      "model": "medium",
+      "depends_on": [
+        "M59-001"
+      ],
+      "paths": [
+        "skills/harness-issues/scripts/issues.sh",
+        "scripts/test-issues.sh",
+        "scripts/fixtures/issues/",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M59-002.1",
+          "title": "Labelled bug becomes a feature",
+          "critical": true,
+          "steps": [
+            "Fake gh lists an issue labelled bug titled 'Save button does nothing'",
+            "Run issues.sh sync"
+          ],
+          "pass_if": "FEATURES.json gains a failing kind bug feature with the next id, the issue is retitled [id] Save button does nothing, and a second sync changes nothing",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M59-003",
+      "milestone": 59,
+      "title": "A bug session reproduces before it fixes: the builder's first commit-worthy step is a test that fails on the reported symptom, no fix or hypothesis before it; after the fix the PROGRESS entry carries a one-line Lesson; the evaluator checks the repro test exists and failed first",
+      "status": "deferred",
+      "notes": "Actionable when zero-touch QA phase 2 has merged to master. Needs a human: compare with Stefano's own lean debugging skill (he will link it) before writing the rule.",
+      "verify": "bash scripts/e2e.sh exits 0 with test-agents.sh proving the check below",
+      "model": "high",
+      "depends_on": [
+        "M59-001"
+      ],
+      "paths": [
+        "agents/src/harness-builder.md",
+        "agents/src/harness-evaluator.md",
+        "skills/harness-initial-setup/templates/harness-protocol.md",
+        "scripts/test-agents.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M59-003.1",
+          "title": "Repro first, lesson after",
+          "critical": true,
+          "steps": [
+            "Read harness-builder.md and harness-evaluator.md"
+          ],
+          "pass_if": "For kind bug, the builder writes a failing repro test of the reported symptom before any fix and ends with a Lesson line; the evaluator returns NEEDS_WORK when no repro test exists",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M60-001",
+      "milestone": 60,
+      "title": "retro-facts.sh: one deterministic page of facts for a run (failed gates, retries, NEEDS_WORK verdicts, budget stops, blocked features, tokens and dollars where known, and whether each check's test failed before it passed) from the run report, PROGRESS Decisions lines and .harness-run/logs/, at most 80 lines",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-retro.sh proving the checks below",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-retro/scripts/retro-facts.sh",
+        "scripts/test-retro.sh",
+        "scripts/fixtures/retro/",
+        "scripts/e2e.sh"
+      ],
+      "checks": [
+        {
+          "id": "M60-001.1",
+          "title": "Facts page from a fixture run",
+          "critical": true,
+          "steps": [
+            "Run retro-facts.sh on scripts/fixtures/retro/"
+          ],
+          "pass_if": "Output lists the fixture's failed gate, its NEEDS_WORK verdict, and flags the check whose test never failed before passing; at most 80 lines",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M60-002",
+      "milestone": 60,
+      "title": "harness-retro skill: runs retro-facts.sh, reads only its page, and proposes at most 5 fixes ranked by severity in fixed categories (navigation, automated check, tool economy, no-op rule, missing information), each as a gate check or a dated AGENTS.md rule; never applies them",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-retro.sh proving the check below",
+      "model": "medium",
+      "depends_on": [
+        "M60-001"
+      ],
+      "paths": [
+        "skills/harness-retro/SKILL.md",
+        "scripts/test-retro.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M60-002.1",
+          "title": "Lean retro",
+          "critical": true,
+          "steps": [
+            "Read skills/harness-retro/SKILL.md"
+          ],
+          "pass_if": "It runs retro-facts.sh, never reads raw session logs or whole files, caps fixes at 5 in the named categories, and offers but never applies changes",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M60-003",
+      "milestone": 60,
+      "title": "Wizard for Needs a human: when a session ends blocked on a Needs-a-human item, or a plan's Before the run lists one, the orchestrator writes scripts/wizard-<id>.sh that walks the human through each step and runs a check at the end; never contains secrets",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving the check below",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/SKILL.md",
+        "skills/harness-run/templates/wizard.sh.tmpl",
+        "scripts/test-run.sh",
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M60-003.1",
+          "title": "Wizard generated for a blocked feature",
+          "critical": true,
+          "steps": [
+            "Fixture feature deferred with notes 'Needs a human: add STRIPE_KEY secret'",
+            "Generate the wizard"
+          ],
+          "pass_if": "scripts/wizard-<id>.sh exists, passes bash -n, prompts step by step, ends with a verification command, and contains no secret value",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M60-004",
+      "milestone": 60,
+      "title": "README becomes a guide: a 'what do I run when' table at the top, one short section per skill, deep detail moved to docs/guide/; README under 400 lines; check-readme.sh also searches docs/guide/ so release phrases stay covered",
+      "status": "failing",
+      "verify": "bash scripts/e2e.sh exits 0 with check-readme.sh and check-doc-refs.sh green and wc -l README.md under 400",
+      "model": "medium",
+      "depends_on": [
+        "M60-001",
+        "M60-002",
+        "M60-003"
+      ],
+      "paths": [
+        "README.md",
+        "docs/guide/",
+        "scripts/check-readme.sh",
+        "scripts/test-check-readme.sh",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M60-004.1",
+          "title": "README is a guide under 400 lines",
+          "critical": true,
+          "steps": [
+            "wc -l README.md",
+            "Read its first screen"
+          ],
+          "pass_if": "Under 400 lines; the first section is a table mapping each situation to the command or skill to run; every skill in skills/ appears in it",
+          "evidence": "test"
+        },
+        {
+          "id": "M60-004.2",
+          "title": "No release phrase lost",
+          "critical": true,
+          "steps": [
+            "bash scripts/check-readme.sh"
+          ],
+          "pass_if": "Exit 0 with phrases found in README.md or docs/guide/",
           "evidence": "test"
         }
       ]
