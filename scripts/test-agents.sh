@@ -148,4 +148,19 @@ for f in "$t/.claude/agents/harness-builder.md" "$t/.github/agents/harness-build
   grep -qF 'one read per command, never chained' "$f" || fail "$f: read rule must forbid chained reads (M44-001)"
 done
 
+chk="M58-001.1 standards findings are NOTE-only @critical"
+for f in agents/src/harness-evaluator.md "$t/.claude/agents/harness-evaluator.md" "$t/.codex/agents/harness-evaluator.toml"; do
+  for w in CODING_STANDARDS.md CONTRIBUTING.md 'mysterious name' 'duplicated code' 'feature envy' 'data clumps' \
+           'primitive obsession' 'speculative generality' 'shotgun surgery' 'NOTE: <file:line>' 'never changes the verdict'; do
+    grep -qF "$w" "$f" || fail "$chk: $f must name '$w'"
+  done
+done
+fx="scripts/fixtures/checks/features.json" v="skills/harness-session/scripts/acceptance-verdict.sh"
+notes=$'NOTE: src/a.ts:3 mysterious name `d`\nNOTE: CONTRIBUTING.md rule 2 not followed in src/b.ts:9'
+for rows in $'| M1-001.1 | covered | ok |\n| M1-001.2 | covered | ok |' $'| M1-001.1 | covered | ok |\n| M1-001.2 | missing | none |'; do
+  a="$(bash "$v" --features "$fx" M1-001 - <<< "$rows" 2>&1)" || true
+  b="$(bash "$v" --features "$fx" M1-001 - <<< "$rows"$'\n'"$notes" 2>&1)" || true
+  [ "$a" = "$b" ] || fail "$chk: NOTE lines changed the verdict: '$a' vs '$b'"
+done
+
 echo "AGENTS TESTS GREEN"

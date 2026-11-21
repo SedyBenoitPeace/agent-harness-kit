@@ -38,6 +38,13 @@ agent-harness-template>` and open a PR there; gate green; PR.
   evaluator reports a contradicting term as a NOTE. Without a glossary
   nothing changes. Upgrade: `upgrade.sh .` regenerates the builder and
   evaluator agent files.
+- The evaluator adds a standards pass (M58-001; idea from Matt Pocock's
+  `code-review` skill, github.com/mattpocock/skills, MIT): it reads
+  `CODING_STANDARDS.md` and `CONTRIBUTING.md` when present, plus a fixed
+  smell baseline (mysterious name, duplicated code, feature envy, data
+  clumps, primitive obsession, speculative generality, shotgun surgery), and
+  writes findings as `NOTE:` lines; acceptance-verdict.sh still decides.
+  Upgrade: `upgrade.sh .` regenerates the evaluator agent files.
 
 ## 3.25.0 — 2026-11-21
 
