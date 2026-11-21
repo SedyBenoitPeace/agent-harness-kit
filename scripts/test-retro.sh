@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Proves retro-facts.sh (M60-001) against scripts/fixtures/retro/, a finished
+# Proves retro-facts.sh (M60-001) and the harness-retro skill (M60-002) against scripts/fixtures/retro/, a finished
 # run: report, PROGRESS.md, .harness-run/events.log and quiet.sh logs.
 # Each t "<check id> …" line is the one test for that check (check-coverage.sh).
 set -euo pipefail
@@ -34,4 +34,19 @@ for i in $(seq 1 120); do echo "17619$i gate M9-$i final red"; done >> "$tmp/.ha
 big="$(bash "$RF" "$tmp")"
 [ "$(wc -l <<< "$big")" -le 80 ] || fail "long run: $(wc -l <<< "$big") lines, want at most 80"
 grep -q 'more lines cut' <<< "$big" || fail "long run: the cut must be said"
+
+t "M60-002.1 lean retro @critical"
+SK="skills/harness-retro/SKILL.md"
+[ -f "$SK" ] || fail "$SK missing"
+grep -q '^name: harness-retro$' "$SK" || fail "SKILL.md: frontmatter name"
+grep -qF 'scripts/retro-facts.sh' "$SK" || fail "SKILL.md: must run retro-facts.sh"
+grep -qF 'Never read raw session logs' "$SK" || fail "SKILL.md: must forbid raw session logs"
+grep -qF 'never a whole file' "$SK" || fail "SKILL.md: must forbid whole-file reads"
+grep -qF 'At most 5 fixes' "$SK" || fail "SKILL.md: must cap fixes at 5"
+for c in navigation 'automated check' 'tool economy' 'no-op rule' 'missing information'; do
+  grep -qF "**$c**" "$SK" || fail "SKILL.md: category '$c' missing"
+done
+grep -qF '(added <YYYY-MM-DD>)' "$SK" || fail "SKILL.md: a rule fix must be a dated AGENTS.md rule"
+grep -qF 'gate check' "$SK" || fail "SKILL.md: a fix may be a gate check"
+grep -qF 'Offer, never apply' "$SK" || fail "SKILL.md: must offer and never apply"
 echo "RETRO TESTS GREEN"

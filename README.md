@@ -95,6 +95,9 @@ English:
 - **harness-status** — where the project stands: progress per milestone,
   last session, exact next feature. `/agent-harness-kit:harness-status` or
   _"what's the harness status?"_.
+- **harness-retro** — after a run, one page of facts from
+  `retro-facts.sh` and at most 5 ranked fixes (a gate check or a dated
+  AGENTS.md rule), offered, never applied. _"retro the last run"_.
 - **harness-audit** — check any repo's harness-readiness.
   `/agent-harness-kit:harness-audit` or _"audit this repo's harness"_.
   It also warns when a failing feature's `verify` needs something only you
