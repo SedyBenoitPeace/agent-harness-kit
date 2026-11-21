@@ -14,6 +14,15 @@ agent-harness-template>` and open a PR there; gate green; PR.
 
 ## Unreleased
 
+- A bug session reproduces before it fixes (M59-003; based on the owner's
+  lean-debugging skill, plus Matt Pocock's `diagnosing-bugs` skill,
+  github.com/mattpocock/skills, MIT): for `"kind": "bug"` the builder's
+  first step is a test failing on the reported symptom (a flaky bug is
+  looped until it reproduces), then one hypothesis at a time and one
+  root-cause fix; after 3 failed fixes it stops blocked with
+  `Needs a human`; the entry ends with a one-line `Lesson:`. The evaluator
+  returns NEEDS_WORK when no repro test exists or it never failed before
+  the fix.
 - Builders work one check per red-green cycle (M58-002; idea from Matt
   Pocock's `tdd` skill, github.com/mattpocock/skills, MIT): one check's
   test, watch it fail, make it pass, then the next check, instead of

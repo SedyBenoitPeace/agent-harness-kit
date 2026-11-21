@@ -23,6 +23,15 @@ next check (never every check's test before any code), each title
 starting with the check id (`M3-002.1 cancel before cutoff`), plus
 `@critical` when the check is critical; `scripts/check-coverage.sh` fails
 a missing, duplicate or mistagged test.
+A bug (`"kind": "bug"`): reproduce first. Your first step is a test that
+fails on the reported symptom (not a nearby failure), run in isolation,
+before any fix or hypothesis; a flaky bug: loop it until it fails often
+enough to debug. Then one hypothesis at a time ("X causes it because Y"),
+discarding a wrong one before the next, and one fix at the root cause where
+every caller routes through; the repro and neighbouring tests then pass.
+After 3 failed fixes, stop: never ask mid-run, report `blocked` with notes
+`Needs a human: <the design question>`. End the PROGRESS.md entry (a lane:
+the commit body) with one `Lesson:` line on what let the bug through.
 Domain terms: if GLOSSARY.md exists, use its terms in test titles and in new
 names in code, never a word its avoid column lists.
 In the PROGRESS.md entry, write the Decisions: line: options you considered
