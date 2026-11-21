@@ -1024,7 +1024,7 @@
       "id": "M60-004",
       "milestone": 60,
       "title": "README becomes a guide: a 'what do I run when' table at the top, one short section per skill, deep detail moved to docs/guide/; README under 400 lines; check-readme.sh also searches docs/guide/ so release phrases stay covered",
-      "status": "failing",
+      "status": "passing",
       "verify": "bash scripts/e2e.sh exits 0 with check-readme.sh and check-doc-refs.sh green and wc -l README.md under 400",
       "model": "medium",
       "depends_on": [

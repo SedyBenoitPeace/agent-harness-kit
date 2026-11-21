@@ -3,6 +3,19 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-21 -- session 101 (M60-004 README as a guide, lane merged)
+
+- Branch: `m57`.
+- Done: M60-004. README 934 → 210 lines: "What do I run when" table first
+  (every skill in skills/), one short section per skill; the rest moved
+  verbatim to eight `docs/guide/` pages. `check-readme.sh` also searches
+  `docs/guide/`; the gate's README content checks read README plus the
+  guide pages. Tests M60-004.1, M60-004.2 in test-check-readme.sh.
+- Decisions: moved text verbatim (headings kept, links fixed) rather than
+  rewriting it; e2e.sh changed outside the feature's paths because ~45
+  checks grepped README only; claude/README.md pointer updated.
+- Gate: GREEN (bash scripts/e2e.sh after the merge and the flip).
+
 ## 2026-11-21 -- session 100 (M58-002 one check at a time, lane merged)
 
 - Branch: `m57`.
