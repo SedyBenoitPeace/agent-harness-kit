@@ -31,6 +31,17 @@ run; [ "$rc" -eq 1 ] || fail "README: none without a reason must fail"
 printf '## 3.17.10 — x\n\n- y\n' > "$W/CHANGELOG.md"
 run; [ "$rc" -eq 1 ] || fail "3.17.10 is >= 3.17.0 (numeric compare)"
 
+t() { echo "-- $1"; }
+t "M57-004.1 credit and local skills list"
+credits="$(sed -n '/^## Credits/,/^## /p' README.md)"
+grep -qF 'github.com/mattpocock/skills' <<< "$credits" && grep -qF 'MIT' <<< "$credits" || fail "M57-004.1: Credits must link github.com/mattpocock/skills (MIT)"
+# one line per bullet: wrapped continuation lines joined onto their bullet
+local_skills="$(sed -n '/^## Recommended local skills/,/^## /p' README.md \
+  | awk '/^- /{if(b!="")print b; b=$0; next} /^ +[^ ]/{sub(/^ +/," "); b=b $0; next} {if(b!="")print b; b=""} END{if(b!="")print b}')"
+for s in grilling improve-codebase-architecture prototype codebase-design teach; do
+  grep -qiE "^- \*\*$s\*\* — .*not in the kit" <<< "$local_skills" || fail "M57-004.1: Recommended local skills needs a '- **$s** — … not in the kit …' line"
+done
+
 # the real repo
 bash "$CHK" >/dev/null || fail "this repo's CHANGELOG/README are not covered: $(bash "$CHK" || true)"
 echo "CHECK-README TESTS GREEN"

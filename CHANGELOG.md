@@ -30,6 +30,10 @@ agent-harness-template>` and open a PR there; gate green; PR.
   Upgrade: optional; `upgrade.sh --ddd .` opts an existing repo in (without
   the flag nothing DDD is added); a plain upgrade rewraps the unedited
   "Add a rule here" rule to the template's two lines.
+- README credits github.com/mattpocock/skills (MIT) and adds "Recommended
+  local skills": Matt Pocock's `grilling`, `improve-codebase-architecture`,
+  `prototype`, `codebase-design` and `teach`, one line each on when to call
+  them and why they are not in the kit (M57-004). The kit never invokes them.
 
 ## 3.25.0 — 2026-11-21
 
