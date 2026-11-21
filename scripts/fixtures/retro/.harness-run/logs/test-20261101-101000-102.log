@@ -1,0 +1,3 @@
+-- M1-001.1 first booking @critical
+-- M1-001.2 double booking is refused
+BOOK TEST FAIL: second booking accepted

@@ -731,7 +731,8 @@ bash scripts/test-issues.sh
 # --- the agent merges its own PR when the rules allow (M56), against a fake gh --
 shellcheck skills/harness-session/scripts/can-merge.sh scripts/test-merge.sh scripts/fixtures/merge/gh
 bash scripts/test-merge.sh
-bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh
+shellcheck skills/harness-retro/scripts/retro-facts.sh scripts/test-retro.sh; bash scripts/test-retro.sh  # M60-001 retro facts page
+bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh scripts/test-retro.sh
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------
 [ -f claude/hooks/hooks.json ] || fail "Claude edition: hooks/hooks.json missing"
