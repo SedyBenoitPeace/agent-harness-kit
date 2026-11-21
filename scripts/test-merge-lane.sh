@@ -8,6 +8,7 @@ KIT="$PWD"; ML="$KIT/skills/harness-run/scripts/merge-lane.sh"
 fail() { echo "MERGE-LANE TEST FAIL: $*" >&2; exit 1; }
 [ -f "$ML" ] || fail "merge-lane.sh missing"
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 R="$WORK/repo"; mkdir -p "$R"; g() { git -C "$R" -c user.email=t@t -c user.name=t "$@"; }
 g init -q -b main
 printf '{"shared_paths":["README.md","CHANGELOG.md"],"features":[]}\n' > "$R/FEATURES.json"
