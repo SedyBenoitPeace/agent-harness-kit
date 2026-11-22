@@ -80,7 +80,11 @@ plan, implement structure outline, for example), do not run harness-brief
 and do not re-plan it: turn it into FEATURES.json entries plus a plan
 section (§1.4, §1.5), keeping its phases, order and checks, then go to
 harness-run. Add only what the harness needs and the outline lacks: a
-falsifiable `verify` per feature, `effort`, and the gate. Ask the human
+falsifiable `verify` per feature, `effort`, the gate, and on every entry
+`depends_on` (ids whose code it cannot build or test without; `[]` for
+none; the outline's order is not a dependency) and `paths` (the files it
+changes or the narrowest folder it owns; never a whole `src/` or
+top-level folder). `run-start.sh` refuses a run until they do. Ask the human
 only where it leaves one of those open. `context.sh --outline <path>`
 prints this as a `SKIP_BRIEF` hint.
 
@@ -166,7 +170,10 @@ by side. Record both on every feature:
   e.g. `"ios-simulator"`. Two features with the same value never run in
   parallel lanes at the same time, even when their `paths` are disjoint.
 
-A feature with either field missing always runs sequentially. Two
+A feature with either field missing always runs sequentially, so
+`run-start.sh` refuses to start a run while an open feature lacks one or
+names a whole tracked top-level folder in `paths` (`check-entries.sh`
+prints each `ENTRY:` problem; `harness-audit` warns about them). Two
 features run side by side only when no file one names sits in the other's
 `paths`; folders alone never keep them apart. Lanes follow `depends_on`,
 not milestones: a run over a range ("through M21") builds a later

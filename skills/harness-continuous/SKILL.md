@@ -37,6 +37,9 @@ permissions only — never a skip-all-permissions flag.
    fails it ignores `.harness-run/` (committing `.gitignore` alone), writes `start`, empties
    `skip`, deletes a `STOP` left over from an earlier run, and archives the
    previous run's logs under `.harness-run/previous/<its start commit>/`.
+   It refuses (exit 1) on `ENTRY:` or `KIT: stale` lines: fix each `ENTRY:`
+   entry from its plan section as harness-run's Workflow says, commit
+   FEATURES.json alone and run it again; `KIT: stale` is a baseline problem.
    Invoking the command is the signal to start. It prints `BOARD: <path>`
    (the live run board): put that line in your first progress line to the human.
 

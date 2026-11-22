@@ -78,6 +78,7 @@ if [ -n "$OUTLINE" ]; then
   if [ -f "$OUTLINE" ]; then
     echo "OUTLINE: $OUTLINE"
     echo 'SKIP_BRIEF: approved outline — do not run harness-brief or re-plan it; turn it into FEATURES.json entries plus a plan section (protocol 1.1), then go to harness-run'
+    echo 'ENTRY_RULE: every entry records depends_on (ids whose code it cannot build or test without; [] for none; preferred order is not a dependency) and paths (the files it changes or the narrowest folder it owns; never a whole src/ or top-level folder); run-start.sh refuses the run otherwise (protocol 1.4)'
   else
     echo "OUTLINE: not found — $OUTLINE"
   fi
@@ -200,6 +201,17 @@ jq -r --arg ex "$SKIPPED_IDS" --arg busy "$(cat "$BUSY")" --arg through "${THROU
     end
 ' FEATURES.json
 
+# Run readiness (M65-001): the entry check run-start.sh enforces, shown up
+# front so a planner fixes entries before a run is refused. Not for a
+# dispatched builder (--brief): its run already passed it.
+entries=""
+if [ "$BRIEF" -eq 0 ]; then
+  echo
+  echo "== Run readiness =="
+  entries="$(bash "$SCRIPT_DIR/../../harness-run/scripts/check-entries.sh" . 2>&1 || true)"
+  printf '%s\n' "$entries"
+fi
+
 # Harness-upgrade notices: the plugin ships newer templates than the ones
 # a repo was scaffolded with. Report the two that matter as facts; the
 # skill decides what to offer.
@@ -221,7 +233,9 @@ stale=""
 for f in harness-protocol.md harness-protocol-planning.md harness-protocol-runs.md harness-protocol-maintenance.md; do
   cmp -s "$(dirname "$SHIPPED_PROTOCOL")/$f" "docs/agents/$f" 2>/dev/null || stale="$stale docs/agents/$f"
 done
-if [ ! -f docs/agents/harness-protocol.md ]; then
+if printf '%s\n' "$entries" | grep -q '^KIT: stale'; then
+  echo "PROTOCOL: not compared — plugin $plugin_version is older than this repo's kit (KIT: stale above)"
+elif [ ! -f docs/agents/harness-protocol.md ]; then
   echo 'PROTOCOL: missing'
 elif [ -z "$stale" ]; then
   echo "PROTOCOL: current (plugin $plugin_version)"

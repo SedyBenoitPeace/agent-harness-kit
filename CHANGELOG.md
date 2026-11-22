@@ -12,6 +12,38 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.27.0 — 2026-11-22
+
+- A run refuses entries that would build one at a time (M65-001; owner
+  report: an agent turned an approved outline into entries without reading
+  protocol 1.4, gave them `paths: ["qa/"]`, no `depends_on` and an order-only
+  dependency, and the whole run went sequential with nothing flagging it).
+  New `check-entries.sh` (harness-run) prints an `ENTRY:` line for each open
+  feature missing `depends_on` or `paths`, or whose `paths` name the whole
+  repo or a whole tracked top-level folder (`qa/`, `src/**`; `shared_paths`
+  and not-yet-tracked folders are fine), `ORDER?:` hints for a dependency on
+  just the feature before it, and `LANES: n of m open features can start
+  now` up front. `run-start.sh` runs it first and refuses the run (exit 1,
+  no run state) while any `ENTRY:` line remains; `context.sh` shows it under
+  `== Run readiness ==`; harness-audit WARNs each line (replacing its
+  "no parallel lanes for" WARN).
+- Stale kit: `check-entries.sh` prints `KIT: stale` and `run-start.sh`
+  refuses when the kit scripts running are older than
+  `docs/agents/harness-kit-version` (an old cached plugin misses newer
+  rules); `context.sh` then no longer offers an upgrade, which would have
+  been a downgrade.
+- The rule is quoted where entries get written: the protocol's approved
+  outline paragraph, `context.sh --outline` (`ENTRY_RULE:`), and the
+  harness-brief skip note, instead of only pointing to §1.4.
+
+README: `ENTRIES: blocked`, `KIT: stale`
+
+Upgrade:
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`
+  (`upgrade.sh .`), commit. Then run harness-audit and fix every
+  `WARN  ENTRY:` line before the next run: `run-start.sh` now refuses a run
+  until open features declare `depends_on` and narrow `paths`.
+
 ## 3.26.0 — 2026-11-22
 
 - The upgrade installs acceptance checks itself (M63-001; owner report:

@@ -13,7 +13,9 @@ runs in the main conversation because it must ask the human questions.
 
 **Skip it** when the task points to an approved plan or outline from
 another workflow: that is the brief already. Turn it into FEATURES.json
-entries plus a plan section (protocol 1.1), then go to harness-run.
+entries plus a plan section (protocol 1.1), each with `depends_on` and
+narrow `paths` (protocol 1.4; `run-start.sh` refuses a run without them),
+then go to harness-run.
 
 ## Workflow
 

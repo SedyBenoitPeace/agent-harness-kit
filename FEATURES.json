@@ -4,7 +4,8 @@
     "61": "Lanes by dependency, not milestone",
     "62": "README a new user can work from",
     "63": "Upgrades install acceptance checks",
-    "64": "Private names stay private"
+    "64": "Private names stay private",
+    "65": "Runs refuse sequential-only entries"
   },
   "features": [
     {
@@ -195,6 +196,66 @@
             "Commit a message naming a private repo"
           ],
           "pass_if": "ci-local refreshes the list with gh repo list and runs the check; a commit message naming a private repo fails",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M65-001",
+      "milestone": 65,
+      "title": "A run refuses entries that would build one at a time: check-entries.sh names open features missing depends_on/paths or claiming a whole top-level folder, and a kit older than the repo's recorded version; run-start.sh refuses, context.sh shows it, harness-audit warns, the rule is quoted where entries are written",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-check-entries.sh proving the checks below",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/check-entries.sh",
+        "skills/harness-run/scripts/run-start.sh",
+        "skills/harness-session/scripts/context.sh",
+        "skills/harness-audit/scripts/check.sh",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "skills/harness-run/SKILL.md",
+        "skills/harness-continuous/SKILL.md",
+        "skills/harness-brief/SKILL.md",
+        "scripts/test-check-entries.sh",
+        "scripts/test-audit.sh",
+        "scripts/test-run.sh",
+        "scripts/test-board.sh",
+        "scripts/e2e.sh",
+        "CHANGELOG.md",
+        "README.md"
+      ],
+      "checks": [
+        {
+          "id": "M65-001.1",
+          "title": "bad entries refuse the run",
+          "critical": true,
+          "steps": [
+            "Fixture: qa/ paths, no depends_on, an order-only chain",
+            "Run check-entries.sh, run-start.sh, context.sh, harness-audit"
+          ],
+          "pass_if": "ENTRY lines name each missing field and broad path; run-start exits 1 with no run state; context prints ENTRIES: blocked; audit WARNs, never FAILs; good entries, new folders and shared paths pass",
+          "evidence": "test"
+        },
+        {
+          "id": "M65-001.2",
+          "title": "a stale kit refuses the run",
+          "critical": true,
+          "steps": [
+            "Stamp docs/agents/harness-kit-version newer than the kit"
+          ],
+          "pass_if": "KIT: stale line, run-start exits 1, context does not offer an upgrade; equal or older stamp passes",
+          "evidence": "test"
+        },
+        {
+          "id": "M65-001.3",
+          "title": "the rule is quoted where entries are written",
+          "critical": false,
+          "steps": [
+            "context.sh --outline",
+            "Read protocol and skills"
+          ],
+          "pass_if": "ENTRY_RULE line; protocol outline paragraph quotes depends_on/paths inline; run and continuous skills say how to handle ENTRY and KIT lines",
           "evidence": "test"
         }
       ]

@@ -26,6 +26,13 @@ worktrees exist; then keep the run as it is): once the first step-1
 `context.sh` is clean, run `bash scripts/run-start.sh <target>`. It writes the run
 state and prints `BOARD: <path>`, the live run board; put that line in your
 first progress line. It empties `busy`, so run it before any lane starts.
+It refuses (exit 1, no run state) while `check-entries.sh` finds a problem:
+for each `ENTRY:` line, fix that FEATURES.json entry from its plan section
+(`depends_on` = ids it cannot build or test without, `[]` for none; `paths` =
+the files it changes, never a whole top-level folder), commit FEATURES.json
+alone and run it again; on `KIT: stale`, report and STOP (the kit must be
+updated first). `ORDER?:` lines are a hint: drop a dependency that is only
+order.
 
 1. Run `bash ../harness-session/scripts/context.sh` (path relative to this
    skill) from the target repo root.

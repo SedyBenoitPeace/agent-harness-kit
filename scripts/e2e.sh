@@ -375,6 +375,9 @@ bash scripts/test-run.sh
 # M47-001: the live run board (run-id, events.log, board.sh)
 shellcheck skills/harness-run/scripts/board.sh skills/harness-run/scripts/run-start.sh scripts/test-board.sh
 bash scripts/test-board.sh
+# M65-001: a run refuses features that would run one at a time, and a stale kit
+shellcheck skills/harness-run/scripts/check-entries.sh scripts/test-check-entries.sh
+bash scripts/test-check-entries.sh
 # M61-002: lanes merge with shared_paths conflicts resolved by union
 shellcheck skills/harness-run/scripts/merge-lane.sh scripts/test-merge-lane.sh
 bash scripts/test-merge-lane.sh
@@ -416,7 +419,7 @@ grep -Eq 'brief.*plan.*run' <<< "$GUIDE" || fail "README: lifecycle must show br
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.26.0" ] || fail "plugin version must be 3.26.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.27.0" ] || fail "plugin version must be 3.27.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' <<< "$GUIDE" || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' <<< "$GUIDE" || fail "README: size map path missing (M33-005)"
@@ -740,7 +743,7 @@ bash scripts/test-merge.sh
 shellcheck scripts/check-private-names.sh scripts/refresh-private-names.sh scripts/test-private-names.sh
 bash scripts/test-private-names.sh
 bash scripts/check-private-names.sh
-bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh scripts/test-upgrade.sh scripts/test-session.sh scripts/test-run.sh scripts/test-retro.sh scripts/test-check-readme.sh scripts/test-agents.sh scripts/test-private-names.sh
+bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh scripts/test-upgrade.sh scripts/test-session.sh scripts/test-run.sh scripts/test-retro.sh scripts/test-check-readme.sh scripts/test-agents.sh scripts/test-private-names.sh scripts/test-check-entries.sh
 shellcheck skills/harness-retro/scripts/retro-facts.sh scripts/test-retro.sh; bash scripts/test-retro.sh  # M60-001 retro facts page
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------

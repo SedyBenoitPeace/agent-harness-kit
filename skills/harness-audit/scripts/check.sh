@@ -174,10 +174,14 @@ unprov="$(jq -r '[.features[]? | select(.status == "failing" and ((.verify? // "
 if [ -n "$unprov" ]; then
   warn "verify names something a builder cannot prove from the repo alone (real session, owner, machine, device, hardware, push, PR, human) on: $unprov — move it to the plan's Before the run section (protocol 1.4)"
 fi
-# Lanes (WARN only, M34-005, M45-002): a failing feature missing depends_on or
-# paths can only run sequentially, so name every such feature.
-nolane="$(jq -r '[.features[]? | select(.status == "failing" and (((.depends_on | type) == "array" and (.paths | type) == "array" and (.paths | length) > 0) | not)) | .id] | join(" ")' FEATURES.json 2>/dev/null || true)"
-[ -z "$nolane" ] || warn "no parallel lanes for $nolane: depends_on or paths missing (protocol 1.4)"
+# Lanes (WARN only, M34-005, M45-002, M65-001): check-entries.sh, the check
+# run-start.sh enforces: a failing feature missing depends_on or paths, or
+# claiming a whole top-level folder, runs one at a time; a stale kit misses
+# newer rules. One WARN per line it prints.
+if [ -f FEATURES.json ]; then
+  { bash "$SCRIPT_DIR/../../harness-run/scripts/check-entries.sh" . 2>/dev/null || true; } \
+    | grep -E '^(ENTRY|KIT|ORDER\?): ' | while IFS= read -r l; do warn "$l (protocol 1.4)"; done || true
+fi
 
 # Global memory/workflow plugins (WARN only, M34-012): a memory or workflow
 # MCP server or plugin in the person's own CLI setup may inject its instructions
