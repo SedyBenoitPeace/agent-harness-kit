@@ -8,7 +8,7 @@ harness"; then waves of 4–6 lanes for 6 h, gate green.
 
 ## Built
 - M61-001 context.sh: `--through N` opens later milestones; `shared_paths`
-  (FEATURES.json top level) never block; `max_lanes` (default 5, was 3);
+  (FEATURES.json top level; absent = README.md, CHANGELOG.md) never block; `max_lanes` (default 5, was 3);
   `--busy` line `<id> ready` keeps files, frees the slot; each open feature
   that is not a lane prints `  not a lane: <id> — <reason>` (not with --brief).
 - M61-002 merge-lane.sh: --no-ff merge; conflicts only in shared_paths are

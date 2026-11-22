@@ -11,7 +11,7 @@ WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 R="$WORK/repo"; mkdir -p "$R"; g() { git -C "$R" -c user.email=t@t -c user.name=t "$@"; }
 g init -q -b main
-printf '{"shared_paths":["README.md","CHANGELOG.md"],"features":[]}\n' > "$R/FEATURES.json"
+printf '{"features":[]}\n' > "$R/FEATURES.json"  # default shared_paths: README.md, CHANGELOG.md
 printf '# App\n\n## Use\n\n- start\n' > "$R/README.md"
 printf '# Changelog\n\n## Unreleased\n\n' > "$R/CHANGELOG.md"
 printf 'x = 1\n' > "$R/code.txt"
@@ -49,12 +49,12 @@ grep -qx 'CONFLICT: code.txt' <<<"$out" || fail "a real conflict must name the f
 [ "$(g rev-parse HEAD)" = "$head" ] || fail "a real conflict must not commit"
 [ -z "$(g status --porcelain)" ] || fail "a real conflict must abort the merge cleanly"
 
-# 4. no shared_paths: every conflict is real
-jq 'del(.shared_paths)' "$R/FEATURES.json" > "$WORK/f" && mv "$WORK/f" "$R/FEATURES.json"; g commit -qam "no shared"
+# 4. shared_paths [] opts out: every conflict is real
+jq '.shared_paths = []' "$R/FEATURES.json" > "$WORK/f" && mv "$WORK/f" "$R/FEATURES.json"; g commit -qam "no shared"
 lane M1-004 "use D" "added D"; lane M1-005 "use E" "added E"
 (cd "$R" && bash "$ML" . M1-004 >/dev/null) || fail "M1-004 merges clean"
 set +e; (cd "$R" && bash "$ML" . M1-005 >/dev/null 2>&1); rc=$?; set -e
-[ "$rc" -eq 1 ] || fail "without shared_paths a README conflict is real"
+[ "$rc" -eq 1 ] || fail "with shared_paths [] a README conflict is real"
 
 # 5. usage
 set +e; (cd "$R" && bash "$ML" . >/dev/null 2>&1); rc=$?; set -e

@@ -67,9 +67,5 @@
       ],
       "notes": "Owner decision 2026-11-21 (option A): continuous runs build on work that only awaits the owner phone check, and merge lanes without asking."
     }
-  ],
-  "shared_paths": [
-    "README.md",
-    "CHANGELOG.md"
   ]
 }

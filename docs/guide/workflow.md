@@ -42,9 +42,9 @@ Part of the [agent-harness-kit guide](../../README.md).
    slow review never holds unrelated builds, and a feature waiting on a
    running one starts once that one lands. Lanes follow dependencies, not
    milestones: a run "through M21" builds a later milestone's independent
-   feature early and merges it in milestone order. Files every feature
-   touches (README, changelog) go in `shared_paths` and never keep lanes
-   apart. Each waiting feature prints `not a lane: <id> — <reason>`, so you
+   feature early and merges it in milestone order. README.md and
+   CHANGELOG.md never keep lanes apart (`shared_paths` in FEATURES.json
+   changes that list; `[]` turns it off). Each waiting feature prints `not a lane: <id> — <reason>`, so you
    can see why the run is sequential. To
    walk away entirely, invoke
    `/agent-harness-kit:harness-continuous` instead (see

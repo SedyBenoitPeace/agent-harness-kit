@@ -173,9 +173,9 @@ not milestones: a run over a range ("through M21") builds a later
 milestone's independent feature early and merges it in milestone order.
 
 Two optional top-level FEATURES.json keys: `shared_paths`, files many
-features add a few lines to (`["README.md", "CHANGELOG.md"]`), never keep
-lanes apart, and a merge conflict only in them keeps both sides
-(`merge-lane.sh`), then the full gate decides; `max_lanes` (default 5)
+features add a few lines to (absent = `README.md` and `CHANGELOG.md`; `[]`
+= none), never keep lanes apart, and a merge conflict only in them keeps
+both sides (`merge-lane.sh`), then the full gate decides; `max_lanes` (default 5)
 caps lanes running at once; lower it when lane gates time out under load.
 
 Ask one more question per feature: **Can the gate prove this? If not, what

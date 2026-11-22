@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # harness-run: merge a finished lane into the current branch (M61-002).
 # git merge --no-ff lane/<id>. A conflict only in files the repo lists in
-# FEATURES.json "shared_paths" (README, changelog: many features add a few
-# lines each) is resolved by keeping both sides (git merge-file --union);
+# FEATURES.json "shared_paths" (absent = README.md and CHANGELOG.md, [] =
+# none; many features add a few lines each) is resolved by keeping both sides (git merge-file --union);
 # the full gate then decides. Any other conflict aborts the merge.
 # Usage: merge-lane.sh <target> <id>
 # Prints MERGED: lane/<id> (+ UNION: <file> per resolved file), or
@@ -15,7 +15,7 @@ cd "$t"
 if git merge -q --no-ff "lane/$id" -m "Merge lane/$id" >/dev/null 2>&1; then
   echo "MERGED: lane/$id"; exit 0
 fi
-shared="$(jq -r '(.shared_paths // [])[]' FEATURES.json 2>/dev/null || true)"
+shared="$(jq -r '(.shared_paths // ["README.md", "CHANGELOG.md"])[]' FEATURES.json 2>/dev/null || true)"
 files=(); while IFS= read -r f; do files+=("$f"); done < <(git diff --name-only --diff-filter=U)  # bash 3.2: no mapfile
 [ "${#files[@]}" -gt 0 ] || { git merge --abort 2>/dev/null || true; echo "CONFLICT: (merge failed without conflicted files)"; exit 1; }
 real=()

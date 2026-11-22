@@ -150,8 +150,8 @@ fi
 # inside the other's directory/glob. Two directories never block: disjoint
 # files in a shared folder merge cleanly, and a real conflict is caught at
 # merge (lane dropped, redone sequentially). Paths listed in the top-level
-# shared_paths (M61-001: README, changelog) never block; merge-lane.sh
-# resolves their conflicts.
+# shared_paths (M61-001; absent = README.md and CHANGELOG.md, [] = none)
+# never block; merge-lane.sh resolves their conflicts.
 # Without --brief, each open feature in range that is not a lane prints
 # "  not a lane: <id> — <reason>" (at most 6 lines).
 # ponytail: a conflicting lane is rebuilt from scratch; resolve-in-lane if that gets common.
@@ -163,7 +163,7 @@ jq -r --arg ex "$SKIPPED_IDS" --arg busy "$(cat "$BUSY")" --arg through "${THROU
   def hit($x; $y): ($x.d and $y.d | not) and (($x.s | startswith($y.s)) or ($y.s | startswith($x.s)));
   def clash($a; $b): first($a[] as $x | $b[] as $y | select(hit($x; $y)) | if $x.d then $y.s else $x.s end) // null;
   (.max_lanes // 5 | if type == "number" and . >= 1 then floor else 5 end) as $cap
-  | (.shared_paths // []) as $shared
+  | (.shared_paths // ["README.md", "CHANGELOG.md"]) as $shared
   | def ents: (.paths // []) | map(select(. as $p | $shared | index([$p]) | not)) | map(entry);
   ([$arc[].features[]?, .features[]] | map({key: .id, value: (if $un == 1 and .status == "deferred" and ((.notes // "") | startswith("Needs a human: verify")) then "passing" else .status end)}) | from_entries) as $st
   | ([.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]

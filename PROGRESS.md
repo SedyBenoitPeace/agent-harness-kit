@@ -2107,7 +2107,7 @@ Newest-first session log. One entry per working session. Read this (plus
 
 ## 2026-11-21 — M61 lanes by dependency (thread "Fix board timer and harness parallelism")
 - Branch: `parallel-by-dependency`.
-- Done: M61-001..004. context.sh `--through N`, `shared_paths`, `max_lanes` (default 5), `<id> ready` busy lines, `not a lane:` reasons, `--unattended`; merge-lane.sh with union merge of shared paths; harness-run/continuous, protocol planning/runs, FEATURES template, guide and CHANGELOG updated. The kit's own FEATURES.json declares README.md and CHANGELOG.md shared.
+- Done: M61-001..004. context.sh `--through N`, `shared_paths`, `max_lanes` (default 5), `<id> ready` busy lines, `not a lane:` reasons, `--unattended`; merge-lane.sh with union merge of shared paths; harness-run/continuous, protocol planning/runs, FEATURES template, guide and CHANGELOG updated. README.md and CHANGELOG.md are shared by default (owner 2026-11-22: "Is it not by the default?").
 - Decisions: union merge (git merge-file --union) instead of changelog fragments, because it also covers README and needs no assembler; a later-milestone lane merges only once its milestone branch exists, so each milestone keeps its own PR; "Needs a human: verify" counts as met only with --unattended (owner decision A), any other deferred dependency still blocks; reasons are capped at 6 lines and hidden in builder briefs.
 - Evidence: live M57–M60 plan gave PARALLEL none; with the fix it gives 3 lanes. quick-calories transcript: PARALLEL none 6 of 7 checks before the owner overruled the harness.
 - Gate: GREEN (bash scripts/ci-local.sh).

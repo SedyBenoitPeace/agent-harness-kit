@@ -95,8 +95,8 @@ agent-harness-template>` and open a PR there; gate green; PR.
     `.harness-run/busy` (keeps its files, frees its slot) and merges when
     the run reaches its milestone branch.
   - Default lane cap 5 (was 3); FEATURES.json `max_lanes` changes it.
-  - FEATURES.json `shared_paths` (e.g. README.md, CHANGELOG.md) never keep
-    lanes apart; `merge-lane.sh` merges a lane and resolves conflicts only
+  - README.md and CHANGELOG.md never keep lanes apart, by default
+    (FEATURES.json `shared_paths` changes the list, `[]` turns it off); `merge-lane.sh` merges a lane and resolves conflicts only
     in those files by keeping both sides; any other conflict aborts.
   - Each open feature that is not a lane prints `not a lane: <id> —
     <reason>` (dependency, missing field, shared file, exclusive, cap,
@@ -117,9 +117,8 @@ Upgrade:
   rewraps the unedited "Add a rule here" AGENTS.md rule.
 - Optional: `upgrade.sh --ddd .` opts an existing repo into domain-driven
   design (GLOSSARY.md, docs/adr/); without the flag nothing is added.
-- For more lanes: add `"shared_paths": ["README.md", "CHANGELOG.md"]` (the
-  files most features touch) to FEATURES.json; set `max_lanes` lower if
-  lane gates time out under load.
+- Nothing for lanes: README.md and CHANGELOG.md are shared by default; set
+  `max_lanes` lower only if lane gates time out under load.
 
 ## 3.25.0 — 2026-11-21
 
