@@ -34,7 +34,9 @@ baseline → implement test/check-first → gate green → flip the feature to
   here, it doesn't exist for the next session.
 - Keep this file a table of contents (≤100 lines); depth goes in `docs/`.
 - Open-source hygiene: no personal paths, keys, or private project names in
-  any committed file; templates use `{{placeholders}}` only.
+  any committed file, commit message or PR text (`ci-local.sh` checks files and
+  messages; check a PR body with `scripts/check-private-names.sh <file>`);
+  templates use `{{placeholders}}` only.
 - Integrate via PR; the owner merges. Before every push, `bash scripts/ci-local.sh`
   must print `CI-LOCAL GREEN` (CI's gate in Docker on a clean clone, no git
   identity): a local `e2e.sh` alone misses clean-checkout and tool-version gaps.

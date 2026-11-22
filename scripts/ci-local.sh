@@ -10,6 +10,13 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 [ -z "$(git status --porcelain)" ] || echo "NOTE: uncommitted changes are not tested (CI sees commits only)"
 
+# private repo names never reach a public repo (M64-001): refresh the list
+# from gh, then check committed files and the commit messages about to be pushed
+bash scripts/refresh-private-names.sh
+base="$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null || echo origin/master)"
+bash scripts/check-private-names.sh
+bash scripts/check-private-names.sh --messages "$base..HEAD" /dev/null
+
 work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
 git clone -q --no-hardlinks . "$work/repo"
 echo "CI-LOCAL: $(git rev-parse --short HEAD) in a clean clone"

@@ -7,7 +7,7 @@ repair flow — derive from code, interview the human, or skip — the human
 chooses. Released as plugin 1.4.0.
 
 **Why:** Field evidence — a coding session in a harnessed repo
-(insurance-reminder) invented `ARCHITECTURE.md` spontaneously and linked it
+(an app repo) invented `ARCHITECTURE.md` spontaneously and linked it
 from AGENTS.md. PRODUCT.md captures the why, FEATURES.json the scope;
 nothing captured the technical shape, so sessions re-derive it from code.
 
@@ -65,7 +65,7 @@ session that changes the shape updates it **in the same commit** (protocol
 ## Decision log
 
 - **2026-07-11 — root ARCHITECTURE.md, not docs/.** Matches the user's
-  field practice (insurance-reminder) and the widely-known
+  field practice (an app repo) and the widely-known
   matklad ARCHITECTURE.md convention; AGENTS.md points to it.
 - **2026-07-11 — audit WARNs; the skill layer repairs.** check.sh stays
   deterministic and non-blocking (older harnessed repos are legal); the

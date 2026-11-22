@@ -3,6 +3,22 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-22 -- session 106 (M64-001 private names stay private)
+
+- Branch: `private-names-guard`.
+- Done: M64-001. `scripts/check-private-names.sh` fails when a tracked file,
+  a text file (a PR body) or a pushed commit message names a private repo;
+  `scripts/refresh-private-names.sh` writes the list to
+  `.git/info/private-names` from `gh repo list`; `ci-local.sh` runs both
+  before every push; the gate runs the check when a list exists (CI skips).
+  Scrubbed two older private names from PROGRESS.md and the M13 plan.
+- Decisions: the list is never committed; whole-word, case-insensitive;
+  `scripts/private-names-allow.txt` holds names meant to be public (the
+  template repo, which is private today although the README links it).
+- Lesson: a hygiene rule only a reader enforces is not enforced; put it in
+  the push path.
+- Gate: GREEN (bash scripts/ci-local.sh prints CI-LOCAL GREEN).
+
 ## 2026-11-22 -- session 105 (M63-001 upgrades install acceptance checks)
 
 - Branch: `readme-comprehensive` (PR #63, on the owner's request).
@@ -311,7 +327,7 @@ Newest-first session log. One entry per working session. Read this (plus
 ## 2026-11-20 -- session 92 (M54-001 run board marks dead runs stalled)
 
 - Branch: `board-stale-runs`.
-- Trigger: a mac-window-tabber run died after M6-008 without `run-end`;
+- Trigger: an app repo run died after M6-008 without `run-end`;
   43 minutes later its board still showed a live run with a Stop button.
   Cause: board.sh's only end signal is `run-end` in events.log, and
   status.sh/context.sh keep refreshing it, so "updated 0s ago" stays fresh.
@@ -320,7 +336,7 @@ Newest-first session log. One entry per working session. Read this (plus
   `HARNESS_BOARD_STALE` (default 1800s) = stalled rows, `run stalled`
   header, no Stop button. test-board.sh proves stall, recovery on a fresh
   log, the override and that run-end still wins. Checked on the real
-  mac-window-tabber run state: header now reads stalled.
+  app repo run state: header now reads stalled.
 - Decisions: a time heuristic, not a PID check: builders are agent
   subagents with no PID on disk, and the orchestrator is a CLI session. 30
   minutes because builders write quiet.sh logs every few minutes; a builder
