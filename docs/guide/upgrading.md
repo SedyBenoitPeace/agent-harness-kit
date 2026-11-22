@@ -26,14 +26,9 @@ bash ~/.claude/plugins/cache/agent-harness-kit/agent-harness-kit/<version>/skill
 run the script from a clone of this repository.) Review `git diff`, then
 commit it as its own commit.
 
-**Domain-driven design (opt-in):** setup asks once, "Use domain-driven
-design (glossary + ADRs)?", default no. Yes adds `GLOSSARY.md` (term,
-definition, words to avoid), `docs/adr/0000-template.md` and one AGENTS.md
-map line; no adds nothing. An existing repo opts in with `upgrade.sh --ddd .`;
-without `--ddd` the upgrade never adds them. Once `GLOSSARY.md` exists, the brief adds
-settled terms and offers an ADR for a rejected option that must hold, the
-builder names tests and code with its terms, and the evaluator notes a
-term that contradicts it.
+**Domain-driven design (opt-in):** an existing repo opts in with
+`upgrade.sh --ddd .`; without `--ddd` the upgrade never adds it. See
+[Domain-driven design](planning.md#domain-driven-design).
 
 **Upgrading to 3.0.0:** `harness-setup` was renamed
 `harness-initial-setup`; the old slash command no longer exists.

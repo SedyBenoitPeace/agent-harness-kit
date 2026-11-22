@@ -3,6 +3,55 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-22 -- session 105 (M63-001 upgrades install acceptance checks)
+
+- Branch: `readme-comprehensive` (PR #63, on the owner's request).
+- Done: M63-001. `upgrade.sh` installs/refreshes `scripts/check-coverage.sh`
+  and `scripts/read-checks.sh`, removes a kit copy of
+  `scripts/acceptance-verdict.sh`, and adds the check-coverage gate step with
+  the detected test folders only when it passes now (else one TODO with the
+  exact line). CHANGELOG 3.23.0/3.25.0 Upgrade notes are no longer manual.
+  Released as 3.26.0 (manifests, package.json, e2e version check).
+- Also fixed (found by the new tests): `check-coverage.sh` exited 1 with no
+  message when no test title matched; UPGRADE-NOTE printed only the first
+  line of each multi-line note (so 3.23.0's manual steps were cut short too).
+- Proof on throwaway clones (scratchpad, originals untouched):
+  quick-calories-meal-estimator (master, 3.19.1; harness/m11, 3.24.0) and
+  booking-app (main; claude/qa-staging-suite, 3.21.0): run 1 installs both
+  scripts and the step; each real e2e.sh with its other steps stubbed to
+  `true` prints `OK check-coverage` and `GATE GREEN` from /tmp; booking-app's
+  `qa-coverage.py --self-test` still passes and its QA files are untouched;
+  after committing, run 2 prints no CHANGED line and leaves the tree clean.
+- Decisions: verify-then-insert (a wrong folder guess becomes a TODO, never
+  a red gate); gate form detected from a top-level `cd` or a `ROOT=`
+  variable, else TODO; full app gates not run (need Flutter, Docker, .NET
+  and native toolchains; the owner said no native builds here).
+- Lesson: an Upgrade note that asks a human to edit files is a feature the
+  upgrade script is missing; the gate now proves notes print whole.
+- Gate: GREEN (bash scripts/ci-local.sh prints CI-LOCAL GREEN).
+
+## 2026-11-22 -- session 104 (M62-001 README a new user can work from)
+
+- Branch: `readme-comprehensive`.
+- Done: M62-001. README rewritten (398 lines): what setup puts in the
+  repo, install table for every agent, first-hour walkthrough, skill
+  sections saying what each changes, Opt-in features (acceptance checks,
+  evaluator and second opinion, parallel lanes, domain-driven design,
+  GitHub issues and bug intake, bug repro, automerge, effort and model
+  size), FEATURES.json field table, Troubleshooting (from this week's real
+  failures: sequential runs, AGENT: missing, coverage titles, green locally
+  red in CI). DDD section moved to docs/guide/planning.md. FEATURES.json.tmpl
+  `_instructions` names checks, kind, automerge, source. Finished M57–M60
+  plans moved to docs/plans/completed/.
+- Decisions: kept the 400-line cap (one line per idea plus a guide link);
+  test field list hardcoded with a comment (the template prose has no
+  stable format to parse). Test M62-001.1 fails on master's README
+  (missing `kind`, `checks`, `automerge`, `source`, `exclusive`,
+  `max_lanes`) and passes now.
+- Lesson: a README test that counts lines and skills cannot tell whether a
+  new user can use a feature; test for the concepts instead.
+- Gate: GREEN (bash scripts/ci-local.sh prints CI-LOCAL GREEN).
+
 ## 2026-11-21 -- session 102 (M59-003 reproduce before fixing, lane merged)
 
 - Branch: `m57`.

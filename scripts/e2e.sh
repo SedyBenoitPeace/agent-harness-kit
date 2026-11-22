@@ -416,7 +416,7 @@ grep -Eq 'brief.*plan.*run' <<< "$GUIDE" || fail "README: lifecycle must show br
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.25.0" ] || fail "plugin version must be 3.25.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.26.0" ] || fail "plugin version must be 3.26.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' <<< "$GUIDE" || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' <<< "$GUIDE" || fail "README: size map path missing (M33-005)"

@@ -12,8 +12,24 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
-## Unreleased
+## 3.26.0 — 2026-11-22
 
+- The upgrade installs acceptance checks itself (M63-001; owner report:
+  3.23.0 told a person to copy scripts and edit `scripts/e2e.sh` by hand, so
+  no upgraded repo had checks working). `upgrade.sh` copies or refreshes
+  `scripts/check-coverage.sh` and `scripts/read-checks.sh`, removes a kit copy
+  of `scripts/acceptance-verdict.sh` (a repo's own file of that name is kept),
+  and adds `step check-coverage "bash scripts/check-coverage.sh <folders>"`
+  before `GATE GREEN`. The folders are the repo's test folders (`test`,
+  `tests`, `__tests__`, `spec`, `e2e`, `integration_test`, and folders
+  holding `*.test.*`, `*.spec.*` or `*_test.*` files; dependencies and build
+  output skipped). The step is added only when it passes right now; otherwise
+  the upgrade prints one TODO with the exact line and the reason. A gate not
+  in the kit's step form gets the TODO too. A second run changes nothing; a
+  repo's own QA tooling is not touched.
+- Fix: `check-coverage.sh` exited 1 with no message when the test folders
+  held no id-titled test yet (every repo adopting checks); it now passes when
+  no passing feature has checks.
 - A bug session reproduces before it fixes (M59-003; based on the owner's
   lean-debugging skill, plus Matt Pocock's `diagnosing-bugs` skill,
   github.com/mattpocock/skills, MIT): for `"kind": "bug"` the builder's
@@ -104,15 +120,25 @@ agent-harness-template>` and open a PR there; gate green; PR.
   - `context.sh --unattended` (harness-continuous): a dependency that is
     `deferred` with `Needs a human: verify` (built, merged, gate green,
     only a human check left) counts as met.
+- The README explains the kit on its own (M62-001; owner report: GitHub
+  issues, domain-driven design and other opt-ins were only in docs/guide/):
+  what setup puts in your repo, install for every agent, a first-hour
+  walkthrough, what each skill changes, an Opt-in features section, a
+  FEATURES.json field table and Troubleshooting. Domain-driven design moves
+  to the planning guide. FEATURES.json.tmpl `_instructions` now names
+  `checks`, `kind`, `automerge` and `source`. A gate test fails when a
+  template field or guide page is missing from README.md.
 - Board fix (M54-002): a passing row's time column shows how long the
   feature took (dispatch to result) and stops; it no longer ticks on as if
   the feature were still running.
 
-README: `What do I run when`, `GLOSSARY.md`, `kind: bug`, `harness-retro`, `wizard`, `mattpocock/skills`, `max_lanes`, `shared_paths`, `not a lane`
+README: `installs the acceptance-check scripts`, `What do I run when`, `GLOSSARY.md`, `kind: bug`, `harness-retro`, `wizard`, `mattpocock/skills`, `max_lanes`, `shared_paths`, `not a lane`, `## FEATURES.json fields`, `## Troubleshooting`, `Your first hour`
 
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure`
-  (`upgrade.sh .`): it regenerates the builder and evaluator agent files
+  (`upgrade.sh .`), review `git diff`, commit. It installs the
+  acceptance-check scripts and gate step (or prints one TODO with the exact
+  line), regenerates the builder and evaluator agent files
   (glossary use, standards pass, one check per cycle, bug repro) and
   rewraps the unedited "Add a rule here" AGENTS.md rule.
 - Optional: `upgrade.sh --ddd .` opts an existing repo into domain-driven
@@ -152,9 +178,9 @@ Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure` (recopies
   the protocol). Nothing merges itself until a feature has
   `"automerge": true` on the default branch.
-- Delete `scripts/acceptance-verdict.sh` if 3.23.0 copied it in: the
-  evaluator now runs only the kit's own copy, and a PR touching the repo's
-  QA scripts is NEEDS_WORK (a PR could otherwise rewrite its own verdict).
+- A `scripts/acceptance-verdict.sh` copied in for 3.23.0 is removed by the
+  upgrade since 3.26.0: the evaluator runs only the kit's own copy, and a PR
+  touching the repo's QA scripts is NEEDS_WORK.
 
 ## 3.24.0 — 2026-11-20
 
@@ -211,11 +237,9 @@ Acceptance checks, phase 1 of the zero-touch QA chain (M53; decisions in
 README: `## Acceptance checks`, `read-checks.sh`, `check-coverage.sh`, `acceptance-verdict.sh`
 
 Upgrade:
-- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`, then
-  copy `check-coverage.sh`, `read-checks.sh` and `acceptance-verdict.sh`
-  from the kit's `skills/harness-session/scripts/` into `scripts/` and add
-  `step check-coverage "bash scripts/check-coverage.sh <test folders>"` to
-  `scripts/e2e.sh`. Features without `checks` are unaffected.
+- Harness repos: run `/agent-harness-kit:harness-upgrade-structure`. Since
+  3.26.0 it installs the acceptance-check scripts and the gate step itself
+  (see 3.26.0). Features without `checks` are unaffected.
 
 ## 3.22.2 — 2026-11-20
 
