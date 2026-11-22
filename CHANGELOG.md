@@ -87,11 +87,28 @@ agent-harness-template>` and open a PR there; gate green; PR.
   clumps, primitive obsession, speculative generality, shotgun surgery), and
   writes findings as `NOTE:` lines; acceptance-verdict.sh still decides.
   Upgrade: `upgrade.sh .` regenerates the evaluator agent files.
+- Lanes follow dependencies, not milestones (M61; owner report: a run over
+  M57–M60 found 0 lanes, and a quick-calories run only parallelised after
+  the owner said "overrule the harness"):
+  - `context.sh --through N` lets lanes come from later milestones up to N;
+    a lane from a later milestone waits as `<id> ready` in
+    `.harness-run/busy` (keeps its files, frees its slot) and merges when
+    the run reaches its milestone branch.
+  - Default lane cap 5 (was 3); FEATURES.json `max_lanes` changes it.
+  - README.md and CHANGELOG.md never keep lanes apart, by default
+    (FEATURES.json `shared_paths` changes the list, `[]` turns it off); `merge-lane.sh` merges a lane and resolves conflicts only
+    in those files by keeping both sides; any other conflict aborts.
+  - Each open feature that is not a lane prints `not a lane: <id> —
+    <reason>` (dependency, missing field, shared file, exclusive, cap,
+    outside the run's range).
+  - `context.sh --unattended` (harness-continuous): a dependency that is
+    `deferred` with `Needs a human: verify` (built, merged, gate green,
+    only a human check left) counts as met.
 - Board fix (M54-002): a passing row's time column shows how long the
   feature took (dispatch to result) and stops; it no longer ticks on as if
   the feature were still running.
 
-README: `What do I run when`, `GLOSSARY.md`, `kind: bug`, `harness-retro`, `wizard`, `mattpocock/skills`
+README: `What do I run when`, `GLOSSARY.md`, `kind: bug`, `harness-retro`, `wizard`, `mattpocock/skills`, `max_lanes`, `shared_paths`, `not a lane`
 
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure`
@@ -100,6 +117,8 @@ Upgrade:
   rewraps the unedited "Add a rule here" AGENTS.md rule.
 - Optional: `upgrade.sh --ddd .` opts an existing repo into domain-driven
   design (GLOSSARY.md, docs/adr/); without the flag nothing is added.
+- Nothing for lanes: README.md and CHANGELOG.md are shared by default; set
+  `max_lanes` lower only if lane gates time out under load.
 
 ## 3.25.0 — 2026-11-21
 

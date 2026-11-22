@@ -1,5 +1,71 @@
 {
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
-  "milestones": {},
-  "features": []
+  "milestones": {
+    "61": "Lanes by dependency, not milestone"
+  },
+  "features": [
+    {
+      "id": "M61-001",
+      "milestone": 61,
+      "title": "context.sh lanes by dependency: --through N opens later milestones, shared_paths never block, max_lanes (default 5), a ready lane keeps its files but frees its slot, and each open feature that is not a lane prints why",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving each rule",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "scripts/test-session.sh"
+      ]
+    },
+    {
+      "id": "M61-002",
+      "milestone": 61,
+      "title": "merge-lane.sh merges a lane --no-ff; conflicts only in shared_paths keep both sides, any other conflict aborts with CONFLICT: lines and exit 1",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-merge-lane.sh",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/merge-lane.sh",
+        "scripts/test-merge-lane.sh",
+        "scripts/e2e.sh"
+      ]
+    },
+    {
+      "id": "M61-003",
+      "milestone": 61,
+      "title": "harness-run and harness-continuous use --through, ready lanes and merge-lane.sh; protocol, FEATURES template and guide document shared_paths and max_lanes",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0",
+      "model": "small",
+      "depends_on": [
+        "M61-001",
+        "M61-002"
+      ],
+      "paths": [
+        "skills/harness-run/SKILL.md",
+        "skills/harness-continuous/SKILL.md",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "skills/harness-initial-setup/templates/harness-protocol-runs.md",
+        "skills/harness-initial-setup/templates/FEATURES.json.tmpl",
+        "docs/guide/workflow.md"
+      ]
+    },
+    {
+      "id": "M61-004",
+      "milestone": 61,
+      "title": "context.sh --unattended: a dependency deferred with Needs a human: verify (built, merged, green, only a human check left) counts as met; any other deferred dependency still blocks",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh proving it",
+      "model": "small",
+      "depends_on": [
+        "M61-001"
+      ],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "scripts/test-session.sh"
+      ],
+      "notes": "Owner decision 2026-11-21 (option A): continuous runs build on work that only awaits the owner phone check, and merge lanes without asking."
+    }
+  ]
 }

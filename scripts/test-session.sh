@@ -133,7 +133,12 @@ make_lanes_repo "$WORK/l-dirs" "[$(f M1-001 1 failing '[]' '["src/","test/"]'),$
 make_lanes_repo "$WORK/l-missing" "[$(f M1-001 1 failing '' '["src/a/"]'),$(f M1-002 1 failing '[]' '["src/b/"]')]"
 [ "$(lanes "$WORK/l-missing")" = 'PARALLEL: none' ] || fail "lanes: missing fields on NEXT must be sequential"
 make_lanes_repo "$WORK/l-cap" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]')]"
-[ "$(lanes "$WORK/l-cap")" = 'PARALLEL: M1-001 M1-002 M1-003' ] || fail "lanes: cap of 3 not applied"
+[ "$(lanes "$WORK/l-cap")" = 'PARALLEL: M1-001 M1-002 M1-003 M1-004' ] || fail "M61-001: default cap is 5 lanes"
+make_lanes_repo "$WORK/l-cap6" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]'),$(f M1-005 1 failing '[]' '["e/"]'),$(f M1-006 1 failing '[]' '["f/"]')]"
+[ "$(lanes "$WORK/l-cap6")" = 'PARALLEL: M1-001 M1-002 M1-003 M1-004 M1-005' ] || fail "M61-001: cap of 5 not applied"
+out="$(bash "$CONTEXT" "$WORK/l-cap6")"; grep -q "not a lane: M1-006 — cap of 5 lanes reached" <<<"$out" || fail "M61-001: the cap must be named as the reason"
+jq '. + {max_lanes: 3}' "$WORK/l-cap/FEATURES.json" > "$WORK/l-cap/F" && mv "$WORK/l-cap/F" "$WORK/l-cap/FEATURES.json"
+[ "$(lanes "$WORK/l-cap")" = 'PARALLEL: M1-001 M1-002 M1-003' ] || fail "M61-001: max_lanes in FEATURES.json sets the cap"
 
 # M46-001 rolling lanes: --busy FILE lists ids whose lane is still running;
 # new lanes avoid their files and exclusive value, share the cap of 3, and one
@@ -142,6 +147,7 @@ blanes() { tr ' ' '\n' <<<"$2" > "$1/busy.ids"; bash "$CONTEXT" --busy "$1/busy.
 make_lanes_repo "$WORK/r-one" "[$(f M1-001 1 failing '[]' '["a/x.js"]'),$(f M1-002 1 failing '[]' '["a/"]'),$(f M1-003 1 failing '[]' '["b/"]')]"
 [ "$(blanes "$WORK/r-one" M1-001)" = 'PARALLEL: M1-003' ] || fail "rolling: one new lane beside a busy one, avoiding its file"
 make_lanes_repo "$WORK/r-cap" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]')]"
+jq '. + {max_lanes: 3}' "$WORK/r-cap/FEATURES.json" > "$WORK/r-cap/F" && mv "$WORK/r-cap/F" "$WORK/r-cap/FEATURES.json"
 [ "$(blanes "$WORK/r-cap" 'M1-001 M1-002')" = 'PARALLEL: M1-003' ] || fail "rolling: busy lanes count toward the cap of 3"
 [ "$(blanes "$WORK/r-cap" 'M1-001 M1-002 M1-003')" = 'PARALLEL: none' ] || fail "rolling: no new lane when 3 are busy"
 make_lanes_repo "$WORK/r-next" "[$(f M1-001 1 failing '' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]')]"
@@ -156,6 +162,37 @@ make_lanes_repo "$WORK/l-ex" "[$(f M1-001 1 failing '[]' '["a/"]' | ex),$(f M1-0
 [ "$(lanes "$WORK/l-ex")" = 'PARALLEL: M1-001 M1-003' ] || fail "lanes: same exclusive value must not share a batch"
 make_lanes_repo "$WORK/l-ex2" "[$(f M1-001 1 failing '[]' '["a/"]' | ex),$(f M1-002 1 failing '[]' '["b/"]' | ex)]"
 [ "$(lanes "$WORK/l-ex2")" = 'PARALLEL: none' ] || fail "lanes: two same-exclusive features alone must be sequential"
+# M61-001: lanes by dependency, not milestone. --through N opens later
+# milestones up to N; shared_paths never block; a finished lane waiting for
+# its milestone ("<id> ready" in --busy) keeps its files but frees its slot;
+# each open feature that is not a lane says why.
+tlanes() { bash "$CONTEXT" --through "$2" "$1" | grep '^PARALLEL:'; }
+why() { bash "$CONTEXT" ${2:+--through "$2"} "$1" | grep '^  not a lane:' || true; }
+make_lanes_repo "$WORK/m-span" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M2-001 2 failing '[]' '["b/"]'),$(f M3-001 3 failing '[]' '["c/"]')]"
+[ "$(lanes "$WORK/m-span")" = 'PARALLEL: none' ] || fail "M61-001: without --through, lanes stay in NEXT's milestone"
+why "$WORK/m-span" | grep -q 'M2-001 — milestone 2 is outside this run (--through)' || fail "M61-001: a later-milestone feature must say why it is not a lane"
+[ "$(tlanes "$WORK/m-span" 2)" = 'PARALLEL: M1-001 M2-001' ] || fail "M61-001: --through 2 must open milestone 2"
+[ "$(tlanes "$WORK/m-span" M3)" = 'PARALLEL: M1-001 M2-001 M3-001' ] || fail "M61-001: --through M3 must accept the M prefix"
+make_lanes_repo "$WORK/m-shared" "[$(f M1-001 1 failing '[]' '["a/","README.md","CHANGELOG.md"]'),$(f M1-002 1 failing '[]' '["b/","README.md","CHANGELOG.md"]')]"
+[ "$(lanes "$WORK/m-shared")" = 'PARALLEL: M1-001 M1-002' ] || fail "M61-001: README.md and CHANGELOG.md are shared by default"
+jq '. + {shared_paths: []}' "$WORK/m-shared/FEATURES.json" > "$WORK/m-shared/F" && mv "$WORK/m-shared/F" "$WORK/m-shared/FEATURES.json"
+why "$WORK/m-shared" | grep -q 'M1-002 — shares README.md with M1-001' || fail "M61-001: shared_paths [] opts out; a file clash names the file and the feature"
+make_lanes_repo "$WORK/m-dep" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '["M1-001"]' '["b/"]'),$(f M1-003 1 failing '' '["c/"]')]"
+why "$WORK/m-dep" | grep -q 'M1-002 — depends on M1-001 (failing)' || fail "M61-001: a dependency must be named as the reason"
+why "$WORK/m-dep" | grep -q 'M1-003 — no depends_on' || fail "M61-001: a missing depends_on must be named as the reason"
+out="$(bash "$CONTEXT" --brief "$WORK/m-dep")"; grep -q "not a lane" <<<"$out" && fail "M61-001: a briefed builder gets no lane reasons"
+# M61-004: on an unattended run, a dependency that is built and green and
+# only waits for a human check (deferred, notes "Needs a human: verify") is met;
+# any other deferred dependency still blocks, and an interactive run waits.
+make_lanes_repo "$WORK/m-park" "[$(f M1-001 1 deferred '[]' '["a/"]' | sed 's/}$/,"notes":"Needs a human: verify — owner checks the layout"}/'),$(f M1-002 1 deferred '[]' '["b/"]' | sed 's/}$/,"notes":"Needs a human: which provider?"}/'),$(f M1-003 1 failing '["M1-001"]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]'),$(f M1-005 1 failing '["M1-002"]' '["e/"]')]"
+[ "$(lanes "$WORK/m-park")" = 'PARALLEL: none' ] || fail "M61-004: an interactive run waits on a parked dependency"
+out="$(bash "$CONTEXT" --unattended "$WORK/m-park")"
+grep -qx 'PARALLEL: M1-003 M1-004' <<<"$out" || fail "M61-004: unattended, a dependency awaiting only a human check is met"
+grep -q 'not a lane: M1-005 — depends on M1-002 (deferred)' <<<"$out" || fail "M61-004: a dependency with an open question still blocks"
+printf 'M1-001 ready\nM1-002\nM1-003\n' > "$WORK/r-cap/busy.ids"
+[ "$(bash "$CONTEXT" --busy "$WORK/r-cap/busy.ids" "$WORK/r-cap" | grep '^PARALLEL:')" = 'PARALLEL: M1-004' ] || fail "M61-001: a ready lane must not take a slot"
+printf 'M1-001 ready\n' > "$WORK/r-one/busy.ids"
+[ "$(bash "$CONTEXT" --busy "$WORK/r-one/busy.ids" "$WORK/r-one" | grep '^PARALLEL:')" = 'PARALLEL: M1-003' ] || fail "M61-001: a ready lane must keep its files"
 grep -q 'exclusive' skills/harness-initial-setup/templates/harness-protocol-planning.md || fail "protocol 1.4 must name exclusive"
 grep -q 'exclusive' skills/harness-initial-setup/templates/FEATURES.json.tmpl || fail "FEATURES template must name exclusive"
 

@@ -42,7 +42,10 @@ permissions only — never a skip-all-permissions flag.
 
 ## Loop
 
-1. Run `bash ../harness-session/scripts/context.sh --skip .harness-run/skip`.
+1. Run `bash ../harness-session/scripts/context.sh --skip .harness-run/skip
+   --unattended` (plus `--through <last milestone>` for a range). A
+   `  not a lane: <id> — <reason>` line says why a feature waits; never
+   overrule it by hand, report it instead.
    Stop (then End) when: `NEXT: none` · the feature cap is reached
    (default 10, the human may name another; every dispatched feature
    counts, skips included) · `.harness-run/STOP` exists (delete it,
@@ -62,7 +65,13 @@ permissions only — never a skip-all-permissions flag.
    for (blocked, red gate, second NEEDS_WORK) becomes a skip instead (a red gate after its merge: undo that merge
    first, `git reset --hard ORIG_HEAD`): the other lanes keep rolling and
    its slot is refilled (refill with `context.sh --skip .harness-run/skip
-   --busy .harness-run/busy`).
+   --busy .harness-run/busy --unattended`, plus `--through <last milestone>`
+   when the start instruction named a range). Lanes cross milestones
+   (M61): a later milestone's lane builds early and merges, without asking,
+   once its milestone branch exists. `--unattended` lets a feature build on
+   a dependency that is `deferred` with `Needs a human: verify` (built,
+   merged, green, only a human check left); a note asking the human to
+   approve before dependents start still holds them.
    `dispatch.sh` exit 3 (`AGENT: missing`) is not a skip: generate and
    commit the agent files as harness-run says, then End with the reason
    "restart the CLI to load the builder agents" (never a stand-in subagent).
