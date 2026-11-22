@@ -315,11 +315,15 @@ kit_v="$(jq -r '.version // empty' "$KIT/.claude-plugin/plugin.json" 2>/dev/null
 stamp=docs/agents/harness-kit-version
 have_v="$(tr -d '[:space:]' < "$stamp" 2>/dev/null || true)"
 if [ -n "$kit_v" ] && [ -f "$KIT/CHANGELOG.md" ]; then
+  # one line per note, its wrapped continuation lines joined (M63-001)
   awk '
-    /^## [0-9]+\.[0-9]+\.[0-9]+ / { v = $2; up = 0; next }
+    function flush() { if (n != "") print v "\t" n; n = "" }
+    /^## [0-9]+\.[0-9]+\.[0-9]+ / { flush(); v = $2; up = 0; next }
     /^Upgrade:/ { up = 1; next }
-    up && /^- / { sub(/^- /, ""); print v "\t" $0; next }
-    up && /^[^ ]/ { up = 0 }
+    up && /^- / { flush(); sub(/^- /, ""); n = $0; next }
+    up && /^ +[^ ]/ && n != "" { sub(/^ +/, ""); n = n " " $0; next }
+    up && /^[^ ]/ { flush(); up = 0 }
+    END { flush() }
   ' "$KIT/CHANGELOG.md" > "$gen.notes" 2>/dev/null || true
   # vlt A B: version A < B, numerically per field (portable: no sort -V)
   vlt() {
@@ -360,6 +364,61 @@ elif grep -q 'FULL_LOG' scripts/e2e.sh; then
   echo "OK: scripts/e2e.sh output is bounded"
 else
   echo "TODO: scripts/e2e.sh output is unbounded — wrap each command with the step function from $TEMPLATES/e2e.sh.tmpl and add echo \"FULL_LOG: \$LOG\" after GATE GREEN"
+fi
+# acceptance checks (M63-001): the coverage scripts live in the repo (CI runs
+# them on a clean clone); the evaluator's verdict script stays in the kit, so a
+# kit copy 3.23.0 told people to add is removed (a repo's own file is kept).
+KS="$SKILLS/harness-session/scripts"
+ck_new=0
+for f in check-coverage.sh read-checks.sh; do
+  if ! cmp -s "$KS/$f" "scripts/$f"; then
+    mkdir -p scripts; [ -e "scripts/$f" ] && w=refreshed || w="was missing"
+    cp "$KS/$f" "scripts/$f"; chmod +x "scripts/$f"
+    echo "CHANGED: scripts/$f ($w; copied from the plugin)"; ck_new=1
+  fi
+done
+[ "$ck_new" -eq 1 ] || echo "OK: scripts/check-coverage.sh and scripts/read-checks.sh are current"
+if grep -qF 'acceptance-verdict.sh — the script, not the model, decides' scripts/acceptance-verdict.sh 2>/dev/null; then
+  rm scripts/acceptance-verdict.sh
+  echo "CHANGED: scripts/acceptance-verdict.sh (removed: the evaluator runs the kit's own copy, so a PR cannot rewrite its verdict)"
+fi
+# The gate step needs the repo's test folders: conventional test folders and
+# folders holding *.test.* / *.spec.* / *_test.* files, outside dependencies
+# and build output, at most 4 levels deep, nested ones folded into their parent.
+# ponytail: name heuristics; a repo with tests elsewhere gets the TODO instead.
+if [ -f scripts/e2e.sh ] && ! grep -q 'check-coverage' scripts/e2e.sh; then
+  dirs="$(find . -maxdepth 4 \( -name node_modules -o -name .git -o -name build -o -name dist -o -name Pods \
+      -o -name .dart_tool -o -name vendor -o -name .venv -o -name venv -o -name target -o -name bin -o -name obj \
+      -o -name .harness-run -o -name coverage -o -name .next -o -name '* *' \) -prune \
+    -o -type d \( -name test -o -name tests -o -name __tests__ -o -name spec -o -name e2e -o -name integration_test \) -print \
+    -o -type f \( -name '*.test.*' -o -name '*.spec.*' -o -name '*_test.*' \) -print \
+    | while IFS= read -r p; do if [ -f "$p" ]; then dirname "$p"; else echo "$p"; fi; done \
+    | sed 's|^\./||' | { grep -v '^\.$' || true; } | sort -u \
+    | awk '{ for (i = 1; i <= n; i++) if (index($0, k[i] "/") == 1) next; k[++n] = $0; print }' | tr '\n' ' ' | sed 's/ $//')"
+  # the step runs from the gate's own folder: the repo root after a top-level
+  # cd, else the gate's ROOT variable; any other gate shape gets the TODO
+  pre=""; form=1
+  if grep -qE '^cd .*dirname' scripts/e2e.sh; then :
+  elif grep -q '^ROOT=' scripts/e2e.sh; then pre="cd '\$ROOT' && "
+  else form=0; fi
+  grep -q '^step()' scripts/e2e.sh && grep -q '^echo "GATE GREEN"' scripts/e2e.sh || form=0
+  # shellcheck disable=SC2086 # dirs is a space-separated folder list
+  if [ -z "$dirs" ]; then
+    echo "TODO: add the acceptance-check step to scripts/e2e.sh before GATE GREEN, naming your test folders: step check-coverage \"bash scripts/check-coverage.sh <your test folders>\""
+  else
+    line="step check-coverage \"${pre}bash scripts/check-coverage.sh $dirs\""
+    if [ "$form" -eq 0 ]; then
+      echo "TODO: add this line to scripts/e2e.sh before GATE GREEN (acceptance checks; the gate is not in the kit's step form): $line"
+    elif ! cov="$(bash scripts/check-coverage.sh $dirs 2>&1)"; then
+      echo "TODO: add this line to scripts/e2e.sh before GATE GREEN once these checks have tests (it would turn the gate red now: $(tr '\n' ';' <<< "$cov" | sed 's/;$//')): $line"
+    else
+      awk -v l="$line" '!d && /^echo "GATE GREEN"/ { print "# Acceptance checks: one test per check in FEATURES.json, titled with its id"; print l; d = 1 } { print }' scripts/e2e.sh > "$gen.e2e"
+      cat "$gen.e2e" > scripts/e2e.sh; rm -f "$gen.e2e"
+      echo "CHANGED: scripts/e2e.sh (added the acceptance-check step: $line)"
+    fi
+  fi
+elif [ -f scripts/e2e.sh ]; then
+  echo "OK: scripts/e2e.sh runs the acceptance-check step"
 fi
 # Open plans are re-checked against the current protocol 1.4 (M51-001): a
 # plan written under an older copy may lack lane fields or chain by order.

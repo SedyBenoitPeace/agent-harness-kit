@@ -27,8 +27,7 @@ protocol any agent can follow.
 | Is the repo healthy right now | `bash scripts/e2e.sh` (exit 0 = green) |
 | Not on Claude Code | [Install](#install) |
 
-Each skill also answers to plain English; see
-[Using the skills](#using-the-skills--copy-paste-prompts).
+Each skill also answers to plain English; see [Using the skills](#using-the-skills--copy-paste-prompts).
 
 ## What is the harness approach?
 
@@ -174,11 +173,13 @@ and protocol copies that drifted from the kit.
 
 ### harness-upgrade-structure
 
-After a plugin update: recopies the protocol, regenerates the agent files,
-adds missing AGENTS.md lines, re-checks open plans against the current
-protocol and prints the release notes you still need. Commits nothing.
-`upgrade.sh --ddd .` also opts the repo into domain-driven design
-([Upgrading](docs/guide/upgrading.md)).
+After a plugin update, the whole upgrade with no manual step: recopies the
+protocol, regenerates the agent files, adds missing AGENTS.md lines,
+installs the acceptance-check scripts and adds their gate step (only when
+it stays green; otherwise one TODO with the exact line), re-checks open
+plans and prints the release notes. Run it twice: the second run changes
+nothing. Commits nothing. `upgrade.sh --ddd .` also opts the repo into
+domain-driven design ([Upgrading](docs/guide/upgrading.md)).
 
 ### harness-handoff
 
@@ -324,8 +325,7 @@ aliases ([Workflow, models and decisions](docs/guide/workflow.md)).
 - **Green locally, red in CI.** Run `scripts/ci-local.sh` if your repo has
   one (a clean clone of the commit, as CI sees it), and merge the default
   branch into yours before opening the PR.
-- **A feature waits on you.** `harness-status` lists every `Needs a human:`
-  question; a run also writes a wizard script for steps only you can do.
+- **A feature waits on you.** `harness-status` lists every `Needs a human:` question; a run writes a wizard script for steps only you can do.
 
 ## Using the skills — copy-paste prompts
 

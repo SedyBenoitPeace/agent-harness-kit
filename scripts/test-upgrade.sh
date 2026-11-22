@@ -362,4 +362,93 @@ sess="skills/harness-session/SKILL.md"
 grep -q 'harness-upgrade-structure' "$sess" || fail "harness-session SKILL.md: UPGRADE: offer must point at harness-upgrade-structure"
 ! grep -q 'recopy the shipped' "$sess" || fail "harness-session SKILL.md: upgrade steps must not be duplicated inline"
 
+# 6. acceptance checks reach upgraded repos (M63-001): the coverage scripts are
+#    installed, the gate step is added only when it is green, nothing manual left
+KITS="$PWD/skills/harness-session/scripts"
+# ck_repo DIR GATE_STYLE: a bounded pre-3.23 gate (cd | root), test folders, a
+# passing feature with one check and its test, the repo's own QA tooling, and
+# the stale kit acceptance-verdict.sh 3.23.0 told people to copy
+ck_repo() {
+  local d="$1" style="$2"
+  mkdir -p "$d/docs/agents" "$d/docs/qa" "$d/scripts" "$d/tests" "$d/web/src/owner" "$d/node_modules/x/test" "$d/build/test"
+  git -C "$d" init -q -b main
+  printf '{ "milestones": {"1":"C"}, "features": [ { "id": "M1-001", "milestone": 1, "title": "t", "status": "passing", "verify": "x", "model": "small", "depends_on": [], "paths": ["tests/"], "checks": [ { "id": "M1-001.1", "title": "c", "critical": true, "steps": ["s"], "pass_if": "p", "evidence": "test" } ] } ] }\n' > "$d/FEATURES.json"
+  printf '# P\n' > "$d/PROGRESS.md"; printf '# A\nharness-run\n' > "$d/AGENTS.md"
+  cp "$SHIPPED" "$d/docs/agents/harness-protocol.md"
+  printf 'test("M1-001.1 c @critical", () => {})\n' > "$d/tests/a.test.js"
+  printf 'test("renders", () => {})\n' > "$d/web/src/owner/b.test.ts"
+  printf 'test("M9-009.1 vendored", () => {})\n' > "$d/node_modules/x/test/v.test.js"
+  printf 'print("own qa")\n' > "$d/scripts/qa-coverage.py"; printf '# own checklist\n' > "$d/docs/qa/checklist.md"
+  cp "$KITS/acceptance-verdict.sh" "$d/scripts/acceptance-verdict.sh"
+  # shellcheck disable=SC2016 # the fixture gate is written literally
+  { echo '#!/usr/bin/env bash'; echo 'set -euo pipefail'
+    if [ "$style" = cd ]; then echo 'cd "$(dirname "$0")/.."'; else echo 'ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"'; fi
+    echo 'LOG="$(mktemp)"'
+    echo 'step() { local name="$1" cmd="$2"; bash -c "$cmd" >> "$LOG" 2>&1 || { echo "FAIL  $name"; tail -n 20 "$LOG"; exit 1; }; echo "OK    $name"; }'
+    echo 'step tests "true"'
+    echo 'echo "GATE GREEN"'; echo 'echo "FULL_LOG: $LOG"'; } > "$d/scripts/e2e.sh"
+  git -C "$d" -c user.email=t@t -c user.name=t add -A; git -C "$d" -c user.email=t@t -c user.name=t commit -qm seed
+}
+
+t "M63-001.1 upgrade installs the coverage scripts and is idempotent @critical"
+C="$WORK/checks-cd"; ck_repo "$C" cd
+out="$(bash "$UPGRADE" "$C" 2>&1)" || fail "M63-001.1: upgrade failed: $out"
+for f in check-coverage.sh read-checks.sh; do
+  cmp -s "$KITS/$f" "$C/scripts/$f" || fail "M63-001.1: scripts/$f not installed from the kit"
+  grep -q "^CHANGED: scripts/$f" <<< "$out" || fail "M63-001.1: installing scripts/$f not reported"
+done
+[ ! -e "$C/scripts/acceptance-verdict.sh" ] || fail "M63-001.1: the stale kit acceptance-verdict.sh must be removed"
+grep -q '^CHANGED: scripts/acceptance-verdict.sh' <<< "$out" || fail "M63-001.1: removing acceptance-verdict.sh not reported"
+[ "$(cat "$C/scripts/qa-coverage.py")" = 'print("own qa")' ] && [ "$(cat "$C/docs/qa/checklist.md")" = '# own checklist' ] || fail "M63-001.1: the repo's own QA tooling must be untouched"
+git -C "$C" -c user.email=t@t -c user.name=t add -A; git -C "$C" -c user.email=t@t -c user.name=t commit -qm up
+out="$(bash "$UPGRADE" "$C" 2>&1)" || fail "M63-001.1: second run failed"
+grep -q '^CHANGED:' <<< "$out" && fail "M63-001.1: a second run must change nothing: $(grep '^CHANGED:' <<< "$out")"
+grep -q '^OK: scripts/check-coverage.sh and scripts/read-checks.sh' <<< "$out" || fail "M63-001.1: second run must report the scripts current"
+[ -z "$(git -C "$C" status --short)" ] || fail "M63-001.1: second run must leave the tree clean"
+# a repo's own acceptance-verdict.sh (not the kit's) stays
+O="$WORK/checks-own"; ck_repo "$O" cd; printf '#!/bin/sh\n# mine\n' > "$O/scripts/acceptance-verdict.sh"
+git -C "$O" -c user.email=t@t -c user.name=t commit -qam own
+bash "$UPGRADE" "$O" >/dev/null 2>&1 || fail "M63-001.1: upgrade on own verdict script failed"
+grep -q mine "$O/scripts/acceptance-verdict.sh" || fail "M63-001.1: a repo's own acceptance-verdict.sh must be kept"
+
+t "M63-001.2 the gate step is added only when green, else one exact TODO @critical"
+grep -qx 'step check-coverage "bash scripts/check-coverage.sh tests web/src/owner"' "$C/scripts/e2e.sh" || fail "M63-001.2: cd-style gate must gain the step with the detected folders: $(grep check-coverage "$C/scripts/e2e.sh")"
+[ "$(grep -n 'check-coverage' "$C/scripts/e2e.sh" | cut -d: -f1)" -lt "$(grep -n 'GATE GREEN' "$C/scripts/e2e.sh" | cut -d: -f1)" ] || fail "M63-001.2: the step must come before GATE GREEN"
+grep -q "GATE GREEN" <<< "$(cd "$WORK" && bash "$C/scripts/e2e.sh")" || fail "M63-001.2: the gate must stay green"
+[ "$(grep -c check-coverage "$C/scripts/e2e.sh")" -eq 1 ] || fail "M63-001.2: the second run must not add the step twice"
+Q="$WORK/checks-root"; ck_repo "$Q" root
+bash "$UPGRADE" "$Q" >/dev/null 2>&1 || fail "M63-001.2: root-style upgrade failed"
+grep -qxF "step check-coverage \"cd '\$ROOT' && bash scripts/check-coverage.sh tests web/src/owner\"" "$Q/scripts/e2e.sh" || fail "M63-001.2: ROOT-style gate must cd to \$ROOT: $(grep check-coverage "$Q/scripts/e2e.sh")"
+grep -q "GATE GREEN" <<< "$(cd "$WORK" && bash "$Q/scripts/e2e.sh")" || fail "M63-001.2: the ROOT-style gate must stay green from any folder"
+# a repo with tests but no checks yet (no id-titled test anywhere) stays green
+P="$WORK/checks-plain"; ck_repo "$P" cd; printf 'test("adds", () => {})\n' > "$P/tests/a.test.js"
+jq '.features[0] |= del(.checks)' "$P/FEATURES.json" > "$P/F" && mv "$P/F" "$P/FEATURES.json"; git -C "$P" -c user.email=t@t -c user.name=t commit -qam plain
+bash "$UPGRADE" "$P" >/dev/null 2>&1 || fail "M63-001.2: plain upgrade failed"
+grep -q '^step check-coverage' "$P/scripts/e2e.sh" || fail "M63-001.2: a repo without checks must still get the step"
+grep -q "GATE GREEN" <<< "$(cd "$WORK" && bash "$P/scripts/e2e.sh")" || fail "M63-001.2: a repo without checks must stay green"
+# a check with no test would turn the gate red: one TODO with the exact line, gate untouched
+X="$WORK/checks-red"; ck_repo "$X" cd; rm "$X/tests/a.test.js"; git -C "$X" -c user.email=t@t -c user.name=t commit -qam red
+out="$(bash "$UPGRADE" "$X" 2>&1)" || fail "M63-001.2: red-coverage upgrade failed"
+grep -q check-coverage "$X/scripts/e2e.sh" && fail "M63-001.2: a step that would be red must not be added"
+[ "$(grep -c '^TODO: .*check-coverage' <<< "$out")" -eq 1 ] || fail "M63-001.2: want exactly one check-coverage TODO: $out"
+grep -qF 'step check-coverage "bash scripts/check-coverage.sh tests web/src/owner"' <<< "$out" || fail "M63-001.2: the TODO must name the exact line"
+grep -q 'M1-001.1' <<< "$out" || fail "M63-001.2: the TODO must say which check has no test"
+# no test folder at all: one TODO, never a guessed folder
+N0="$WORK/checks-none"; ck_repo "$N0" cd; git -C "$N0" rm -rq tests web; rm -rf "$N0/tests" "$N0/web"
+jq '.features[0] |= del(.checks)' "$N0/FEATURES.json" > "$N0/F" && mv "$N0/F" "$N0/FEATURES.json"; git -C "$N0" -c user.email=t@t -c user.name=t commit -qam none
+out="$(bash "$UPGRADE" "$N0" 2>&1)" || fail "M63-001.2: no-folder upgrade failed"
+grep -q check-coverage "$N0/scripts/e2e.sh" && fail "M63-001.2: no detectable test folder must not add a step"
+grep -q '^TODO: .*check-coverage.sh <your test folders>' <<< "$out" || fail "M63-001.2: no test folder needs a TODO with a placeholder: $out"
+# an unbounded gate (no step function): TODO, gate untouched
+grep -q check-coverage "$R/scripts/e2e.sh" && fail "M63-001.2: an unbounded gate must not be edited"
+
+t "M63-001.3 no manual step left in the release notes"
+v323="$(sed -n '/^## 3.23.0/,/^## 3.22.2/p' CHANGELOG.md)"
+grep -qiE 'copy .*check-coverage|add .step check-coverage' <<< "$v323" && fail "M63-001.3: 3.23.0 Upgrade still tells a person to copy scripts or edit e2e.sh"
+v325="$(sed -n '/^## 3.25.0/,/^## 3.24.0/p' CHANGELOG.md)"
+grep -qi 'Delete .scripts/acceptance-verdict.sh' <<< "$v325" && fail "M63-001.3: 3.25.0 Upgrade still asks a person to delete acceptance-verdict.sh"
+W3="$WORK/notes"; ck_repo "$W3" cd; out="$(bash "$UPGRADE" "$W3" 2>&1)"
+grep -q '^UPGRADE-NOTE: 3.25.0: .*QA scripts is NEEDS_WORK' <<< "$out" || fail "M63-001.3: an UPGRADE-NOTE must carry its whole note, wrapped lines joined: $(grep '^UPGRADE-NOTE: 3.25.0' <<< "$out")"
+grep -qF 'check-coverage' README.md || fail "M63-001.3: README must say the upgrade installs the coverage check"
+
 echo "UPGRADE TESTS GREEN"

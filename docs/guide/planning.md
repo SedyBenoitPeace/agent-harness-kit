@@ -110,6 +110,9 @@ issue body:
   when critical. `check-coverage.sh`, in the gate, fails a missing,
   duplicate, unknown or mistagged test. It reads test titles, not test
   bodies, so a stub still counts; the evaluator's per-check grading catches it.
+- Setup installs `check-coverage.sh` and `read-checks.sh` in `scripts/` and
+  the gate step; an older repo gets both from harness-upgrade-structure, which
+  adds the step only when it passes (else it prints one TODO with the line).
 - The evaluator grades each check covered, partial, missing or unrequested;
   `acceptance-verdict.sh` turns that table into PASS or NEEDS_WORK.
 

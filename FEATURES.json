@@ -2,7 +2,8 @@
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
   "milestones": {
     "61": "Lanes by dependency, not milestone",
-    "62": "README a new user can work from"
+    "62": "README a new user can work from",
+    "63": "Upgrades install acceptance checks"
   },
   "features": [
     {
@@ -102,6 +103,56 @@
             "ls docs/guide"
           ],
           "pass_if": "README.md links each docs/guide/*.md",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M63-001",
+      "milestone": 63,
+      "title": "harness-upgrade-structure installs acceptance checks with no manual step: copies or refreshes scripts/check-coverage.sh and read-checks.sh, removes a kit copy of acceptance-verdict.sh, adds the check-coverage gate step with the detected test folders only when it is green (else one TODO with the exact line); idempotent; a repo's own QA tooling untouched",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-upgrade.sh proving the checks below; on throwaway copies of two real app repos one upgrade run installs both scripts and the step (or one TODO), the step passes, and a second run reports no CHANGED line",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-upgrade-structure/scripts/upgrade.sh",
+        "skills/harness-session/scripts/check-coverage.sh",
+        "scripts/test-upgrade.sh",
+        "CHANGELOG.md",
+        "README.md",
+        "docs/guide/planning.md"
+      ],
+      "checks": [
+        {
+          "id": "M63-001.1",
+          "title": "upgrade installs the coverage scripts and is idempotent",
+          "critical": true,
+          "steps": [
+            "Upgrade a 3.21-style fixture repo",
+            "Commit, upgrade again"
+          ],
+          "pass_if": "Both scripts match the kit, a kit acceptance-verdict.sh is removed (a repo's own kept), the repo's QA tooling is unchanged, and the second run prints no CHANGED line",
+          "evidence": "test"
+        },
+        {
+          "id": "M63-001.2",
+          "title": "the gate step is added only when green, else one exact TODO",
+          "critical": true,
+          "steps": [
+            "Upgrade fixtures: cd-style gate, ROOT-style gate, a check without a test, no test folders, no checks"
+          ],
+          "pass_if": "Green cases gain the step with the detected folders before GATE GREEN and stay green from any folder; the red case and the no-folder case get exactly one TODO naming the line and change nothing",
+          "evidence": "test"
+        },
+        {
+          "id": "M63-001.3",
+          "title": "no manual step left in the release notes",
+          "critical": false,
+          "steps": [
+            "Read CHANGELOG 3.23.0 and 3.25.0 Upgrade blocks and README"
+          ],
+          "pass_if": "No Upgrade block asks a person to copy the scripts, edit e2e.sh or delete acceptance-verdict.sh; README says the upgrade installs the check",
           "evidence": "test"
         }
       ]

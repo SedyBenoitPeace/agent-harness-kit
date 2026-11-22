@@ -21,7 +21,7 @@ req="$(bash "$here/read-checks.sh" --status passing,review "$features" | jq -s .
 # FEATURES.json and a space, comment lines dropped; read whole, so a
 # Playwright tag option on the lines after the title still counts
 idre="[\"'\`][A-Z][A-Za-z0-9]*-[A-Za-z0-9-]*\.[0-9]+ "
-texts="$(grep -rIlE --exclude-dir=node_modules --exclude-dir=.git "$idre" "$@" 2>/dev/null \
+texts="$({ grep -rIlE --exclude-dir=node_modules --exclude-dir=.git "$idre" "$@" 2>/dev/null || true; } \
   | while IFS= read -r f; do { grep -vE '^\s*(//|#|\*|/\*)' "$f" || true; } | jq -Rs .; done | jq -s .)"
 
 gaps="$(jq -rn --slurpfile texts <(printf "%s" "$texts") --argjson all "$all" --argjson req "$req" '
