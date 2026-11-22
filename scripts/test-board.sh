@@ -18,7 +18,7 @@ R="$WORK/repo"; mkdir -p "$R"
 g() { git -C "$R" "$@"; }
 g init -q -b main; g config user.email t@t; g config user.name t
 feat() { # id status eval_attempts
-  printf '{"id":"%s","milestone":1,"title":"feature %s","status":"%s","eval_attempts":%s,"notes":"note of %s"}' "$1" "$1" "$2" "$3" "$1"
+  printf '{"id":"%s","milestone":1,"title":"feature %s","status":"%s","eval_attempts":%s,"notes":"note of %s","depends_on":[],"paths":["src/%s"]}' "$1" "$1" "$2" "$3" "$1" "$1"
 }
 {
   echo '{"features":['

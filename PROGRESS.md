@@ -3,6 +3,21 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-22 -- session 107 (M65-001 runs refuse sequential-only entries)
+
+- Branch: `enforce-parallel-entries`.
+- Done: M65-001. `check-entries.sh` names open features missing
+  `depends_on`/`paths` or claiming a whole top-level folder, and a kit older
+  than the repo's stamp; `run-start.sh` refuses the run on either;
+  `context.sh` shows it up front; harness-audit WARNs. The rule is quoted
+  inline where outline entries are written. Released as 3.27.0.
+- Decisions: order-only dependencies are a hint (`ORDER?:`), not a block; an
+  untracked folder is fine (a new feature owns it). Audit's old
+  "no parallel lanes for" WARN is replaced by one WARN per `ENTRY:` line.
+- Lesson: a planning rule a reader must remember is not enforced; refuse
+  the run in the script every run calls.
+- Gate: GREEN.
+
 ## 2026-11-22 -- session 106 (M64-001 private names stay private)
 
 - Branch: `private-names-guard`.

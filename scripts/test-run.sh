@@ -317,7 +317,8 @@ g5() { git -C "$R5" -c user.email=t@t -c user.name=t "$@"; }
 git -C "$R5" init -q -b main
 # run-start.sh commits on its own: give the fixture an identity (CI has none)
 g5 config user.email t@t; g5 config user.name t
-cp "$R/FEATURES.json" "$R5/FEATURES.json"; printf '# PROGRESS\n' > "$R5/PROGRESS.md"
+jq '(.features[] | select(.status == "failing")) |= (.depends_on //= [] | .paths //= ["src/\(.id)"])' "$R/FEATURES.json" > "$R5/FEATURES.json" # M65-001: run-start refuses entries without them
+printf '# PROGRESS\n' > "$R5/PROGRESS.md"
 g5 add -A; g5 commit -qm seed
 bash "$START_SH" "$R5" >/dev/null || fail "run-start: first run failed"
 first="$(git -C "$R5" rev-parse HEAD)"

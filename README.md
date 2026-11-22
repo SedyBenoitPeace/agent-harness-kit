@@ -312,8 +312,8 @@ aliases ([Workflow, models and decisions](docs/guide/workflow.md)).
 
 ## Troubleshooting
 
-- **The run is sequential.** Read the `not a lane:` lines; usually a
-  feature lacks `depends_on` or `paths`. harness-audit proposes them.
+- **Sequential run, `ENTRIES: blocked` or `KIT: stale`.** Fix each `not a lane:`/`ENTRY:`
+  line (`depends_on`, narrow `paths`; harness-audit proposes them); a stale kit: update the plugin.
 - **`AGENT: missing`.** The repo has no builder agent for this CLI: run
   `scripts/gen-agents.sh <repo>` (the kit's), commit, restart the CLI.
 - **`UPGRADE: offer` or `PROTOCOL: outdated`.** Run
