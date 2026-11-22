@@ -7,6 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 KIT="$PWD"
 fail() { echo "BOARD TEST FAIL: $*" >&2; exit 1; }
+t() { echo "-- $1"; }
 S="$KIT/skills/harness-run/scripts"
 BOARD="$S/board.sh"; START_SH="$S/run-start.sh"; DISPATCH="$S/dispatch.sh"
 REPORT="$S/run-report.sh"; GATE="$KIT/skills/harness-session/scripts/run-gate.sh"
@@ -70,16 +71,51 @@ out="$(bash "$BOARD" "$R" --open)"; [ "$out" = "BOARD: $HTML" ] || fail "--open 
 [ -z "$(bash "$BOARD" "$R")" ] || fail "board.sh without --open prints nothing"
 
 # --- dispatch writes an event; the row is building -------------------------
-d_out="$(bash "$DISPATCH" "$R" claude M1-001)" || fail "dispatch failed"
-[ "$d_out" = "$(printf 'AGENT: harness-builder\nSIZE: -')" ] || fail "dispatch stdout changed: $d_out"
-grep -q "^[0-9]* dispatch M1-001 claude harness-builder -$" "$H/events.log" || fail "dispatch event (claude) missing"
+t "M66-004.2 without --via nothing changes @critical"
+event_count="$(wc -l < "$H/events.log")"
+bash "$DISPATCH" "$R" claude M1-001 > "$WORK/claude.out" || fail "claude dispatch failed"
+printf 'AGENT: harness-builder\nSIZE: -\n' | cmp -s - "$WORK/claude.out" || fail "claude stdout changed"
+[ ! -e "$H/models.log" ] || fail "claude dispatch must leave models.log to its hook"
 [ "$(wc -l < "$COUNT")" -eq 1 ] || fail "dispatch must not reopen the board"
 bash "$BOARD" "$R"; expect M1-001 building; expect M1-002 queued
 row M1-001 | grep -q 'claude harness-builder' || fail "agent column missing"
 # exit 3 (no agent file) writes no event
-set +e; (bash "$DISPATCH" "$R" codex M1-002 >/dev/null 2>&1); rc=$?; set -e
+rc=0; bash "$DISPATCH" "$R" codex M1-002 >/dev/null 2>&1 || rc=$?
 [ "$rc" -eq 3 ] || fail "dispatch without codex agents must still exit 3"
-! grep -q 'dispatch M1-002' "$H/events.log" || fail "a refused dispatch writes no event"
+mkdir -p "$R/.codex/agents" "$R/.github/agents"
+: > "$R/.codex/agents/harness-builder.toml"
+: > "$R/.github/agents/harness-builder.agent.md"
+bash "$DISPATCH" "$R" codex M1-001 > "$WORK/codex.out" || fail "codex dispatch failed"
+printf 'AGENT: harness-builder\nSIZE: medium\nSPAWN: fork_turns=none\n' | cmp -s - "$WORK/codex.out" || fail "codex stdout changed"
+printf 'M1-001 medium model medium\n' | cmp -s - "$H/models.log" || fail "codex models.log changed"
+bash "$DISPATCH" "$R" copilot M1-001 > "$WORK/copilot.out" || fail "copilot dispatch failed"
+printf 'AGENT: harness-builder\nSIZE: medium\n' | cmp -s - "$WORK/copilot.out" || fail "copilot stdout changed"
+printf 'M1-001 medium model medium\nM1-001 medium model medium\n' | cmp -s - "$H/models.log" || fail "copilot models.log changed"
+tail -n "+$((event_count + 1))" "$H/events.log" | sed 's/^[0-9][0-9]* //' > "$WORK/dispatch.events"
+cmp -s - "$WORK/dispatch.events" <<'EOF' || fail "events.log without --via changed"
+dispatch M1-001 claude harness-builder -
+dispatch M1-001 codex harness-builder medium
+dispatch M1-001 copilot harness-builder medium
+EOF
+
+t "M66-004.1 --via lands in the dispatch event @critical"
+bash "$DISPATCH" "$R" claude M1-001 0 --via codex/some-model > "$WORK/via.out" || fail "dispatch --via failed"
+cmp -s "$WORK/via.out" "$WORK/claude.out" || fail "--via changed claude stdout"
+tail -n1 "$H/events.log" | grep -q "^[0-9]* dispatch M1-001 claude harness-builder - codex/some-model$" || fail "--via codex/some-model missing from the dispatch event"
+row M1-001 | grep -qF 'claude harness-builder - codex/some-model' || fail "board must show the --via builder"
+bash "$DISPATCH" "$R" codex M1-001 --via codex > "$WORK/via.out" || fail "codex dispatch --via failed"
+cmp -s "$WORK/via.out" "$WORK/codex.out" || fail "--via changed codex stdout"
+tail -n1 "$H/events.log" | grep -q "^[0-9]* dispatch M1-001 codex harness-builder medium codex$" || fail "--via codex missing from the dispatch event"
+printf 'M1-001 medium model medium\n%.0s' 1 2 3 | cmp -s - "$H/models.log" || fail "--via changed models.log"
+event_count="$(wc -l < "$H/events.log")"
+for bad_via in '' 'codex/some model' $'codex/some\tmodel' $'codex/some\nmodel'; do
+  rc=0; bash "$DISPATCH" "$R" claude M1-001 --via "$bad_via" >/dev/null 2>&1 || rc=$?
+  [ "$rc" -eq 2 ] || fail "--via must reject empty or whitespace-containing values with exit 2, got $rc"
+done
+rc=0; bash "$DISPATCH" "$R" claude M1-001 0 --via >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 2 ] || fail "a bare --via must exit 2, got $rc"
+[ "$(wc -l < "$H/events.log")" -eq "$event_count" ] || fail "invalid --via must not write an event"
+rm -rf "$R/.codex" "$R/.github/agents"; rm -f "$H/models.log"
 
 # --- gate in a lane worktree: event in the main log, row gate running ------
 bash "$DISPATCH" "$R" claude M1-002 >/dev/null
@@ -218,7 +254,16 @@ junk="$(callers "$JK")"
 case "$junk" in *JUNK*) fail "board.sh output leaked to a caller" ;; esac
 
 # --- run-end ------------------------------------------------------------------
-(cd "$R" && bash "$REPORT" "$(cat "$H/start")" --stop-reason "cap reached" >/dev/null 2>"$WORK/rep.err") || { cat "$WORK/rep.err"; false; } || fail "run-report failed"
+# The report must take the builder from the latest dispatch for each done feature.
+bash "$DISPATCH" "$R" claude M1-001 --via codex/some-model >/dev/null
+bash "$DISPATCH" "$R" claude M1-001 --via copilot >/dev/null
+bash "$DISPATCH" "$R" claude M1-002 --via codex/some-model >/dev/null
+jq '(.features[] | select(.id == "M1-001" or .id == "M1-002") | .status) = "review"' "$R/FEATURES.json" > "$WORK/f"
+mv "$WORK/f" "$R/FEATURES.json"
+g add FEATURES.json; g commit -qm "Build M1-001 and M1-002"
+report_path="$(cd "$R" && bash "$REPORT" "$(cat "$H/start")" --stop-reason "cap reached" 2>"$WORK/rep.err")" || { cat "$WORK/rep.err"; fail "run-report failed"; }
+grep -qE '^- M1-001 .*built via copilot \(review:' "$R/$report_path" || fail "report must show the latest builder for M1-001"
+grep -qE '^- M1-002 .*built via codex/some-model \(review:' "$R/$report_path" || fail "report must show provider/model for M1-002"
 tail -1 "$H/events.log" | grep -q "^[0-9]* run-end - cap reached$" || fail "run-end event missing"
 grep -q 'run ended: cap reached' "$HTML" || fail "run-report must leave the final snapshot saying run ended"
 touch -t 200001010000 "$HTML"; m0="$(stat -c %Y "$HTML" 2>/dev/null || stat -f %m "$HTML")"

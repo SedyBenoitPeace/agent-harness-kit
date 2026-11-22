@@ -116,7 +116,11 @@ set; absent means no evaluation and today's flow):
    `bar`, whether `evaluate` is `ui` (QA mode), and — when any `paths`
    entry touches auth, payments, personal data or migrations — the
    security checklist. Never pass the builder's transcript (Codex:
-   `fork_turns: "none"`). If the agent
+   `fork_turns: "none"`). With children on 2+ providers (Children on other
+   providers), the evaluator is a child on a provider other than the
+   builder's, its task text `bash scripts/feature.sh <id> <target> --prompt
+   evaluator --range <base>..<head>` plus the extras above; one provider
+   or none → the named agent as here (M66-003). If the agent
    is missing, run `../../scripts/gen-agents.sh <target>`, commit the agent
    files, tell the human to restart the CLI, and STOP; never a stand-in subagent.
 2. Integrity check: `git status --short` must be empty and HEAD unchanged.
@@ -220,6 +224,31 @@ the human to clear the context and invoke harness-run again.
 The orchestrator never reads diffs or gate logs itself; a feature's
 details stay in its subagent, its commit, and `PROGRESS.md`.
 
+## Children on other providers
+
+When the host can start child tasks on providers other than its own (T3
+Code: `orchestrator_capabilities` lists the providers that can run a
+cross-provider child, `delegate_task` starts one), builders go there instead
+of Workflow step 3's named agent (M66-002):
+
+- Each lane's builder (or each sequential feature) goes to the next provider
+  in the order the host lists them, round-robin. Never choose by judgement.
+- Name the provider only, never a model: the host runs that provider's
+  default model, which is the human's setting. Effort comes from the size
+  `dispatch.sh` printed (small low, medium medium, large high) through the
+  option name the host reports for that provider.
+- The task text is the output of `bash scripts/feature.sh <id> <target>
+  --prompt builder [--lane ../<repo>-<id>]`, pasted as is: it carries the
+  builder role, so this is the one case a child that is not the named agent
+  builds. Never type or edit a brief.
+- Pass `--via <provider>[/<model>]` to `dispatch.sh` (the host reports the
+  model it ran), so the board shows who built each feature.
+- A provider that fails to start a child is dropped for the rest of the run;
+  the next one takes the feature.
+
+Waiting, verifying, merging and the Evaluator step are unchanged. No such
+host (or only its own provider) → Workflow step 3, unchanged.
+
 ## Red flags
 
 | Thought | Reality |
@@ -231,3 +260,4 @@ details stay in its subagent, its commit, and `PROGRESS.md`.
 | "Next milestone is ready too, keep going" | Stop at the milestone boundary. |
 | "No subagents here, I'll run them all in this chat" | One session, then stop. That is the whole point. |
 | "No builder agent, a general-purpose one can act as it" | `AGENT: missing`: generate the agents, commit, restart, re-invoke. |
+| "I'll pick the best model for this feature" | Provider only, host order; the host picks the model. |

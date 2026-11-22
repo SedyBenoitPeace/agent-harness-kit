@@ -5,7 +5,8 @@
     "62": "README a new user can work from",
     "63": "Upgrades install acceptance checks",
     "64": "Private names stay private",
-    "65": "Runs refuse sequential-only entries"
+    "65": "Runs refuse sequential-only entries",
+    "66": "Builders across providers"
   },
   "features": [
     {
@@ -259,6 +260,156 @@
           "evidence": "test"
         }
       ]
+    },
+    {
+      "id": "M66-001",
+      "milestone": 66,
+      "title": "feature.sh --prompt prints the whole prompt for a child that cannot be started as a named agent: builder (role body, brief sentence with absolute context.sh path, optional lane clause, entry, plan section, hint) or evaluator (role body, entry, commit range); without --prompt the output is unchanged",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving the checks below",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/feature.sh",
+        "scripts/test-run.sh"
+      ],
+      "checks": [
+        {
+          "id": "M66-001.1",
+          "title": "builder prompt is complete and has no placeholder",
+          "critical": true,
+          "steps": [
+            "feature.sh M1-002 <fixture> --prompt builder",
+            "same with --lane ../repo-M1-002"
+          ],
+          "pass_if": "Output holds the builder role text without frontmatter, the brief sentence naming M1-002 and an absolute existing context.sh path, the entry and plan section; the lane run adds the lane clause; no <...> placeholder or PLACEHOLDER word remains",
+          "evidence": "test"
+        },
+        {
+          "id": "M66-001.2",
+          "title": "evaluator prompt carries role, entry and range",
+          "critical": true,
+          "steps": [
+            "feature.sh M1-002 <fixture> --prompt evaluator --range a1..b2",
+            "--prompt evaluator without --range",
+            "--prompt with an unknown role"
+          ],
+          "pass_if": "First run holds the evaluator role text, the entry and a1..b2; the other two exit 2",
+          "evidence": "test"
+        },
+        {
+          "id": "M66-001.3",
+          "title": "without --prompt the output is unchanged",
+          "critical": true,
+          "steps": [
+            "feature.sh M1-002 <fixture> with no flag"
+          ],
+          "pass_if": "Output is byte-identical to the pre-M66 output for the same fixture",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M66-002",
+      "milestone": 66,
+      "title": "harness-run spreads lane builders across the host's providers when the host can start child tasks on other providers: provider only (host default model), host listing order round-robin, effort from size through the host's option name, task text from feature.sh --prompt; no such host → today's Workflow step 3",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving the checks below",
+      "model": "small",
+      "depends_on": [
+        "M66-001"
+      ],
+      "paths": [
+        "skills/harness-run/SKILL.md",
+        "scripts/test-run.sh"
+      ],
+      "checks": [
+        {
+          "id": "M66-002.1",
+          "title": "SKILL.md states the cross-provider rule and its fallback",
+          "critical": true,
+          "steps": [
+            "Read the new harness-run section"
+          ],
+          "pass_if": "It names: other providers, provider only and never a model, the host's listing order, effort from size, feature.sh --prompt builder, dropping a provider that fails, and that without such a host Workflow step 3 applies unchanged",
+          "evidence": "test"
+        },
+        {
+          "id": "M66-002.2",
+          "title": "no model name in the kit's run docs",
+          "critical": false,
+          "steps": [
+            "grep harness-run and harness-continuous SKILL.md for model ids"
+          ],
+          "pass_if": "No claude-/gpt-/gemini- model id appears",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M66-003",
+      "milestone": 66,
+      "title": "With host child tasks on 2+ providers the evaluator runs on a provider other than the builder's, prompted by feature.sh --prompt evaluator; integrity check unchanged; one provider or none → today's evaluator",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-run.sh proving the check below",
+      "model": "small",
+      "depends_on": [
+        "M66-001"
+      ],
+      "paths": [
+        "skills/harness-run/SKILL.md",
+        "scripts/test-run.sh"
+      ],
+      "checks": [
+        {
+          "id": "M66-003.1",
+          "title": "Evaluator step names the other-provider rule and its fallback",
+          "critical": true,
+          "steps": [
+            "Read the Evaluator step"
+          ],
+          "pass_if": "It says a provider other than the builder's when 2+ exist, feature.sh --prompt evaluator, the integrity check still applies, and otherwise today's evaluator",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M66-004",
+      "milestone": 66,
+      "title": "dispatch.sh --via <provider>[/<model>] appends who built the feature to the dispatch event line (run board and report show it); without --via every output and log line is unchanged",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-board.sh proving the checks below",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/dispatch.sh",
+        "scripts/test-board.sh"
+      ],
+      "checks": [
+        {
+          "id": "M66-004.1",
+          "title": "--via lands in the dispatch event",
+          "critical": true,
+          "steps": [
+            "Inside a run fixture: dispatch.sh <t> claude M1-001 0 --via codex/some-model",
+            "dispatch.sh <t> codex M1-001 --via codex"
+          ],
+          "pass_if": "events.log dispatch lines end with codex/some-model and codex; stdout is the same as without --via; a bare --via with no value exits 2",
+          "evidence": "test"
+        },
+        {
+          "id": "M66-004.2",
+          "title": "without --via nothing changes",
+          "critical": true,
+          "steps": [
+            "dispatch.sh on claude, codex, copilot fixtures without --via"
+          ],
+          "pass_if": "stdout, models.log and events.log lines are byte-identical to the pre-M66 output",
+          "evidence": "test"
+        }
+      ],
+      "eval_attempts": 1,
+      "notes": "Evaluator (Codex) NEEDS_WORK on 8b04ce2: 1) run-report.sh:97 reads only models.log, so the report omits the --via builder (board shows it); the report must show it. 2) test-board.sh:92 compares codex stdout/models.log between current runs only, and copilot checks only the agent line with no models.log assertion: assert fixed expected pre-M66 lines for claude, codex and copilot (stdout, models.log, events.log). 3) dispatch.sh:22 accepts a --via value with a newline, writing two events.log lines: reject a value with whitespace or a newline (exit 2). NOTE: dispatch.sh:20 rename `a` to a clear name."
     }
   ]
 }
