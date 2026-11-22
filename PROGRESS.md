@@ -16,10 +16,10 @@ Newest-first session log. One entry per working session. Read this (plus
   message when no test title matched; UPGRADE-NOTE printed only the first
   line of each multi-line note (so 3.23.0's manual steps were cut short too).
 - Proof on throwaway clones (scratchpad, originals untouched):
-  quick-calories-meal-estimator (master, 3.19.1; harness/m11, 3.24.0) and
-  booking-app (main; claude/qa-staging-suite, 3.21.0): run 1 installs both
+  app repo A (master, 3.19.1; a feature branch, 3.24.0) and
+  app repo B (main; a feature branch, 3.21.0): run 1 installs both
   scripts and the step; each real e2e.sh with its other steps stubbed to
-  `true` prints `OK check-coverage` and `GATE GREEN` from /tmp; booking-app's
+  `true` prints `OK check-coverage` and `GATE GREEN` from /tmp; app repo B's
   `qa-coverage.py --self-test` still passes and its QA files are untouched;
   after committing, run 2 prints no CHANGED line and leaves the tree clean.
 - Decisions: verify-then-insert (a wrong folder guess becomes a TODO, never
@@ -2158,5 +2158,5 @@ Newest-first session log. One entry per working session. Read this (plus
 - Branch: `parallel-by-dependency`.
 - Done: M61-001..004. context.sh `--through N`, `shared_paths`, `max_lanes` (default 5), `<id> ready` busy lines, `not a lane:` reasons, `--unattended`; merge-lane.sh with union merge of shared paths; harness-run/continuous, protocol planning/runs, FEATURES template, guide and CHANGELOG updated. README.md and CHANGELOG.md are shared by default (owner 2026-11-22: "Is it not by the default?").
 - Decisions: union merge (git merge-file --union) instead of changelog fragments, because it also covers README and needs no assembler; a later-milestone lane merges only once its milestone branch exists, so each milestone keeps its own PR; "Needs a human: verify" counts as met only with --unattended (owner decision A), any other deferred dependency still blocks; reasons are capped at 6 lines and hidden in builder briefs.
-- Evidence: live M57–M60 plan gave PARALLEL none; with the fix it gives 3 lanes. quick-calories transcript: PARALLEL none 6 of 7 checks before the owner overruled the harness.
+- Evidence: live M57–M60 plan gave PARALLEL none; with the fix it gives 3 lanes. An app repo transcript: PARALLEL none 6 of 7 checks before the owner overruled the harness.
 - Gate: GREEN (bash scripts/ci-local.sh).

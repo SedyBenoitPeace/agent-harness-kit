@@ -2,7 +2,7 @@
 
 Owner: Stefano, thread "Fix board timer and harness parallelism", 2026-11-21.
 Evidence: on the live M57–M60 plan context.sh found 0 lanes; without the
-milestone wall 2; also ignoring README/CHANGELOG 3. quick-calories run
+milestone wall 2; also ignoring README/CHANGELOG 3. an app repo run
 2026-11-21: PARALLEL none 6 of 7 times until the owner said "overrule the
 harness"; then waves of 4–6 lanes for 6 h, gate green.
 
