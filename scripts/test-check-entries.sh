@@ -19,7 +19,7 @@ KIT_V="$(jq -r .version "$KIT/.claude-plugin/plugin.json")"
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 R="$WORK/repo"; mkdir -p "$R/qa/src" "$R/web" "$R/docs/agents"
 g() { git -C "$R" -c user.email=t@t -c user.name=t "$@"; }
-g init -q -b main
+g init -q -b main; g config user.email t@t; g config user.name t # run-start commits (CI has no identity)
 echo x > "$R/qa/src/a.py"; echo x > "$R/qa/src/b.py"; echo x > "$R/web/app.js"; printf '# P\n' > "$R/PROGRESS.md"
 f() { # id deps-json-or-absent paths-json-or-absent [status]
   local d="" p=""
