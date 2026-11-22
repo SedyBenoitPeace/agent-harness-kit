@@ -104,11 +104,19 @@ agent-harness-template>` and open a PR there; gate green; PR.
   - `context.sh --unattended` (harness-continuous): a dependency that is
     `deferred` with `Needs a human: verify` (built, merged, gate green,
     only a human check left) counts as met.
+- The README explains the kit on its own (M62-001; owner report: GitHub
+  issues, domain-driven design and other opt-ins were only in docs/guide/):
+  what setup puts in your repo, install for every agent, a first-hour
+  walkthrough, what each skill changes, an Opt-in features section, a
+  FEATURES.json field table and Troubleshooting. Domain-driven design moves
+  to the planning guide. FEATURES.json.tmpl `_instructions` now names
+  `checks`, `kind`, `automerge` and `source`. A gate test fails when a
+  template field or guide page is missing from README.md.
 - Board fix (M54-002): a passing row's time column shows how long the
   feature took (dispatch to result) and stops; it no longer ticks on as if
   the feature were still running.
 
-README: `What do I run when`, `GLOSSARY.md`, `kind: bug`, `harness-retro`, `wizard`, `mattpocock/skills`, `max_lanes`, `shared_paths`, `not a lane`
+README: `What do I run when`, `GLOSSARY.md`, `kind: bug`, `harness-retro`, `wizard`, `mattpocock/skills`, `max_lanes`, `shared_paths`, `not a lane`, `## FEATURES.json fields`, `## Troubleshooting`, `Your first hour`
 
 Upgrade:
 - Harness repos: run `/agent-harness-kit:harness-upgrade-structure`

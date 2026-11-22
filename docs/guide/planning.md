@@ -67,6 +67,25 @@ about the gaps. If the document is a plan or outline you have already
 approved, say so: the brief and replanning are skipped, and it goes
 straight into FEATURES.json entries plus a plan section.
 
+## Domain-driven design
+
+Off by default. Setup asks once, "Use domain-driven design (glossary +
+ADRs)?"; an existing repo opts in with `upgrade.sh --ddd .`. Yes adds
+`GLOSSARY.md` (term, definition, words to avoid), `docs/adr/0000-template.md`
+and one AGENTS.md map line; no adds nothing. Once `GLOSSARY.md` exists:
+
+- the brief words its questions in glossary terms, adds each newly settled
+  term, and offers an ADR (copied from `0000-template.md`) when you reject an
+  option for a reason later work must keep;
+- builders use glossary terms in test titles and new names, never a word
+  the glossary lists to avoid;
+- the evaluator reports a term that contradicts the glossary as a `NOTE:`,
+  never as NEEDS_WORK on its own.
+
+Use it when the domain has words that mean something precise (a booking
+vs a reservation, a member vs a user) or when decisions keep being
+re-argued; skip it for a small tool.
+
 ## Acceptance checks
 
 Acceptance checks are written while the brief is refined, before any code.

@@ -3,6 +3,28 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-22 -- session 104 (M62-001 README a new user can work from)
+
+- Branch: `readme-comprehensive`.
+- Done: M62-001. README rewritten (398 lines): what setup puts in the
+  repo, install table for every agent, first-hour walkthrough, skill
+  sections saying what each changes, Opt-in features (acceptance checks,
+  evaluator and second opinion, parallel lanes, domain-driven design,
+  GitHub issues and bug intake, bug repro, automerge, effort and model
+  size), FEATURES.json field table, Troubleshooting (from this week's real
+  failures: sequential runs, AGENT: missing, coverage titles, green locally
+  red in CI). DDD section moved to docs/guide/planning.md. FEATURES.json.tmpl
+  `_instructions` names checks, kind, automerge, source. Finished M57–M60
+  plans moved to docs/plans/completed/.
+- Decisions: kept the 400-line cap (one line per idea plus a guide link);
+  test field list hardcoded with a comment (the template prose has no
+  stable format to parse). Test M62-001.1 fails on master's README
+  (missing `kind`, `checks`, `automerge`, `source`, `exclusive`,
+  `max_lanes`) and passes now.
+- Lesson: a README test that counts lines and skills cannot tell whether a
+  new user can use a feature; test for the concepts instead.
+- Gate: GREEN (bash scripts/ci-local.sh prints CI-LOCAL GREEN).
+
 ## 2026-11-21 -- session 102 (M59-003 reproduce before fixing, lane merged)
 
 - Branch: `m57`.

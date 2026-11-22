@@ -1,7 +1,8 @@
 {
   "_instructions": "Source of truth for the build. DO NOT delete, edit, or renumber existing ids/titles. Statuses: passing (done+proven), failing (actionable), deferred (postponed; notes say when actionable), superseded (dead, kept for history). Flip failing->passing only when a test or the stated manual check proves it. Append new features with the next id in their milestone. Work ONE feature per session: lowest milestone, then lowest id, among 'failing'.",
   "milestones": {
-    "61": "Lanes by dependency, not milestone"
+    "61": "Lanes by dependency, not milestone",
+    "62": "README a new user can work from"
   },
   "features": [
     {
@@ -66,6 +67,44 @@
         "scripts/test-session.sh"
       ],
       "notes": "Owner decision 2026-11-21 (option A): continuous runs build on work that only awaits the owner phone check, and merge lanes without asking."
+    },
+    {
+      "id": "M62-001",
+      "milestone": 62,
+      "title": "README explains every FEATURES.json field and opt-in feature on the front page (install for every agent, first-hour walkthrough, opt-in features, field table, troubleshooting); every guide page linked",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-check-readme.sh proving the checks below",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "README.md",
+        "docs/guide/",
+        "skills/harness-initial-setup/templates/FEATURES.json.tmpl",
+        "scripts/test-check-readme.sh",
+        "CHANGELOG.md"
+      ],
+      "checks": [
+        {
+          "id": "M62-001.1",
+          "title": "README itself explains every FEATURES.json field and opt-in",
+          "critical": true,
+          "steps": [
+            "Read README.md"
+          ],
+          "pass_if": "Every field FEATURES.json.tmpl documents appears in README.md, with the opt-ins (DDD, GitHub issues, automerge, lanes, Needs a human) and a troubleshooting section",
+          "evidence": "test"
+        },
+        {
+          "id": "M62-001.2",
+          "title": "Every guide page is linked from the README",
+          "critical": false,
+          "steps": [
+            "ls docs/guide"
+          ],
+          "pass_if": "README.md links each docs/guide/*.md",
+          "evidence": "test"
+        }
+      ]
     }
   ]
 }

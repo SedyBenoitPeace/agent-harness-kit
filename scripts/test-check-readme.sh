@@ -61,6 +61,23 @@ rc=0; out="$(bash "$CHK" "$W/CHANGELOG.md" "$W/README.md" "$W/none" 2>&1)" || rc
 [ "$rc" -eq 1 ] && grep -q "never says 'Deep phrase'" <<< "$out" || fail "M60-004.2: a phrase in neither place must fail: $out"
 [ -d docs/guide ] || fail "M60-004.2: docs/guide/ missing"
 
+t "M62-001.1 README itself explains every FEATURES.json field and opt-in @critical"
+# A new field or opt-in must reach the front page, not only docs/guide/: a new
+# user reads README.md. Add a field here when FEATURES.json.tmpl gains one.
+tmpl="$(sed 's/{{[A-Za-z0-9_]*}}/X/g' skills/harness-initial-setup/templates/FEATURES.json.tmpl | jq -r ._instructions)"
+for f in depends_on paths shared_paths max_lanes exclusive evaluate bar eval_attempts effort model second_opinion checks kind automerge source; do
+  grep -qF -- "$f" <<< "$tmpl" || fail "M62-001.1: FEATURES.json.tmpl _instructions never mentions $f"
+  grep -qF -- "\`$f\`" README.md || fail "M62-001.1: README.md never names \`$f\`"
+done
+for w in GLOSSARY.md 'upgrade.sh --ddd' 'issues.sh migrate' 'harness:agent' 'not a lane' 'Needs a human' '## Troubleshooting' '## FEATURES.json fields'; do
+  grep -qF -- "$w" README.md || fail "M62-001.1: README.md never says '$w'"
+done
+
+t "M62-001.2 every guide page is linked from the README"
+for g in docs/guide/*.md; do
+  grep -qF -- "($g" README.md || fail "M62-001.2: README.md does not link $g"
+done
+
 # the real repo
 bash "$CHK" >/dev/null || fail "this repo's CHANGELOG/README are not covered: $(bash "$CHK" || true)"
 echo "CHECK-README TESTS GREEN"
