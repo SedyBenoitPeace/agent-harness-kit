@@ -419,7 +419,7 @@ grep -Eq 'brief.*plan.*run' <<< "$GUIDE" || fail "README: lifecycle must show br
 
 # --- continuous runs documented end to end (M20) -----------------------------
 
-[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.27.0" ] || fail "plugin version must be 3.27.0"
+[ "$(jq -r .version .claude-plugin/plugin.json)" = "3.28.0" ] || fail "plugin version must be 3.28.0"
 # --- model sizes documented and released (M33-005) ----------------------------
 grep -q '^## Choosing a model size' <<< "$GUIDE" || fail "README: 'Choosing a model size' section missing (M33-005)"
 grep -qF 'docs/agents/model-sizes.json' <<< "$GUIDE" || fail "README: size map path missing (M33-005)"
@@ -743,7 +743,7 @@ bash scripts/test-merge.sh
 shellcheck scripts/check-private-names.sh scripts/refresh-private-names.sh scripts/test-private-names.sh
 bash scripts/test-private-names.sh
 bash scripts/check-private-names.sh
-bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh scripts/test-upgrade.sh scripts/test-session.sh scripts/test-run.sh scripts/test-retro.sh scripts/test-check-readme.sh scripts/test-agents.sh scripts/test-private-names.sh scripts/test-check-entries.sh
+bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh scripts/test-upgrade.sh scripts/test-session.sh scripts/test-run.sh scripts/test-retro.sh scripts/test-check-readme.sh scripts/test-agents.sh scripts/test-private-names.sh scripts/test-check-entries.sh scripts/test-board.sh
 shellcheck skills/harness-retro/scripts/retro-facts.sh scripts/test-retro.sh; bash scripts/test-retro.sh  # M60-001 retro facts page
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------

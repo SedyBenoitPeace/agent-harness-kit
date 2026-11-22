@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # harness-run: script-built report for a finished (or stopped) run. Built only
-# from git, FEATURES.json, the skip file and the stop reason: no network, no
-# model calls. The file name and every timestamp come from the repo (HEAD's
-# commit date), so a fixed repo state always yields identical output.
+# from git, FEATURES.json, local run logs, the skip file and the stop reason:
+# no network or model calls. The file name and timestamps come from the repo
+# (HEAD's commit date), so fixed inputs yield identical output.
 # Usage: run-report.sh <start-commit> [--skip FILE] [--stop-reason TEXT]
 # Writes docs/runs/<YYYY-MM-DD-HHMM>.md and prints its path.
 # Exit codes: 0 written; 2 usage error / not a harnessed git repo.
@@ -96,6 +96,14 @@ times="$(prev="$(git log -1 --format=%ct "$START")"
 cost_of() { [ -s .harness-run/cost.log ] && awk -v id="$1" '$1 == id { t += $2; n++ } END { if (n) printf "$%.2f", t }' .harness-run/cost.log; }
 model_of() { [ -s .harness-run/models.log ] && awk -v id="$1" '$1 == id { if (!f) f = $2; l = $2 } END { if (l != "") { printf "%s", l; if (f != l) printf " (stepped up from %s)", f } }' .harness-run/models.log; }
 
+# M66-004: the latest dispatch supplies the builder, if it used --via.
+builder_of() {
+  [ -s .harness-run/events.log ] && awk -v id="$1" '
+    $2 == "dispatch" && $3 == id { builder = $7 }
+    END { printf "%s", builder }
+  ' .harness-run/events.log
+}
+
 # M32-001: tokens from .harness-run/usage.log (<scope> <cli> <model> <in> <cached> <out>),
 # humanised with integer math so the report stays deterministic
 USAGE=.harness-run/usage.log
@@ -114,6 +122,8 @@ while IFS=$'\t' read -r id hash; do
   [ -z "$model" ] || cost="$cost, $model"
   tokens="$(tok_of "$id" || true)"
   [ -z "$tokens" ] || cost="$cost, $tokens"
+  builder="$(builder_of "$id" || true)"
+  [ -z "$builder" ] || cost="$cost, built via $builder"
   case "$st" in
     passing) done_out="$done_out- $id — $(title "$id") — $hash$cost
 " ;;

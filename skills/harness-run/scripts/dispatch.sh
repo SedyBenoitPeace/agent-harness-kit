@@ -4,7 +4,8 @@
 # `model` (small|medium|large). Absent or another CLI's alias: medium, except
 # on claude where the edition's hook decides (plain harness-builder).
 # A sized agent file that does not exist falls back to harness-builder.
-# Usage: dispatch.sh <target> <cli: claude|codex|copilot> <id> [retries]
+# Usage: dispatch.sh <target> <cli: claude|codex|copilot> <id> [retries] [--via <provider>[/<model>]]
+# --via appends who built it to the dispatch event (M66-004); without it nothing changes.
 # Prints `AGENT: <name>` and `SIZE: <size>` (codex also `SPAWN: fork_turns=none`:
 # Codex spawn_agent forks the orchestrator's whole history when fork_turns is
 # omitted, so a builder would start from it, M44-001); appends `<id> <size> model <size>[, +n]`
@@ -16,6 +17,20 @@
 # orchestrator generates them with gen-agents.sh and stops for a CLI restart,
 # never a built-in subagent told to act as the builder (M39-001).
 set -euo pipefail
+via="" positional_args=()
+while [ $# -gt 0 ]; do
+  if [ "$1" = --via ]; then
+    case "${2:-}" in
+      '' | *[[:space:]]*) echo "dispatch: --via needs <provider>[/<model>] without whitespace" >&2; exit 2 ;;
+    esac
+    via=" $2"
+    shift 2
+  else
+    positional_args+=("$1")
+    shift
+  fi
+done
+set -- "${positional_args[@]+"${positional_args[@]}"}"
 target="${1:-}" cli="${2:-}" id="${3:-}" retries="${4:-0}"
 [ -n "$id" ] || { echo "usage: dispatch.sh <target> <claude|codex|copilot> <id> [retries]" >&2; exit 2; }
 case "$cli" in claude | codex | copilot) ;; *) echo "dispatch: unknown cli $cli" >&2; exit 2 ;; esac
@@ -47,7 +62,7 @@ board() { local r; r="$(cd "$_bt" && cd "$(git rev-parse --git-common-dir 2>/dev
 trap board EXIT
 case "$m" in
   small) n=0 ;; medium) n=1 ;; large) n=2 ;;
-  *) if [ "$cli" = claude ]; then echo "AGENT: harness-builder"; echo "SIZE: -"; ev dispatch "$id" claude harness-builder -; exit 0; fi
+  *) if [ "$cli" = claude ]; then echo "AGENT: harness-builder"; echo "SIZE: -"; ev dispatch "$id" claude harness-builder "-$via"; exit 0; fi
      m=medium; n=1 ;;
 esac
 base=$m
@@ -57,7 +72,7 @@ agent=harness-builder-$size
 [ -f "$(agent_file "$agent")" ] || agent=harness-builder
 echo "AGENT: $agent"
 echo "SIZE: $size"
-ev dispatch "$id" "$cli" "$agent" "$size"
+ev dispatch "$id" "$cli" "$agent" "$size$via"
 [ "$cli" = codex ] && echo "SPAWN: fork_turns=none"
 [ "$cli" = claude ] && exit 0
 reason="model $base"; [ "$retries" -eq 0 ] || reason="$reason, +$retries"

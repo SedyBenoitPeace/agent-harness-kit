@@ -5,6 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 fail() { echo "RUN TEST FAIL: $*" >&2; exit 1; }
+t() { echo "-- $1"; }
 export HARNESS_BOARD_OPEN=0 # run-start.sh must never open a fixture's run board (M47-001)
 
 md="skills/harness-continuous/SKILL.md"
@@ -397,6 +398,63 @@ echo "$out" | grep -qxF '== Human hint ==' || fail "feature.sh: non-empty hint m
 echo "$out" | grep -qxF 'not the regex' || fail "feature.sh: hint text missing"
 echo "$out" | awk '/^== Human hint ==/{h=NR} /^== Plan section ==/{p=NR} END{exit !(h>p && p>0)}' || fail "feature.sh: hint must come after the plan section"
 ! bash "$FEAT" M1-001 "$W" | grep -qF '== Human hint ==' || fail "feature.sh: another feature's hint leaked"
+t "M66-001.1 builder prompt is complete and has no placeholder @critical"
+for lane in inline ../repo-M1-002; do
+  lane_args=()
+  if [ "$lane" != inline ]; then lane_args=(--lane "$lane"); fi
+  prompt="$(bash "$FEAT" M1-002 "$W" --prompt builder ${lane_args[@]+"${lane_args[@]}"})" || fail "feature.sh: builder prompt failed"
+  for w in 'You are the harness builder.' 'Run one harness session for M1-002' '== Feature M1-002 ==' '"verify": "V2"' '## M1-002 two' SECTION2 'not the regex'; do
+    grep -qF -- "$w" <<< "$prompt" || fail "feature.sh: builder prompt missing $w"
+  done
+  context="$(sed -n 's/.*bash \(\/[^ ]*\/context\.sh\) --brief.*/\1/p' <<< "$prompt")"
+  [ -f "$context" ] || fail "feature.sh: builder prompt must name an absolute existing context.sh"
+  if grep -qE '^name: harness-builder$|^---$|<[^>]+>|PLACEHOLDER' <<< "$prompt"; then
+    fail "feature.sh: builder prompt contains frontmatter or an unfilled placeholder"
+  fi
+  if [ "$lane" != inline ]; then
+    grep -qF -- "$lane" <<< "$prompt" || fail "feature.sh: builder prompt missing lane directory"
+    grep -qF 'lane/M1-002' <<< "$prompt" || fail "feature.sh: builder prompt missing lane branch"
+  elif grep -qF 'lane/M1-002' <<< "$prompt"; then
+    fail "feature.sh: inline builder prompt contains a lane clause"
+  fi
+done
+t "M66-001.2 evaluator prompt carries role, entry and range @critical"
+prompt="$(bash "$FEAT" M1-002 "$W" --prompt evaluator --range a1..b2)" || fail "feature.sh: evaluator prompt failed"
+for w in 'You are the harness evaluator.' '== Feature M1-002 ==' '"verify": "V2"' 'Commit range: a1..b2'; do
+  grep -qF -- "$w" <<< "$prompt" || fail "feature.sh: evaluator prompt missing $w"
+done
+if grep -qE '^name: harness-evaluator$|^---$|SECTION2|== Human hint ==' <<< "$prompt"; then
+  fail "feature.sh: evaluator prompt contains frontmatter, plan or hint"
+fi
+for role in evaluator unknown; do
+  rc=0; bash "$FEAT" M1-002 "$W" --prompt "$role" >/dev/null 2>&1 || rc=$?
+  [ "$rc" -eq 2 ] || fail "feature.sh: expected usage error for --prompt $role without --range"
+done
+t "M66-001.3 without --prompt the output is unchanged @critical"
+bash "$FEAT" M1-002 "$W" > "$W/brief.actual" || fail "feature.sh: default brief failed"
+# Pre-M66 stdout, including blank lines and the final newline.
+cmp -s "$W/brief.actual" - <<'BRIEF' || fail "feature.sh: default brief changed"
+== Feature M1-002 ==
+{
+  "id": "M1-002",
+  "milestone": 1,
+  "title": "two",
+  "status": "failing",
+  "verify": "V2",
+  "depends_on": [
+    "M1-001"
+  ]
+}
+
+== Plan section ==
+PLAN: docs/plans/active/m1.md
+## M1-002 two
+- SECTION2
+
+== Human hint ==
+use the v2 parser
+not the regex
+BRIEF
 rm "$W/docs/plans/active/m1.md" "$W/.harness-run/hints/M1-002.md" # (grep -q under pipefail would SIGPIPE on later output)
 bash "$FEAT" M1-002 "$W" | grep -q '^PLAN: no section naming M1-002' || fail "feature.sh: missing plan must say so"
 { printf '## M1-002 long\n'; seq 1 120; } > "$W/docs/plans/active/long.md"
@@ -413,7 +471,6 @@ grep -qF 'do not cat SKILL.md, AGENTS.md' "$run" || fail "harness-run SKILL.md: 
 grep -qF 'harness session for <id>' "$run" || fail "harness-run SKILL.md: brief must keep 'harness session for <id>' (Claude edition hook parses it)"
 
 # M60-003: a Needs-a-human item becomes scripts/wizard-<id>.sh (idea from Matt Pocock's `wizard` skill)
-t() { echo "-- $1"; }
 t "M60-003.1 wizard generated for a blocked feature @critical"
 WIZ="skills/harness-run/scripts/wizard.sh"
 W="$(mktemp -d)"
@@ -442,5 +499,21 @@ if bash "$WIZ" "$W" M9-999 >/dev/null 2>&1; then fail "wizard.sh: unknown id wit
 rm -rf "$W"
 grep -qF 'scripts/wizard.sh' "$run" || fail "harness-run SKILL.md: must name scripts/wizard.sh (M60-003)"
 grep -qF 'Before the run' "$run" || fail "harness-run SKILL.md: wizard must cover a plan's Before the run items"
+
+t "M66-002.1 SKILL.md states the cross-provider rule and its fallback @critical"
+sec="$(awk '/^## Children on other providers/{on=1; next} /^## /{on=0} on' "$run")"
+[ -n "$sec" ] || fail "harness-run SKILL.md: no 'Children on other providers' section (M66-002)"
+for w in 'other than its own' 'never a model' 'order the host lists' 'Effort comes from the size' \
+  '--prompt builder' 'dropped for the rest of the run' 'Workflow step 3, unchanged'; do
+  printf '%s\n' "$sec" | tr '\n' ' ' | tr -s ' ' | grep -qF -- "$w" || fail "harness-run SKILL.md cross-provider section: missing '$w' (M66-002)"
+done
+t "M66-002.2 no model name in the kit's run docs"
+! grep -nE '\b(claude-[a-z]+-[0-9]|gpt-[0-9]|gemini-[0-9])' "$run" skills/harness-continuous/SKILL.md \
+  || fail "harness-run/continuous SKILL.md: a model id is named (M66-002: provider only)"
+t "M66-003.1 Evaluator step names the other-provider rule and its fallback @critical"
+ev="$(awk '/^## Evaluator step/{on=1; next} /^## /{on=0} on' "$run" | tr '\n' ' ' | tr -s ' ')"
+for w in 'provider other than the builder' '--prompt evaluator' 'one provider or none' 'Integrity check'; do
+  printf '%s\n' "$ev" | grep -qF -- "$w" || fail "harness-run Evaluator step: missing '$w' (M66-003)"
+done
 
 echo "RUN TESTS GREEN"

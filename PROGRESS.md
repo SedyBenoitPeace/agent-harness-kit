@@ -3,6 +3,28 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-22 -- session 108 (M66 builders across providers)
+
+- Branch: `m66-cross-provider` (own worktree; another session works on the
+  main checkout).
+- Done: M66-001..004, released as 3.28.0. `feature.sh --prompt
+  builder|evaluator` prints a whole child prompt; harness-run's "Children on
+  other providers" sends lane builders round-robin across the host's
+  providers (provider only, host default model, effort from size) and the
+  evaluator to another provider; `dispatch.sh --via` puts the builder on the
+  board and in the run report. Without such a host nothing changes.
+- Run on T3 Code itself: 001 built by Codex, judged PASS by Claude; 004
+  built by Claude, NEEDS_WORK from Codex (report, pinned compat lines,
+  multiline --via), reworked by Codex, judged PASS by Claude. 002/003
+  written by the orchestrator, red then green in test-run.sh.
+- Decisions: no routing file and no model names in the kit (a provider-only
+  child ran Codex's default model); host listing order, not judgement; the
+  planned M66-005 folded into 001.3 and 004.2; lanes read their brief from a
+  file the script wrote, never a hand-typed one.
+- Lesson: an evaluator on another provider found three real gaps a
+  same-provider builder had called done.
+- Gate: GREEN (bash scripts/e2e.sh).
+
 ## 2026-11-22 -- session 107 (M65-001 runs refuse sequential-only entries)
 
 - Branch: `enforce-parallel-entries`.

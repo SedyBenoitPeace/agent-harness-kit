@@ -135,17 +135,17 @@ once. Ends with one `SESSION:` line.
 
 ### harness-run
 
-Many features in one conversation, one fresh builder subagent each,
-verified from the repo (status script + clean tree) before the next.
-Independent features run as **parallel lanes** in their own git worktrees,
-up to 5 at once ([Parallel lanes](#parallel-lanes)). Features that opt in
-get an independent evaluator. Stops at the first problem, the milestone
-boundary (or `through M<n>`), or a cap of 10. A step only you can do comes
-back as `scripts/wizard-<id>.sh`, which walks you through it and runs a
-check, naming secrets but never holding them. A live run board
-(`.harness-run/board.html`) shows every open feature: stage, agent, gate,
-time, cost; click a row for all its fields, copy a STOP command, or leave a
-hint the next builder reads ([Claude Code plugin in depth](docs/guide/claude-code.md)).
+Many features in one conversation, one fresh builder subagent each, verified from the repo
+(status script + clean tree) before the next. Independent features run as **parallel lanes** in
+their own git worktrees, up to 5 at once ([Parallel lanes](#parallel-lanes)). Features that opt
+in get an independent evaluator. Where child tasks can run on other providers (T3 Code),
+builders spread across them, the evaluator runs on another provider than the builder, and the
+host picks each model. Stops at the first problem, the milestone boundary (or `through M<n>`),
+or a cap of 10. A step only you can do comes back as `scripts/wizard-<id>.sh`, which walks you
+through it and runs a check, naming secrets but never holding them. A live run board
+(`.harness-run/board.html`) shows every open feature: stage, agent, gate, time, cost; click a
+row for all its fields, copy a STOP command, or leave a hint the next builder reads ([Claude
+Code plugin in depth](docs/guide/claude-code.md)).
 
 ### harness-continuous
 

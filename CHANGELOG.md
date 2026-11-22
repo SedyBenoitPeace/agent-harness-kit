@@ -12,6 +12,27 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.28.0 — 2026-11-22
+
+- Builders across providers (M66). On a host whose child tasks can run on
+  other providers (T3 Code), harness-run and harness-continuous send each
+  lane's builder to the next provider in the host's order and run the
+  evaluator on a provider other than the builder's. The kit names a
+  provider only, never a model: the host runs that provider's default.
+  Without such a host nothing changes.
+- `feature.sh <id> [target] --prompt builder [--lane <dir>]` and
+  `--prompt evaluator --range <base>..<head>` print the whole prompt for a
+  child that is not a named agent, so no brief is typed by hand (an owner
+  run shipped a `FEATURE_PLACEHOLDER` brief). Without `--prompt` the output
+  is unchanged.
+- `dispatch.sh … --via <provider>[/<model>]` records who built a feature;
+  the run board and run report show it.
+
+Upgrade:
+- Nothing: the kit's scripts and skills update with the plugin.
+
+README: `child tasks can run on other providers`
+
 ## 3.27.0 — 2026-11-22
 
 - A run refuses entries that would build one at a time (M65-001; owner
