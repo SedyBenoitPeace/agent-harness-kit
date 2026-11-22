@@ -3,7 +3,8 @@
   "milestones": {
     "61": "Lanes by dependency, not milestone",
     "62": "README a new user can work from",
-    "63": "Upgrades install acceptance checks"
+    "63": "Upgrades install acceptance checks",
+    "64": "Private names stay private"
   },
   "features": [
     {
@@ -153,6 +154,47 @@
             "Read CHANGELOG 3.23.0 and 3.25.0 Upgrade blocks and README"
           ],
           "pass_if": "No Upgrade block asks a person to copy the scripts, edit e2e.sh or delete acceptance-verdict.sh; README says the upgrade installs the check",
+          "evidence": "test"
+        }
+      ]
+    },
+    {
+      "id": "M64-001",
+      "milestone": 64,
+      "title": "Private repo names never reach this public repo: check-private-names.sh fails on a committed file, a commit message or a PR text naming one of the owner's private repos; the list lives outside git and ci-local.sh refreshes it from gh before every push",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-private-names.sh proving the checks below",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "scripts/check-private-names.sh",
+        "scripts/refresh-private-names.sh",
+        "scripts/private-names-allow.txt",
+        "scripts/test-private-names.sh",
+        "scripts/ci-local.sh",
+        "scripts/e2e.sh",
+        "AGENTS.md"
+      ],
+      "checks": [
+        {
+          "id": "M64-001.1",
+          "title": "a private repo name in a tracked file or a text fails the check",
+          "critical": true,
+          "steps": [
+            "Fixture repo and name list"
+          ],
+          "pass_if": "A whole-word, case-insensitive name in a tracked file or a text file fails with file:line; allowed names and partial words pass; no list skips",
+          "evidence": "test"
+        },
+        {
+          "id": "M64-001.2",
+          "title": "ci-local refreshes the list and checks commit messages before a push",
+          "critical": false,
+          "steps": [
+            "Read ci-local.sh and refresh-private-names.sh",
+            "Commit a message naming a private repo"
+          ],
+          "pass_if": "ci-local refreshes the list with gh repo list and runs the check; a commit message naming a private repo fails",
           "evidence": "test"
         }
       ]
