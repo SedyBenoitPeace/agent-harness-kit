@@ -104,7 +104,7 @@ agent-harness-template>` and open a PR there; gate green; PR.
   writes findings as `NOTE:` lines; acceptance-verdict.sh still decides.
   Upgrade: `upgrade.sh .` regenerates the evaluator agent files.
 - Lanes follow dependencies, not milestones (M61; owner report: a run over
-  M57–M60 found 0 lanes, and a quick-calories run only parallelised after
+  M57–M60 found 0 lanes, and an app repo run only parallelised after
   the owner said "overrule the harness"):
   - `context.sh --through N` lets lanes come from later milestones up to N;
     a lane from a later milestone waits as `<id> ready` in
