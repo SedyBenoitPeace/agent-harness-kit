@@ -56,4 +56,4 @@ baseline → implement test/check-first → gate green → flip the feature to
   must print `CI-LOCAL GREEN` (CI's gate in Docker on a clean clone, no git
   identity): a local `e2e.sh` alone misses clean-checkout and tool-version gaps.
 - After a release PR merges on GitHub, run `bash scripts/upgrade-all.sh` (list in
-  `.git/info/upgrade-repos`, never committed; a line may be a folder of repos, `--add <folder>`): it opens the upgrade PR in each listed repo.
+  `.git/info/upgrade-repos`, never committed; a line may be a folder of repos, `--add <folder>`; or `bash scripts/upgrade-all.sh <repo>` for one path, no list): it opens the upgrade PR in each listed repo.

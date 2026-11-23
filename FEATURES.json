@@ -511,6 +511,20 @@
         "scripts/test-upgrade-all.sh"
       ],
       "notes": "Plan: docs/plans/completed/2026-11-23-m68-002-folder-lines.md. Not shipped in the plugin: no version bump."
+    },
+    {
+      "id": "M68-003",
+      "milestone": 68,
+      "title": "upgrade-all.sh: an existing harness-upgrade branch no longer skips the repo (open PR updated in place, merged leftover replaced, local branch ignored); paths as arguments run without the list",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-upgrade-all.sh cases 11-17: an open PR gets one more commit without a force push or is reported already open, a merged leftover branch is replaced, a branch with no PR gets one, a local branch is left as it was, --dry-run deletes nothing, a path argument runs with no list",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "scripts/upgrade-all.sh",
+        "scripts/test-upgrade-all.sh"
+      ],
+      "notes": "Plan: docs/plans/completed/2026-11-23-m68-003-existing-branch.md. Not shipped in the plugin: no version bump."
     }
   ]
 }

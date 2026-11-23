@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # upgrade-all.sh — run upgrade.sh over every repo in a local list and open one
 # upgrade PR per repo (M68-001). A tool of this repo, not shipped in the plugin.
-#   upgrade-all.sh [--list FILE] [--dry-run] | --add DIR
+#   upgrade-all.sh [--list FILE] [--dry-run] [PATH...] | --add DIR
+# PATH... (a repo or a folder of repos, as list lines) runs just those: no list is
+# read, needed or prompted for.
 # The list: one absolute path per line, # comments and blank lines ignored. A line
 # that is a repo is upgraded; any other folder stands for each harnessed repo
 # directly inside it (one level, never this kit). --add DIR appends a folder (with
@@ -9,19 +11,24 @@
 # default .git/info/upgrade-repos (git cannot commit it, so no repo name ever
 # enters this public repo). Each repo is upgraded in a temp worktree off
 # origin/<default branch>: its own checkout (branch, index, files) is never
-# touched. Output: one "<path>: <result>" line per repo.
+# touched; its own harness-upgrade branch is never created or deleted (the temp
+# worktree is detached, the push is HEAD:refs/heads/harness-upgrade, never forced).
+# An origin harness-upgrade branch: with an open PR it is updated in place; if its
+# PR was merged and it is still the PR's head it is stale and deleted first (never
+# under --dry-run); otherwise it is the start and a PR is opened from it. Output: one "<path>: <result>" line per repo.
 # Exit 0 done (skips are not failures); 1 a repo failed; 2 no list.
 set -uo pipefail
 KIT="$(cd "$(dirname "$0")/.." && pwd)"
 UPGRADE="$KIT/skills/harness-upgrade-structure/scripts/upgrade.sh"
-list="$(cd "$KIT" && git rev-parse --git-common-dir)/info/upgrade-repos"; dry=0; addto=""
+list="$(cd "$KIT" && git rev-parse --git-common-dir)/info/upgrade-repos"; dry=0; addto=""; paths=()
 case "$list" in /*) ;; *) list="$KIT/$list" ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
     --list) list="${2:?--list needs a file}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
     --add) addto="${2:?--add needs a folder}"; shift 2 ;;
-    *) echo "usage: upgrade-all.sh [--list FILE] [--dry-run] | --add DIR" >&2; exit 2 ;;
+    -*) echo "usage: upgrade-all.sh [--list FILE] [--dry-run] [PATH...] | --add DIR" >&2; exit 2 ;;
+    *) paths+=("$1"); shift ;;
   esac
 done
 
@@ -34,7 +41,7 @@ add() {
   echo "added: $d"
 }
 if [ -n "$addto" ]; then add "$addto"; exit $?; fi
-if [ ! -f "$list" ]; then
+if [ "${#paths[@]}" = 0 ] && [ ! -f "$list" ]; then
   if [ -t 0 ]; then
     read -r -p "Folder that holds your repos: " ans
     [ -n "$ans" ] && add "$ans" || exit 2
@@ -54,8 +61,6 @@ one() (
     if [ -n "$wt" ]; then
       git -C "$repo" worktree remove --force "$wt/w" >/dev/null 2>&1 || true
       rm -rf "$wt"; git -C "$repo" worktree prune
-      # the PR's head is origin's branch; a local one would block the next run
-      git -C "$repo" branch -q -D harness-upgrade >/dev/null 2>&1 || true
     fi
   }
   trap cleanup EXIT
@@ -65,10 +70,6 @@ one() (
   fi
   git -C "$repo" remote get-url origin >/dev/null 2>&1 || { echo "skipped: no origin remote"; exit 0; }
   git -C "$repo" fetch -q --prune origin 2>&1 || { echo "fetch failed" >&2; exit 1; }
-  if git -C "$repo" show-ref --verify --quiet refs/heads/harness-upgrade \
-    || git -C "$repo" show-ref --verify --quiet refs/remotes/origin/harness-upgrade; then
-    echo "skipped: harness-upgrade branch exists"; exit 0
-  fi
   def="$(git -C "$repo" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##' || true)"
   if [ -z "$def" ]; then
     for b in main master; do
@@ -77,21 +78,57 @@ one() (
   fi
   [ -n "$def" ] || { echo "skipped: no default branch found on origin"; exit 0; }
 
+  # origin's harness-upgrade: open PR = update it; stale (merged, still its head) = delete
+  # and start over; anything else = start from it. A local branch of that name is ignored.
+  start="origin/$def"; mode=""; prurl=""
+  if git -C "$repo" show-ref --verify --quiet refs/remotes/origin/harness-upgrade; then
+    prs="$(cd "$repo" && gh pr list --head harness-upgrade --state all --json number,state,url,headRefOid)" \
+      || { echo "gh pr list failed" >&2; exit 1; }
+    prurl="$(printf '%s' "$prs" | jq -r 'map(select(.state == "OPEN")) | .[0].url // empty')" \
+      || { echo "unreadable gh pr list output" >&2; exit 1; }
+    tipsha="$(git -C "$repo" rev-parse refs/remotes/origin/harness-upgrade)"
+    if [ -n "$prurl" ]; then
+      start="origin/harness-upgrade"; mode=open
+    elif [ "$(printf '%s' "$prs" | jq -r '.[0] | "\(.state) \(.headRefOid)"')" = "MERGED $tipsha" ]; then
+      [ "$dry" = 1 ] || git -C "$repo" push -q origin --delete harness-upgrade 2>&1 \
+        || { echo "could not delete the stale origin branch" >&2; exit 1; }
+    else
+      start="origin/harness-upgrade"; mode=other
+    fi
+  fi
+
   wt="$(mktemp -d)"
-  git -C "$repo" worktree add -q --no-track -b harness-upgrade "$wt/w" "origin/$def" >/dev/null 2>&1 \
+  git -C "$repo" worktree add -q --detach "$wt/w" "$start" >/dev/null 2>&1 \
     || { echo "worktree add failed" >&2; exit 1; }
   rc=0; out="$(bash "$UPGRADE" "$wt/w" 2>&1)" || rc=$?
   if [ "$rc" = 3 ]; then echo "skipped: no harness"; exit 0; fi
   if [ "$rc" != 0 ]; then echo "skipped: $(printf '%s\n' "$out" | tail -n 1)"; exit 0; fi
-  if [ -z "$(git -C "$wt/w" status --short)" ]; then echo "up to date"; exit 0; fi
+  ahead="$(git -C "$wt/w" rev-list --count "origin/$def..HEAD")"
+  dirty="$(git -C "$wt/w" status --short)"
+  if [ -z "$dirty" ]; then
+    if [ "$mode" = open ]; then echo "PR $prurl (already open)"; exit 0; fi
+    if [ "$mode" != other ] || [ "$ahead" = 0 ]; then
+      if [ "$mode" = other ] && [ "$dry" != 1 ]; then
+        git -C "$repo" push -q origin --delete harness-upgrade 2>&1 || { echo "could not delete the empty origin branch" >&2; exit 1; }
+      fi
+      echo "up to date"; exit 0
+    fi
+  fi
 
   changed="$(printf '%s\n' "$out" | grep -c '^CHANGED:' || true)"
   todo="$(printf '%s\n' "$out" | grep -c '^TODO:' || true)"
-  if [ "$dry" = 1 ]; then echo "would open a PR ($changed changed, $todo todo)"; exit 0; fi
+  if [ "$dry" = 1 ]; then
+    if [ "$mode" = open ]; then echo "would update PR $prurl ($changed changed, $todo todo)"
+    else echo "would open a PR ($changed changed, $todo todo)"; fi
+    exit 0
+  fi
 
-  git -C "$wt/w" add -A
-  git -C "$wt/w" commit -q -m "chore: upgrade harness structure"
-  git -C "$wt/w" push -q origin harness-upgrade 2>&1 || { echo "push failed" >&2; exit 1; }
+  if [ -n "$dirty" ]; then
+    git -C "$wt/w" add -A
+    git -C "$wt/w" commit -q -m "chore: upgrade harness structure"
+    git -C "$wt/w" push -q origin HEAD:refs/heads/harness-upgrade 2>&1 || { echo "push failed" >&2; exit 1; }
+  fi
+  if [ "$mode" = open ]; then echo "PR $prurl (updated)"; exit 0; fi
   {
     echo "Harness structure upgrade (upgrade-all.sh)."; echo
     printf '%s\n' "$out" | grep -E '^(CHANGED|UPGRADE-NOTE):' || true
@@ -114,9 +151,9 @@ report() {
   if [ "$rc" = 0 ]; then echo "$1: $res"; else echo "$1: failed: $res"; failed=1; fi
 }
 
-failed=0
-while IFS= read -r repo || [ -n "$repo" ]; do
-  case "$repo" in ''|'#'*) continue ;; esac
+# line ENTRY: a repo, or a folder of repos
+line() {
+  local repo="$1" d n
   if [ -d "$repo" ] && ! top "$repo"; then
     n=0
     for d in "$repo"/*/; do
@@ -129,5 +166,15 @@ while IFS= read -r repo || [ -n "$repo" ]; do
   else
     report "$repo"
   fi
-done < "$list"
+}
+
+failed=0
+if [ "${#paths[@]}" -gt 0 ]; then
+  for p in "${paths[@]}"; do line "$p"; done
+else
+  while IFS= read -r repo || [ -n "$repo" ]; do
+    case "$repo" in ''|'#'*) continue ;; esac
+    line "$repo"
+  done < "$list"
+fi
 exit "$failed"

@@ -10,16 +10,21 @@ fail() { echo "UPGRADE-ALL TEST FAIL: $*" >&2; exit 1; }
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 
-# stub gh: records its arguments and the --body-file text, prints a URL
+# stub gh: records its arguments and the --body-file text, prints a URL; `pr list`
+# answers from $GH_PR/<repo name>.json (the repo is found by its origin), else []
 mkdir "$WORK/bin"
 cat > "$WORK/bin/gh" <<'STUB'
 #!/usr/bin/env bash
 echo "$*" >> "$GH_LOG"
+if [ "$1 $2" = "pr list" ]; then
+  cat "$GH_PR/$(basename "$(git remote get-url origin)" .git).json" 2>/dev/null || echo '[]'; exit 0
+fi
 while [ $# -gt 0 ]; do [ "$1" = --body-file ] && cp "$2" "$GH_LOG.body"; shift; done
 echo "https://example.test/acme/pr/7"
 STUB
 chmod +x "$WORK/bin/gh"
 export GH_LOG="$WORK/gh.log"; : > "$GH_LOG"
+export GH_PR="$WORK/pr"; mkdir "$GH_PR"
 export PATH="$WORK/bin:$PATH"
 
 # mkrepo <name>: an outdated harnessed repo on main with a bare origin
@@ -67,10 +72,6 @@ grep -q '^- \[ \] .*scripts/e2e.sh' "$GH_LOG.body" || fail "1: the e2e TODO must
 git -C "$WORK/alpha" worktree list | grep -q 'harness-upgrade' && fail "1: temp worktree left"
 git -C "$WORK/alpha" show-ref --verify --quiet refs/heads/harness-upgrade && fail "1: local branch left (the PR head is on origin)"
 git -C "$WORK/alpha" worktree prune
-
-echo "-- 2 same repo again: skipped"
-out="$(run)" || fail "2: exit $?"
-echo "$out" | grep -qxF "$WORK/alpha: skipped: harness-upgrade branch exists" || fail "2: $out"
 
 echo "-- 3 up-to-date repo: nothing left behind"
 printf '%s\n' "$WORK/gamma" > "$LIST"
@@ -140,5 +141,74 @@ printf '%s\n' "$WORK/fold10" > "$LIST"
 out="$(bash "$WORK/fold10/kit/scripts/upgrade-all.sh" --list "$LIST" --dry-run 2>&1)" || fail "10: exit $?: $out"
 echo "$out" | grep -q "^$WORK/fold10/other: would open a PR" || fail "10: other missing: $out"
 echo "$out" | grep -qF "fold10/kit" && fail "10: the kit was listed: $out"
+
+# prfix <name> <STATE> <oid>: the one PR gh reports for that repo's harness-upgrade head
+prfix() { printf '[{"number":7,"state":"%s","url":"https://example.test/acme/pr/7","headRefOid":"%s"}]\n' "$2" "$3" > "$GH_PR/$1.json"; }
+# mkbranch <name>: origin's harness-upgrade = main + one commit (a resolved TODO)
+mkbranch() {
+  local r="$WORK/$1"
+  git -C "$r" checkout -q -b tmp-hu main
+  echo ok > "$r/resolved.txt"; git -C "$r" add resolved.txt; git -C "$r" commit -qm "resolve todo"
+  git -C "$r" push -q origin tmp-hu:refs/heads/harness-upgrade 2>/dev/null
+  git -C "$r" checkout -q main; git -C "$r" branch -q -D tmp-hu
+}
+tip() { git -C "$WORK/$1.git" rev-parse harness-upgrade; }
+PRURL=https://example.test/acme/pr/7
+
+echo "-- 11 open PR, repo outdated again: branch updated in place, no force"
+mkrepo e11; mkbranch e11; prfix e11 OPEN "$(tip e11)"; old="$(tip e11)"; : > "$GH_LOG"
+printf '%s\n' "$WORK/e11" > "$LIST"
+out="$(run)" || fail "11: exit $?: $out"
+echo "$out" | grep -qxF "$WORK/e11: PR $PRURL (updated)" || fail "11: $out"
+git -C "$WORK/e11.git" merge-base --is-ancestor "$old" harness-upgrade || fail "11: earlier commit lost"
+[ "$(git -C "$WORK/e11.git" rev-list --count "$old..harness-upgrade")" = 1 ] || fail "11: want exactly one new commit"
+grep -q 'pr create' "$GH_LOG" && fail "11: a second PR was created"
+git -C "$WORK/e11" show-ref --verify --quiet refs/heads/harness-upgrade && fail "11: local branch created"
+
+echo "-- 12 open PR, nothing new: already open, tip unchanged"
+mkrepo e12; printf '%s\n' "$WORK/e12" > "$LIST"; run >/dev/null || fail "12: first run"
+prfix e12 OPEN "$(tip e12)"; old="$(tip e12)"; : > "$GH_LOG"
+out="$(run)" || fail "12: exit $?: $out"
+echo "$out" | grep -qxF "$WORK/e12: PR $PRURL (already open)" || fail "12: $out"
+[ "$(tip e12)" = "$old" ] || fail "12: tip moved"
+grep -q 'pr create' "$GH_LOG" && fail "12: a second PR was created"
+
+echo "-- 13 merged PR, branch left behind: replaced by one fresh commit"
+mkrepo e13; mkbranch e13; prfix e13 MERGED "$(tip e13)"; : > "$GH_LOG"
+printf '%s\n' "$WORK/e13" > "$LIST"
+out="$(run)" || fail "13: exit $?: $out"
+echo "$out" | grep -qxF "$WORK/e13: PR $PRURL" || fail "13: $out"
+[ "$(git -C "$WORK/e13.git" rev-list --count main..harness-upgrade)" = 1 ] || fail "13: want exactly one commit on main"
+git -C "$WORK/e13.git" cat-file -e harness-upgrade:resolved.txt 2>/dev/null && fail "13: the old branch survived"
+
+echo "-- 14 branch on origin, no PR: a PR is opened from it"
+mkrepo e14; mkbranch e14; old="$(tip e14)"; : > "$GH_LOG"; printf '%s\n' "$WORK/e14" > "$LIST"
+out="$(run)" || fail "14: exit $?: $out"
+echo "$out" | grep -qxF "$WORK/e14: PR $PRURL" || fail "14: $out"
+git -C "$WORK/e14.git" merge-base --is-ancestor "$old" harness-upgrade || fail "14: branch commits lost"
+grep -q 'pr create' "$GH_LOG" || fail "14: no PR created"
+
+echo "-- 15 local harness-upgrade branch: left alone"
+mkrepo e15; git -C "$WORK/e15" branch harness-upgrade main; lb="$(git -C "$WORK/e15" rev-parse harness-upgrade)"
+printf '%s\n' "$WORK/e15" > "$LIST"
+out="$(run)" || fail "15: exit $?: $out"
+echo "$out" | grep -q "^$WORK/e15: PR " || fail "15: $out"
+[ "$(git -C "$WORK/e15" rev-parse harness-upgrade)" = "$lb" ] || fail "15: local branch moved or gone"
+remote_has e15 || fail "15: origin has no branch"
+
+echo "-- 16 --dry-run in the merged-PR setup: origin untouched"
+mkrepo e16; mkbranch e16; prfix e16 MERGED "$(tip e16)"; old="$(tip e16)"; : > "$GH_LOG"
+printf '%s\n' "$WORK/e16" > "$LIST"
+out="$(run --dry-run)" || fail "16: exit $?: $out"
+echo "$out" | grep -q "^$WORK/e16: would open a PR (" || fail "16: $out"
+[ "$(tip e16)" = "$old" ] || fail "16: origin branch changed"
+grep -q 'pr create' "$GH_LOG" && fail "16: gh pr create called"
+
+echo "-- 17 a path argument: no list read, created or prompted"
+mkrepo e17; dl="$(git rev-parse --git-common-dir)/info/upgrade-repos"; had=0; [ -e "$dl" ] && had=1
+out="$(bash "$UA" --dry-run "$WORK/e17" 2>&1 </dev/null)" || fail "17: exit $?: $out"
+echo "$out" | grep -q "^$WORK/e17: would open a PR (" || fail "17: $out"
+[ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = 1 ] || fail "17: want one line: $out"
+now=0; [ -e "$dl" ] && now=1; [ "$had" = "$now" ] || fail "17: the default list was created"
 
 echo "UPGRADE-ALL TEST OK"
