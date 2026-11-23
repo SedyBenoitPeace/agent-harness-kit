@@ -539,7 +539,7 @@
         "skills/harness-session/scripts/context.sh",
         "scripts/test-session.sh"
       ],
-      "notes": "Plan: docs/plans/active/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
+      "notes": "Plan: docs/plans/completed/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
     },
     {
       "id": "M69-002",
@@ -554,7 +554,7 @@
         "scripts/test-merge-lane.sh",
         "skills/harness-run/SKILL.md"
       ],
-      "notes": "Plan: docs/plans/active/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
+      "notes": "Plan: docs/plans/completed/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
     },
     {
       "id": "M69-003",
@@ -570,7 +570,7 @@
         "skills/harness-initial-setup/templates/harness-protocol-planning.md",
         "docs/agents/harness-protocol-planning.md"
       ],
-      "notes": "Plan: docs/plans/active/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
+      "notes": "Plan: docs/plans/completed/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
     },
     {
       "id": "M69-004",
@@ -586,7 +586,7 @@
         "scripts/test-board.sh",
         "skills/harness-run/SKILL.md"
       ],
-      "notes": "Plan: docs/plans/active/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
+      "notes": "Plan: docs/plans/completed/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
     }
   ]
 }
