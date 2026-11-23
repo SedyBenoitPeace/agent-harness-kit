@@ -503,7 +503,7 @@ grep -qF 'Before the run' "$run" || fail "harness-run SKILL.md: wizard must cove
 t "M66-002.1 SKILL.md states the cross-provider rule and its fallback @critical"
 sec="$(awk '/^## Children on other providers/{on=1; next} /^## /{on=0} on' "$run")"
 [ -n "$sec" ] || fail "harness-run SKILL.md: no 'Children on other providers' section (M66-002)"
-for w in 'other than its own' 'never a model' 'order the host lists' 'Effort comes from the size' \
+for w in 'other than its own' 'never a model' 'VIA: <provider>' '--providers' 'Effort comes from the size' \
   '--prompt builder' 'dropped for the rest of the run' 'Workflow step 3, unchanged'; do
   printf '%s\n' "$sec" | tr '\n' ' ' | tr -s ' ' | grep -qF -- "$w" || fail "harness-run SKILL.md cross-provider section: missing '$w' (M66-002)"
 done

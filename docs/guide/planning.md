@@ -188,3 +188,21 @@ Any other conflict, or a red gate after the merge, leaves the branch as it
 was and names the cause. It is a merge, not a rebase: one resolution, no
 force push. harness-run lanes never need it (lanes never touch the two
 files).
+
+## Parallel lanes
+
+harness-run builds every feature whose `depends_on` is met side by side,
+up to `max_lanes` (default 5), like a merge queue: two features that edit
+the same file still run at once. Each lane merges through the full gate
+as it finishes; on a conflict the run merges its branch into the lane and
+the lane's builder resolves it, keeping both sides (`merge-lane.sh
+--into-lane`). A feature that must go after others, such as a sweep that
+moves every constant into one file, lists them in `depends_on`
+(`check-entries.sh` prints `SWEEP?:` for one that does not). Files that
+truly cannot be edited by two lanes at once go in the top-level
+`exclusive_paths`.
+
+On a host that runs child tasks on several providers (T3 Code),
+`run-start.sh --providers codex,claude,…` records them and each
+`dispatch.sh` prints `VIA: <provider>`, the next one in turn, so builders
+spread across providers without the orchestrator choosing.

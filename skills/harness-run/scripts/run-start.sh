@@ -10,10 +10,20 @@
 # depends_on/paths or claiming a whole top-level folder, or kit scripts older
 # than the repo's recorded kit version, refuse the run (exit 1, its lines
 # printed, no run state written).
-# Usage: run-start.sh <target>
-# Prints only `BOARD: <path to board.html>` (from board.sh --open).
+# --providers a,b,c (M69-004): the host can run builders on these providers
+# (T3 Code: orchestrator_capabilities, in the host's order). Written to
+# .harness-run/providers; with 2+, dispatch.sh assigns each builder the next
+# one (VIA:). Without it, builders are the named agents.
+# Usage: run-start.sh <target> [--providers a,b,c]
+# Prints `BOARD: <path to board.html>` (from board.sh --open), and
+# `PROVIDERS: a b c` when given.
 set -euo pipefail
-t="${1:-}"; [ -d "$t" ] || { echo "usage: run-start.sh <target>" >&2; exit 2; }
+t="${1:-}"; [ -d "$t" ] || { echo "usage: run-start.sh <target> [--providers a,b,c]" >&2; exit 2; }
+provs=""
+if [ "${2:-}" = --providers ]; then
+  case "${3:-}" in '' | *[!A-Za-z0-9._,-]*) echo "run-start: --providers needs a comma list, e.g. codex,claude" >&2; exit 2 ;; esac
+  provs="$3"
+elif [ -n "${2:-}" ]; then echo "usage: run-start.sh <target> [--providers a,b,c]" >&2; exit 2; fi
 here="$(cd "$(dirname "$0")" && pwd)"
 cd "$t"
 chk="$(bash "$here/check-entries.sh" .)" || { printf '%s\n' "$chk"; exit 1; }
@@ -33,6 +43,8 @@ git rev-parse HEAD > "$d/start"
 echo "$(date +%s)-$$" > "$d/run-id"
 : > "$d/skip"
 : > "$d/busy"
-rm -f "$d/STOP" "$d/board-opened"
+rm -f "$d/STOP" "$d/board-opened" "$d/provider-last"
+if [ -n "$provs" ]; then tr ',' '\n' <<<"$provs" | grep . > "$d/providers"; else rm -f "$d/providers"; fi
 echo "$(date +%s) run-start - $(cat "$d/start")" > "$d/events.log"
 { bash "$here/board.sh" . --open 2>/dev/null || true; } | grep '^BOARD: ' || true
+[ ! -s "$d/providers" ] || echo "PROVIDERS: $(tr '\n' ' ' < "$d/providers" | sed 's/ $//')"

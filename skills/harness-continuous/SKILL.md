@@ -40,6 +40,7 @@ permissions only — never a skip-all-permissions flag.
    It refuses (exit 1) on `ENTRY:` or `KIT: stale` lines: fix each `ENTRY:`
    entry from its plan section as harness-run's Workflow says, commit
    FEATURES.json alone and run it again; `KIT: stale` is a baseline problem.
+   `SWEEP?:` lines and `--providers` work as in harness-run's Workflow.
    Invoking the command is the signal to start. It prints `BOARD: <path>`
    (the live run board): put that line in your first progress line to the human.
 

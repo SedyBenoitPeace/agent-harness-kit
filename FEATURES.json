@@ -7,7 +7,8 @@
     "64": "Private names stay private",
     "65": "Runs refuse sequential-only entries",
     "66": "Builders across providers",
-    "67": "Parallel PRs never conflict on the harness files"
+    "67": "Parallel PRs never conflict on the harness files",
+    "69": "Lanes like a merge queue; builders across providers by script"
   },
   "features": [
     {
@@ -525,6 +526,67 @@
         "scripts/test-upgrade-all.sh"
       ],
       "notes": "Plan: docs/plans/completed/2026-11-23-m68-003-existing-branch.md. Not shipped in the plugin: no version bump."
+    },
+    {
+      "id": "M69-001",
+      "milestone": 69,
+      "title": "context.sh lanes: a file two open features both name no longer keeps them apart (merge queue); only paths inside the top-level exclusive_paths (absent = none) and exclusive block",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-session.sh: same-file and file-in-folder features are listed together; with exclusive_paths naming the file they are not, and the reason names the file, the feature and exclusive_paths; a busy lane's shared file does not block a refill",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/scripts/context.sh",
+        "scripts/test-session.sh"
+      ],
+      "notes": "Plan: docs/plans/active/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
+    },
+    {
+      "id": "M69-002",
+      "milestone": 69,
+      "title": "merge-lane.sh --into-lane merges the run's branch into a conflicted lane's worktree: clean or shared-only conflicts commit (SYNCED), any other conflict stays in progress there (RESOLVE + BRIEF) for the lane's builder; the run's branch is never touched",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-merge-lane.sh 3c: no lane worktree exits 2; a real conflict exits 1 with RESOLVE: code.txt and a BRIEF line, shared_paths resolved in the lane, MERGE_HEAD present, run branch HEAD and tree unchanged; after the lane commits, merge-lane.sh merges clean with the lane's resolution; a shared-only conflict prints SYNCED",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/merge-lane.sh",
+        "scripts/test-merge-lane.sh",
+        "skills/harness-run/SKILL.md"
+      ],
+      "notes": "Plan: docs/plans/active/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
+    },
+    {
+      "id": "M69-003",
+      "milestone": 69,
+      "title": "check-entries.sh prints SWEEP?: (a hint, never blocks) for an open feature whose folders hold files 2+ other open features change without depends_on between them; protocol 1.4 says a sweep lists what it waits for",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-check-entries.sh M69-003.1: a folder over two other features' files is flagged and the run still starts; one that depends on them is not flagged; one overlapping feature is not a sweep",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/check-entries.sh",
+        "scripts/test-check-entries.sh",
+        "skills/harness-initial-setup/templates/harness-protocol-planning.md",
+        "docs/agents/harness-protocol-planning.md"
+      ],
+      "notes": "Plan: docs/plans/active/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
+    },
+    {
+      "id": "M69-004",
+      "milestone": 69,
+      "title": "run-start.sh --providers a,b,c records the host's providers; with 2+, dispatch.sh prints and logs VIA: <next provider> round-robin, accepts --via for another listed one, exits 4 for an unlisted one",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-board.sh M69-004.1/2: three providers rotate codex, pi, then --via claude/opus is logged whole, then codex; an unlisted provider exits 4; one provider assigns nothing; run-start prints PROVIDERS and writes the file, rejects a bad list with exit 2, and a run without the flag clears it",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/dispatch.sh",
+        "skills/harness-run/scripts/run-start.sh",
+        "scripts/test-board.sh",
+        "skills/harness-run/SKILL.md"
+      ],
+      "notes": "Plan: docs/plans/active/2026-11-23-m69-optimistic-lanes.md. Released as 3.30.0."
     }
   ]
 }

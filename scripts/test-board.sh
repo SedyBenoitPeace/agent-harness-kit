@@ -117,6 +117,21 @@ rc=0; bash "$DISPATCH" "$R" claude M1-001 0 --via >/dev/null 2>&1 || rc=$?
 [ "$(wc -l < "$H/events.log")" -eq "$event_count" ] || fail "invalid --via must not write an event"
 rm -rf "$R/.codex" "$R/.github/agents"; rm -f "$H/models.log"
 
+t "M69-004.1 a run over providers assigns each builder the next one @critical"
+printf 'codex\npi\nclaude\n' > "$H/providers"; rm -f "$H/provider-last"
+v() { bash "$DISPATCH" "$R" claude M1-001 "$@" | sed -n 's/^VIA: //p'; }
+[ "$(v)" = codex ] || fail "first builder must go to the first provider"
+tail -n1 "$H/events.log" | grep -q " dispatch M1-001 claude harness-builder - codex$" || fail "the assigned provider must be logged"
+[ "$(v)" = pi ] || fail "second builder must go to the next provider"
+[ "$(v --via claude/opus)" = claude ] || fail "--via may name another listed provider"
+tail -n1 "$H/events.log" | grep -q " - claude/opus$" || fail "--via with a model must be logged whole"
+[ "$(v)" = codex ] || fail "rotation continues after the provider last used"
+rc=0; bash "$DISPATCH" "$R" claude M1-001 --via gemini >/dev/null 2>&1 || rc=$?
+[ "$rc" -eq 4 ] || fail "a provider not in the run's list must exit 4, got $rc"
+printf 'claude\n' > "$H/providers"
+bash "$DISPATCH" "$R" claude M1-001 | grep -q '^VIA:' && fail "one provider must not assign"
+rm -f "$H/providers" "$H/provider-last"
+
 # --- gate in a lane worktree: event in the main log, row gate running ------
 bash "$DISPATCH" "$R" claude M1-002 >/dev/null
 L="$WORK/repo-M1-002"; g worktree add -q -b lane/M1-002 "$L"
@@ -391,4 +406,11 @@ bash "$BOARD" "$Z"
 grep -q 'run ended: done' "$ZH" || fail "ended run must say run ended"
 ! grep -q 'run stalled' "$ZH" || fail "ended run is not stalled"
 
+
+t "M69-004.2 run-start records the host's providers"
+out="$(HARNESS_BOARD_OPEN=0 bash "$START_SH" "$R" --providers codex,claude)" || fail "run-start --providers failed"
+grep -qx 'PROVIDERS: codex claude' <<<"$out" || fail "run-start must print PROVIDERS: $out"
+printf 'codex\nclaude\n' | cmp -s - "$H/providers" || fail "run-start must write the providers file"
+rc=0; bash "$START_SH" "$R" --providers 'a b' >/dev/null 2>&1 || rc=$?; [ "$rc" -eq 2 ] || fail "bad --providers must exit 2"
+out="$(HARNESS_BOARD_OPEN=0 bash "$START_SH" "$R")"; [ ! -e "$H/providers" ] || fail "a run without --providers must clear the list"
 echo "BOARD TESTS GREEN (60 features in ${secs}s)"

@@ -11,6 +11,10 @@
 #   ENTRY: <id> — <problem>        blocks
 #   KIT: stale — <versions>         blocks
 #   ORDER?: <id> — <hint>           warning: a dependency that may be order only
+#   SWEEP?: <id> — <hint>           warning (M69-003): a folder it owns holds files
+#                                   2+ other open features name and it does not
+#                                   depend on them; lanes share files, so a sweep
+#                                   meant to go last must say so in depends_on
 #   LANES: <n> of <m> open features can start now: <ids>
 #   RULE: <protocol 1.4 rule>       only when blocked
 #   ENTRIES: ok | ENTRIES: blocked — <what to do>
@@ -56,6 +60,14 @@ out="$(jq -r --arg tops "$tops" --slurpfile arc "$ARCH" '
                | "ENTRY: \($e.id) — paths \(.); name the files or the narrowest subfolder it owns") end) ),
     ( range(1; $f | length) | select($f[.].depends_on == [$f[. - 1].id])
       | "ORDER?: \($f[.].id) — depends only on \($f[. - 1].id), the feature before it; keep it only if its code cannot build or test without it (order is not a dependency)" ),
+    ( def cov($p; $q): ($p | sub("[*?\\[].*$"; "") | sub("/+$"; "")) as $d | $d != "" and ($q | startswith($d + "/"));
+      $f[] | . as $e | select((.paths | type) == "array")
+      | [ $f[] | . as $g | select($g.id != $e.id and (($g.paths | type) == "array")
+                 and ((($e.depends_on // []) | index([$g.id])) | not)
+                 and ((($g.depends_on // []) | index([$e.id])) | not))
+          | select(any($e.paths[]; . as $p | any($g.paths[]; cov($p; .)))) | .id ] as $sw
+      | select(($sw | length) >= 2)
+      | "SWEEP?: \(.id) — its folders hold files that \($sw | join(", ")) also change; if it must go after them (a sweep or rename), add them to depends_on and split out any part that need not wait" ),
     ( [$f[] | select((.depends_on | type) == "array" and (.paths | type) == "array" and (.paths | length) > 0
                      and all(.depends_on[]; $st[.] == "passing")) | .id] as $now
       | "LANES: \($now | length) of \($f | length) open features can start now\(if $now == [] then "" else ": " + ($now | join(" ")) end)" )

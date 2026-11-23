@@ -86,6 +86,16 @@ write "$(f M5-030 '["M4-001"]' '["web/app.js"]')"
 out="$(bash "$CHK" "$R")" || fail "archived dependency must pass: $out"
 echo "$out" | grep -q '^LANES: 1 of 1 open features can start now: M5-030$' || fail "archived dep counts as met: $out"
 
+t "M69-003.1 a sweep over other features' files is flagged, not blocked"
+mkdir -p "$R/src/core"; echo x > "$R/src/core/a.swift"
+write "$(f M5-040 '[]' '["src/core/a.swift"]')" "$(f M5-041 '[]' '["src/core/b.swift"]')" \
+      "$(f M5-042 '[]' '["src/core", "Tests"]')" "$(f M5-043 '["M5-040","M5-041"]' '["src/core/"]')"
+out="$(bash "$CHK" "$R")" || fail "a sweep hint must not block: $out"
+echo "$out" | grep -q '^SWEEP?: M5-042 — its folders hold files that M5-040, M5-041, M5-043 also change' || fail "sweep not flagged: $out"
+echo "$out" | grep -q '^SWEEP?: M5-043' && fail "a sweep that depends on what it sweeps must not be flagged: $out"
+write "$(f M5-040 '[]' '["src/core/a.swift"]')" "$(f M5-042 '[]' '["src/core"]')"
+out="$(bash "$CHK" "$R")"; echo "$out" | grep -q '^SWEEP?' && fail "one overlapping feature is not a sweep: $out"
+
 t "M65-001.2 a stale kit refuses the run @critical"
 # --- stale kit: scripts older than the repo's recorded kit version ----------
 echo "99.0.0" > "$R/docs/agents/harness-kit-version"; g add -A; g commit -qm stamp

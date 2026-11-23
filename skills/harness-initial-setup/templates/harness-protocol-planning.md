@@ -173,15 +173,20 @@ by side. Record both on every feature:
 A feature with either field missing always runs sequentially, so
 `run-start.sh` refuses to start a run while an open feature lacks one or
 names a whole tracked top-level folder in `paths` (`check-entries.sh`
-prints each `ENTRY:` problem; `harness-audit` warns about them). Two
-features run side by side only when no file one names sits in the other's
-`paths`; folders alone never keep them apart. Lanes follow `depends_on`,
+prints each `ENTRY:` problem; `harness-audit` warns about them). Shared
+files never keep features apart: lanes merge one at a time through the
+gate, and a conflict is resolved in the lane. So a feature that must go
+after others (a sweep, rename or "move every X into one file") lists them
+in `depends_on`, and anything in it that need not wait is split out
+(`SWEEP?:` flags one that does not). Lanes follow `depends_on`,
 not milestones: a run over a range ("through M21") builds a later
 milestone's independent feature early and merges it in milestone order.
 
-Two optional top-level FEATURES.json keys: `shared_paths`, files many
+Optional top-level FEATURES.json keys: `exclusive_paths`, files or
+folders no two lanes may change at once (a generated lockfile, a schema
+that cannot merge; absent = none); `shared_paths`, files many
 features add a few lines to (absent = `README.md` and `CHANGELOG.md`; `[]`
-= none), never keep lanes apart, and a merge conflict only in them keeps
+= none): a merge conflict only in them keeps
 both sides (`merge-lane.sh`), then the full gate decides; `max_lanes` (default 5)
 caps lanes running at once; lower it when lane gates time out under load.
 

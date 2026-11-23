@@ -3,6 +3,25 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-23 -- session 111 (M69 lanes like a merge queue, providers by script)
+
+- Branch: `optimistic-lanes`.
+- Done: M69-001..004, released as 3.30.0. Shared files no longer block
+  lanes (only `exclusive_paths` / `exclusive`); `merge-lane.sh --into-lane`
+  hands a conflict to the lane's builder; `SWEEP?:` hint in
+  check-entries.sh; `run-start.sh --providers` + `dispatch.sh` `VIA:`.
+- Proven by test-session.sh, test-merge-lane.sh 3c, test-check-entries.sh
+  M69-003.1, test-board.sh M69-004.1/2. On the owner's live FEATURES.json
+  (copied, not committed): `PARALLEL: none` became 5 lanes, and `SWEEP?:`
+  named the timing sweep.
+- Decisions: optimistic by default, the conflict is the signal (a file name
+  is a poor predictor: eight features edited different functions of one
+  file); one resolve attempt in the lane, then the old sequential redo;
+  dispatch.sh assigns the provider itself instead of refusing a missing
+  `--via`, so the rule cannot be skipped; SWEEP? is a hint, a sweep that
+  runs early only costs a conflict.
+- Gate: GREEN (bash scripts/e2e.sh).
+
 ## 2026-11-23 -- session 110 (M68-001 upgrade-all.sh)
 
 - Branch: `m68-upgrade-all`.

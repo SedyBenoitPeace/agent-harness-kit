@@ -124,9 +124,14 @@ make_lanes_repo "$WORK/l-disjoint" "[$(f M1-000 1 passing '[]' '["x/"]'),$(f M1-
 make_lanes_repo "$WORK/l-dep" "[$(f M1-001 1 failing '[]' '["src/a/"]'),$(f M1-002 1 failing '["M1-001"]' '["src/b/"]')]"
 [ "$(lanes "$WORK/l-dep")" = 'PARALLEL: none' ] || fail "lanes: dependency on a failing feature must be sequential"
 make_lanes_repo "$WORK/l-overlap" "[$(f M1-001 1 failing '[]' '["src/"]'),$(f M1-002 1 failing '[]' '["src/b/x.js"]')]"
-[ "$(lanes "$WORK/l-overlap")" = 'PARALLEL: none' ] || fail "lanes: a file inside another feature's directory must be sequential"
+# M69-001: shared files never block (merge queue); only exclusive_paths do
+[ "$(lanes "$WORK/l-overlap")" = 'PARALLEL: M1-001 M1-002' ] || fail "M69-001: a file inside another feature's directory must not block"
+jq '. + {exclusive_paths: ["src/b/"]}' "$WORK/l-overlap/FEATURES.json" > "$WORK/l-overlap/F" && mv "$WORK/l-overlap/F" "$WORK/l-overlap/FEATURES.json"
+[ "$(lanes "$WORK/l-overlap")" = 'PARALLEL: none' ] || fail "M69-001: a file inside another feature's directory blocks under exclusive_paths"
 make_lanes_repo "$WORK/l-samefile" "[$(f M1-001 1 failing '[]' '["a/","pubspec.yaml"]'),$(f M1-002 1 failing '[]' '["b/","pubspec.yaml"]')]"
-[ "$(lanes "$WORK/l-samefile")" = 'PARALLEL: none' ] || fail "lanes: a file both features name must be sequential"
+[ "$(lanes "$WORK/l-samefile")" = 'PARALLEL: M1-001 M1-002' ] || fail "M69-001: a file both features name must not block"
+jq '. + {exclusive_paths: ["pubspec.yaml"]}' "$WORK/l-samefile/FEATURES.json" > "$WORK/l-samefile/F" && mv "$WORK/l-samefile/F" "$WORK/l-samefile/FEATURES.json"
+[ "$(lanes "$WORK/l-samefile")" = 'PARALLEL: none' ] || fail "M69-001: a file both features name blocks when exclusive_paths lists it"
 # M45-002: two directories never block (disjoint files in a shared folder merge; a conflict is caught at merge)
 make_lanes_repo "$WORK/l-dirs" "[$(f M1-001 1 failing '[]' '["src/","test/"]'),$(f M1-002 1 failing '[]' '["src/b/**","test/"]')]"
 [ "$(lanes "$WORK/l-dirs")" = 'PARALLEL: M1-001 M1-002' ] || fail "lanes: shared or nested directories alone must not block"
@@ -145,7 +150,9 @@ jq '. + {max_lanes: 3}' "$WORK/l-cap/FEATURES.json" > "$WORK/l-cap/F" && mv "$WO
 # new lane is enough while others run; an ineligible NEXT no longer blocks then
 blanes() { tr ' ' '\n' <<<"$2" > "$1/busy.ids"; bash "$CONTEXT" --busy "$1/busy.ids" "$1" | grep '^PARALLEL:'; }
 make_lanes_repo "$WORK/r-one" "[$(f M1-001 1 failing '[]' '["a/x.js"]'),$(f M1-002 1 failing '[]' '["a/"]'),$(f M1-003 1 failing '[]' '["b/"]')]"
-[ "$(blanes "$WORK/r-one" M1-001)" = 'PARALLEL: M1-003' ] || fail "rolling: one new lane beside a busy one, avoiding its file"
+[ "$(blanes "$WORK/r-one" M1-001)" = 'PARALLEL: M1-002 M1-003' ] || fail "M69-001: a busy lane's shared file does not block"
+jq '. + {exclusive_paths: ["a/"]}' "$WORK/r-one/FEATURES.json" > "$WORK/r-one/F" && mv "$WORK/r-one/F" "$WORK/r-one/FEATURES.json"
+[ "$(blanes "$WORK/r-one" M1-001)" = 'PARALLEL: M1-003' ] || fail "rolling: one new lane beside a busy one, avoiding its exclusive file"
 make_lanes_repo "$WORK/r-cap" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '[]' '["b/"]'),$(f M1-003 1 failing '[]' '["c/"]'),$(f M1-004 1 failing '[]' '["d/"]')]"
 jq '. + {max_lanes: 3}' "$WORK/r-cap/FEATURES.json" > "$WORK/r-cap/F" && mv "$WORK/r-cap/F" "$WORK/r-cap/FEATURES.json"
 [ "$(blanes "$WORK/r-cap" 'M1-001 M1-002')" = 'PARALLEL: M1-003' ] || fail "rolling: busy lanes count toward the cap of 3"
@@ -175,8 +182,8 @@ why "$WORK/m-span" | grep -q 'M2-001 — milestone 2 is outside this run (--thro
 [ "$(tlanes "$WORK/m-span" M3)" = 'PARALLEL: M1-001 M2-001 M3-001' ] || fail "M61-001: --through M3 must accept the M prefix"
 make_lanes_repo "$WORK/m-shared" "[$(f M1-001 1 failing '[]' '["a/","README.md","CHANGELOG.md"]'),$(f M1-002 1 failing '[]' '["b/","README.md","CHANGELOG.md"]')]"
 [ "$(lanes "$WORK/m-shared")" = 'PARALLEL: M1-001 M1-002' ] || fail "M61-001: README.md and CHANGELOG.md are shared by default"
-jq '. + {shared_paths: []}' "$WORK/m-shared/FEATURES.json" > "$WORK/m-shared/F" && mv "$WORK/m-shared/F" "$WORK/m-shared/FEATURES.json"
-why "$WORK/m-shared" | grep -q 'M1-002 — shares README.md with M1-001' || fail "M61-001: shared_paths [] opts out; a file clash names the file and the feature"
+jq '. + {exclusive_paths: ["README.md"]}' "$WORK/m-shared/FEATURES.json" > "$WORK/m-shared/F" && mv "$WORK/m-shared/F" "$WORK/m-shared/FEATURES.json"
+why "$WORK/m-shared" | grep -q 'M1-002 — shares README.md with M1-001 (exclusive_paths)' || fail "M69-001: an exclusive_paths clash names the file and the feature"
 make_lanes_repo "$WORK/m-dep" "[$(f M1-001 1 failing '[]' '["a/"]'),$(f M1-002 1 failing '["M1-001"]' '["b/"]'),$(f M1-003 1 failing '' '["c/"]')]"
 why "$WORK/m-dep" | grep -q 'M1-002 — depends on M1-001 (failing)' || fail "M61-001: a dependency must be named as the reason"
 why "$WORK/m-dep" | grep -q 'M1-003 — no depends_on' || fail "M61-001: a missing depends_on must be named as the reason"
