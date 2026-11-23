@@ -55,4 +55,5 @@ done
 echo "GATE GREEN"
 GATE
 touch tests/.keep
+chmod +x scripts/e2e.sh
 git add -A && git commit -q -m "harness scaffold"

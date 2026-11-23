@@ -189,6 +189,7 @@ out="$(bash "$UPGRADE" "$L" 2>&1)" || fail "lanes: expected exit 0"
 echo "$out" | grep -q '^TODO: .*harness-audit.* on: M1-002$' || fail "lanes: open feature without paths must be a TODO naming it (M51-001)"
 echo "$out" | grep -q '^TODO: depends_on may be order only .*: M1-002 M1-003 M1-004$' || fail "lanes: a chain of open features must be named (M51-001)"
 echo "$out" | grep -q 'M1-000' && fail "lanes: a passing feature must not be named"
+echo "$out" | grep -q 'No such file' && fail "lanes: a first upgrade (no version stamp yet) must not print a shell error"
 
 # 4c. version stamp + release notes (M27-004): the first upgrade records the
 #     kit version and prints every release's Upgrade notes; a repo stamped

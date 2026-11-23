@@ -22,8 +22,11 @@ agent-harness-template>` and open a PR there; gate green; PR.
   three-way by key and id and PROGRESS.md by entry (even when git's text
   merge was clean), and keeps both sides of the `shared_paths` files. Any
   other conflict, the same id added twice differently, or a red gate
-  leaves the branch as it was. Protocol §2.6
-  says when to run it.
+  leaves the branch as it was. Protocol §2.6 says when to run it.
+- harness-run's `merge-lane.sh` keeps two README/CHANGELOG blocks added at
+  the same place whole (M67-002); it used to interleave them line by line.
+- harness-upgrade-structure no longer prints a shell error on a repo's
+  first upgrade (no version stamp yet).
 
 Upgrade:
 - Run harness-upgrade-structure (recopies the protocol with the §2.6 line).

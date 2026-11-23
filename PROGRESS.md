@@ -23,7 +23,10 @@ Newest-first session log. One entry per working session. Read this (plus
 - Lesson: `git merge-file --union` interleaves two inserted blocks; and a
   clean text merge of FEATURES.json can still hold a duplicate id. The
   Codex review found both classes; a mutation per fix proves the tests bite.
-  `merge-lane.sh` still uses plain `--union` (follow-up).
+- Follow-ups in the same release: M67-002 (`merge-lane.sh` gets `--diff3`,
+  red test first); `upgrade.sh` silent on a missing version stamp (red
+  assert in test-upgrade.sh first); the eval scaffold's gate is executable;
+  agent-harness-template synced (its own PR).
 - Gate: GREEN (bash scripts/e2e.sh).
 
 ## 2026-11-22 -- session 108 (M66 builders across providers)

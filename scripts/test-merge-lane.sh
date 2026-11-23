@@ -49,6 +49,19 @@ grep -qx 'CONFLICT: code.txt' <<<"$out" || fail "a real conflict must name the f
 [ "$(g rev-parse HEAD)" = "$head" ] || fail "a real conflict must not commit"
 [ -z "$(g status --porcelain)" ] || fail "a real conflict must abort the merge cleanly"
 
+# 3b. two lanes each add a multi-line block at the same place: both blocks
+#     stay whole (plain --union interleaves them line by line where they share lines)
+block() { g checkout -q -b "lane/$1" main
+  { sed -n '1,4p' "$R/CHANGELOG.md"; printf '### %s\n\n- Added %s.\n- Tests: green.\n\n' "$1" "$1"; sed -n '5,$p' "$R/CHANGELOG.md"; } > "$WORK/c"
+  mv "$WORK/c" "$R/CHANGELOG.md"; g commit -qam "$1"; g checkout -q main; }
+block M1-006; block M1-007
+(cd "$R" && bash "$ML" . M1-006 >/dev/null) || fail "M1-006 merges clean"
+(cd "$R" && bash "$ML" . M1-007 >/dev/null) || fail "M1-007: a CHANGELOG-only conflict must resolve"
+[ "$(grep -c '^- Tests: green.$' "$R/CHANGELOG.md")" -eq 2 ] || fail "both CHANGELOG blocks must stay whole: $(cat "$R/CHANGELOG.md")"
+for id in M1-006 M1-007; do
+  grep -A3 "^### $id\$" "$R/CHANGELOG.md" | grep -qx -- "- Tests: green." || fail "$id block must be whole"
+done
+
 # 4. shared_paths [] opts out: every conflict is real
 jq '.shared_paths = []' "$R/FEATURES.json" > "$WORK/f" && mv "$WORK/f" "$R/FEATURES.json"; g commit -qam "no shared"
 lane M1-004 "use D" "added D"; lane M1-005 "use E" "added E"

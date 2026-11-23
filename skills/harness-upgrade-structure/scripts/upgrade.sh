@@ -313,7 +313,7 @@ fi
 KIT="$SKILLS/.."
 kit_v="$(jq -r '.version // empty' "$KIT/.claude-plugin/plugin.json" 2>/dev/null || true)"
 stamp=docs/agents/harness-kit-version
-have_v="$(tr -d '[:space:]' < "$stamp" 2>/dev/null || true)"
+have_v="$( { tr -d '[:space:]' < "$stamp"; } 2>/dev/null || true)"  # braces: a missing stamp is silent
 if [ -n "$kit_v" ] && [ -f "$KIT/CHANGELOG.md" ]; then
   # one line per note, its wrapped continuation lines joined (M63-001)
   awk '

@@ -469,6 +469,20 @@
         }
       ],
       "notes": "Reviewer (Codex) on the first version: 8 findings; fixed: ignored file overwritten, binary union exit ignored, clean text merge skipped the id rules, ids keyed by tostring, missing stage / refused commit left a merge in progress, text union split PROGRESS entries, tests blind to deletions. Not fixed: gate artifacts left after a red gate (any gate run leaves them)."
+    },
+    {
+      "id": "M67-002",
+      "milestone": 67,
+      "title": "merge-lane.sh keeps two blocks added at the same place whole (merge-file --union --diff3), as sync-branch.sh does",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-merge-lane.sh case 3b: two lanes each add a CHANGELOG block at the same line, both stay whole",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-run/scripts/merge-lane.sh",
+        "scripts/test-merge-lane.sh"
+      ],
+      "notes": "Found while building M67-001: plain --union interleaved two inserted blocks where they share lines."
     }
   ]
 }
