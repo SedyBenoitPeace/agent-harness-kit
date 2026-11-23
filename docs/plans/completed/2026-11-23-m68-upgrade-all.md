@@ -37,7 +37,8 @@ working there, the tree may be dirty):
 5. Changed → commit `chore: upgrade harness structure`, push, `gh pr create`
    with the `CHANGED:` / `UPGRADE-NOTE:` lines and the `TODO:` lines as a
    `- [ ]` checklist in the body; print `PR <url>`. Remove the worktree
-   (the branch stays, it is the PR's head).
+   and the local branch (the PR's head is origin's branch; a local one
+   would make the next run skip the repo after the PR merges).
 6. `--dry-run`: steps 1–4, then `would open a PR (<n> changed, <m> todo)`;
    remove the worktree and the branch; nothing pushed.
 

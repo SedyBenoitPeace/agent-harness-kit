@@ -65,6 +65,7 @@ grep -q '^- \[ \] ' "$GH_LOG.body" || fail "1: PR body has no checklist"
 grep -q '^CHANGED: ' "$GH_LOG.body" || fail "1: PR body has no CHANGED lines"
 grep -q '^- \[ \] .*scripts/e2e.sh' "$GH_LOG.body" || fail "1: the e2e TODO must be a checklist line"
 git -C "$WORK/alpha" worktree list | grep -q 'harness-upgrade' && fail "1: temp worktree left"
+git -C "$WORK/alpha" show-ref --verify --quiet refs/heads/harness-upgrade && fail "1: local branch left (the PR head is on origin)"
 git -C "$WORK/alpha" worktree prune
 
 echo "-- 2 same repo again: skipped"

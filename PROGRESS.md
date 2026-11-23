@@ -18,9 +18,9 @@ Newest-first session log. One entry per working session. Read this (plus
 - Decisions: A (push script) over B (scheduled Action per repo), per the plan;
   `fetch --prune` so a merged, deleted remote branch stops blocking; an
   upgrade.sh exit 2 is a skip, any other unexpected failure (fetch, push, gh)
-  is a failure and exits 1; the local `harness-upgrade` branch is left for the
-  owner to delete after the PR merges (the script then skips that repo until
-  they do). Assumed: bash 3.2 only, so a subshell function plus trap, no
+  is a failure and exits 1; the local `harness-upgrade` branch is deleted after
+  the push (the PR's head is origin's branch), so a repo is skipped only while
+  origin still has that branch. Assumed: bash 3.2 only, so a subshell function plus trap, no
   `set -e` in the outer loop.
 - Gate: GREEN (bash scripts/e2e.sh).
 

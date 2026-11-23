@@ -29,13 +29,14 @@ fi
 # Prints one result line; a non-zero exit is an unexpected failure.
 one() (
   set -e
-  repo="$1"; wt=""; keep=0
+  repo="$1"; wt=""
   # shellcheck disable=SC2329 # runs from the EXIT trap
   cleanup() {
     if [ -n "$wt" ]; then
       git -C "$repo" worktree remove --force "$wt/w" >/dev/null 2>&1 || true
       rm -rf "$wt"; git -C "$repo" worktree prune
-      if [ "$keep" = 0 ]; then git -C "$repo" branch -q -D harness-upgrade >/dev/null 2>&1 || true; fi
+      # the PR's head is origin's branch; a local one would block the next run
+      git -C "$repo" branch -q -D harness-upgrade >/dev/null 2>&1 || true
     fi
   }
   trap cleanup EXIT
@@ -72,7 +73,6 @@ one() (
   git -C "$wt/w" add -A
   git -C "$wt/w" commit -q -m "chore: upgrade harness structure"
   git -C "$wt/w" push -q origin harness-upgrade 2>&1 || { echo "push failed" >&2; exit 1; }
-  keep=1
   {
     echo "Harness structure upgrade (upgrade-all.sh)."; echo
     printf '%s\n' "$out" | grep -E '^(CHANGED|UPGRADE-NOTE):' || true
