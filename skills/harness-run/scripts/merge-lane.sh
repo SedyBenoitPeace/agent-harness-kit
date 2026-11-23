@@ -2,7 +2,8 @@
 # harness-run: merge a finished lane into the current branch (M61-002).
 # git merge --no-ff lane/<id>. A conflict only in files the repo lists in
 # FEATURES.json "shared_paths" (absent = README.md and CHANGELOG.md, [] =
-# none; many features add a few lines each) is resolved by keeping both sides (git merge-file --union);
+# none; many features add a few lines each) is resolved by keeping both sides
+# (git merge-file --union --diff3: without --diff3 two blocks interleave line by line);
 # the full gate then decides. Any other conflict aborts the merge.
 # Usage: merge-lane.sh <target> <id>
 # Prints MERGED: lane/<id> (+ UNION: <file> per resolved file), or
@@ -28,7 +29,7 @@ tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 for f in "${files[@]}"; do
   git show ":1:$f" > "$tmp/base" 2>/dev/null || : > "$tmp/base"
   git show ":2:$f" > "$tmp/ours"; git show ":3:$f" > "$tmp/theirs"
-  git merge-file --union "$tmp/ours" "$tmp/base" "$tmp/theirs" || true
+  git merge-file --union --diff3 "$tmp/ours" "$tmp/base" "$tmp/theirs" || true
   cp "$tmp/ours" "$f"; git add -- "$f"
 done
 git commit -q --no-edit

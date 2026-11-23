@@ -96,6 +96,11 @@ section carries this workflow. Do not cat this file, AGENTS.md,
    and never touch FEATURES.json or PROGRESS.md (the `Decisions:` line goes
    in the commit message body instead);
    the orchestrator runs the full gate and flips status.
+   **As a separate PR** whose branch conflicts with the default branch
+   (another parallel PR merged first): run `bash scripts/sync-branch.sh
+   --push` (path relative to this skill) on the branch; it keeps both
+   sides of FEATURES.json and PROGRESS.md and stops on any other conflict
+   (protocol §2.6).
    **Stopping on a Needs-a-human item** (AGENTS.md list): set your own
    feature to `deferred` with `notes` starting `Needs a human: <question>`,
    commit FEATURES.json only, report `blocked`. Status reports then show it
