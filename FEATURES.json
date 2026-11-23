@@ -6,7 +6,8 @@
     "63": "Upgrades install acceptance checks",
     "64": "Private names stay private",
     "65": "Runs refuse sequential-only entries",
-    "66": "Builders across providers"
+    "66": "Builders across providers",
+    "67": "Parallel PRs never conflict on the harness files"
   },
   "features": [
     {
@@ -410,6 +411,64 @@
       ],
       "eval_attempts": 1,
       "notes": "Evaluator (Codex) NEEDS_WORK on 8b04ce2: 1) run-report.sh:97 reads only models.log, so the report omits the --via builder (board shows it); the report must show it. 2) test-board.sh:92 compares codex stdout/models.log between current runs only, and copilot checks only the agent line with no models.log assertion: assert fixed expected pre-M66 lines for claude, codex and copilot (stdout, models.log, events.log). 3) dispatch.sh:22 accepts a --via value with a newline, writing two events.log lines: reject a value with whitespace or a newline (exit 2). NOTE: dispatch.sh:20 rename `a` to a clear name."
+    },
+    {
+      "id": "M67-001",
+      "milestone": 67,
+      "title": "sync-branch.sh brings a harness PR branch up to date with the default branch, resolving conflicts only in FEATURES.json (three-way by key and id) and PROGRESS.md / shared_paths (both sides kept), then runs the gate; any other conflict aborts",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-sync-branch.sh proving the checks below",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "skills/harness-session/scripts/sync-branch.sh",
+        "scripts/test-sync-branch.sh",
+        "skills/harness-initial-setup/templates/harness-protocol.md",
+        "skills/harness-session/SKILL.md",
+        "scripts/e2e.sh"
+      ],
+      "checks": [
+        {
+          "id": "M67-001.1",
+          "title": "two parallel feature PRs both merge",
+          "critical": true,
+          "steps": [
+            "Two branches off the same base each append a FEATURES.json entry, flip it passing, add a PROGRESS.md entry at the top and a code file",
+            "Merge the first into main; run sync-branch.sh on the second",
+            "Main archives a feature and trims the oldest PROGRESS entry while a PR adds one; then a PR archives one while main adds one"
+          ],
+          "pass_if": "exit 0 with zero edits; FEATURES.json valid with both ids in order and both passing; PROGRESS.md equals the expected file (every entry whole, branch entry first); archived entries and trimmed log entries stay gone on either side; the branch then merges into main with no conflict",
+          "evidence": "test"
+        },
+        {
+          "id": "M67-001.2",
+          "title": "a real conflict stops it",
+          "critical": true,
+          "steps": [
+            "Both sides change the same code line",
+            "Both sides add the same new id with different content",
+            "Both sides change the same feature field differently",
+            "The same id added at different lines (git text merge clean)",
+            "A shared file that is binary, or deleted on one side",
+            "A hook refuses the merge commit",
+            "The branch archives a feature main changed",
+            "An untracked file the base branch starts tracking (exit 2 before merging, file intact)"
+          ],
+          "pass_if": "exit 1 naming the file or JSON path; HEAD and the working tree are as before",
+          "evidence": "test"
+        },
+        {
+          "id": "M67-001.3",
+          "title": "a red gate undoes the merge",
+          "critical": true,
+          "steps": [
+            "The merged result fails scripts/e2e.sh"
+          ],
+          "pass_if": "exit 1, HEAD as before",
+          "evidence": "test"
+        }
+      ],
+      "notes": "Reviewer (Codex) on the first version: 8 findings; fixed: ignored file overwritten, binary union exit ignored, clean text merge skipped the id rules, ids keyed by tostring, missing stage / refused commit left a merge in progress, text union split PROGRESS entries, tests blind to deletions. Not fixed: gate artifacts left after a red gate (any gate run leaves them)."
     }
   ]
 }

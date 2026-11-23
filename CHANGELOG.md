@@ -12,6 +12,24 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.29.0 — 2026-11-23
+
+- Parallel PRs never stop on the harness files (M67-001; owner report:
+  three features built as separate PRs off the same default branch, every
+  PR after the first merge conflicted on FEATURES.json and PROGRESS.md by
+  position only). New `sync-branch.sh [<base>] [--push]` (harness-session)
+  merges the default branch into the PR branch; it resolves FEATURES.json
+  three-way by key and id and PROGRESS.md by entry (even when git's text
+  merge was clean), and keeps both sides of the `shared_paths` files. Any
+  other conflict, the same id added twice differently, or a red gate
+  leaves the branch as it was. Protocol §2.6
+  says when to run it.
+
+Upgrade:
+- Run harness-upgrade-structure (recopies the protocol with the §2.6 line).
+
+README: none (README is at its line cap; docs/guide/planning.md "Parallel PRs" documents it)
+
 ## 3.28.0 — 2026-11-22
 
 - Builders across providers (M66). On a host whose child tasks can run on

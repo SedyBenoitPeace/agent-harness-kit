@@ -166,3 +166,25 @@ you with the reasons:
 
 It is a guardrail against an agent's mistakes, not a wall: agents run with
 your GitHub token, so the rules stop accidents, not a determined agent.
+
+## Parallel PRs
+
+Features built as separate PRs in parallel (worktrees, delegated sessions)
+each append their own FEATURES.json entry and PROGRESS.md entry, so every
+PR after the first merge conflicts on those two files, by position only.
+GitHub's merge button ignores `.gitattributes` merge drivers, so the kit
+fixes the branch instead: after a merge, run `sync-branch.sh --push`
+(harness-session) on each other open harness PR. It merges the default
+branch into the PR branch and, whenever both sides changed them, merges:
+
+- FEATURES.json, three-way by key and by feature id (the default branch's
+  order, then the PR's new features). The same id added twice with
+  different content, or the same field changed differently, stops it.
+- PROGRESS.md by entry: the PR's new entries on top, then the default
+  branch's; an entry either side removed stays removed.
+- The `shared_paths` files: both sides kept (a binary one stops it).
+
+Any other conflict, or a red gate after the merge, leaves the branch as it
+was and names the cause. It is a merge, not a rebase: one resolution, no
+force push. harness-run lanes never need it (lanes never touch the two
+files).

@@ -3,6 +3,29 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-23 -- session 109 (M67-001 parallel PRs sync past the harness files)
+
+- Branch: `m67-parallel-prs`.
+- Done: M67-001, released as 3.29.0. `sync-branch.sh [<base>] [--push]`
+  (harness-session) merges the default branch into a PR branch; FEATURES.json
+  merges three-way by key and id, PROGRESS.md by `## ` entry, whenever both
+  sides changed them; `shared_paths` files keep both sides; anything else,
+  or a red gate, leaves the branch as it was. Protocol §2.6 says to run it
+  on every other open harness PR after a merge.
+- Proven on a scaffolded sample repo: upgrade (protocol carries the rule),
+  audit 0 FAIL, two parallel PRs, the second conflicted on exactly the two
+  files, synced with zero edits, merged clean, audit + gate green.
+- Decisions: B (sync script) over A (fragment files: breaks every reader of
+  FEATURES.json) and C (post-merge writer: main says a merged feature is
+  failing until it runs); merge over rebase (one resolution, no force push);
+  FEATURES.json rewritten in jq format (NOTE otherwise); red-gate artifacts
+  not cleaned.
+- Lesson: `git merge-file --union` interleaves two inserted blocks; and a
+  clean text merge of FEATURES.json can still hold a duplicate id. The
+  Codex review found both classes; a mutation per fix proves the tests bite.
+  `merge-lane.sh` still uses plain `--union` (follow-up).
+- Gate: GREEN (bash scripts/e2e.sh).
+
 ## 2026-11-22 -- session 108 (M66 builders across providers)
 
 - Branch: `m66-cross-provider` (own worktree; another session works on the
