@@ -742,11 +742,14 @@ bash scripts/test-merge.sh
 # parallel PRs sync past FEATURES.json / PROGRESS.md conflicts (M67-001)
 shellcheck skills/harness-session/scripts/sync-branch.sh scripts/test-sync-branch.sh
 bash scripts/test-sync-branch.sh
+# upgrade every listed repo through a temp worktree and a PR (M68-001), against a stub gh
+shellcheck scripts/upgrade-all.sh scripts/test-upgrade-all.sh
+bash scripts/test-upgrade-all.sh
 # private repo names (M64-001): skipped without a local list, as on CI
 shellcheck scripts/check-private-names.sh scripts/refresh-private-names.sh scripts/test-private-names.sh
 bash scripts/test-private-names.sh
 bash scripts/check-private-names.sh
-bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh scripts/test-upgrade.sh scripts/test-session.sh scripts/test-run.sh scripts/test-retro.sh scripts/test-check-readme.sh scripts/test-agents.sh scripts/test-private-names.sh scripts/test-check-entries.sh scripts/test-board.sh scripts/test-sync-branch.sh
+bash skills/harness-session/scripts/check-coverage.sh scripts/test-checks.sh scripts/test-issues.sh scripts/test-merge.sh scripts/test-brief.sh scripts/test-upgrade.sh scripts/test-session.sh scripts/test-run.sh scripts/test-retro.sh scripts/test-check-readme.sh scripts/test-agents.sh scripts/test-private-names.sh scripts/test-check-entries.sh scripts/test-board.sh scripts/test-sync-branch.sh scripts/test-upgrade-all.sh
 shellcheck skills/harness-retro/scripts/retro-facts.sh scripts/test-retro.sh; bash scripts/test-retro.sh  # M60-001 retro facts page
 
 # --- mods (M25): the edition's hooks module, tested by the engine itself --------

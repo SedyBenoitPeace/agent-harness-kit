@@ -4,7 +4,7 @@ Open-source Claude Code skill + portable protocol pack for planning
 applications with the long-running-agent harness approach (in-repo
 FEATURES.json / PROGRESS.md / plans / e2e gate), consumable by any AI agent.
 
-## State: 3.29.0 ready (M0–M67); Claude Code edition `agent-harness-kit-claude` in `claude/`
+## State: 3.29.0 ready (M0–M68); Claude Code edition `agent-harness-kit-claude` in `claude/`
 
 1. Spec: `docs/specs/2026-07-03-harness-planning-skill-design.md`
 2. Active plans: `docs/plans/active/` (one per milestone; completed ones in `docs/plans/completed/`)
@@ -40,3 +40,5 @@ baseline → implement test/check-first → gate green → flip the feature to
 - Integrate via PR; the owner merges. Before every push, `bash scripts/ci-local.sh`
   must print `CI-LOCAL GREEN` (CI's gate in Docker on a clean clone, no git
   identity): a local `e2e.sh` alone misses clean-checkout and tool-version gaps.
+- After a release PR merges on GitHub, run `bash scripts/upgrade-all.sh` (repo
+  list in `.git/info/upgrade-repos`, never committed): it opens the upgrade PR in each listed repo.
