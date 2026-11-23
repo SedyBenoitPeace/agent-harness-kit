@@ -1,5 +1,9 @@
 # AGENTS.md — agent-harness-kit
 
+This repository is operated with the long-running-agent harness, plugin or
+not: the full manual is `docs/agents/harness-protocol.md` — read it before
+your first feature session.
+
 Open-source Claude Code skill + portable protocol pack for planning
 applications with the long-running-agent harness approach (in-repo
 FEATURES.json / PROGRESS.md / plans / e2e gate), consumable by any AI agent.
@@ -20,6 +24,17 @@ the harness-session skill is available, use it; otherwise follow
 
 ## Session loop
 
+Feature work only: a FEATURES.json entry or plan task (or work needing one), a
+change to what the product does, or an edit to agent instructions (this file,
+`docs/agents/`, FEATURES.json, skills, prompts). Anything else is a small task:
+do it, check that one result (grep a moved path; run the gate once if code,
+tests, scripts or CI/build config change), stop. If it proves to be feature
+work, stop and say so. Rules and Needs a human always apply.
+If the human says to skip the harness ("just build it"): no brief or plan, but
+FEATURES.json and its archive stay the source of truth: append an entry with
+the next free id, build it, run the gate, flip it to `passing`, commit.
+An approved plan or outline from another workflow: skip harness-brief, turn it
+into FEATURES.json entries plus a plan section, then go to harness-run.
 Feature work only (a FEATURES.json entry, a plan task, or a kit behaviour change); a file move or doc fix is a small task: do it, check it, stop.
 
 Read `git log -20` + PROGRESS.md + FEATURES.json → pick the lowest failing
