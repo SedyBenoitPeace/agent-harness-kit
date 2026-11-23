@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # upgrade-all.sh — run upgrade.sh over every repo in a local list and open one
 # upgrade PR per repo (M68-001). A tool of this repo, not shipped in the plugin.
-#   upgrade-all.sh [--list FILE] [--dry-run]
-# The list: one absolute repo path per line, # comments and blank lines ignored;
+#   upgrade-all.sh [--list FILE] [--dry-run] | --add DIR
+# The list: one absolute path per line, # comments and blank lines ignored. A line
+# that is a repo is upgraded; any other folder stands for each harnessed repo
+# directly inside it (one level, never this kit). --add DIR appends a folder (with
+# no list, a terminal is asked for one);
 # default .git/info/upgrade-repos (git cannot commit it, so no repo name ever
 # enters this public repo). Each repo is upgraded in a temp worktree off
 # origin/<default branch>: its own checkout (branch, index, files) is never
@@ -11,18 +14,34 @@
 set -uo pipefail
 KIT="$(cd "$(dirname "$0")/.." && pwd)"
 UPGRADE="$KIT/skills/harness-upgrade-structure/scripts/upgrade.sh"
-list="$(cd "$KIT" && git rev-parse --git-common-dir)/info/upgrade-repos"; dry=0
+list="$(cd "$KIT" && git rev-parse --git-common-dir)/info/upgrade-repos"; dry=0; addto=""
 case "$list" in /*) ;; *) list="$KIT/$list" ;; esac
 while [ $# -gt 0 ]; do
   case "$1" in
     --list) list="${2:?--list needs a file}"; shift 2 ;;
     --dry-run) dry=1; shift ;;
-    *) echo "usage: upgrade-all.sh [--list FILE] [--dry-run]" >&2; exit 2 ;;
+    --add) addto="${2:?--add needs a folder}"; shift 2 ;;
+    *) echo "usage: upgrade-all.sh [--list FILE] [--dry-run] | --add DIR" >&2; exit 2 ;;
   esac
 done
+
+# add DIR: append its absolute path to the list once; the prompt uses it too
+add() {
+  local d="${1/#\~\//$HOME/}"
+  [ -d "$d" ] || { echo "no such folder: $1" >&2; return 1; }
+  d="$(cd "$d" && pwd)"
+  grep -qxF "$d" "$list" 2>/dev/null || { mkdir -p "$(dirname "$list")"; printf '%s\n' "$d" >> "$list"; }
+  echo "added: $d"
+}
+if [ -n "$addto" ]; then add "$addto"; exit $?; fi
 if [ ! -f "$list" ]; then
-  echo "no repo list: create $list with one absolute repo path per line" >&2
-  exit 2
+  if [ -t 0 ]; then
+    read -r -p "Folder that holds your repos: " ans
+    [ -n "$ans" ] && add "$ans" || exit 2
+  else
+    echo "no repo list: create $list with one absolute path per line, or run with --add <folder>" >&2
+    exit 2
+  fi
 fi
 
 # one repo, in a subshell so its trap removes the worktree on every path.
@@ -87,10 +106,28 @@ one() (
   echo "PR $url"
 )
 
+# top DIR: DIR is a git repo's own top level
+top() { [ -d "$1" ] && [ -z "$(git -C "$1" rev-parse --show-prefix 2>/dev/null || echo x)" ]; }
+# report PATH: run one repo, print its result line, remember a failure
+report() {
+  local res rc; res="$(one "$1" 2>&1 </dev/null)"; rc=$?
+  if [ "$rc" = 0 ]; then echo "$1: $res"; else echo "$1: failed: $res"; failed=1; fi
+}
+
 failed=0
 while IFS= read -r repo || [ -n "$repo" ]; do
   case "$repo" in ''|'#'*) continue ;; esac
-  res="$(one "$repo" 2>&1 </dev/null)"; rc=$?
-  if [ "$rc" = 0 ]; then echo "$repo: $res"; else echo "$repo: failed: $res"; failed=1; fi
+  if [ -d "$repo" ] && ! top "$repo"; then
+    n=0
+    for d in "$repo"/*/; do
+      d="${d%/}"
+      if top "$d" && [ -f "$d/FEATURES.json" ] && [ -f "$d/PROGRESS.md" ] && ! [ "$d" -ef "$KIT" ]; then
+        n=$((n + 1)); report "$d"
+      fi
+    done
+    [ "$n" -gt 0 ] || echo "$repo: skipped: no harnessed repos inside"
+  else
+    report "$repo"
+  fi
 done < "$list"
 exit "$failed"
