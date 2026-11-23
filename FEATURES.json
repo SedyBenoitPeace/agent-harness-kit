@@ -497,6 +497,20 @@
         "scripts/test-upgrade-all.sh"
       ],
       "notes": "Plan: docs/plans/active/2026-11-23-m68-upgrade-all.md. Not shipped in the plugin: no version bump."
+    },
+    {
+      "id": "M68-002",
+      "milestone": 68,
+      "title": "upgrade-all.sh: a folder line stands for every harnessed repo directly inside it; --add DIR (and a prompt on a terminal when there is no list) sets the list",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-upgrade-all.sh cases 7-10: a folder line runs only its harnessed repos, an empty folder is skipped, --add writes one absolute line once and refuses a missing folder, the kit's own repo is never listed",
+      "model": "small",
+      "depends_on": [],
+      "paths": [
+        "scripts/upgrade-all.sh",
+        "scripts/test-upgrade-all.sh"
+      ],
+      "notes": "Plan: docs/plans/completed/2026-11-23-m68-002-folder-lines.md. Not shipped in the plugin: no version bump."
     }
   ]
 }
