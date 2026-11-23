@@ -36,17 +36,19 @@ the repo — not the subagent's word — before starting the next. Rules:
 - The orchestrator never reads diffs or gate logs; a blocked session is
   relayed to the human and the run stops. It also stops at a milestone
   boundary and at a feature cap.
-- Parallel lanes run only for features whose `depends_on` / `paths`
-  (§1.4) prove them independent, computed by script, never guessed. Each
+- Parallel lanes run for features whose `depends_on` (§1.4) is met,
+  computed by script, never guessed; shared files do not keep them apart,
+  only `exclusive_paths` and `exclusive` do. Each
   lane works in its own worktree and never touches FEATURES.json or
   PROGRESS.md; it puts its `Decisions:` line in its commit message body.
   Lanes roll: up to `max_lanes` (default 5) run at once, and as each
   finishes (built, or passed its evaluator inside the lane) the
   orchestrator merges it (`merge-lane.sh`), runs the full
   gate, flips its status, writes its PROGRESS.md entry with its
-  `Decisions:` line, and starts the next ready lane in its slot. A merge
-  conflict means that feature is redone sequentially once no other lane
-  runs.
+  `Decisions:` line, and starts the next ready lane in its slot, like a
+  merge queue. A merge conflict is synced into the lane and its builder
+  resolves it there, keeping both sides; a second conflict means that
+  feature is redone sequentially once no other lane runs.
 - Independent evaluation (opt-in per feature via `evaluate`, §1.4): the
   session that builds such a feature ends it in `review`, never
   `passing`. The orchestrator then dispatches the named agent

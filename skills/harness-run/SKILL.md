@@ -32,7 +32,11 @@ for each `ENTRY:` line, fix that FEATURES.json entry from its plan section
 the files it changes, never a whole top-level folder), commit FEATURES.json
 alone and run it again; on `KIT: stale`, report and STOP (the kit must be
 updated first). `ORDER?:` lines are a hint: drop a dependency that is only
-order.
+order. `SWEEP?:` lines are a hint too: a feature that must go after the ones
+it names (a sweep or rename) gets them in `depends_on`, its other parts split
+out; commit FEATURES.json alone before the first lane. On a host whose child
+tasks run on other providers (Children on other providers), pass
+`--providers <the host's list, in its order>` to run-start.sh.
 
 1. Run `bash ../harness-session/scripts/context.sh` (path relative to this
    skill) from the target repo root.
@@ -162,7 +166,9 @@ human to run it; do not commit it unless they ask.
 
 When `context.sh` prints `PARALLEL: <id> <id> …` (instead of
 `PARALLEL: none`), those features declared `depends_on` / `paths` that
-the script proved independent — never infer lanes yourself. Lanes roll
+the script proved ready — never infer lanes yourself. Shared files do not
+keep lanes apart (M69-001, a merge queue): only `exclusive_paths` and
+`exclusive` do, and a conflict is resolved at merge as step 2 says. Lanes roll
 (M46-001): a free slot is refilled as soon as any lane agent finishes,
 never held for a whole batch. `.harness-run/busy` lists the ids whose lane
 is running, one per line; empty it (`: > .harness-run/busy`) before a
@@ -193,7 +199,12 @@ run's first lane. Instead of Workflow steps 3–5:
    - `passing` (or evaluator `PASS`) → merge it with `bash
      scripts/merge-lane.sh <target> <id>` (conflicts only in
      `shared_paths` keep both sides); exit 1 (`CONFLICT:`) → the merge is
-     aborted: keep its id in `.harness-run/busy` (so refills skip it), and
+     aborted; run `merge-lane.sh <target> <id> --into-lane` (M69-002).
+     `SYNCED:` → merge again. `RESOLVE:` → dispatch the lane's builder
+     (same provider) into its lane with the lane brief plus the `BRIEF:`
+     line; its slot stays busy; when it ends `passing` with gate green,
+     merge again. A second `CONFLICT:`, or the resolve ending otherwise →
+     keep its id in `.harness-run/busy` (so refills skip it), and
      redo it sequentially once it is the only id left. Run the full gate
      (`bash ../harness-session/scripts/run-gate.sh final <target>`).
      Green → flip the id to `passing` (with `docs/verification/<id>.md`
@@ -231,8 +242,10 @@ Code: `orchestrator_capabilities` lists the providers that can run a
 cross-provider child, `delegate_task` starts one), builders go there instead
 of Workflow step 3's named agent (M66-002):
 
-- Each lane's builder (or each sequential feature) goes to the next provider
-  in the order the host lists them, round-robin. Never choose by judgement.
+- run-start.sh got `--providers` (Workflow); `dispatch.sh` then prints
+  `VIA: <provider>` (M69-004): send that builder to that provider, never
+  another by judgement. Only if it fails to start, use the next listed one
+  and pass `--via <it>` to a second `dispatch.sh` call.
 - Name the provider only, never a model: the host runs that provider's
   default model, which is the human's setting. Effort comes from the size
   `dispatch.sh` printed (small low, medium medium, large high) through the
@@ -241,10 +254,8 @@ of Workflow step 3's named agent (M66-002):
   --prompt builder [--lane ../<repo>-<id>]`, pasted as is: it carries the
   builder role, so this is the one case a child that is not the named agent
   builds. Never type or edit a brief.
-- Pass `--via <provider>[/<model>]` to `dispatch.sh` (the host reports the
-  model it ran), so the board shows who built each feature.
-- A provider that fails to start a child is dropped for the rest of the run;
-  the next one takes the feature.
+- The board shows the provider `dispatch.sh` logged; a provider that fails
+  to start a child is dropped for the rest of the run.
 
 Waiting, verifying, merging and the Evaluator step are unchanged. No such
 host (or only its own provider) → Workflow step 3, unchanged.

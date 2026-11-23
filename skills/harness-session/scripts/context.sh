@@ -147,12 +147,11 @@ fi
 # slots; then one new lane is enough, and an ineligible NEXT waits. A line
 # "<id> ready" (M61-001) is a finished lane waiting for its milestone: it
 # keeps its files and exclusive value but frees its slot.
-# Overlap (M45-002): only a named file blocks — a file both features list, or one
-# inside the other's directory/glob. Two directories never block: disjoint
-# files in a shared folder merge cleanly, and a real conflict is caught at
-# merge (lane dropped, redone sequentially). Paths listed in the top-level
-# shared_paths (M61-001; absent = README.md and CHANGELOG.md, [] = none)
-# never block; merge-lane.sh resolves their conflicts.
+# Overlap (M69-001, optimistic like a merge queue): shared files never block.
+# Lanes merge one at a time through the gate; a conflict is synced into the
+# lane and resolved there (merge-lane.sh --into-lane). Only paths inside the
+# top-level exclusive_paths (absent = none) block: a file both features list
+# there, or one inside the other's directory/glob.
 # Without --brief, each open feature in range that is not a lane prints
 # "  not a lane: <id> — <reason>" (at most 6 lines).
 # ponytail: a conflicting lane is rebuilt from scratch; resolve-in-lane if that gets common.
@@ -164,8 +163,8 @@ jq -r --arg ex "$SKIPPED_IDS" --arg busy "$(cat "$BUSY")" --arg through "${THROU
   def hit($x; $y): ($x.d and $y.d | not) and (($x.s | startswith($y.s)) or ($y.s | startswith($x.s)));
   def clash($a; $b): first($a[] as $x | $b[] as $y | select(hit($x; $y)) | if $x.d then $y.s else $x.s end) // null;
   (.max_lanes // 5 | if type == "number" and . >= 1 then floor else 5 end) as $cap
-  | (.shared_paths // ["README.md", "CHANGELOG.md"]) as $shared
-  | def ents: (.paths // []) | map(select(. as $p | $shared | index([$p]) | not)) | map(entry);
+  | ((.exclusive_paths // []) | map(entry)) as $xp
+  | def ents: (.paths // []) | map(entry) | map(. as $e | select(any($xp[]; .s as $x | ($e.s | startswith($x)) or ($x | startswith($e.s)))));
   ([$arc[].features[]?, .features[]] | map({key: .id, value: (if $un == 1 and .status == "deferred" and ((.notes // "") | startswith("Needs a human: verify")) then "passing" else .status end)}) | from_entries) as $st
   | ([.features[] | select(.status == "failing" and (.id as $i | ($ex | split("\n") | index($i)) == null))]
       | sort_by(.milestone, .id)) as $f
@@ -186,7 +185,7 @@ jq -r --arg ex "$SKIPPED_IDS" --arg busy "$(cat "$BUSY")" --arg through "${THROU
             ($e | ents) as $p | ($e.exclusive // null) as $x
             | ([.l[] | {id, c: clash(.p; $p)} | select(.c != null)] | first) as $c
             | ([.l[] | select($x != null and .x == $x) | .id] | first) as $xc
-            | if $c != null then .r[$e.id] = "shares \($c.c) with \($c.id)"
+            | if $c != null then .r[$e.id] = "shares \($c.c) with \($c.id) (exclusive_paths)"
               elif $xc != null then .r[$e.id] = "exclusive \($x) with \($xc)"
               elif ([.l[] | select(.ready | not)] | length) >= $cap then .r[$e.id] = "cap of \($cap) lanes reached"
               else .l += [{id: $e.id, p: $p, x: $x, ready: false}] end) end) as $res

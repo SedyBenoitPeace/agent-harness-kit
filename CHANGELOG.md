@@ -12,6 +12,33 @@ phrases that document it (or `README: none (<reason>)`; `scripts/check-readme.sh
 checks them); run `bash scripts/sync-template.sh <path to
 agent-harness-template>` and open a PR there; gate green; PR.
 
+## 3.30.0 — 2026-11-23
+
+- Lanes work like a merge queue (M69-001; owner report: nine features in
+  one milestone printed `PARALLEL: none` because eight named the same app
+  delegate file, and the orchestrator overruled the kit by hand). A file two
+  features both name no longer keeps them apart; they run side by side and
+  merge one at a time through the full gate. Only the new top-level
+  `exclusive_paths` (absent = none) and `exclusive` still block.
+- A lane conflict is resolved in the lane (M69-002): `merge-lane.sh <target>
+  <id> --into-lane` merges the run's branch into the lane's worktree and
+  prints `SYNCED:`, or `RESOLVE:` files plus a `BRIEF:` line for the lane's
+  builder. A second conflict falls back to a sequential redo.
+- `check-entries.sh` prints `SWEEP?:` (a hint) for a feature whose folders
+  hold files other open features change, without `depends_on` between them
+  (M69-003). Protocol §1.4: a sweep lists what it waits for.
+- Builders across providers by script (M69-004; owner report: every builder
+  ran as the Claude agent on a three-provider host). `run-start.sh
+  --providers a,b,c` records the host's list; each `dispatch.sh` then
+  prints and logs `VIA: <provider>`, the next in turn.
+
+Upgrade:
+- Run harness-upgrade-structure (recopies protocol §1.4 and the runs part).
+- A repo with files that cannot merge (a generated lockfile) lists them in
+  FEATURES.json `exclusive_paths`.
+
+README: none (README is at its line cap; docs/guide/planning.md "Parallel lanes" documents it)
+
 ## 3.29.0 — 2026-11-23
 
 - Parallel PRs never stop on the harness files (M67-001; owner report:

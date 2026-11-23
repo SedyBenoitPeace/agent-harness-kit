@@ -62,6 +62,32 @@ for id in M1-006 M1-007; do
   grep -A3 "^### $id\$" "$R/CHANGELOG.md" | grep -qx -- "- Tests: green." || fail "$id block must be whole"
 done
 
+# 3c. M69-002 --into-lane: the conflict goes to the lane, not the run.
+#     M1-003 conflicts on code.txt (real) and README/CHANGELOG (shared).
+set +e; out="$(cd "$R" && bash "$ML" . M1-003 --into-lane 2>&1)"; rc=$?; set -e
+[ "$rc" -eq 2 ] || fail "--into-lane without a lane worktree must exit 2, got $rc: $out"
+LW="$WORK/repo-M1-003"; g worktree add -q "$LW" lane/M1-003
+head="$(g rev-parse HEAD)"
+set +e; out="$(cd "$R" && bash "$ML" . M1-003 --into-lane 2>&1)"; rc=$?; set -e
+[ "$rc" -eq 1 ] || fail "--into-lane with a real conflict must exit 1, got $rc: $out"
+grep -qx 'RESOLVE: code.txt' <<<"$out" || fail "--into-lane must name the file to resolve: $out"
+grep -q '^BRIEF: A merge of main into lane/M1-003 is in progress in ' <<<"$out" || fail "--into-lane must print the builder's BRIEF line: $out"
+[ "$(g rev-parse HEAD)" = "$head" ] || fail "--into-lane must leave the run's branch untouched"
+[ -z "$(g status --porcelain)" ] || fail "--into-lane must leave the run's tree clean"
+git -C "$LW" rev-parse -q --verify MERGE_HEAD >/dev/null || fail "--into-lane must leave the merge in progress in the lane"
+! grep -q '^<<<<<<<' "$LW/README.md" "$LW/CHANGELOG.md" || fail "--into-lane must resolve shared_paths in the lane"
+printf 'x = 23\n' > "$LW/code.txt"; git -C "$LW" add code.txt; git -C "$LW" commit -q --no-edit
+out="$(cd "$R" && bash "$ML" . M1-003)" || fail "a lane resolved in place must then merge clean: $out"
+grep -qx 'MERGED: lane/M1-003' <<<"$out" || fail "resolved lane must print MERGED"
+grep -qx 'x = 23' "$R/code.txt" || fail "the lane's resolution must land"
+# clean sync: the lane only needs the run's newer commits
+lane M1-008 "use H" "added H"; LW8="$WORK/repo-M1-008"; g worktree add -q "$LW8" lane/M1-008
+out="$(cd "$R" && bash "$ML" . M1-008 --into-lane)" || fail "--into-lane with shared-only conflicts must exit 0: $out"
+grep -qx 'SYNCED: lane/M1-008' <<<"$out" || fail "--into-lane must print SYNCED: $out"
+grep -qx -- '- use A' "$LW8/README.md" || fail "the lane must receive the run's changes"
+grep -qx -- '- use H' "$LW8/README.md" || fail "the lane must keep its own changes"
+g worktree remove --force "$LW"; g worktree remove --force "$LW8"
+
 # 4. shared_paths [] opts out: every conflict is real
 jq '.shared_paths = []' "$R/FEATURES.json" > "$WORK/f" && mv "$WORK/f" "$R/FEATURES.json"; g commit -qam "no shared"
 lane M1-004 "use D" "added D"; lane M1-005 "use E" "added E"
