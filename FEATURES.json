@@ -483,6 +483,20 @@
         "scripts/test-merge-lane.sh"
       ],
       "notes": "Found while building M67-001: plain --union interleaved two inserted blocks where they share lines."
+    },
+    {
+      "id": "M68-001",
+      "milestone": 68,
+      "title": "upgrade-all.sh runs upgrade.sh over a local list of repos, each in a temp worktree, and opens one upgrade PR per repo",
+      "status": "passing",
+      "verify": "bash scripts/e2e.sh exits 0 with test-upgrade-all.sh: an outdated repo gets a PR and its dirty checkout is untouched, an open upgrade branch / no harness / not a repo are skipped without stopping the rest, an up-to-date repo leaves no branch, --dry-run pushes nothing, no list exits 2",
+      "model": "medium",
+      "depends_on": [],
+      "paths": [
+        "scripts/upgrade-all.sh",
+        "scripts/test-upgrade-all.sh"
+      ],
+      "notes": "Plan: docs/plans/active/2026-11-23-m68-upgrade-all.md. Not shipped in the plugin: no version bump."
     }
   ]
 }

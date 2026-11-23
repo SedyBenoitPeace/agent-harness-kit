@@ -3,6 +3,27 @@
 Newest-first session log. One entry per working session. Read this (plus
 `git log -20` and FEATURES.json) at the start of every session.
 
+## 2026-11-23 -- session 110 (M68-001 upgrade-all.sh)
+
+- Branch: `m68-upgrade-all`.
+- Done: M68-001. `scripts/upgrade-all.sh [--list FILE] [--dry-run]` runs
+  upgrade.sh over the repos in `.git/info/upgrade-repos` (never committed),
+  each in a temp worktree off `origin/<default>`, and opens one upgrade PR per
+  repo; a listed repo's own checkout is never touched. Skips (no origin, open
+  `harness-upgrade` branch, no harness, not a repo) do not stop the rest. A tool
+  of this repo, not shipped in the plugin: no version bump. AGENTS.md has the
+  one reminder line.
+- Proven by `scripts/test-upgrade-all.sh` (in the gate): six cases against
+  throwaway repos with bare origins and a stub gh.
+- Decisions: A (push script) over B (scheduled Action per repo), per the plan;
+  `fetch --prune` so a merged, deleted remote branch stops blocking; an
+  upgrade.sh exit 2 is a skip, any other unexpected failure (fetch, push, gh)
+  is a failure and exits 1; the local `harness-upgrade` branch is deleted after
+  the push (the PR's head is origin's branch), so a repo is skipped only while
+  origin still has that branch. Assumed: bash 3.2 only, so a subshell function plus trap, no
+  `set -e` in the outer loop.
+- Gate: GREEN (bash scripts/e2e.sh).
+
 ## 2026-11-23 -- session 109 (M67-001 parallel PRs sync past the harness files)
 
 - Branch: `m67-parallel-prs`.
